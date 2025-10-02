@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Frontend (Next.js) – Docker Dev Guide
 
-## Getting Started
+### 1) Build and run the container
 
-First, run the development server:
+- Prepare environment (optional, if you need env vars):
+  - Create `.env` from the `.env.example` template in the same folder.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Build and start (PowerShell):
+```
+docker compose up -d --build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Tail logs to verify readiness:
+```
+docker compose logs -f frontend
+```
+Wait until you see something similar before opening the app:
+```
+> frontend@0.1.0 dev
+> next dev --turbopack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+   ▲ Next.js 15.5.4 (Turbopack)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   - Local:        http://localhost:3000
+   - Network:      http://172.18.0.2:3000
+   - Environments: .env
 
-## Learn More
+ ✓ Starting...
+ ✓ Ready in ~11s
+ ○ Compiling / ...
+ ✓ Compiled / in ~10s
+ GET / 200 in 11139ms
+```
 
-To learn more about Next.js, take a look at the following resources:
+- Open the app after “Ready”: `http://localhost:3000`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Stop and remove containers/volumes:
+```
+docker compose down -v
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 2) Useful commands for development
 
-## Deploy on Vercel
+- Open a shell inside the container:
+```
+docker compose exec frontend sh
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Install a package:
+```
+docker compose exec frontend npm i <pkg>
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- List installed top-level packages:
+```
+docker compose exec frontend npm ls --depth=0
+```
+
+- Lint (optional):
+```
+docker compose exec frontend npm run lint
+```
+
+- Stream logs:
+```
+docker compose logs -f frontend
+```
+
+- Rebuild image (e.g., after dependency changes):
+```
+docker compose build frontend
+```
+
