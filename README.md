@@ -6,15 +6,19 @@
   - Create `.env` from the `.env.example` template in the same folder.
 
 - Build and start (PowerShell):
+
 ```
 docker compose up -d --build
 ```
 
 - Tail logs to verify readiness:
+
 ```
 docker compose logs -f frontend
 ```
+
 Wait until you see something similar before opening the app:
+
 ```
 > frontend@0.1.0 dev
 > next dev --turbopack
@@ -35,6 +39,7 @@ Wait until you see something similar before opening the app:
 - Open the app after “Ready”: `http://localhost:3000`
 
 - Stop and remove containers/volumes:
+
 ```
 docker compose down -v
 ```
@@ -42,32 +47,37 @@ docker compose down -v
 ### 2) Useful commands for development
 
 - Open a shell inside the container:
+
 ```
 docker compose exec frontend sh
 ```
 
 - Install a package:
+
 ```
 docker compose exec frontend npm i <pkg>
 ```
 
 - List installed top-level packages:
+
 ```
 docker compose exec frontend npm ls --depth=0
 ```
 
 - Lint (optional):
+
 ```
 docker compose exec frontend npm run lint
 ```
 
 - Stream logs:
+
 ```
 docker compose logs -f frontend
 ```
 
 - Rebuild image (e.g., after dependency changes):
+
 ```
 docker compose build frontend
 ```
-
