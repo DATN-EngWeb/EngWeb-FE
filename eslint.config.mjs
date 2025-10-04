@@ -1,4 +1,4 @@
-// eslint.config.js
+// eslint.config.mjs
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import react from 'eslint-plugin-react';
@@ -59,7 +59,7 @@ export default [
       // TypeScript / React tweaks
       'no-undef': 'error',
       'react/react-in-jsx-scope': 'off',
-      'tailwindcss/no-custom-classname': 'off',
+      //'tailwindcss/no-custom-classname': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {

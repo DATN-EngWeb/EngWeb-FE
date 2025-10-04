@@ -13,10 +13,6 @@
     "lint-staged": "lint-staged"
   },
   "dependencies": {
-    "eslint": "^9.37.0",
-    "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^6.1.1",
-    "eslint-plugin-unicorn": "^61.0.2",
     "next": "15.5.4",
     "next-auth": "^4.24.11",
     "react": "19.1.0",
@@ -24,6 +20,10 @@
     "typescript-eslint": "^8.45.0"
   },
   "devDependencies": {
+    "eslint": "^9.37.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^6.1.1",
+    "eslint-plugin-unicorn": "^61.0.2",
     "@commitlint/cli": "^20.1.0",
     "@commitlint/config-conventional": "^20.0.0",
     "@eslint/eslintrc": "^3",
