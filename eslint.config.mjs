@@ -11,7 +11,14 @@ import prettierConfig from 'eslint-config-prettier';
 /** @type {import("eslint").FlatConfig.Config[]} */
 export default [
   {
-    ignores: ['.next/**', 'public/**', 'next.config.js', 'postcss.config.js'],
+    ignores: [
+      '.next/**',
+      'public/**',
+      'next.config.js',
+      'postcss.config.js',
+      'commitlint.config.js',
+      '**/*.config.js',
+    ],
   },
 
   {
