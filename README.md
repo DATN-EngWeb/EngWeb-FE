@@ -20,6 +20,47 @@
 - Node.js 20 or higher
 - npm 10 or higher
 
+## Folder Structure
+
+```bash
+english_app_fe/
+├── .husky/ # Git hooks (pre-commit, etc.)
+├── .next/ # Next.js build output
+│
+├── app/ # App Router (Next.js 13+)
+│ ├── api/ # API routes (server functions)
+│ ├── assets/ # Static assets (fonts, images…)
+│ │ ├── fonts/
+│ │ └── images/
+│ ├── hooks/ # Custom React hooks
+│ ├── lib/ # Utilities, constants, helper functions
+│ ├── pages/ # (Optional) Legacy pages router (if needed)
+│ ├── styles/ # Local styles for components/routes
+│ ├── components/ # Reusable global UI components
+│ ├── theme/ # MUI theme (light/dark, palette, typography)
+│ ├── utils/ # General utility functions
+│ ├── favicon.ico
+│ ├── globals.css # Global CSS (imported once)
+│ ├── layout.tsx # Root layout (applies to all routes)
+│ └── page.tsx # Root page (/)
+│
+├── node_modules/ # Dependencies
+│
+├── .env.example # Example environment variables
+├── .gitignore # Git ignore rules
+├── .prettierrc # Prettier config for code formatting
+├── commitlint.config.js # Commit message convention rules
+├── eslint.config.mjs # ESLint config
+├── next-env.d.ts # Next.js TypeScript definitions
+├── next.config.ts # Next.js configuration file
+├── package-lock.json # npm lockfile
+├── package.json # Project dependencies and scripts
+├── postcss.config.mjs # PostCSS configuration (for TailwindCSS)
+├── README.md # Project documentation
+├── tsconfig.json # TypeScript compiler options
+└── .env # (optional) Actual environment file (not committed)
+```
+
 ## Getting Started
 
 ### 1. Clone the repository
