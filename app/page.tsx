@@ -12,7 +12,7 @@ export default function Home() {
         fontSize: '28px',
       }}
     >
-      NENS - No English No Success
+      NENS - No English No Success commit 1
     </main>
   );
 }
