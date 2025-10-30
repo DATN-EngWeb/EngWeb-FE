@@ -35,7 +35,7 @@ const theme = createTheme({
   },
   typography: {
     fontFamily:
-      'system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, sans-serif',
+      'Poppins, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, sans-serif',
     h1: {
       fontSize: '3rem',
       fontWeight: 'bold',

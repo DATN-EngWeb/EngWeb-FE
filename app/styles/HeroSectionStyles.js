@@ -2,53 +2,94 @@
 export const heroSectionStyles = {
   // Main container styles
   mainContainer: {
-    py: 8,
-    backgroundColor: 'background.default',
+    py: { xs: 6, md: 10 },
+    backgroundColor: '#fff4e9',
   },
 
   // Main title styles
   mainTitle: {
-    color: 'primary.main',
+    color: '#4a2c25', // deep brown close to screenshot
     mb: 2,
-    fontSize: { xs: '2.5rem', md: '3rem' },
+    fontWeight: 700,
+    lineHeight: 1.1,
+    letterSpacing: '-0.5px',
+    fontSize: { xs: '2.1rem', md: '2.7rem' },
+    maxWidth: { xs: '100%', md: 470 },
+    wordBreak: 'break-word',
+    hyphens: 'auto',
+  },
+
+  titleContainer: {
+    maxWidth: { xs: '100%', md: 470 },
   },
 
   // Description text styles
   description: {
-    color: 'text.secondary',
-    mb: 3,
-    fontSize: '1.1rem',
-    lineHeight: 1.6,
+    color: '#6b7280',
+    mb: 4,
+    maxWidth: 520,
+    fontSize: '1rem',
+    lineHeight: 1.7,
   },
 
   // Start Now button styles
   startNowButton: {
-    backgroundColor: 'warning.main',
-    color: 'text.primary',
-    px: 4,
-    py: 1.5,
-    fontSize: '1rem',
+    backgroundColor: '#f9c35d',
+    color: '#4a2c25',
+    borderRadius: 9999,
+    px: 3,
+    py: 1.25,
+    fontWeight: 600,
+    textTransform: 'none',
+    gap: 1.5,
+    boxShadow: 'none',
     '&:hover': {
-      backgroundColor: 'warning.dark',
+      backgroundColor: '#e6ad3f',
+      boxShadow: 'none',
     },
+  },
+
+  playCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: '50%',
+    backgroundColor: '#ffffff',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  playTriangle: {
+    width: 0,
+    height: 0,
+    borderTop: '6px solid transparent',
+    borderBottom: '6px solid transparent',
+    borderLeft: '10px solid #f0a000',
+    marginLeft: '2px',
   },
 
   // Image container styles
   imageContainer: {
-    position: 'relative',
     display: 'flex',
-    justifyContent: 'center',
+    justifyContent: { xs: 'center', md: 'flex-end' },
+    alignItems: 'center',
+    width: '100%',
+  },
+  heroImage: {
+    width: { xs: 300, md: 560 },
+    height: 'auto',
   },
 
   // Circular paper styles
   circularPaper: {
-    width: 400,
-    height: 400,
-    borderRadius: '50%',
+    width: 480,
+    height: 420,
+    borderRadius: 32,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    backgroundColor: '#E0E0E0',
+    backgroundColor: '#f1e6da',
+    overflow: 'hidden',
   },
 };

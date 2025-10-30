@@ -2,68 +2,50 @@
 export const contactFormStyles = {
   // Main container styles
   mainContainer: {
-    py: 8,
-    backgroundColor: 'background.paper',
+    py: { xs: 6, md: 8 },
+    backgroundColor: '#ffffff',
   },
 
-  // Circular paper styles
-  circularPaper: {
-    width: 300,
-    height: 300,
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '5rem',
-    backgroundColor: '#E0E0E0',
-    position: 'relative',
-  },
-
-  // Question mark styles
-  questionMark: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    fontSize: '3rem',
-    color: 'primary.main',
-  },
-
-  // Star styles
-  star: {
-    position: 'absolute',
-    bottom: 40,
-    left: 20,
-    fontSize: '2rem',
-    color: 'secondary.main',
-  },
-
-  // Any Question button styles
-  anyQuestionButton: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    backgroundColor: 'secondary.main',
-    '&:hover': {
-      backgroundColor: 'secondary.dark',
-    },
-  },
-
-  // Text content styles
-  textContainer: {
+  // Header section styles (heading and subtitle at top)
+  headerSection: {
     textAlign: 'center',
+    mb: { xs: 4, md: 6 },
   },
 
   // Main title styles
   mainTitle: {
-    color: 'primary.main',
+    color: '#4a2c25',
     mb: 1,
-    fontSize: { xs: '2rem', md: '2.5rem' },
+    fontWeight: 700,
+    fontSize: { xs: '1.75rem', md: '2.5rem' },
+    lineHeight: 1.2,
+    letterSpacing: '-0.3px',
   },
 
   // Subtitle styles
   subtitle: {
-    color: 'text.secondary',
-    mb: 4,
+    color: '#6b7280',
+    fontSize: '1rem',
+    lineHeight: 1.6,
+  },
+
+  // Image container styles
+  imageContainer: {
+    display: 'flex',
+    justifyContent: { xs: 'center', md: 'flex-start' },
+    alignItems: 'center',
+    width: '100%',
+  },
+
+  // Image styles
+  image: {
+    width: '100%',
+    maxWidth: { xs: '100%', md: 500 },
+  },
+
+  // Form container styles
+  formContainer: {
+    mt: { xs: 4, md: 0 },
   },
 
   // Form styles
@@ -76,18 +58,41 @@ export const contactFormStyles = {
   // TextField styles
   textField: {
     '& .MuiOutlinedInput-root': {
-      borderRadius: 2,
+      borderRadius: 3,
+      backgroundColor: '#f5f5f5',
+      '& fieldset': {
+        borderColor: 'transparent',
+      },
+      '&:hover fieldset': {
+        borderColor: '#e0e0e0',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#d0d0d0',
+      },
+      '&.Mui-focused': {
+        backgroundColor: '#ffffff',
+      },
+    },
+    '& .MuiInputBase-input::placeholder': {
+      color: '#9e9e9e',
+      opacity: 1,
     },
   },
 
   // Send Message button styles
   sendMessageButton: {
-    backgroundColor: 'primary.main',
-    alignSelf: 'flex-start',
+    backgroundColor: '#5a2b22',
+    color: '#ffffff',
+    borderRadius: 9999,
+    alignSelf: 'flex-end',
     px: 4,
-    py: 1.5,
+    py: 1.25,
+    fontWeight: 600,
+    textTransform: 'none',
+    boxShadow: 'none',
     '&:hover': {
-      backgroundColor: 'primary.dark',
+      backgroundColor: '#4a231c',
+      boxShadow: 'none',
     },
   },
 };

@@ -2,9 +2,10 @@
 export const footerStyles = {
   // Main container styles
   mainContainer: {
-    backgroundColor: 'primary.main',
-    color: 'white',
+    backgroundColor: '#ffffff',
+    color: '#111827',
     py: 6,
+    borderTop: '1px solid #f0f0f0',
   },
 
   // Logo link styles
@@ -15,14 +16,18 @@ export const footerStyles = {
 
   // Contact info styles
   contactInfo: {
+    mt: 2,
     fontSize: '0.9rem',
-    lineHeight: 1.6,
+    lineHeight: 1.7,
+    color: '#6b7280',
   },
 
   // Section title styles
   sectionTitle: {
     mb: 2,
-    fontSize: '1rem',
+    fontSize: '0.95rem',
+    color: '#6b7280',
+    fontWeight: 600,
   },
 
   // Links container styles
@@ -34,23 +39,34 @@ export const footerStyles = {
 
   // Footer link styles
   footerLink: {
-    color: 'white',
+    color: '#374151',
     textDecoration: 'none',
     fontSize: '0.9rem',
     '&:hover': {
-      textDecoration: 'underline',
+      color: '#111827',
     },
   },
 
   // Social links container styles
   socialLinksContainer: {
     display: 'flex',
-    gap: 2,
-    fontSize: '1.5rem',
+    gap: 1,
   },
 
   // Social link styles
   socialLink: {
-    color: 'white',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: '#f3f4f6',
+    border: '1px solid #e5e7eb',
+    transition: 'background-color .2s ease, transform .1s ease',
+    '&:hover': {
+      backgroundColor: '#e5e7eb',
+      transform: 'translateY(-1px)',
+    },
   },
 };

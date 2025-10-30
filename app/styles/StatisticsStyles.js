@@ -3,15 +3,18 @@ export const statisticsStyles = {
   // Main container styles
   mainContainer: {
     py: 8,
-    backgroundColor: 'background.default',
+    backgroundColor: '#fff4e9',
   },
 
   // Main title styles
   mainTitle: {
-    color: 'primary.main',
-    mb: 3,
-    fontSize: { xs: '2rem', md: '2.5rem' },
-    lineHeight: 1.3,
+    fontSize: { xs: '1.45rem', md: '1.55rem' },
+    color: '#4a2c25',
+    fontWeight: 700,
+    mb: 2,
+    lineHeight: 1.2,
+    letterSpacing: '-0.02em',
+    maxWidth: 440,
   },
 
   // Stats container styles
@@ -26,33 +29,35 @@ export const statisticsStyles = {
 
   // Stat number styles
   statNumber: {
-    mb: 1,
-    fontSize: { xs: '2rem', md: '3rem' },
-    fontWeight: 'bold',
+    mb: 0,
+    fontSize: { xs: '2.2rem', md: '2.8rem' },
+    fontWeight: 700,
+    color: '#ee7623',
   },
 
   // Stat label styles
   statLabel: {
-    color: 'text.secondary',
-    fontSize: '0.9rem',
+    color: '#9ca3af',
+    fontSize: '0.95rem',
+    lineHeight: 1.25,
   },
 
   // Description text styles
   description: {
-    color: 'text.secondary',
-    lineHeight: 1.6,
-    maxWidth: 500,
+    fontSize: '0.93rem',
+    color: '#6b7280',
+    maxWidth: 210,
+    textAlign: 'right',
+    lineHeight: 1.45,
+    ml: 'auto',
+    alignSelf: 'center',
   },
 
   // Circular paper styles
-  circularPaper: {
-    width: 200,
-    height: 200,
-    borderRadius: '50%',
+  rightImageContainer: {
     display: 'flex',
+    justifyContent: { xs: 'center', md: 'flex-end' },
     alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '4rem',
-    backgroundColor: '#E0E0E0',
+    width: '100%',
   },
 };

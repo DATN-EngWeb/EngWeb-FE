@@ -1,32 +1,40 @@
 import React from 'react';
-import { Box, Container, Typography, Grid, Paper, TextField, Button } from '@mui/material';
+import { Box, Container, Typography, Grid, TextField, Button } from '@mui/material';
+import Image from 'next/image';
 import { contactFormStyles } from '../styles/ContactFormStyles';
+import ContactFormImage from '../assets/contact.png';
 
 export default function ContactForm() {
   return (
     <Box sx={contactFormStyles.mainContainer}>
       <Container maxWidth="lg">
+        {/* Header section - centered at top */}
+        <Box sx={contactFormStyles.headerSection}>
+          <Typography variant="h2" sx={contactFormStyles.mainTitle}>
+            Do you have any question?
+          </Typography>
+          <Typography variant="body1" sx={contactFormStyles.subtitle}>
+            Our manager will answer all your questions
+          </Typography>
+        </Box>
+
+        {/* Content section - image left, form right */}
         <Grid container spacing={4} alignItems="center">
           <Grid item xs={12} md={6}>
-            <Box sx={{ position: 'relative' }}>
-              <Paper elevation={3} sx={contactFormStyles.circularPaper}>
-                😕
-                <Typography sx={contactFormStyles.questionMark}>?</Typography>
-                <Typography sx={contactFormStyles.star}>⭐</Typography>
-              </Paper>
-              <Button variant="contained" sx={contactFormStyles.anyQuestionButton}>
-                Any Question
-              </Button>
+            <Box sx={contactFormStyles.imageContainer}>
+              <Box sx={contactFormStyles.image}>
+                <Image
+                  src={ContactFormImage}
+                  alt="Contact Form"
+                  width={500}
+                  height={400}
+                  style={{ width: '100%', height: 'auto' }}
+                />
+              </Box>
             </Box>
           </Grid>
           <Grid item xs={12} md={6}>
-            <Box sx={contactFormStyles.textContainer}>
-              <Typography variant="h2" sx={contactFormStyles.mainTitle}>
-                Do you have any question?
-              </Typography>
-              <Typography variant="body1" sx={contactFormStyles.subtitle}>
-                Our manager will answer all your questions
-              </Typography>
+            <Box sx={contactFormStyles.formContainer}>
               <Box component="form" sx={contactFormStyles.form}>
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>

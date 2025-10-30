@@ -1,6 +1,9 @@
 import React from 'react';
 import { Box, Container, Typography, Grid, Link } from '@mui/material';
 import Image from 'next/image';
+import FacebookImage from '../assets/facebook.png';
+import LinkedinImage from '../assets/linkedin.png';
+import TwitterImage from '../assets/twitter.png';
 import LogoImage from '../assets/logo.png';
 import { footerStyles } from '../styles/FooterStyles';
 
@@ -18,8 +21,8 @@ export default function Footer() {
             </Link>
 
             <Box sx={footerStyles.contactInfo}>
-              <Typography variant="body2">hello.hello@gmail.com</Typography>
-              <Typography variant="body2">+48 8880 23 3308</Typography>
+              <Typography variant="body2">nens.hcmsus@gmail.com</Typography>
+              <Typography variant="body2">+91 98183 23 2309</Typography>
               <Typography variant="body2">Somewhere in the World</Typography>
             </Box>
           </Grid>
@@ -55,13 +58,13 @@ export default function Footer() {
                 </Typography>
                 <Box sx={footerStyles.socialLinksContainer}>
                   <Link href="#" sx={footerStyles.socialLink}>
-                    <Image src={LogoImage} alt="NENS" width={32} height={24} />
+                    <Image src={FacebookImage} alt="Facebook" width={18} height={18} />
                   </Link>
                   <Link href="#" sx={footerStyles.socialLink}>
-                    🐦
+                    <Image src={TwitterImage} alt="Twitter" width={18} height={18} />
                   </Link>
                   <Link href="#" sx={footerStyles.socialLink}>
-                    📷
+                    <Image src={LinkedinImage} alt="LinkedIn" width={18} height={18} />
                   </Link>
                 </Box>
               </Grid>
