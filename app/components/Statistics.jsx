@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Container, Typography, Grid } from '@mui/material';
+import { Box, Container, Typography } from '@mui/material';
 import Image from 'next/image';
 import StatisticsImage from '../assets/statistic.png';
 import { statisticsStyles } from '../styles/StatisticsStyles';
@@ -14,66 +14,69 @@ export default function Statistics() {
   return (
     <Box sx={statisticsStyles.mainContainer}>
       <Container maxWidth="lg">
-        <Grid container spacing={2} alignItems="center">
-          {/* Hàng đầu: chữ bên trái, ảnh bên phải */}
-          <Grid item xs={12} md={7}>
+        {/* Top row: title + image */}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            flexDirection: { xs: 'column', md: 'row' },
+          }}
+        >
+          <Box sx={{ flex: 1 }}>
             <Typography variant="h2" sx={statisticsStyles.mainTitle}>
               English made simple — learn smarter, speak better, and reach your goals faster.
             </Typography>
-          </Grid>
-          <Grid item xs={12} md={5} sx={{ textAlign: { xs: 'center', md: 'right' } }}>
+          </Box>
+          <Box
+            sx={{
+              flex: 1,
+              display: 'flex',
+              justifyContent: { xs: 'center', md: 'flex-end' },
+              alignItems: 'center',
+            }}
+          >
             <Image
               src={StatisticsImage}
               alt="NENS"
-              style={{ width: '140px', height: 'auto', maxWidth: '100%' }}
+              style={{ width: '50%', height: 'auto', maxWidth: '100%' }}
             />
-          </Grid>
+          </Box>
+        </Box>
 
-          {/* Hàng thứ hai: dãy số liệu và mô tả nhỏ */}
-          <Grid item xs={12}>
-            <Grid container spacing={2} alignItems="flex-end">
-              <Grid item xs={6} md={2}>
-                <Typography variant="h3" sx={statisticsStyles.statNumber}>
-                  500+
-                </Typography>
-                <Typography variant="body2" sx={statisticsStyles.statLabel}>
-                  Students Reached
-                </Typography>
-              </Grid>
-              <Grid item xs={6} md={2}>
-                <Typography variant="h3" sx={statisticsStyles.statNumber}>
-                  100+
-                </Typography>
-                <Typography variant="body2" sx={statisticsStyles.statLabel}>
-                  Teacher Reached
-                </Typography>
-              </Grid>
-              <Grid item xs={6} md={2}>
-                <Typography variant="h3" sx={statisticsStyles.statNumber}>
-                  236
-                </Typography>
-                <Typography variant="body2" sx={statisticsStyles.statLabel}>
-                  Exams
-                </Typography>
-              </Grid>
-              <Grid
-                item
-                xs={12}
-                md={6}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: { xs: 'flex-start', md: 'flex-end' },
-                }}
-              >
-                <Typography variant="body2" sx={statisticsStyles.description}>
-                  Discover interactive lessons, fun activities, and real-world conversations that
-                  make English learning exciting at every level.
-                </Typography>
-              </Grid>
-            </Grid>
-          </Grid>
-        </Grid>
+        {/* Bottom row: stats + description */}
+        <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 12, mt: 2, flexWrap: 'wrap' }}>
+          <Box sx={{ minWidth: { xs: '45%', md: 'auto' } }}>
+            <Typography variant="h3" sx={statisticsStyles.statNumber}>
+              500+
+            </Typography>
+            <Typography variant="body2" sx={statisticsStyles.statLabel}>
+              Students Reached
+            </Typography>
+          </Box>
+          <Box sx={{ minWidth: { xs: '45%', md: 'auto' } }}>
+            <Typography variant="h3" sx={statisticsStyles.statNumber}>
+              100+
+            </Typography>
+            <Typography variant="body2" sx={statisticsStyles.statLabel}>
+              Teacher Reached
+            </Typography>
+          </Box>
+          <Box sx={{ minWidth: { xs: '45%', md: 'auto' } }}>
+            <Typography variant="h3" sx={statisticsStyles.statNumber}>
+              236
+            </Typography>
+            <Typography variant="body2" sx={statisticsStyles.statLabel}>
+              Exams
+            </Typography>
+          </Box>
+          <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
+            <Typography variant="body2" sx={statisticsStyles.description}>
+              Discover interactive lessons, fun activities, and real-world conversations that make
+              English learning exciting at every level.
+            </Typography>
+          </Box>
+        </Box>
       </Container>
     </Box>
   );

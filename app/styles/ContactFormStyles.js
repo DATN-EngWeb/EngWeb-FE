@@ -53,6 +53,14 @@ export const contactFormStyles = {
     display: 'flex',
     flexDirection: 'column',
     gap: 2,
+    width: '100%',
+  },
+
+  // Row for the top inputs
+  formRow: {
+    display: 'flex',
+    gap: 2,
+    flexDirection: { xs: 'column', md: 'row' },
   },
 
   // TextField styles
@@ -84,7 +92,7 @@ export const contactFormStyles = {
     backgroundColor: '#5a2b22',
     color: '#ffffff',
     borderRadius: 9999,
-    alignSelf: 'flex-end',
+    alignSelf: { xs: 'center', md: 'flex-end' },
     px: 4,
     py: 1.25,
     fontWeight: 600,

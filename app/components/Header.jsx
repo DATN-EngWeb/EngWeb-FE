@@ -18,12 +18,10 @@ export default function Header() {
     <AppBar position="static" sx={appBarStyles}>
       <Container maxWidth="lg">
         <Toolbar sx={toolbarStyles}>
-          {/* Logo */}
           <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
             <Image src={Logo} alt="NENS" width={32} height={24} />
           </Link>
 
-          {/* Navigation */}
           <Box sx={navBoxStyles}>
             <Link href="/reading" style={{ textDecoration: 'none' }}>
               <Button color="inherit" sx={navButtonStyles}>

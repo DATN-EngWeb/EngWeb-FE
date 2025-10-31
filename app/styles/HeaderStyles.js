@@ -1,8 +1,6 @@
 export const appBarStyles = {
   backgroundColor: '#fff4e9',
   color: '#171717',
-  boxShadow: 'none',
-  borderBottom: '1px solid #f0e6da',
 };
 
 export const toolbarStyles = {
@@ -11,7 +9,6 @@ export const toolbarStyles = {
 
 export const navBoxStyles = {
   display: { xs: 'none', md: 'flex' },
-  gap: 3,
 };
 
 export const navButtonStyles = {

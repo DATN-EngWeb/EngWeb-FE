@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Container, Typography, Button, Grid, Paper } from '@mui/material';
+import { Box, Container, Typography, Button } from '@mui/material';
 import Image from 'next/image';
 import HomeImage from '../assets/home.png';
 import { heroSectionStyles } from '../styles/HeroSectionStyles';
@@ -7,9 +7,16 @@ import { heroSectionStyles } from '../styles/HeroSectionStyles';
 export default function HeroSection() {
   return (
     <Box sx={heroSectionStyles.mainContainer}>
-      <Container maxWidth="lg" disableGutters>
-        <Grid container spacing={4} alignItems="center">
-          <Grid item xs={12} md={4}>
+      <Container maxWidth="lg">
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            flexDirection: { xs: 'column', md: 'row' },
+          }}
+        >
+          <Box sx={{ flex: 1 }}>
             <Box sx={heroSectionStyles.titleContainer}>
               <Typography variant="h1" sx={heroSectionStyles.mainTitle}>
                 Learn English, Grow Confidently
@@ -25,26 +32,17 @@ export default function HeroSection() {
                 </Box>
               </Button>
             </Box>
-          </Grid>
-          <Grid item xs={12} md={8} sx={{ p: 0 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                alignItems: 'center',
-                width: '100%',
-                m: 0,
-                p: 0,
-              }}
-            >
+          </Box>
+          <Box sx={{ flex: 1 }}>
+            <Box sx={heroSectionStyles.imageContainer}>
               <Image
                 src={HomeImage}
                 alt="NENS"
-                style={{ width: '400px', height: 'auto', maxWidth: 560 }}
+                style={{ width: '90%', height: 'auto', maxWidth: 560 }}
               />
             </Box>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Container>
     </Box>
   );

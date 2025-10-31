@@ -23,7 +23,7 @@ export const whatMakesUsDifferentStyles = {
     mb: 2,
     fontSize: '0.98rem',
     lineHeight: 1.52,
-    maxWidth: { xs: '100%', md: 420 },
+    maxWidth: { xs: '100%', md: 900 },
   },
 
   // List container styles

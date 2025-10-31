@@ -2,7 +2,7 @@
 export const heroSectionStyles = {
   // Main container styles
   mainContainer: {
-    py: { xs: 6, md: 10 },
+    py: { xs: 6, md: 2 },
     backgroundColor: '#fff4e9',
   },
 
@@ -13,14 +13,14 @@ export const heroSectionStyles = {
     fontWeight: 700,
     lineHeight: 1.1,
     letterSpacing: '-0.5px',
-    fontSize: { xs: '2.1rem', md: '2.7rem' },
+    fontSize: { xs: '2.6rem', md: '4.0rem' },
     maxWidth: { xs: '100%', md: 470 },
     wordBreak: 'break-word',
     hyphens: 'auto',
   },
 
   titleContainer: {
-    maxWidth: { xs: '100%', md: 470 },
+    maxWidth: { xs: '100%', md: 1000 },
   },
 
   // Description text styles
@@ -28,7 +28,7 @@ export const heroSectionStyles = {
     color: '#6b7280',
     mb: 4,
     maxWidth: 520,
-    fontSize: '1rem',
+    fontSize: { xs: '1.05rem', md: '1.12rem' },
     lineHeight: 1.7,
   },
 

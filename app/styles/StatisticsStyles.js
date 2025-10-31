@@ -1,20 +1,17 @@
-// Statistics component styles
 export const statisticsStyles = {
-  // Main container styles
   mainContainer: {
     py: 8,
-    backgroundColor: '#fff4e9',
   },
 
   // Main title styles
   mainTitle: {
-    fontSize: { xs: '1.45rem', md: '1.55rem' },
+    fontSize: { xs: '1.45rem', md: '3rem' },
     color: '#4a2c25',
     fontWeight: 700,
     mb: 2,
     lineHeight: 1.2,
     letterSpacing: '-0.02em',
-    maxWidth: 440,
+    maxWidth: 800,
   },
 
   // Stats container styles
@@ -30,7 +27,7 @@ export const statisticsStyles = {
   // Stat number styles
   statNumber: {
     mb: 0,
-    fontSize: { xs: '2.2rem', md: '2.8rem' },
+    fontSize: { xs: '2.2rem', md: '3.4rem' },
     fontWeight: 700,
     color: '#ee7623',
   },
@@ -38,7 +35,7 @@ export const statisticsStyles = {
   // Stat label styles
   statLabel: {
     color: '#9ca3af',
-    fontSize: '0.95rem',
+    fontSize: '1.25rem',
     lineHeight: 1.25,
   },
 
@@ -46,7 +43,7 @@ export const statisticsStyles = {
   description: {
     fontSize: '0.93rem',
     color: '#6b7280',
-    maxWidth: 210,
+    maxWidth: 400,
     textAlign: 'right',
     lineHeight: 1.45,
     ml: 'auto',

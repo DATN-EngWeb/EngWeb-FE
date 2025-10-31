@@ -3,7 +3,6 @@ import {
   Box,
   Container,
   Typography,
-  Grid,
   List,
   ListItem,
   ListItemIcon,
@@ -25,8 +24,26 @@ export default function WhatMakesUsDifferent() {
   return (
     <Box sx={whatMakesUsDifferentStyles.mainContainer}>
       <Container maxWidth="lg">
-        <Grid container spacing={4} alignItems="center">
-          <Grid item xs={12} md={4}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            flexDirection: { xs: 'column', md: 'row' },
+          }}
+        >
+          <Box sx={{ flex: 1 }}>
+            <Box sx={whatMakesUsDifferentStyles.imageContainer}>
+              <Image
+                src={WhatMakesUsDifferentImage}
+                alt="What makes us different"
+                width={380}
+                height={340}
+                style={{ width: '95%', maxWidth: 420, height: 'auto' }}
+              />
+            </Box>
+          </Box>
+          <Box sx={{ flex: 1 }}>
             <Typography variant="h2" sx={whatMakesUsDifferentStyles.heading}>
               What makes us different from other
             </Typography>
@@ -44,27 +61,8 @@ export default function WhatMakesUsDifferent() {
                 </ListItem>
               ))}
             </List>
-          </Grid>
-          <Grid item xs={12} md={8}>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                alignItems: 'flex-end',
-                width: '100%',
-                height: '100%',
-              }}
-            >
-              <Image
-                src={WhatMakesUsDifferentImage}
-                alt="What makes us different"
-                width={380}
-                height={340}
-                style={{ width: '95%', maxWidth: 420, height: 'auto' }}
-              />
-            </Box>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Container>
     </Box>
   );

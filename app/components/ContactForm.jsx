@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Container, Typography, Grid, TextField, Button } from '@mui/material';
+import { Box, Container, Typography, TextField, Button } from '@mui/material';
 import Image from 'next/image';
 import { contactFormStyles } from '../styles/ContactFormStyles';
 import ContactFormImage from '../assets/contact.png';
@@ -18,9 +18,16 @@ export default function ContactForm() {
           </Typography>
         </Box>
 
-        {/* Content section - image left, form right */}
-        <Grid container spacing={4} alignItems="center">
-          <Grid item xs={12} md={6}>
+        {/* Content section - image left, form right (no Grid) */}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            flexDirection: { xs: 'column', md: 'row' },
+          }}
+        >
+          <Box sx={{ flex: 1 }}>
             <Box sx={contactFormStyles.imageContainer}>
               <Box sx={contactFormStyles.image}>
                 <Image
@@ -28,37 +35,33 @@ export default function ContactForm() {
                   alt="Contact Form"
                   width={500}
                   height={400}
-                  style={{ width: '100%', height: 'auto' }}
+                  style={{ width: '90%', height: 'auto' }}
                 />
               </Box>
             </Box>
-          </Grid>
-          <Grid item xs={12} md={6}>
+          </Box>
+          <Box sx={{ flex: 1 }}>
             <Box sx={contactFormStyles.formContainer}>
               <Box component="form" sx={contactFormStyles.form}>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      placeholder="Full Name"
-                      variant="outlined"
-                      sx={contactFormStyles.textField}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      type="email"
-                      placeholder="Email"
-                      variant="outlined"
-                      sx={contactFormStyles.textField}
-                    />
-                  </Grid>
-                </Grid>
+                <Box sx={contactFormStyles.formRow}>
+                  <TextField
+                    fullWidth
+                    placeholder="Full Name"
+                    variant="outlined"
+                    sx={contactFormStyles.textField}
+                  />
+                  <TextField
+                    fullWidth
+                    type="email"
+                    placeholder="Email"
+                    variant="outlined"
+                    sx={contactFormStyles.textField}
+                  />
+                </Box>
                 <TextField
                   fullWidth
                   multiline
-                  rows={4}
+                  rows={5}
                   placeholder="Your message..."
                   variant="outlined"
                   sx={contactFormStyles.textField}
@@ -73,8 +76,8 @@ export default function ContactForm() {
                 </Button>
               </Box>
             </Box>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Container>
     </Box>
   );

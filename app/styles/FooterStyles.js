@@ -8,18 +8,29 @@ export const footerStyles = {
     borderTop: '1px solid #f0f0f0',
   },
 
+  // Columns wrapper
+  columnsWrapper: {
+    display: 'flex',
+    gap: 4,
+    flexWrap: 'wrap',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+
+  // Column sizes
+  columnWide: {
+    flex: '1 1 320px',
+    minWidth: 260,
+  },
+  columnNarrow: {
+    flex: '1 1 160px',
+    minWidth: 160,
+  },
+
   // Logo link styles
   logoLink: {
     textDecoration: 'none',
     color: 'inherit',
-  },
-
-  // Contact info styles
-  contactInfo: {
-    mt: 2,
-    fontSize: '0.9rem',
-    lineHeight: 1.7,
-    color: '#6b7280',
   },
 
   // Section title styles
@@ -60,9 +71,7 @@ export const footerStyles = {
     justifyContent: 'center',
     width: 40,
     height: 40,
-    borderRadius: 10,
-    backgroundColor: '#f3f4f6',
-    border: '1px solid #e5e7eb',
+
     transition: 'background-color .2s ease, transform .1s ease',
     '&:hover': {
       backgroundColor: '#e5e7eb',
