@@ -8,15 +8,8 @@ export default function HeroSection() {
   return (
     <Box sx={heroSectionStyles.mainContainer}>
       <Container maxWidth="lg">
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2,
-            flexDirection: { xs: 'column', md: 'row' },
-          }}
-        >
-          <Box sx={{ flex: 1 }}>
+        <Box sx={heroSectionStyles.mainContentContainer}>
+          <Box sx={heroSectionStyles.flexBox}>
             <Box sx={heroSectionStyles.titleContainer}>
               <Typography variant="h1" sx={heroSectionStyles.mainTitle}>
                 Learn English, Grow Confidently
@@ -33,13 +26,9 @@ export default function HeroSection() {
               </Button>
             </Box>
           </Box>
-          <Box sx={{ flex: 1 }}>
+          <Box sx={heroSectionStyles.flexBox}>
             <Box sx={heroSectionStyles.imageContainer}>
-              <Image
-                src={HomeImage}
-                alt="NENS"
-                style={{ width: '90%', height: 'auto', maxWidth: 560 }}
-              />
+              <Image src={HomeImage} alt="NENS" style={heroSectionStyles.heroImageStyle} />
             </Box>
           </Box>
         </Box>

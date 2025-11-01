@@ -1,20 +1,16 @@
-// ContactForm component styles
 export const contactFormStyles = {
-  // Main container styles
   mainContainer: {
     py: { xs: 6, md: 8 },
-    backgroundColor: '#ffffff',
+    backgroundColor: 'background.paper',
   },
 
-  // Header section styles (heading and subtitle at top)
   headerSection: {
     textAlign: 'center',
     mb: { xs: 4, md: 6 },
   },
 
-  // Main title styles
   mainTitle: {
-    color: '#4a2c25',
+    color: 'primary.main',
     mb: 1,
     fontWeight: 700,
     fontSize: { xs: '1.75rem', md: '2.5rem' },
@@ -22,14 +18,12 @@ export const contactFormStyles = {
     letterSpacing: '-0.3px',
   },
 
-  // Subtitle styles
   subtitle: {
-    color: '#6b7280',
+    color: 'text.primary',
     fontSize: '1rem',
     lineHeight: 1.6,
   },
 
-  // Image container styles
   imageContainer: {
     display: 'flex',
     justifyContent: { xs: 'center', md: 'flex-start' },
@@ -37,18 +31,15 @@ export const contactFormStyles = {
     width: '100%',
   },
 
-  // Image styles
   image: {
     width: '100%',
     maxWidth: { xs: '100%', md: 500 },
   },
 
-  // Form container styles
   formContainer: {
     mt: { xs: 4, md: 0 },
   },
 
-  // Form styles
   form: {
     display: 'flex',
     flexDirection: 'column',
@@ -56,41 +47,38 @@ export const contactFormStyles = {
     width: '100%',
   },
 
-  // Row for the top inputs
   formRow: {
     display: 'flex',
     gap: 2,
     flexDirection: { xs: 'column', md: 'row' },
   },
 
-  // TextField styles
   textField: {
     '& .MuiOutlinedInput-root': {
       borderRadius: 3,
-      backgroundColor: '#f5f5f5',
+      backgroundColor: 'background.default',
       '& fieldset': {
         borderColor: 'transparent',
       },
       '&:hover fieldset': {
-        borderColor: '#e0e0e0',
+        borderColor: 'background.default',
       },
       '&.Mui-focused fieldset': {
-        borderColor: '#d0d0d0',
+        borderColor: 'primary.main',
       },
       '&.Mui-focused': {
-        backgroundColor: '#ffffff',
+        backgroundColor: 'background.paper',
       },
     },
     '& .MuiInputBase-input::placeholder': {
-      color: '#9e9e9e',
+      color: 'text.primary',
       opacity: 1,
     },
   },
 
-  // Send Message button styles
   sendMessageButton: {
-    backgroundColor: '#5a2b22',
-    color: '#ffffff',
+    backgroundColor: 'primary.main',
+    color: 'background.paper',
     borderRadius: 9999,
     alignSelf: { xs: 'center', md: 'flex-end' },
     px: 4,
@@ -99,8 +87,24 @@ export const contactFormStyles = {
     textTransform: 'none',
     boxShadow: 'none',
     '&:hover': {
-      backgroundColor: '#4a231c',
+      backgroundColor: 'primary.dark',
       boxShadow: 'none',
     },
+  },
+
+  mainContentContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 4,
+    flexDirection: { xs: 'column', md: 'row' },
+  },
+
+  flexBox: {
+    flex: 1,
+  },
+
+  imageStyle: {
+    width: '90%',
+    height: 'auto',
   },
 };

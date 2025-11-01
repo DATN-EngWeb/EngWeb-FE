@@ -1,14 +1,11 @@
-// HeroSection component styles
 export const heroSectionStyles = {
-  // Main container styles
   mainContainer: {
     py: { xs: 6, md: 2 },
-    backgroundColor: '#fff4e9',
+    backgroundColor: 'background.default',
   },
 
-  // Main title styles
   mainTitle: {
-    color: '#4a2c25', // deep brown close to screenshot
+    color: 'primary.main',
     mb: 2,
     fontWeight: 700,
     lineHeight: 1.1,
@@ -23,19 +20,17 @@ export const heroSectionStyles = {
     maxWidth: { xs: '100%', md: 1000 },
   },
 
-  // Description text styles
   description: {
-    color: '#6b7280',
+    color: 'text.primary',
     mb: 4,
     maxWidth: 520,
     fontSize: { xs: '1.05rem', md: '1.12rem' },
     lineHeight: 1.7,
   },
 
-  // Start Now button styles
   startNowButton: {
-    backgroundColor: '#f9c35d',
-    color: '#4a2c25',
+    backgroundColor: 'warning.main',
+    color: 'primary.main',
     borderRadius: 9999,
     px: 3,
     py: 1.25,
@@ -44,7 +39,7 @@ export const heroSectionStyles = {
     gap: 1.5,
     boxShadow: 'none',
     '&:hover': {
-      backgroundColor: '#e6ad3f',
+      backgroundColor: 'warning.dark',
       boxShadow: 'none',
     },
   },
@@ -53,7 +48,7 @@ export const heroSectionStyles = {
     width: 28,
     height: 28,
     borderRadius: '50%',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'background.paper',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -64,11 +59,11 @@ export const heroSectionStyles = {
     height: 0,
     borderTop: '6px solid transparent',
     borderBottom: '6px solid transparent',
-    borderLeft: '10px solid #f0a000',
+    borderLeft: '10px solid',
+    borderLeftColor: 'secondary.main',
     marginLeft: '2px',
   },
 
-  // Image container styles
   imageContainer: {
     display: 'flex',
     justifyContent: { xs: 'center', md: 'flex-end' },
@@ -80,7 +75,6 @@ export const heroSectionStyles = {
     height: 'auto',
   },
 
-  // Circular paper styles
   circularPaper: {
     width: 480,
     height: 420,
@@ -89,7 +83,24 @@ export const heroSectionStyles = {
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    backgroundColor: '#f1e6da',
+    backgroundColor: 'background.default',
     overflow: 'hidden',
+  },
+
+  mainContentContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 2,
+    flexDirection: { xs: 'column', md: 'row' },
+  },
+
+  flexBox: {
+    flex: 1,
+  },
+
+  heroImageStyle: {
+    width: '90%',
+    height: 'auto',
+    maxWidth: 560,
   },
 };

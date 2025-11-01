@@ -5,48 +5,28 @@ import StatisticsImage from '../assets/statistic.png';
 import { statisticsStyles } from '../styles/StatisticsStyles';
 
 const stats = [
-  { number: '500+', label: 'Students Reached', color: '#ff8a3d' },
-  { number: '100+', label: 'Teacher Reached', color: '#ff8a3d' },
-  { number: '236', label: 'Exams', color: '#ff8a3d' },
+  { number: '500+', label: 'Students Reached', color: 'secondary.main' },
+  { number: '100+', label: 'Teacher Reached', color: 'secondary.main' },
+  { number: '236', label: 'Exams', color: 'secondary.main' },
 ];
 
 export default function Statistics() {
   return (
     <Box sx={statisticsStyles.mainContainer}>
       <Container maxWidth="lg">
-        {/* Top row: title + image */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4,
-            flexDirection: { xs: 'column', md: 'row' },
-          }}
-        >
-          <Box sx={{ flex: 1 }}>
+        <Box sx={statisticsStyles.topRowContainer}>
+          <Box sx={statisticsStyles.flexBox}>
             <Typography variant="h2" sx={statisticsStyles.mainTitle}>
               English made simple — learn smarter, speak better, and reach your goals faster.
             </Typography>
           </Box>
-          <Box
-            sx={{
-              flex: 1,
-              display: 'flex',
-              justifyContent: { xs: 'center', md: 'flex-end' },
-              alignItems: 'center',
-            }}
-          >
-            <Image
-              src={StatisticsImage}
-              alt="NENS"
-              style={{ width: '50%', height: 'auto', maxWidth: '100%' }}
-            />
+          <Box sx={statisticsStyles.imageFlexBox}>
+            <Image src={StatisticsImage} alt="NENS" style={statisticsStyles.imageStyle} />
           </Box>
         </Box>
 
-        {/* Bottom row: stats + description */}
-        <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 12, mt: 2, flexWrap: 'wrap' }}>
-          <Box sx={{ minWidth: { xs: '45%', md: 'auto' } }}>
+        <Box sx={statisticsStyles.bottomRowContainer}>
+          <Box sx={statisticsStyles.statBoxContainer}>
             <Typography variant="h3" sx={statisticsStyles.statNumber}>
               500+
             </Typography>
@@ -54,7 +34,7 @@ export default function Statistics() {
               Students Reached
             </Typography>
           </Box>
-          <Box sx={{ minWidth: { xs: '45%', md: 'auto' } }}>
+          <Box sx={statisticsStyles.statBoxContainer}>
             <Typography variant="h3" sx={statisticsStyles.statNumber}>
               100+
             </Typography>
@@ -62,7 +42,7 @@ export default function Statistics() {
               Teacher Reached
             </Typography>
           </Box>
-          <Box sx={{ minWidth: { xs: '45%', md: 'auto' } }}>
+          <Box sx={statisticsStyles.statBoxContainer}>
             <Typography variant="h3" sx={statisticsStyles.statNumber}>
               236
             </Typography>
@@ -70,7 +50,7 @@ export default function Statistics() {
               Exams
             </Typography>
           </Box>
-          <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
+          <Box sx={statisticsStyles.descriptionContainer}>
             <Typography variant="body2" sx={statisticsStyles.description}>
               Discover interactive lessons, fun activities, and real-world conversations that make
               English learning exciting at every level.

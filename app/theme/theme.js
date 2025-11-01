@@ -3,34 +3,65 @@ import { createTheme } from '@mui/material/styles';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#8B4513', // Brown
-      light: '#A0522D',
-      dark: '#654321',
-      contrastText: '#ffffff',
+      main: '#532822',
+      light: '#7a3f37',
+      dark: '#3d1e19',
+      contrastText: '#FFFFFF',
     },
     secondary: {
-      main: '#FF6B35', // Orange
-      light: '#FF8A65',
-      dark: '#E64A19',
-      contrastText: '#ffffff',
+      main: '#FF854B',
+      light: '#FFA875',
+      dark: '#E6652B',
+      contrastText: '#FFFFFF',
     },
     success: {
-      main: '#228B22', // Green
-      light: '#4CAF50',
-      dark: '#1B5E20',
+      main: '#43A574',
+      light: '#6BB58F',
+      dark: '#2E7D52',
     },
     warning: {
-      main: '#F4D03F', // Yellow
-      light: '#FFF176',
-      dark: '#F9A825',
+      main: '#FFD25A',
+      light: '#FFDC7A',
+      dark: '#E6B84A',
+    },
+    info: {
+      main: '#89C0FF',
+      light: '#A8D2FF',
+      dark: '#6A9EE6',
+    },
+    error: {
+      main: '#FF939A',
+      light: '#FFB3B8',
+      dark: '#E6737A',
     },
     background: {
-      default: '#ffffff',
-      paper: '#f5f5f5',
+      default: '#FFF4E9',
+      paper: '#FFFFFF',
     },
     text: {
-      primary: '#171717',
-      secondary: '#64748b',
+      primary: '#383838',
+      secondary: '#383838',
+    },
+    natural: {
+      main: '#FFF4E9',
+    },
+    darkGrey: {
+      main: '#383838',
+    },
+    orange: {
+      main: '#FF854B',
+    },
+    yellow: {
+      main: '#FFD25A',
+    },
+    green: {
+      main: '#43A574',
+    },
+    blue: {
+      main: '#89C0FF',
+    },
+    pink: {
+      main: '#FF939A',
     },
   },
   typography: {
@@ -64,12 +95,38 @@ const theme = createTheme({
     },
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        '*': {
+          fontFamily:
+            'Poppins, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, sans-serif',
+        },
+      },
+    },
+    MuiTypography: {
+      styleOverrides: {
+        root: {
+          fontFamily:
+            'Poppins, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, sans-serif',
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
           borderRadius: '8px',
           textTransform: 'none',
           fontWeight: 600,
+          fontFamily:
+            'Poppins, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, sans-serif',
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          fontFamily:
+            'Poppins, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, sans-serif',
         },
       },
     },

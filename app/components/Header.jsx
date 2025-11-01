@@ -11,6 +11,8 @@ import {
   actionBoxStyles,
   registerButtonStyles,
   loginButtonStyles,
+  logoLinkStyles,
+  navLinkStyles,
 } from '../styles/HeaderStyles';
 
 export default function Header() {
@@ -18,34 +20,32 @@ export default function Header() {
     <AppBar position="static" sx={appBarStyles}>
       <Container maxWidth="lg">
         <Toolbar sx={toolbarStyles}>
-          <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <Image src={Logo} alt="NENS" width={32} height={24} />
-          </Link>
-
           <Box sx={navBoxStyles}>
-            <Link href="/reading" style={{ textDecoration: 'none' }}>
+            <Link href="/" style={logoLinkStyles}>
+              <Image src={Logo} alt="NENS" width={32} height={24} />
+            </Link>
+            <Link href="/reading" style={navLinkStyles}>
               <Button color="inherit" sx={navButtonStyles}>
                 Reading
               </Button>
             </Link>
-            <Link href="/listening" style={{ textDecoration: 'none' }}>
+            <Link href="/listening" style={navLinkStyles}>
               <Button color="inherit" sx={navButtonStyles}>
                 Listening
               </Button>
             </Link>
-            <Link href="/writing" style={{ textDecoration: 'none' }}>
+            <Link href="/writing" style={navLinkStyles}>
               <Button color="inherit" sx={navButtonStyles}>
                 Writing
               </Button>
             </Link>
-            <Link href="/speaking" style={{ textDecoration: 'none' }}>
+            <Link href="/speaking" style={navLinkStyles}>
               <Button color="inherit" sx={navButtonStyles}>
                 Speaking
               </Button>
             </Link>
           </Box>
 
-          {/* Buttons */}
           <Box sx={actionBoxStyles}>
             <Button variant={registerButtonStyles.variant} sx={registerButtonStyles.sx}>
               Register

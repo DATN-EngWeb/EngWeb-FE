@@ -24,26 +24,19 @@ export default function WhatMakesUsDifferent() {
   return (
     <Box sx={whatMakesUsDifferentStyles.mainContainer}>
       <Container maxWidth="lg">
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4,
-            flexDirection: { xs: 'column', md: 'row' },
-          }}
-        >
-          <Box sx={{ flex: 1 }}>
+        <Box sx={whatMakesUsDifferentStyles.mainContentContainer}>
+          <Box sx={whatMakesUsDifferentStyles.flexBox}>
             <Box sx={whatMakesUsDifferentStyles.imageContainer}>
               <Image
                 src={WhatMakesUsDifferentImage}
                 alt="What makes us different"
                 width={380}
                 height={340}
-                style={{ width: '95%', maxWidth: 420, height: 'auto' }}
+                style={whatMakesUsDifferentStyles.imageStyle}
               />
             </Box>
           </Box>
-          <Box sx={{ flex: 1 }}>
+          <Box sx={whatMakesUsDifferentStyles.flexBox}>
             <Typography variant="h2" sx={whatMakesUsDifferentStyles.heading}>
               What makes us different from other
             </Typography>

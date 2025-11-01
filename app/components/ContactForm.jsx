@@ -8,7 +8,6 @@ export default function ContactForm() {
   return (
     <Box sx={contactFormStyles.mainContainer}>
       <Container maxWidth="lg">
-        {/* Header section - centered at top */}
         <Box sx={contactFormStyles.headerSection}>
           <Typography variant="h2" sx={contactFormStyles.mainTitle}>
             Do you have any question?
@@ -18,16 +17,8 @@ export default function ContactForm() {
           </Typography>
         </Box>
 
-        {/* Content section - image left, form right (no Grid) */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4,
-            flexDirection: { xs: 'column', md: 'row' },
-          }}
-        >
-          <Box sx={{ flex: 1 }}>
+        <Box sx={contactFormStyles.mainContentContainer}>
+          <Box sx={contactFormStyles.flexBox}>
             <Box sx={contactFormStyles.imageContainer}>
               <Box sx={contactFormStyles.image}>
                 <Image
@@ -35,12 +26,12 @@ export default function ContactForm() {
                   alt="Contact Form"
                   width={500}
                   height={400}
-                  style={{ width: '90%', height: 'auto' }}
+                  style={contactFormStyles.imageStyle}
                 />
               </Box>
             </Box>
           </Box>
-          <Box sx={{ flex: 1 }}>
+          <Box sx={contactFormStyles.flexBox}>
             <Box sx={contactFormStyles.formContainer}>
               <Box component="form" sx={contactFormStyles.form}>
                 <Box sx={contactFormStyles.formRow}>

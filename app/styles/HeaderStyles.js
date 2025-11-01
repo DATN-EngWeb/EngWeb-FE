@@ -1,6 +1,6 @@
 export const appBarStyles = {
-  backgroundColor: '#fff4e9',
-  color: '#171717',
+  backgroundColor: 'background.default',
+  color: 'text.primary',
 };
 
 export const toolbarStyles = {
@@ -14,11 +14,10 @@ export const navBoxStyles = {
 export const navButtonStyles = {
   textTransform: 'none',
   fontWeight: 500,
-  fontSize: '0.9rem',
-  color: '#4b3b35',
+  fontSize: '1.2rem',
+  color: 'primary.main',
+  marginRight: '50px',
 };
-
-const brown = '#5a2b22';
 
 export const actionBoxStyles = {
   display: 'flex',
@@ -29,16 +28,16 @@ export const registerButtonStyles = {
   variant: 'outlined',
   sx: {
     backgroundColor: 'transparent',
-    color: brown,
-    borderColor: brown,
+    color: 'primary.main',
+    borderColor: 'primary.main',
     borderWidth: 1,
     borderStyle: 'solid',
     borderRadius: 9999,
     px: 3,
     py: 0.75,
     '&:hover': {
-      backgroundColor: '#fdeee5',
-      borderColor: brown,
+      backgroundColor: 'background.default',
+      borderColor: 'primary.main',
     },
   },
 };
@@ -46,15 +45,25 @@ export const registerButtonStyles = {
 export const loginButtonStyles = {
   variant: 'contained',
   sx: {
-    backgroundColor: brown,
-    color: '#ffffff',
+    backgroundColor: 'primary.main',
+    color: 'background.paper',
     borderRadius: 9999,
     px: 3,
     py: 0.75,
     boxShadow: 'none',
     '&:hover': {
-      backgroundColor: '#4a231c',
+      backgroundColor: 'primary.dark',
       boxShadow: 'none',
     },
   },
+};
+
+export const logoLinkStyles = {
+  textDecoration: 'none',
+  color: 'inherit',
+  paddingRight: '40px',
+};
+
+export const navLinkStyles = {
+  textDecoration: 'none',
 };

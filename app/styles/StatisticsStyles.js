@@ -1,12 +1,12 @@
 export const statisticsStyles = {
   mainContainer: {
     py: 8,
+    backgroundColor: 'background.paper',
   },
 
-  // Main title styles
   mainTitle: {
     fontSize: { xs: '1.45rem', md: '3rem' },
-    color: '#4a2c25',
+    color: 'primary.main',
     fontWeight: 700,
     mb: 2,
     lineHeight: 1.2,
@@ -14,35 +14,30 @@ export const statisticsStyles = {
     maxWidth: 800,
   },
 
-  // Stats container styles
   statsContainer: {
     mb: 3,
   },
 
-  // Individual stat box styles
   statBox: {
     textAlign: 'center',
   },
 
-  // Stat number styles
   statNumber: {
     mb: 0,
     fontSize: { xs: '2.2rem', md: '3.4rem' },
     fontWeight: 700,
-    color: '#ee7623',
+    color: 'secondary.main',
   },
 
-  // Stat label styles
   statLabel: {
-    color: '#9ca3af',
+    color: 'text.primary',
     fontSize: '1.25rem',
     lineHeight: 1.25,
   },
 
-  // Description text styles
   description: {
     fontSize: '0.93rem',
-    color: '#6b7280',
+    color: 'text.primary',
     maxWidth: 400,
     textAlign: 'right',
     lineHeight: 1.45,
@@ -50,11 +45,52 @@ export const statisticsStyles = {
     alignSelf: 'center',
   },
 
-  // Circular paper styles
   rightImageContainer: {
     display: 'flex',
     justifyContent: { xs: 'center', md: 'flex-end' },
     alignItems: 'center',
     width: '100%',
+  },
+
+  topRowContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 4,
+    flexDirection: { xs: 'column', md: 'row' },
+  },
+
+  flexBox: {
+    flex: 1,
+  },
+
+  imageFlexBox: {
+    flex: 1,
+    display: 'flex',
+    justifyContent: { xs: 'center', md: 'flex-end' },
+    alignItems: 'center',
+  },
+
+  imageStyle: {
+    width: '50%',
+    height: 'auto',
+    maxWidth: '100%',
+  },
+
+  bottomRowContainer: {
+    display: 'flex',
+    alignItems: 'flex-end',
+    gap: 12,
+    mt: 2,
+    flexWrap: 'wrap',
+  },
+
+  statBoxContainer: {
+    minWidth: { xs: '45%', md: 'auto' },
+  },
+
+  descriptionContainer: {
+    ml: 'auto',
+    display: 'flex',
+    alignItems: 'center',
   },
 };

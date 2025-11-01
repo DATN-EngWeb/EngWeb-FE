@@ -15,7 +15,6 @@ export default function Footer() {
     <Box sx={footerStyles.mainContainer}>
       <Container maxWidth="lg">
         <Box sx={footerStyles.columnsWrapper}>
-          {/* Left: logo + contacts */}
           <Box sx={footerStyles.columnWide}>
             <Link href="/" style={footerStyles.logoLink}>
               <Image src={LogoImage} alt="NENS" width={32} height={24} />
@@ -27,7 +26,6 @@ export default function Footer() {
             </Box>
           </Box>
 
-          {/* Middle: Home links */}
           <Box sx={footerStyles.columnNarrow}>
             <Typography variant="h6" sx={footerStyles.sectionTitle}>
               Home
@@ -41,7 +39,6 @@ export default function Footer() {
             </Box>
           </Box>
 
-          {/* Middle: About links */}
           <Box sx={footerStyles.columnNarrow}>
             <Typography variant="h6" sx={footerStyles.sectionTitle}>
               About Us
@@ -55,7 +52,6 @@ export default function Footer() {
             </Box>
           </Box>
 
-          {/* Right: Social */}
           <Box sx={footerStyles.columnNarrow}>
             <Typography variant="h6" sx={footerStyles.sectionTitle}>
               Social Profiles
