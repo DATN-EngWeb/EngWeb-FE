@@ -1,4 +1,5 @@
 import { ThemeProvider } from './theme/ThemeProvider';
+import EmotionCacheProvider from './lib/registry';
 import './globals.css';
 
 export const metadata = {
@@ -10,7 +11,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <EmotionCacheProvider>
+          <ThemeProvider>{children}</ThemeProvider>
+        </EmotionCacheProvider>
       </body>
     </html>
   );
