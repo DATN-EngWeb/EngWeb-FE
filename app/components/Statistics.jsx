@@ -4,11 +4,11 @@ import Image from 'next/image';
 import StatisticsImage from '../assets/statistic.png';
 import { statisticsStyles } from '../styles/StatisticsStyles';
 
-const stats = [
-  { number: '500+', label: 'Students Reached', color: 'secondary.main' },
-  { number: '100+', label: 'Teacher Reached', color: 'secondary.main' },
-  { number: '236', label: 'Exams', color: 'secondary.main' },
-];
+// const stats = [
+//   { number: '500+', label: 'Students Reached', color: 'secondary.main' },
+//   { number: '100+', label: 'Teacher Reached', color: 'secondary.main' },
+//   { number: '236', label: 'Exams', color: 'secondary.main' },
+// ];
 
 export default function Statistics() {
   return (

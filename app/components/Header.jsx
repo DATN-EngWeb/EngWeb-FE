@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { AppBar, Toolbar, Typography, Button, Box, Container } from '@mui/material';
+import { AppBar, Toolbar, Button, Box, Container } from '@mui/material';
 import Logo from '../assets/logo.png';
 import Image from 'next/image';
 import {
