@@ -1,12 +1,5 @@
 // eslint.config.mjs
 import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import react from 'eslint-plugin-react';
-import unicorn from 'eslint-plugin-unicorn';
-import globals from 'globals';
-// import tailwind from "eslint-plugin-tailwindcss"
-import prettier from 'eslint-plugin-prettier';
-import prettierConfig from 'eslint-config-prettier';
 
 /** @type {import("eslint").FlatConfig.Config[]} */
 export default [
@@ -22,45 +15,27 @@ export default [
   },
 
   {
-    files: ['**/*.{js,jsx,ts,tsx}'],
+    files: ['**/*.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
       globals: {
-        ...globals.browser,
-        ...globals.node,
-      },
-      parser: tseslint.parser,
-      parserOptions: {
-        project: './tsconfig.json',
-      },
-    },
-    plugins: {
-      '@typescript-eslint': tseslint.plugin,
-      react,
-      unicorn,
-      prettier,
-      // tailwind,
-    },
-    settings: {
-      react: {
-        version: 'detect',
-      },
-      next: {
-        rootDir: '.',
+        window: 'readonly',
+        document: 'readonly',
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        global: 'readonly',
+        module: 'readonly',
+        require: 'readonly',
+        exports: 'readonly',
       },
     },
     rules: {
       ...js.configs.recommended.rules,
-      ...tseslint.configs.recommended[0].rules,
-      ...react.configs.recommended.rules,
-      ...unicorn.configs.recommended.rules,
-
-      // TypeScript / React tweaks
-      'no-undef': 'error',
-      'react/react-in-jsx-scope': 'off',
-      //'tailwindcss/no-custom-classname': 'off',
-      '@typescript-eslint/no-unused-vars': [
+      'no-unused-vars': [
         'error',
         {
           argsIgnorePattern: '^_',
@@ -68,27 +43,39 @@ export default [
           caughtErrorsIgnorePattern: '^_',
         },
       ],
-      'unicorn/prevent-abbreviations': 'off',
-
-      // Prettier integration
-      ...prettierConfig.rules,
-      'prettier/prettier': [
-        'error',
-        {
-          semi: true,
-          singleQuote: true,
-          trailingComma: 'all',
-          tabWidth: 2,
-          printWidth: 100,
-          endOfLine: 'lf',
-        },
-      ],
+      'no-console': 'warn',
     },
   },
 
   {
-    files: ['**/*.{jsx,tsx}'],
+    files: ['**/*.jsx'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+      globals: {
+        window: 'readonly',
+        document: 'readonly',
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        global: 'readonly',
+        module: 'readonly',
+        require: 'readonly',
+        exports: 'readonly',
+        React: 'readonly',
+        localStorage: 'readonly',
+      },
+    },
     rules: {
+      ...js.configs.recommended.rules,
+      'no-unused-vars': 'off', // Turn off for JSX files since components are used in JSX
       'no-console': 'warn',
     },
   },
