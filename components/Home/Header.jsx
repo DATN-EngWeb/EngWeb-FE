@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { AppBar, Toolbar, Button, Box, Container } from '@mui/material';
-import Logo from '../assets/logo.png';
+import Logo from '../../assets/logo.png';
 import Image from 'next/image';
 import {
   appBarStyles,
@@ -13,7 +13,7 @@ import {
   loginButtonStyles,
   logoLinkStyles,
   navLinkStyles,
-} from '../styles/HeaderStyles';
+} from '../../styles/Home/HeaderStyles';
 
 export default function Header() {
   return (
@@ -47,12 +47,16 @@ export default function Header() {
           </Box>
 
           <Box sx={actionBoxStyles}>
-            <Button variant={registerButtonStyles.variant} sx={registerButtonStyles.sx}>
-              Register
-            </Button>
-            <Button variant={loginButtonStyles.variant} sx={loginButtonStyles.sx}>
-              Login
-            </Button>
+            <Link href="/register" style={navLinkStyles}>
+              <Button variant={registerButtonStyles.variant} sx={registerButtonStyles.sx}>
+                Register
+              </Button>
+            </Link>
+            <Link href="/login" style={navLinkStyles}>
+              <Button variant={loginButtonStyles.variant} sx={loginButtonStyles.sx}>
+                Login
+              </Button>
+            </Link>
           </Box>
         </Toolbar>
       </Container>

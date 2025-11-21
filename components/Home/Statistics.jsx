@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, Container, Typography } from '@mui/material';
 import Image from 'next/image';
-import StatisticsImage from '../assets/statistic.png';
-import { statisticsStyles } from '../styles/StatisticsStyles';
+import StatisticsImage from '../../assets/statistic.png';
+import { statisticsStyles } from '../../styles/Home/StatisticsStyles';
 
 // const stats = [
 //   { number: '500+', label: 'Students Reached', color: 'secondary.main' },

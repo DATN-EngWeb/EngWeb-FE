@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, Container, Typography, Button } from '@mui/material';
 import Image from 'next/image';
-import HomeImage from '../assets/home.png';
-import { heroSectionStyles } from '../styles/HeroSectionStyles';
+import HomeImage from '../../assets/home.png';
+import { heroSectionStyles } from '../../styles/Home/HeroSectionStyles';
 
 export default function HeroSection() {
   return (

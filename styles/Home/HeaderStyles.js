@@ -46,6 +46,7 @@ export const loginButtonStyles = {
   variant: 'contained',
   sx: {
     backgroundColor: 'primary.main',
+    width: '115px',
     color: 'background.paper',
     borderRadius: 9999,
     px: 3,
