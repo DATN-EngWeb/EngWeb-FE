@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 import {
   Box,
@@ -18,15 +19,39 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 
-import loginImage from '../../assets/login.png';
-import googleImage from '../../assets/google.png';
-import facebookImage from '../../assets/facebook-2.png';
+import loginImage from '../../assets/img/login.png';
+import googleImage from '../../assets/img/google.png';
+import facebookImage from '../../assets/img/facebook-2.png';
 import { loginStyles } from '../../styles/Login/LoginStyles';
 
 export default function Login() {
+  const searchParams = useSearchParams();
+  const role = searchParams.get('role') || '';
   const [showPassword, setShowPassword] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState({});
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const newErrors = {};
+
+    if (!username.trim()) {
+      newErrors.username = 'Please enter your username';
+    }
+
+    if (!password.trim()) {
+      newErrors.password = 'Please enter your password';
+    }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length === 0) {
+      /* empty */
+    }
+  };
 
   return (
     <Box component="main" sx={loginStyles.page}>
@@ -47,7 +72,10 @@ export default function Login() {
                 Login
               </Button>
 
-              <Link href="/register" style={loginStyles.linkNoDecoration}>
+              <Link
+                href={role ? `/register?role=${role}` : '/register'}
+                style={loginStyles.linkNoDecoration}
+              >
                 <Button disableElevation sx={loginStyles.switchButton}>
                   Register
                 </Button>
@@ -55,33 +83,68 @@ export default function Login() {
             </Stack>
           </Box>
 
-          <Box component="form" sx={loginStyles.form}>
-            {/* Username */}
+          <Box component="form" sx={loginStyles.form} onSubmit={handleSubmit}>
             <Box sx={loginStyles.fieldContainer}>
               <Typography sx={loginStyles.fieldLabel}>Username</Typography>
               <TextField
                 name="username"
+                value={username}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  if (errors.username) {
+                    setErrors({ ...errors, username: '' });
+                  }
+                }}
                 placeholder="Enter your User name"
                 fullWidth
+                error={!!errors.username}
+                helperText={errors.username}
                 InputProps={{
-                  sx: loginStyles.textFieldInputProps,
+                  sx: {
+                    ...loginStyles.textFieldInputProps,
+                    ...(errors.username && {
+                      borderColor: 'error.main',
+                      border: '2px solid',
+                    }),
+                  },
                 }}
                 inputProps={{
                   sx: loginStyles.textFieldInputPropsPlaceholder,
                 }}
+                FormHelperTextProps={{
+                  sx: {
+                    color: 'error.main',
+                    margin: '4px 0 0 0',
+                    fontSize: '0.875rem',
+                  },
+                }}
               />
             </Box>
 
-            {/* Password */}
             <Box sx={loginStyles.fieldContainerSmall}>
               <Typography sx={loginStyles.fieldLabel}>Password</Typography>
               <TextField
                 name="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errors.password) {
+                    setErrors({ ...errors, password: '' });
+                  }
+                }}
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Enter your Password"
                 fullWidth
+                error={!!errors.password}
+                helperText={errors.password}
                 InputProps={{
-                  sx: loginStyles.textFieldInputProps,
+                  sx: {
+                    ...loginStyles.textFieldInputProps,
+                    ...(errors.password && {
+                      borderColor: 'error.main',
+                      border: '2px solid',
+                    }),
+                  },
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
@@ -96,6 +159,13 @@ export default function Login() {
                 }}
                 inputProps={{
                   sx: loginStyles.textFieldInputPropsPlaceholder,
+                }}
+                FormHelperTextProps={{
+                  sx: {
+                    color: 'error.main',
+                    margin: '4px 0 0 0',
+                    fontSize: '0.875rem',
+                  },
                 }}
               />
             </Box>

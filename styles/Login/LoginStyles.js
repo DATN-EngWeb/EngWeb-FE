@@ -1,25 +1,27 @@
 export const loginStyles = {
   page: {
-    minHeight: '100vh',
-    px: { xs: 2, md: 2 },
+    height: '100vh',
+    overflow: 'hidden',
     display: 'flex',
     gap: { xs: 4, lg: 6 },
     flexDirection: { xs: 'column', lg: 'row' },
     background: (theme) => theme.palette.background.paper,
   },
   storyPanel: {
-    flex: 1.2,
-    borderRadius: { xs: 3, md: 5 },
-    p: { xs: 3, md: 5 },
+    width: 'auto',
+    height: '100vh',
+    borderRadius: { xs: 0, md: 0 },
     position: 'relative',
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
-    gap: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
   storyImage: {
-    width: '100%',
-    height: 'auto',
+    width: 'auto',
+    height: '100vh',
     objectFit: 'contain',
   },
   linkNoDecoration: {
@@ -133,24 +135,23 @@ export const loginStyles = {
   formPanel: {
     flex: 1,
     display: 'flex',
-    alignItems: 'flex-start',
-    justifyContent: { xs: 'flex-start', lg: 'flex-start' },
-    pt: { xs: 3, md: 5 },
+    alignItems: 'center',
+    justifyContent: { xs: 'center', lg: 'center' },
+    overflow: 'auto',
+    minWidth: 0,
   },
   formCard: {
     width: '100%',
     maxWidth: 650,
     borderRadius: { xs: 3, md: 4 },
-    pt: 0,
-    px: { xs: 3, md: 5 },
-    pb: { xs: 3, md: 5 },
-    ml: { lg: -4 },
+
+    ml: { lg: 0 },
   },
   cardEyebrow: {
     textAlign: 'center',
     fontSize: 24,
     fontWeight: 600,
-    mb: 3,
+    mb: 2,
   },
   switcherWrapper: {
     display: 'flex',
@@ -173,15 +174,15 @@ export const loginStyles = {
     textTransform: 'none',
   },
   switchActive: {
-    backgroundColor: 'warning.main',
+    backgroundColor: 'yellow.main',
     color: 'primary.dark',
-    boxShadow: (theme) => `0 10px 20px ${theme.palette.warning.main}73`,
+    boxShadow: (theme) => `0 10px 20px ${theme.palette.yellow.main}73`,
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 2,
-    mt: 4,
+    gap: 1.5,
+    mt: 2,
   },
   textField: {
     '& .MuiOutlinedInput-root': {
@@ -199,7 +200,7 @@ export const loginStyles = {
     },
   },
   fieldContainer: {
-    mb: 2,
+    mb: 1.5,
   },
   fieldContainerSmall: {
     mb: 1,

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Container, Typography } from '@mui/material';
 import Image from 'next/image';
-import StatisticsImage from '../../assets/statistic.png';
+import StatisticsImage from '../../assets/img/statistic.png';
 import { statisticsStyles } from '../../styles/Home/StatisticsStyles';
 
 // const stats = [

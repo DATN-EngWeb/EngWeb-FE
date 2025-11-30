@@ -4,8 +4,8 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { testimonialsStyles } from '../../styles/Home/TestimonialsStyles';
 import Image from 'next/image';
-import CardImage from '../../assets/card.png';
-import AvatarImg from '../../assets/avatar.png';
+import CardImage from '../../assets/img/card.png';
+import AvatarImg from '../../assets/img/avatar.png';
 
 export default function Testimonials() {
   return (

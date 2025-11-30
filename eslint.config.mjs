@@ -31,6 +31,9 @@ export default [
         module: 'readonly',
         require: 'readonly',
         exports: 'readonly',
+        FileReader: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
       },
     },
     rules: {
@@ -71,6 +74,9 @@ export default [
         exports: 'readonly',
         React: 'readonly',
         localStorage: 'readonly',
+        FileReader: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
       },
     },
     rules: {

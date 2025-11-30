@@ -1,10 +1,10 @@
 import React from 'react';
 import { Box, Container, Typography, Link } from '@mui/material';
 import Image from 'next/image';
-import FacebookImage from '../../assets/facebook.png';
-import LinkedinImage from '../../assets/linkedin.png';
-import TwitterImage from '../../assets/twitter.png';
-import LogoImage from '../../assets/logo.png';
+import FacebookImage from '../../assets/img/facebook.png';
+import LinkedinImage from '../../assets/img/linkedin.png';
+import TwitterImage from '../../assets/img/twitter.png';
+import LogoImage from '../../assets/img/logo.png';
 import { footerStyles } from '../../styles/Home/FooterStyles';
 
 const homeLinks = ['Benefits', 'Our Courses', 'Our Testimonials', 'Our FAQ'];

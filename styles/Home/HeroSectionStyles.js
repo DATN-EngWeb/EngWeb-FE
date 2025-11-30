@@ -29,7 +29,7 @@ export const heroSectionStyles = {
   },
 
   startNowButton: {
-    backgroundColor: 'warning.main',
+    backgroundColor: 'yellow.main',
     color: 'primary.main',
     borderRadius: 9999,
     px: 3,
