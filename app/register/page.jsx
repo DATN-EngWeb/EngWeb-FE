@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import {
@@ -19,7 +19,7 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import registerImage from '../../assets/img/register.png';
 import { loginStyles } from '../../styles/Login/LoginStyles';
 
-export default function Register() {
+function RegisterContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const role = searchParams.get('role') || '';
@@ -225,5 +225,13 @@ export default function Register() {
         </Box>
       </Box>
     </Box>
+  );
+}
+
+export default function Register() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterContent />
+    </Suspense>
   );
 }

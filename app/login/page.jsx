@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 import {
@@ -24,7 +24,7 @@ import googleImage from '../../assets/img/google.png';
 import facebookImage from '../../assets/img/facebook-2.png';
 import { loginStyles } from '../../styles/Login/LoginStyles';
 
-export default function Login() {
+function LoginContent() {
   const searchParams = useSearchParams();
   const role = searchParams.get('role') || '';
   const [showPassword, setShowPassword] = useState(false);
@@ -205,5 +205,13 @@ export default function Login() {
         </Box>
       </Box>
     </Box>
+  );
+}
+
+export default function Login() {
+  return (
+    <Suspense fallback={null}>
+      <LoginContent />
+    </Suspense>
   );
 }
