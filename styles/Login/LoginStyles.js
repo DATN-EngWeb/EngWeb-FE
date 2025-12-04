@@ -144,7 +144,7 @@ export const loginStyles = {
     width: '100%',
     maxWidth: 650,
     borderRadius: { xs: 3, md: 4 },
-
+    pr: '50px',
     ml: { lg: 0 },
   },
   cardEyebrow: {
@@ -183,7 +183,6 @@ export const loginStyles = {
     flexDirection: 'column',
     gap: 1.5,
     mt: 2,
-    pr: '50px',
   },
   textField: {
     '& .MuiOutlinedInput-root': {
