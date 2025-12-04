@@ -183,6 +183,7 @@ export const loginStyles = {
     flexDirection: 'column',
     gap: 1.5,
     mt: 2,
+    pr: '50px',
   },
   textField: {
     '& .MuiOutlinedInput-root': {
@@ -213,7 +214,7 @@ export const loginStyles = {
     border: (theme) => `2px solid ${theme.palette.warning.light}`,
     '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
     px: 2,
-    height: 48,
+    height: 65,
   },
   textFieldInputPropsPlaceholder: {
     '::placeholder': { color: 'text.secondary', opacity: 0.6 },
