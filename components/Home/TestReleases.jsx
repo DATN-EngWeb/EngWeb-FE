@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Container, Typography, Grid, Card, CardContent } from '@mui/material';
-import { testReleasesStyles } from '../styles/TestReleasesStyles';
+import { testReleasesStyles } from '../../styles/Home/TestReleasesStyles';
 
 const testData = [
   { title: 'ETS 2024', color: 'secondary.main', icon: '📊' },

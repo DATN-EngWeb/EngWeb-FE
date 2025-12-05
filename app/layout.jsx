@@ -1,5 +1,5 @@
-import { ThemeProvider } from './theme/ThemeProvider';
-import EmotionCacheProvider from './lib/registry';
+import { ThemeProvider } from '../theme/ThemeProvider';
+import EmotionCacheProvider from '../lib/registry';
 import './globals.css';
 
 export const metadata = {

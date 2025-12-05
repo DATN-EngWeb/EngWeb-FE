@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, Container, Typography, TextField, Button } from '@mui/material';
 import Image from 'next/image';
-import { contactFormStyles } from '../styles/ContactFormStyles';
-import ContactFormImage from '../assets/contact.png';
+import { contactFormStyles } from '../../styles/Home/ContactFormStyles';
+import ContactFormImage from '../../assets/img/contact.png';
 
 export default function ContactForm() {
   return (

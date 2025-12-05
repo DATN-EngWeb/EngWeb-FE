@@ -10,8 +10,8 @@ import {
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import Image from 'next/image';
-import WhatMakesUsDifferentImage from '../assets/different.png';
-import { whatMakesUsDifferentStyles } from '../styles/WhatMakesUsDifferentStyles';
+import WhatMakesUsDifferentImage from '../../assets/img/different.png';
+import { whatMakesUsDifferentStyles } from '../../styles/Home/WhatMakesUsDifferentStyles';
 
 const features = [
   'Teacher & AI Feedback on Speaking and Writing',
