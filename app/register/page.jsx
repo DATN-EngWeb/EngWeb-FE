@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import {
@@ -14,7 +14,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { Visibility, VisibilityOff, ArrowBack } from '@mui/icons-material';
 
 import registerImage from '../../assets/img/register.png';
 import { loginStyles } from '../../styles/Login/LoginStyles';
@@ -28,6 +28,19 @@ function RegisterContent() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
+  const [currentRole, setCurrentRole] = useState('');
+
+  useEffect(() => {
+    // Check localStorage for current logged in role
+    if (typeof window !== 'undefined') {
+      const storedRole = localStorage.getItem('userRole');
+      if (storedRole) {
+        setCurrentRole(storedRole);
+      } else if (role) {
+        setCurrentRole(role);
+      }
+    }
+  }, [role]);
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -67,12 +80,30 @@ function RegisterContent() {
   return (
     <Box component="main" sx={loginStyles.page}>
       <Box component="section" sx={loginStyles.storyPanel}>
+        <Button
+          onClick={() => router.push('/')}
+          sx={loginStyles.backButton}
+          aria-label="Back to home"
+        >
+          <ArrowBack />
+        </Button>
         <Image src={registerImage} alt="Register" style={loginStyles.storyImage} />
       </Box>
 
       <Box component="section" sx={loginStyles.formPanel}>
         <Box sx={loginStyles.formCard}>
           <Typography sx={loginStyles.cardEyebrow}>Welcome to NENS</Typography>
+
+          {currentRole && (
+            <Box sx={loginStyles.roleBadge}>
+              Register as a:{' '}
+              {currentRole === 'student'
+                ? 'student'
+                : currentRole === 'teacher'
+                  ? 'teacher'
+                  : currentRole}
+            </Box>
+          )}
 
           <Box sx={loginStyles.switcherWrapper}>
             <Stack direction="row" sx={loginStyles.switcher}>

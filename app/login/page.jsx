@@ -2,8 +2,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Suspense, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { Suspense, useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 import {
   Box,
@@ -17,7 +17,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { Visibility, VisibilityOff, ArrowBack } from '@mui/icons-material';
 
 import loginImage from '../../assets/img/login.png';
 import googleImage from '../../assets/img/google.png';
@@ -25,12 +25,25 @@ import facebookImage from '../../assets/img/facebook-2.png';
 import { loginStyles } from '../../styles/Login/LoginStyles';
 
 function LoginContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const role = searchParams.get('role') || '';
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
+  const [currentRole, setCurrentRole] = useState('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedRole = localStorage.getItem('userRole');
+      if (storedRole) {
+        setCurrentRole(storedRole);
+      } else if (role) {
+        setCurrentRole(role);
+      }
+    }
+  }, [role]);
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -56,12 +69,30 @@ function LoginContent() {
   return (
     <Box component="main" sx={loginStyles.page}>
       <Box component="section" sx={loginStyles.storyPanel}>
+        <Button
+          onClick={() => router.push('/')}
+          sx={loginStyles.backButton}
+          aria-label="Back to home"
+        >
+          <ArrowBack />
+        </Button>
         <Image src={loginImage} alt="Login" style={loginStyles.storyImage} />
       </Box>
 
       <Box component="section" sx={loginStyles.formPanel}>
         <Box sx={loginStyles.formCard}>
           <Typography sx={loginStyles.cardEyebrow}>Welcome to NENS</Typography>
+
+          {currentRole && (
+            <Box sx={loginStyles.roleBadge}>
+              Login as a{' '}
+              {currentRole === 'student'
+                ? 'student'
+                : currentRole === 'teacher'
+                  ? 'teacher'
+                  : currentRole}
+            </Box>
+          )}
 
           <Box sx={loginStyles.switcherWrapper}>
             <Stack direction="row" sx={loginStyles.switcher}>
