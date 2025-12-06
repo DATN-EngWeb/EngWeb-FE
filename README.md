@@ -4,11 +4,11 @@
 
 ## Tech Stack
 
-- **Framework:** Next.js 15.5.4 (with Turbopack)
+- **Framework:** Next.js 16.0.7 (with Turbopack)
 - **Language:** TypeScript 5
 - **UI Library:** React 19.1.0
 - **Styling:** TailwindCSS 4 + PostCSS
-- **Authentication:** NextAuth.js v4
+- **Authentication:** NextAuth.js v5
 - **Code Quality:**
   - ESLint 9 (Flat Config)
   - Prettier 3
