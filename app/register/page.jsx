@@ -96,7 +96,7 @@ function RegisterContent() {
 
           {currentRole && (
             <Box sx={loginStyles.roleBadge}>
-              Register as a:{' '}
+              Register as a{' '}
               {currentRole === 'student'
                 ? 'student'
                 : currentRole === 'teacher'
