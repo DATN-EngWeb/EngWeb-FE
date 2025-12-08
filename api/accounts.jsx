@@ -14,15 +14,19 @@ async function handleResponse(response) {
     return data ?? {};
   }
 
-  const message =
+  // Create error with full data for detailed error handling
+  const error = new Error();
+  error.message =
     data?.message ||
     data?.detail ||
     data?.error ||
     data?.errors ||
     Object.values(data || {})?.[0]?.[0] ||
     'Something went wrong';
+  error.data = data; // Include full error data
+  error.status = response.status;
 
-  throw new Error(typeof message === 'string' ? message : 'Something went wrong');
+  throw error;
 }
 
 export async function registerUser({ username, email, password, role }) {
@@ -67,6 +71,68 @@ export async function resendRegistrationOtp({ userId }) {
     },
     body: JSON.stringify({
       user_id: userId,
+    }),
+    cache: 'no-store',
+  });
+
+  return handleResponse(response);
+}
+
+export async function createTeacherProfile(formData) {
+  const response = await fetch(`${ACCOUNTS_BASE_URL}/teachers`, {
+    method: 'POST',
+    body: formData,
+    cache: 'no-store',
+  });
+
+  return handleResponse(response);
+}
+
+export async function login({ username, password }) {
+  const response = await fetch(`${ACCOUNTS_BASE_URL}/token`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      username,
+      password,
+    }),
+    cache: 'no-store',
+  });
+
+  return handleResponse(response);
+}
+
+export async function refreshToken(refreshTokenValue) {
+  const response = await fetch(`${ACCOUNTS_BASE_URL}/token/refresh`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      refresh: refreshTokenValue,
+    }),
+    cache: 'no-store',
+  });
+
+  return handleResponse(response);
+}
+
+export async function logout(refreshTokenValue, accessToken) {
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  const response = await fetch(`${ACCOUNTS_BASE_URL}/logout`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      refresh: refreshTokenValue,
     }),
     cache: 'no-store',
   });

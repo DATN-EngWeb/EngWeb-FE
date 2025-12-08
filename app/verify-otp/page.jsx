@@ -81,7 +81,7 @@ export default function VerifyOTPPage() {
 
       const nextRole = role || 'student';
       const redirectUrl =
-        nextRole === 'teacher' ? '/upload-certificate' : `/login?role=${nextRole}`;
+        nextRole === 'teacher' ? `/upload-profile?user_id=${userId}` : `/login?role=${nextRole}`;
 
       setTimeout(() => {
         router.push(redirectUrl);

@@ -16,6 +16,7 @@ import {
   Stack,
   TextField,
   Typography,
+  Alert,
 } from '@mui/material';
 import { Visibility, VisibilityOff, ArrowBack } from '@mui/icons-material';
 
@@ -23,6 +24,7 @@ import loginImage from '../../assets/img/login.png';
 import googleImage from '../../assets/img/google.png';
 import facebookImage from '../../assets/img/facebook-2.png';
 import { loginStyles } from '../../styles/Login/LoginStyles';
+import { login as loginAPI } from '../../api/accounts';
 
 function LoginContent() {
   const router = useRouter();
@@ -33,6 +35,8 @@ function LoginContent() {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [currentRole, setCurrentRole] = useState('');
+  const [serverError, setServerError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -47,12 +51,13 @@ function LoginContent() {
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setServerError('');
     const newErrors = {};
 
     if (!username.trim()) {
-      newErrors.username = 'Please enter your username';
+      newErrors.username = 'Please enter your username or email';
     }
 
     if (!password.trim()) {
@@ -61,8 +66,92 @@ function LoginContent() {
 
     setErrors(newErrors);
 
-    if (Object.keys(newErrors).length === 0) {
-      /* empty */
+    if (Object.keys(newErrors).length > 0) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const response = await loginAPI({
+        username: username.trim(),
+        password: password.trim(),
+      });
+
+      // Case 1: Success - status V (Verified)
+      if (response.access && response.refresh && response.status === 'V') {
+        // Save tokens and user info
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('accessToken', response.access);
+          localStorage.setItem('refreshToken', response.refresh);
+          localStorage.setItem('userId', String(response.user_id));
+          localStorage.setItem('username', response.username || '');
+          localStorage.setItem('userRole', response.role || '');
+          localStorage.setItem('avatar', response.avatar || '');
+          localStorage.setItem('userStatus', response.status || '');
+        }
+
+        // Redirect to home
+        router.push('/');
+        return;
+      }
+
+      // Case 2: Pending Verification - status P
+      if (response.require_verification && response.user_id) {
+        const userRole = response.role || currentRole || 'student';
+        router.push(`/verify-otp?user_id=${response.user_id}&role=${userRole}`);
+        return;
+      }
+
+      // Case 3: Incomplete Profile - status I
+      if (response.require_certificate && response.user_id) {
+        router.push(`/upload-profile?user_id=${response.user_id}`);
+        return;
+      }
+
+      // Case 4: Waiting Approval - status W
+      if (response.status === 'W') {
+        setServerError('Account pending approval. Please wait for admin review.');
+        return;
+      }
+
+      // Case 5: Disabled - status D
+      if (response.status === 'D') {
+        setServerError('Account has been disabled.');
+        return;
+      }
+
+      // Fallback: unexpected response
+      setServerError('Login failed. Please try again.');
+    } catch (err) {
+      // Handle error response
+      const errorData = err?.data || {};
+
+      // Check if it's a status-based error (P, I, W, D)
+      if (errorData.require_verification && errorData.user_id) {
+        const userRole = errorData.role || currentRole || 'student';
+        router.push(`/verify-otp?user_id=${errorData.user_id}&role=${userRole}`);
+        return;
+      }
+
+      if (errorData.require_certificate && errorData.user_id) {
+        router.push(`/upload-profile?user_id=${errorData.user_id}`);
+        return;
+      }
+
+      if (errorData.status === 'W') {
+        setServerError('Account pending approval. Please wait for admin review.');
+        return;
+      }
+
+      if (errorData.status === 'D') {
+        setServerError('Account has been disabled.');
+        return;
+      }
+
+      // Default error message
+      setServerError(err?.message || 'Invalid username/email or password. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -115,8 +204,14 @@ function LoginContent() {
           </Box>
 
           <Box component="form" sx={loginStyles.form} onSubmit={handleSubmit}>
+            {serverError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {serverError}
+              </Alert>
+            )}
+
             <Box sx={loginStyles.fieldContainer}>
-              <Typography sx={loginStyles.fieldLabel}>Username</Typography>
+              <Typography sx={loginStyles.fieldLabel}>Username or Email</Typography>
               <TextField
                 name="username"
                 value={username}
@@ -126,7 +221,7 @@ function LoginContent() {
                     setErrors({ ...errors, username: '' });
                   }
                 }}
-                placeholder="Enter your User name"
+                placeholder="Enter your username or email"
                 fullWidth
                 error={!!errors.username}
                 helperText={errors.username}
@@ -212,8 +307,13 @@ function LoginContent() {
               </Button>
             </Box>
 
-            <Button type="submit" variant="contained" sx={loginStyles.primaryButton}>
-              Login
+            <Button
+              type="submit"
+              variant="contained"
+              sx={loginStyles.primaryButton}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Logging in...' : 'Login'}
             </Button>
           </Box>
 
