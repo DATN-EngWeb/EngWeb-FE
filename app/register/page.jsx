@@ -34,14 +34,18 @@ function RegisterContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    // Check localStorage for current logged in role
-    if (typeof window !== 'undefined') {
-      const storedRole = localStorage.getItem('userRole');
-      if (storedRole) {
-        setCurrentRole(storedRole);
-      } else if (role) {
-        setCurrentRole(role);
-      }
+    // Prefer role from URL; fall back to stored role
+    if (typeof window === 'undefined') return;
+
+    if (role) {
+      setCurrentRole(role);
+      localStorage.setItem('userRole', role);
+      return;
+    }
+
+    const storedRole = localStorage.getItem('userRole');
+    if (storedRole) {
+      setCurrentRole(storedRole);
     }
   }, [role]);
 

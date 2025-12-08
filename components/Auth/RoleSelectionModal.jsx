@@ -31,8 +31,8 @@ export default function RoleSelectionModal({ open, onClose, onSelectRole, action
           <Card
             sx={roleModalStyles.card}
             onClick={() => handleRoleSelect('student')}
-            component="button"
-            type="button"
+            role="button"
+            tabIndex={0}
           >
             <CardContent sx={roleModalStyles.cardContent}>
               <Box sx={roleModalStyles.iconContainer}>
@@ -44,9 +44,9 @@ export default function RoleSelectionModal({ open, onClose, onSelectRole, action
                   style={roleModalStyles.icon}
                 />
               </Box>
-              <Button variant="contained" sx={roleModalStyles.roleButton} fullWidth>
+              <Box component="span" sx={roleModalStyles.roleButton}>
                 I am a student
-              </Button>
+              </Box>
             </CardContent>
           </Card>
 
@@ -54,8 +54,8 @@ export default function RoleSelectionModal({ open, onClose, onSelectRole, action
           <Card
             sx={roleModalStyles.card}
             onClick={() => handleRoleSelect('teacher')}
-            component="button"
-            type="button"
+            role="button"
+            tabIndex={0}
           >
             <CardContent sx={roleModalStyles.cardContent}>
               <Box sx={roleModalStyles.iconContainer}>
@@ -67,9 +67,9 @@ export default function RoleSelectionModal({ open, onClose, onSelectRole, action
                   style={roleModalStyles.icon}
                 />
               </Box>
-              <Button variant="contained" sx={roleModalStyles.roleButton} fullWidth>
+              <Box component="span" sx={roleModalStyles.roleButton}>
                 I am a teacher
-              </Button>
+              </Box>
             </CardContent>
           </Card>
         </Box>
