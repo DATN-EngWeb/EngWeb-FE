@@ -786,10 +786,14 @@ function UploadProfileContent({ userId }) {
   );
 }
 
-export default function UploadProfilePage() {
+function UploadProfileWithParams() {
   const searchParams = useSearchParams();
   const userId = searchParams.get('user_id');
 
+  return <UploadProfileContent userId={userId} />;
+}
+
+export default function UploadProfilePage() {
   return (
     <Suspense
       fallback={
@@ -806,7 +810,7 @@ export default function UploadProfilePage() {
         </Box>
       }
     >
-      <UploadProfileContent userId={userId} />
+      <UploadProfileWithParams />
     </Suspense>
   );
 }
