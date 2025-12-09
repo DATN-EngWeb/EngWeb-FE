@@ -302,9 +302,11 @@ function LoginContent() {
                 label="Remember me"
                 sx={loginStyles.rememberMeLabel}
               />
-              <Button variant="text" sx={loginStyles.forgotPasswordButton}>
-                Forgot Password ?
-              </Button>
+              <Link href="/forgot-password" style={{ textDecoration: 'none' }}>
+                <Button variant="text" sx={loginStyles.forgotPasswordButton}>
+                  Forgot Password ?
+                </Button>
+              </Link>
             </Box>
 
             <Button

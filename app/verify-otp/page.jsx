@@ -17,7 +17,12 @@ import { ArrowBack, Verified } from '@mui/icons-material';
 
 import registerImage from '../../assets/img/register.png';
 import { loginStyles } from '../../styles/Login/LoginStyles';
-import { resendRegistrationOtp, verifyRegistrationOtp } from '../../api/accounts.jsx';
+import {
+  resendRegistrationOtp,
+  verifyRegistrationOtp,
+  verifyForgotPasswordOtp,
+  resendForgotPasswordOtp,
+} from '../../api/accounts.jsx';
 
 function VerifyOTPContent() {
   const router = useRouter();
@@ -29,26 +34,42 @@ function VerifyOTPContent() {
   const [successMessage, setSuccessMessage] = useState('');
   const [userId, setUserId] = useState('');
   const [role, setRole] = useState('');
+  const [username, setUsername] = useState('');
+  const [verifyType, setVerifyType] = useState('register'); // 'register' or 'forgot_password'
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const queryUserId = searchParams.get('user_id');
-    const queryRole = searchParams.get('role');
-    const storedUserId = localStorage.getItem('registrationUserId');
-    const storedRole = localStorage.getItem('registrationRole');
+    const type = searchParams.get('type') || 'register';
+    setVerifyType(type);
 
-    const resolvedUserId = queryUserId || storedUserId || '';
-    const resolvedRole = (queryRole || storedRole || '').toLowerCase();
+    if (type === 'forgot_password') {
+      // Forgot password flow - use username
+      const storedUsername = localStorage.getItem('forgotPasswordUsername');
+      setUsername(storedUsername || '');
+    } else {
+      // Registration flow - use user_id
+      const queryUserId = searchParams.get('user_id');
+      const queryRole = searchParams.get('role');
+      const storedUserId = localStorage.getItem('registrationUserId');
+      const storedRole = localStorage.getItem('registrationRole');
 
-    setUserId(resolvedUserId);
-    setRole(resolvedRole);
+      const resolvedUserId = queryUserId || storedUserId || '';
+      const resolvedRole = (queryRole || storedRole || '').toLowerCase();
+
+      setUserId(resolvedUserId);
+      setRole(resolvedRole);
+    }
   }, [searchParams]);
 
   const handleBack = () => {
-    router.push('/register');
+    if (verifyType === 'forgot_password') {
+      router.push('/forgot-password');
+    } else {
+      router.push('/register');
+    }
   };
 
   const handleVerify = async (e) => {
@@ -63,8 +84,14 @@ function VerifyOTPContent() {
       newErrors.otpCode = 'OTP code must be 6 digits';
     }
 
-    if (!userId) {
-      newErrors.userId = 'Missing user id. Please register again.';
+    if (verifyType === 'forgot_password') {
+      if (!username) {
+        newErrors.username = 'Missing username. Please request password reset again.';
+      }
+    } else {
+      if (!userId) {
+        newErrors.userId = 'Missing user id. Please register again.';
+      }
     }
 
     setErrors(newErrors);
@@ -72,20 +99,44 @@ function VerifyOTPContent() {
 
     try {
       setIsVerifying(true);
-      await verifyRegistrationOtp({
-        userId,
-        otpCode: otpCode.trim(),
-      });
 
-      setSuccessMessage('Verified successfully!');
+      if (verifyType === 'forgot_password') {
+        // Forgot password flow
+        const response = await verifyForgotPasswordOtp({
+          username,
+          otpCode: otpCode.trim(),
+        });
 
-      const nextRole = role || 'student';
-      const redirectUrl =
-        nextRole === 'teacher' ? `/upload-profile?user_id=${userId}` : `/login?role=${nextRole}`;
+        if (response.reset_token) {
+          // Store reset token
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('resetToken', response.reset_token);
+            localStorage.removeItem('forgotPasswordUsername');
+          }
 
-      setTimeout(() => {
-        router.push(redirectUrl);
-      }, 600);
+          setSuccessMessage('OTP verified successfully!');
+
+          setTimeout(() => {
+            router.push('/reset-password');
+          }, 600);
+        }
+      } else {
+        // Registration flow
+        await verifyRegistrationOtp({
+          userId,
+          otpCode: otpCode.trim(),
+        });
+
+        setSuccessMessage('Verified successfully!');
+
+        const nextRole = role || 'student';
+        const redirectUrl =
+          nextRole === 'teacher' ? `/upload-profile?user_id=${userId}` : `/login?role=${nextRole}`;
+
+        setTimeout(() => {
+          router.push(redirectUrl);
+        }, 600);
+      }
     } catch (err) {
       setServerError(err?.message || 'Verification failed. Please try again.');
     } finally {
@@ -96,19 +147,37 @@ function VerifyOTPContent() {
   const handleResend = async () => {
     setServerError('');
     setSuccessMessage('');
-    if (!userId) {
-      setErrors({ userId: 'Missing user id. Please register again.' });
-      return;
-    }
 
-    try {
-      setIsResending(true);
-      await resendRegistrationOtp({ userId });
-      setSuccessMessage('A new OTP has been sent to your email.');
-    } catch (err) {
-      setServerError(err?.message || 'Failed to resend OTP. Please try again.');
-    } finally {
-      setIsResending(false);
+    if (verifyType === 'forgot_password') {
+      if (!username) {
+        setErrors({ username: 'Missing username. Please request password reset again.' });
+        return;
+      }
+
+      try {
+        setIsResending(true);
+        await resendForgotPasswordOtp({ username });
+        setSuccessMessage('A new OTP has been sent to your email.');
+      } catch (err) {
+        setServerError(err?.message || 'Failed to resend OTP. Please try again.');
+      } finally {
+        setIsResending(false);
+      }
+    } else {
+      if (!userId) {
+        setErrors({ userId: 'Missing user id. Please register again.' });
+        return;
+      }
+
+      try {
+        setIsResending(true);
+        await resendRegistrationOtp({ userId });
+        setSuccessMessage('A new OTP has been sent to your email.');
+      } catch (err) {
+        setServerError(err?.message || 'Failed to resend OTP. Please try again.');
+      } finally {
+        setIsResending(false);
+      }
     }
   };
 
@@ -123,7 +192,9 @@ function VerifyOTPContent() {
 
       <Box component="section" sx={loginStyles.formPanel}>
         <Box sx={loginStyles.formCard}>
-          <Typography sx={loginStyles.cardEyebrow}>Verify your account</Typography>
+          <Typography sx={loginStyles.cardEyebrow}>
+            {verifyType === 'forgot_password' ? 'Verify Password Reset' : 'Verify your account'}
+          </Typography>
 
           <Box sx={{ ...loginStyles.switcherWrapper, mb: 2 }}>
             <Stack direction="row" spacing={1} alignItems="center">
@@ -181,9 +252,9 @@ function VerifyOTPContent() {
               />
             </Box>
 
-            {errors.userId && (
+            {(errors.userId || errors.username) && (
               <Typography color="error" fontSize="0.9rem">
-                {errors.userId}
+                {errors.userId || errors.username}
               </Typography>
             )}
             {serverError && (

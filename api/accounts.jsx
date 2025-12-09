@@ -139,3 +139,65 @@ export async function logout(refreshTokenValue, accessToken) {
 
   return handleResponse(response);
 }
+
+export async function forgotPassword(usernameOrEmail) {
+  const response = await fetch(`${ACCOUNTS_BASE_URL}/forgot-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      username_or_email: usernameOrEmail,
+    }),
+    cache: 'no-store',
+  });
+
+  return handleResponse(response);
+}
+
+export async function verifyForgotPasswordOtp({ username, otpCode }) {
+  const response = await fetch(`${ACCOUNTS_BASE_URL}/verify-otp/forgot-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      username,
+      otp_code: otpCode,
+    }),
+    cache: 'no-store',
+  });
+
+  return handleResponse(response);
+}
+
+export async function resendForgotPasswordOtp({ username }) {
+  const response = await fetch(`${ACCOUNTS_BASE_URL}/resend-otp/forgot-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      username,
+    }),
+    cache: 'no-store',
+  });
+
+  return handleResponse(response);
+}
+
+export async function resetPassword({ resetToken, newPassword }) {
+  const response = await fetch(`${ACCOUNTS_BASE_URL}/reset-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      reset_token: resetToken,
+      new_password: newPassword,
+    }),
+    cache: 'no-store',
+  });
+
+  return handleResponse(response);
+}
