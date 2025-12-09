@@ -33,6 +33,12 @@ export default function RoleSelectionModal({ open, onClose, onSelectRole, action
             onClick={() => handleRoleSelect('student')}
             role="button"
             tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleRoleSelect('student');
+              }
+            }}
           >
             <CardContent sx={roleModalStyles.cardContent}>
               <Box sx={roleModalStyles.iconContainer}>
@@ -56,6 +62,12 @@ export default function RoleSelectionModal({ open, onClose, onSelectRole, action
             onClick={() => handleRoleSelect('teacher')}
             role="button"
             tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleRoleSelect('teacher');
+              }
+            }}
           >
             <CardContent sx={roleModalStyles.cardContent}>
               <Box sx={roleModalStyles.iconContainer}>

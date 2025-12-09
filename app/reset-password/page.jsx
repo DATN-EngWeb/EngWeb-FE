@@ -15,7 +15,7 @@ import {
   InputAdornment,
 } from '@mui/material';
 import { Visibility, VisibilityOff, ArrowBack } from '@mui/icons-material';
-
+import Logo from '../../assets/img/logo.png';
 import registerImage from '../../assets/img/register.png';
 import { loginStyles } from '../../styles/Login/LoginStyles';
 import { resetPassword } from '../../api/accounts';
@@ -136,7 +136,7 @@ function ResetPasswordContent() {
           sx={loginStyles.backButton}
           aria-label="Back to forgot password"
         >
-          <ArrowBack />
+          <Image src={Logo} alt="NENS" width={32} height={24} />
         </Button>
         <Image src={registerImage} alt="Reset Password" style={loginStyles.storyImage} />
       </Box>

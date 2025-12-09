@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 
 import { Box, Button, TextField, Typography, Alert } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
-
+import Logo from '../../assets/img/logo.png';
 import registerImage from '../../assets/img/register.png';
 import { loginStyles } from '../../styles/Login/LoginStyles';
 import { forgotPassword } from '../../api/accounts';
@@ -94,7 +94,7 @@ function ForgotPasswordContent() {
           sx={loginStyles.backButton}
           aria-label="Back to login"
         >
-          <ArrowBack />
+          <Image src={Logo} alt="NENS" width={32} height={24} />
         </Button>
         <Image src={registerImage} alt="Forgot Password" style={loginStyles.storyImage} />
       </Box>

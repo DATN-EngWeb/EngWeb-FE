@@ -14,7 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import { ArrowBack, Verified } from '@mui/icons-material';
-
+import Logo from '../../assets/img/logo.png';
 import registerImage from '../../assets/img/register.png';
 import { loginStyles } from '../../styles/Login/LoginStyles';
 import {
@@ -185,7 +185,7 @@ function VerifyOTPContent() {
     <Box component="main" sx={loginStyles.page}>
       <Box component="section" sx={loginStyles.storyPanel}>
         <Button onClick={handleBack} sx={loginStyles.backButton} aria-label="Back to register">
-          <ArrowBack />
+          <Image src={Logo} alt="NENS" width={32} height={24} />
         </Button>
         <Image src={registerImage} alt="Verify OTP" style={loginStyles.storyImage} />
       </Box>

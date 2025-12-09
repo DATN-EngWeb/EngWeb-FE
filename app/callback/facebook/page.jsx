@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Box, CircularProgress, Typography, Alert } from '@mui/material';
 import { facebookLogin } from '../../../api/accounts';
@@ -12,105 +12,97 @@ function FacebookCallbackContent() {
   const [error, setError] = useState(null);
   const [isProcessing, setIsProcessing] = useState(true);
 
-  useEffect(() => {
-    const handleCallback = async () => {
-      try {
-        const code = searchParams.get('code');
-        const state = searchParams.get('state');
+  const handleCallback = useCallback(async () => {
+    try {
+      const code = searchParams.get('code');
+      const state = searchParams.get('state');
 
-        if (!code) {
-          setError('No authorization code received from Facebook');
-          setIsProcessing(false);
-          setTimeout(() => router.push('/login'), 3000);
-          return;
-        }
-
-        let role = 'S';
-        if (state) {
-          try {
-            const stateData = JSON.parse(decodeURIComponent(state));
-            role = stateData.role || 'S';
-          } catch (_e) {
-            role = 'S';
-          }
-        }
-
-        const response = await facebookLogin(code, role);
-
-        // Save tokens only when provided (status V flows)
-        if (typeof window !== 'undefined') {
-          const decoded = response.access ? decodeJwt(response.access) : null;
-          const userIdFromToken = decoded?.user_id;
-          const roleFromToken = decoded?.role;
-
-          if (response.access && response.refresh) {
-            localStorage.setItem('accessToken', response.access);
-            localStorage.setItem('refreshToken', response.refresh);
-            localStorage.setItem('userId', String(userIdFromToken || ''));
-            localStorage.setItem('username', response.username || '');
-            localStorage.setItem('userRole', roleFromToken || '');
-            localStorage.setItem('avatar', response.avatar || '');
-            localStorage.setItem('userStatus', response.status || '');
-          }
-        }
-
-        // Redirect based on status/flags
-        if (response.status === 'V') {
-          router.push('/');
-          return;
-        }
-
-        if (response.require_profile || response.status === 'I') {
-          // Teacher incomplete profile: no tokens, redirect to upload-profile
-          router.push(`/upload-profile?user_id=${response.user_id}`);
-          return;
-        }
-
-        if (response.status === 'P') {
-          // Fallback: pending verification (should not happen for current backend), send to OTP
-          router.push(
-            `/verify-otp?type=register&user_id=${response.user_id}&role=${response.role === 'T' ? 'teacher' : 'student'}`,
-          );
-          return;
-        }
-
-        if (response.status === 'W') {
-          setError('Your account is waiting for admin approval');
-          setIsProcessing(false);
-          setTimeout(() => router.push('/login'), 3000);
-          return;
-        }
-
-        if (response.status === 'D') {
-          setError('Your account has been disabled');
-          setIsProcessing(false);
-          setTimeout(() => router.push('/login'), 3000);
-          return;
-        }
-
-        // Admin not implemented or other unexpected cases
-        if (response.error) {
-          setError(response.error);
-          setIsProcessing(false);
-          setTimeout(() => router.push('/login'), 3000);
-          return;
-        }
-
-        // Default fallback
-        router.push('/');
-      } catch (err) {
-        setError(
-          err.message ||
-            err.data?.error ||
-            'Failed to authenticate with Facebook. Please try again.',
-        );
+      if (!code) {
+        setError('No authorization code received from Facebook');
         setIsProcessing(false);
         setTimeout(() => router.push('/login'), 3000);
+        return;
       }
-    };
 
-    handleCallback();
+      let role = 'S';
+      if (state) {
+        try {
+          const stateData = JSON.parse(decodeURIComponent(state));
+          role = stateData.role || 'S';
+        } catch {
+          role = 'S';
+        }
+      }
+
+      const response = await facebookLogin(code, role);
+
+      if (typeof window !== 'undefined') {
+        const decoded = response.access ? decodeJwt(response.access) : null;
+        const userIdFromToken = decoded?.user_id;
+        const roleFromToken = decoded?.role;
+
+        if (response.access && response.refresh) {
+          localStorage.setItem('accessToken', response.access);
+          localStorage.setItem('refreshToken', response.refresh);
+          localStorage.setItem('userId', String(userIdFromToken || ''));
+          localStorage.setItem('username', response.username || '');
+          localStorage.setItem('userRole', roleFromToken || '');
+          localStorage.setItem('avatar', response.avatar || '');
+          localStorage.setItem('userStatus', response.status || '');
+        }
+      }
+
+      if (response.status === 'V') {
+        router.push('/');
+        return;
+      }
+
+      if (response.require_profile || response.status === 'I') {
+        router.push(`/upload-profile?user_id=${response.user_id}`);
+        return;
+      }
+
+      if (response.status === 'P') {
+        router.push(
+          `/verify-otp?type=register&user_id=${response.user_id}&role=${response.role === 'T' ? 'teacher' : 'student'}`,
+        );
+        return;
+      }
+
+      if (response.status === 'W') {
+        setError('Your account is waiting for admin approval');
+        setIsProcessing(false);
+        setTimeout(() => router.push('/login'), 3000);
+        return;
+      }
+
+      if (response.status === 'D') {
+        setError('Your account has been disabled');
+        setIsProcessing(false);
+        setTimeout(() => router.push('/login'), 3000);
+        return;
+      }
+
+      if (response.error) {
+        setError(response.error);
+        setIsProcessing(false);
+        setTimeout(() => router.push('/login'), 3000);
+        return;
+      }
+
+      router.push('/');
+    } catch (err) {
+      setError(
+        err.message || err.data?.error || 'Failed to authenticate with Facebook. Please try again.',
+      );
+      setIsProcessing(false);
+      setTimeout(() => router.push('/login'), 3000);
+    }
   }, [searchParams, router]);
+
+  useEffect(() => {
+    handleCallback();
+  }, [handleCallback]);
 
   if (error) {
     return (

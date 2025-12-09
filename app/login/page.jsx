@@ -19,7 +19,7 @@ import {
   Alert,
 } from '@mui/material';
 import { Visibility, VisibilityOff, ArrowBack } from '@mui/icons-material';
-
+import Logo from '../../assets/img/logo.png';
 import loginImage from '../../assets/img/login.png';
 import googleImage from '../../assets/img/google.png';
 import facebookImage from '../../assets/img/facebook-2.png';
@@ -224,7 +224,7 @@ function LoginContent() {
           sx={loginStyles.backButton}
           aria-label="Back to home"
         >
-          <ArrowBack />
+          <Image src={Logo} alt="NENS" width={32} height={24} />
         </Button>
         <Image src={loginImage} alt="Login" style={loginStyles.storyImage} />
       </Box>

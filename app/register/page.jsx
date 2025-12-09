@@ -15,7 +15,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Visibility, VisibilityOff, ArrowBack } from '@mui/icons-material';
-
+import Logo from '../../assets/img/logo.png';
 import registerImage from '../../assets/img/register.png';
 import { loginStyles } from '../../styles/Login/LoginStyles';
 import { registerUser } from '../../api/accounts.jsx';
@@ -119,7 +119,7 @@ function RegisterContent() {
           sx={loginStyles.backButton}
           aria-label="Back to home"
         >
-          <ArrowBack />
+          <Image src={Logo} alt="NENS" width={32} height={24} />
         </Button>
         <Image src={registerImage} alt="Register" style={loginStyles.storyImage} />
       </Box>

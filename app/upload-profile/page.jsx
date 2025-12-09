@@ -3,31 +3,17 @@
 import Image from 'next/image';
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  Alert,
-  MenuItem,
-  InputAdornment,
-  IconButton,
-} from '@mui/material';
-import {
-  Visibility,
-  VisibilityOff,
-  ArrowBack,
-  CloudUpload,
-  PictureAsPdf,
-} from '@mui/icons-material';
+import { Box, Button, TextField, Typography, Alert, MenuItem } from '@mui/material';
+import { ArrowBack, CloudUpload, PictureAsPdf } from '@mui/icons-material';
 import { loginStyles } from '../../styles/Login/LoginStyles';
 import registerImage from '../../assets/img/register.png';
 import { createTeacherProfile } from '../../api/accounts';
+import Logo from '../../assets/img/logo.png';
 
 function UploadProfileContent({ userId }) {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    full_name: '', // test build
+    full_name: '',
     date_of_birth: '',
     current_workplace: '',
     teacher_type: 'F',
@@ -279,7 +265,7 @@ function UploadProfileContent({ userId }) {
           sx={loginStyles.backButton}
           aria-label="Back to home"
         >
-          <ArrowBack />
+          <Image src={Logo} alt="NENS" width={32} height={24} />
         </Button>
         <Image src={registerImage} alt="Complete Profile" style={loginStyles.storyImage} />
       </Box>
@@ -714,10 +700,7 @@ function UploadProfileContent({ userId }) {
                             <Button
                               variant="text"
                               size="small"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                handleRemoveCredential(index)();
-                              }}
+                              onClick={handleRemoveCredential(index)}
                               sx={{
                                 color: 'error.main',
                                 textTransform: 'none',
