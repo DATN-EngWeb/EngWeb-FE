@@ -1,7 +1,10 @@
 /* eslint-env browser */
 /* global fetch */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+if (!API_BASE_URL) {
+  throw new Error('NEXT_PUBLIC_API_BASE_URL is required but not set in .env');
+}
 const ACCOUNTS_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/accounts`;
 
 async function handleResponse(response) {
@@ -195,6 +198,38 @@ export async function resetPassword({ resetToken, newPassword }) {
     body: JSON.stringify({
       reset_token: resetToken,
       new_password: newPassword,
+    }),
+    cache: 'no-store',
+  });
+
+  return handleResponse(response);
+}
+
+export async function googleLogin(code, role = 'S') {
+  const response = await fetch(`${ACCOUNTS_BASE_URL}/auth/google/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      code,
+      role,
+    }),
+    cache: 'no-store',
+  });
+
+  return handleResponse(response);
+}
+
+export async function facebookLogin(code, role = 'S') {
+  const response = await fetch(`${ACCOUNTS_BASE_URL}/auth/facebook/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      code,
+      role,
     }),
     cache: 'no-store',
   });

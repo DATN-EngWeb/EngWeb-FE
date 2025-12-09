@@ -25,6 +25,7 @@ import googleImage from '../../assets/img/google.png';
 import facebookImage from '../../assets/img/facebook-2.png';
 import { loginStyles } from '../../styles/Login/LoginStyles';
 import { login as loginAPI } from '../../api/accounts';
+import { decodeJwt } from '../../utils/jwt';
 
 function LoginContent() {
   const router = useRouter();
@@ -50,6 +51,62 @@ function LoginContent() {
   }, [role]);
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
+
+  const handleGoogleLogin = () => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
+    const scope = 'email profile';
+
+    if (!clientId) {
+      setServerError('Google OAuth is not configured. Please contact support.');
+      return;
+    }
+
+    if (!redirectUri) {
+      setServerError('Google redirect URI is not configured. Please contact support.');
+      return;
+    }
+
+    // Get role from currentRole or default to 'S' (Student)
+    const role = currentRole === 'teacher' ? 'T' : 'S';
+
+    // Encode role in state parameter
+    const state = encodeURIComponent(JSON.stringify({ role }));
+
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent&state=${state}`;
+
+    window.location.href = authUrl;
+  };
+
+  const handleFacebookLogin = () => {
+    const clientId = process.env.NEXT_PUBLIC_FACEBOOK_CLIENT_ID;
+    const redirectUri = process.env.NEXT_PUBLIC_FACEBOOK_REDIRECT_URI;
+    const scope = process.env.NEXT_PUBLIC_FACEBOOK_SCOPE;
+
+    if (!clientId) {
+      setServerError('Facebook OAuth is not configured. Please contact support.');
+      return;
+    }
+
+    if (!redirectUri) {
+      setServerError('Facebook redirect URI is not configured. Please contact support.');
+      return;
+    }
+
+    if (!scope) {
+      setServerError('Facebook scope is not configured. Please contact support.');
+      return;
+    }
+
+    const role = currentRole === 'teacher' ? 'T' : 'S';
+    const state = encodeURIComponent(JSON.stringify({ role }));
+
+    const authUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(
+      redirectUri,
+    )}&state=${state}&response_type=code&scope=${encodeURIComponent(scope)}`;
+
+    window.location.href = authUrl;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -79,13 +136,17 @@ function LoginContent() {
 
       // Case 1: Success - status V (Verified)
       if (response.access && response.refresh && response.status === 'V') {
+        const decoded = decodeJwt(response.access);
+        const userIdFromToken = decoded?.user_id;
+        const roleFromToken = decoded?.role;
+
         // Save tokens and user info
         if (typeof window !== 'undefined') {
           localStorage.setItem('accessToken', response.access);
           localStorage.setItem('refreshToken', response.refresh);
-          localStorage.setItem('userId', String(response.user_id));
+          localStorage.setItem('userId', String(userIdFromToken || ''));
           localStorage.setItem('username', response.username || '');
-          localStorage.setItem('userRole', response.role || '');
+          localStorage.setItem('userRole', roleFromToken || '');
           localStorage.setItem('avatar', response.avatar || '');
           localStorage.setItem('userStatus', response.status || '');
         }
@@ -322,13 +383,13 @@ function LoginContent() {
           <Divider sx={loginStyles.divider}>Continue with</Divider>
 
           <Box sx={loginStyles.socialRow}>
-            <Button variant="outlined" sx={loginStyles.socialButton}>
+            <Button variant="outlined" sx={loginStyles.socialButton} onClick={handleGoogleLogin}>
               <Box sx={loginStyles.socialButtonContent}>
                 <Image src={googleImage} alt="Google" width={15} height={15} />
                 Google
               </Box>
             </Button>
-            <Button variant="outlined" sx={loginStyles.socialButton}>
+            <Button variant="outlined" sx={loginStyles.socialButton} onClick={handleFacebookLogin}>
               <Box sx={loginStyles.socialButtonContent}>
                 <Image src={facebookImage} alt="Facebook" width={20} height={20} />
                 Facebook
