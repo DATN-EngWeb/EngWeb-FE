@@ -29,7 +29,7 @@ export default function UploadProfilePage() {
   const searchParams = useSearchParams();
   const userId = searchParams.get('user_id');
   const [formData, setFormData] = useState({
-    full_name: '',
+    full_name: '', // test build
     date_of_birth: '',
     current_workplace: '',
     teacher_type: 'F',
