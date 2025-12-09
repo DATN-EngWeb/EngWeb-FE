@@ -15,9 +15,10 @@ import {
   Typography,
 } from '@mui/material';
 import { Visibility, VisibilityOff, ArrowBack } from '@mui/icons-material';
-
+import Logo from '../../assets/img/logo.png';
 import registerImage from '../../assets/img/register.png';
 import { loginStyles } from '../../styles/Login/LoginStyles';
+import { registerUser } from '../../api/accounts.jsx';
 
 function RegisterContent() {
   const router = useRouter();
@@ -29,23 +30,30 @@ function RegisterContent() {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [currentRole, setCurrentRole] = useState('');
+  const [serverError, setServerError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    // Check localStorage for current logged in role
-    if (typeof window !== 'undefined') {
-      const storedRole = localStorage.getItem('userRole');
-      if (storedRole) {
-        setCurrentRole(storedRole);
-      } else if (role) {
-        setCurrentRole(role);
-      }
+    // Prefer role from URL; fall back to stored role
+    if (typeof window === 'undefined') return;
+
+    if (role) {
+      setCurrentRole(role);
+      localStorage.setItem('userRole', role);
+      return;
+    }
+
+    const storedRole = localStorage.getItem('userRole');
+    if (storedRole) {
+      setCurrentRole(storedRole);
     }
   }, [role]);
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setServerError('');
     const newErrors = {};
 
     if (!email.trim()) {
@@ -65,14 +73,40 @@ function RegisterContent() {
       newErrors.password = 'Please enter your password';
     }
 
+    const selectedRole = (currentRole || role || '').toLowerCase();
+    if (!['student', 'teacher'].includes(selectedRole)) {
+      newErrors.role = 'Please select a role';
+    }
+
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      if (role === 'teacher') {
-        router.push('/upload-certificate');
-      } else {
-        const redirectUrl = role ? `/login?role=${role}` : '/login';
-        router.push(redirectUrl);
+      try {
+        setIsSubmitting(true);
+        const backendRole = selectedRole === 'teacher' ? 'T' : 'S';
+        const data = await registerUser({
+          username: username.trim(),
+          email: email.trim(),
+          password: password.trim(),
+          role: backendRole,
+        });
+
+        const userId = data?.user_id;
+        if (!userId) {
+          throw new Error('Missing user_id from server response');
+        }
+
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('registrationUserId', String(userId));
+          localStorage.setItem('registrationRole', selectedRole);
+          localStorage.setItem('userRole', selectedRole);
+        }
+
+        router.push(`/verify-otp?user_id=${userId}&role=${selectedRole}`);
+      } catch (err) {
+        setServerError(err?.message || 'Registration failed. Please try again.');
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
@@ -85,7 +119,7 @@ function RegisterContent() {
           sx={loginStyles.backButton}
           aria-label="Back to home"
         >
-          <ArrowBack />
+          <Image src={Logo} alt="NENS" width={32} height={24} />
         </Button>
         <Image src={registerImage} alt="Register" style={loginStyles.storyImage} />
       </Box>
@@ -249,8 +283,24 @@ function RegisterContent() {
               />
             </Box>
 
-            <Button type="submit" variant="contained" sx={loginStyles.primaryButton}>
-              Create account
+            {errors.role && (
+              <Typography color="error" fontSize="0.9rem">
+                {errors.role}
+              </Typography>
+            )}
+            {serverError && (
+              <Typography color="error" fontSize="0.9rem">
+                {serverError}
+              </Typography>
+            )}
+
+            <Button
+              type="submit"
+              variant="contained"
+              sx={loginStyles.primaryButton}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Creating account...' : 'Create account'}
             </Button>
           </Box>
         </Box>
