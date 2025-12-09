@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Box,
@@ -24,10 +24,8 @@ import { loginStyles } from '../../styles/Login/LoginStyles';
 import registerImage from '../../assets/img/register.png';
 import { createTeacherProfile } from '../../api/accounts';
 
-export default function UploadProfilePage() {
+function UploadProfileContent({ userId }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const userId = searchParams.get('user_id');
   const [formData, setFormData] = useState({
     full_name: '', // test build
     date_of_birth: '',
@@ -785,5 +783,30 @@ export default function UploadProfilePage() {
         </Box>
       </Box>
     </Box>
+  );
+}
+
+export default function UploadProfilePage() {
+  const searchParams = useSearchParams();
+  const userId = searchParams.get('user_id');
+
+  return (
+    <Suspense
+      fallback={
+        <Box
+          component="main"
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '100vh',
+          }}
+        >
+          <Typography>Loading...</Typography>
+        </Box>
+      }
+    >
+      <UploadProfileContent userId={userId} />
+    </Suspense>
   );
 }

@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 
 import {
   Box,
@@ -19,7 +19,7 @@ import registerImage from '../../assets/img/register.png';
 import { loginStyles } from '../../styles/Login/LoginStyles';
 import { resendRegistrationOtp, verifyRegistrationOtp } from '../../api/accounts.jsx';
 
-export default function VerifyOTPPage() {
+function VerifyOTPContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -220,5 +220,27 @@ export default function VerifyOTPPage() {
         </Box>
       </Box>
     </Box>
+  );
+}
+
+export default function VerifyOTPPage() {
+  return (
+    <Suspense
+      fallback={
+        <Box
+          component="main"
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '100vh',
+          }}
+        >
+          <Typography>Loading...</Typography>
+        </Box>
+      }
+    >
+      <VerifyOTPContent />
+    </Suspense>
   );
 }
