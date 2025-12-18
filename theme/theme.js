@@ -20,7 +20,7 @@ const theme = createTheme({
       dark: '#2E7D52',
     },
     warning: {
-      main: '#FFD25A',
+      main: '#FFC83D',
       light: '#FFDC7A',
       dark: '#E6B84A',
     },
