@@ -289,8 +289,21 @@ export default function TeacherHomepage() {
               {page}
             </Button>
           ))}
-          <Typography sx={{ color: 'primary.dark', px: 1 }}>...</Typography>
-          <Button sx={{ minWidth: 40, color: 'primary.dark', '&:hover': 'primary.contrastText' }}>
+          <Typography sx={{ color: 'primary.dark', px: 1.5 }}>...</Typography>
+          <Button
+            variant={currentPage === 10 ? 'contained' : 'text'}
+            onClick={() => setCurrentPage(10)}
+            sx={{
+              minWidth: 40,
+              height: 40,
+              borderRadius: '8px',
+              bgcolor: currentPage === 10 ? 'warning.light' : 'transparent',
+              color: 'primary.dark',
+              '&:hover': {
+                bgcolor: currentPage === 10 ? 'yellow.main' : 'primary.contrastText',
+              },
+            }}
+          >
             10
           </Button>
 
