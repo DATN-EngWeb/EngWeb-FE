@@ -30,7 +30,15 @@ const StatCard = ({ icon, value, variant }) => (
     <Typography component="span" sx={{ fontSize: '1.2rem' }}>
       {icon}
     </Typography>
-    {value}
+    <Typography
+      component="span"
+      sx={{
+        fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' },
+        //whiteSpace: 'nowrap'
+      }}
+    >
+      {value}
+    </Typography>
   </Box>
 );
 

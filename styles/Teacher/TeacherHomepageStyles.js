@@ -20,7 +20,7 @@ export const TeacherHomepageStyles = {
     width: '100%',
   },
   welcomeTitle: {
-    fontSize: { xs: '1.5rem', sm: '2rem', md: '2.4rem' },
+    fontSize: { xs: '1.5rem', sm: '1.7rem', md: '2rem' },
     fontWeight: 500,
     color: 'primary.dark',
     marginBottom: '8px',
@@ -29,7 +29,8 @@ export const TeacherHomepageStyles = {
   welcomeSub: {
     color: 'darkGrey.light',
     marginBottom: '24px',
-    marginLeft: '10px',
+    marginLeft: { xs: '0px', sm: '10px' },
+    fontSize: { xs: '1rem', sm: '1.1rem', md: '1.2rem' },
   },
   statBadge: (variant) => ({
     display: 'inline-flex',
@@ -41,8 +42,7 @@ export const TeacherHomepageStyles = {
     border: `1px solid ${variant === 'yellow' ? 'warning.main' : 'success.main'}`,
     color: variant === 'yellow' ? 'warning.dark' : 'success.dark',
     fontWeight: 500,
-    fontSize: '0.9rem',
-    marginLeft: '10px',
+    marginLeft: { xs: '0px', sm: '10px' },
   }),
   filterSection: {
     display: 'flex',
