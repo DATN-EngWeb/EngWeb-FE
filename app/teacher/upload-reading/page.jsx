@@ -26,10 +26,16 @@ import BorderColorOutlined from '@mui/icons-material/BorderColorOutlined';
 import Link from '@mui/icons-material/Link';
 import { uploadReadingStyles } from '../../../styles/Teacher/Reading/UploadReadingStyles';
 import MultipleChoiceForm from '../../../components/Teacher/Upload_Reading/multipleChoice';
-// import MatchingForm from '../../../components/Teacher/Upload_Reading/matching';
+import MatchingForm from '../../../components/Teacher/Upload_Reading/matching';
 import FillBlankForm from '../../../components/Teacher/Upload_Reading/fillBlanks';
+import Passage from 'next-auth/providers/passage';
 
 export default function Page() {
+  const [test, setTest] = useState({
+    name: '',
+    level: '',
+    description: '',
+  });
   const [parts, setParts] = useState([]);
 
   const handleAddPart = () => {
@@ -37,6 +43,9 @@ export default function Page() {
       id: Date.now(), // Dùng Date.now() để ID không bao giờ trùng
       title: `Part ${parts.length + 1}`,
       type: null,
+      totalScore: 0,
+      time: 0,
+      description: '',
       questions: [], // Mỗi part có một mảng câu hỏi riêng ở đây
     };
     setParts([...parts, newPart]);
@@ -97,6 +106,18 @@ export default function Page() {
     setParts((prevParts) => prevParts.map((p) => (p.id === partId ? { ...p, type: type } : p)));
   };
 
+  const handleUpdateToltalScorePart = (partId, newTotalScore) => {
+    setParts((prevParts) =>
+      prevParts.map((p) => (p.id === partId ? { ...p, totalScore: Number(newTotalScore) } : p)),
+    );
+  };
+
+  const handleUpdateTimePart = (partId, newTime) => {
+    setParts((prevParts) =>
+      prevParts.map((p) => (p.id === partId ? { ...p, time: Number(newTime) } : p)),
+    );
+  };
+
   const renderPartEditor = (part, index) => {
     const partQuestions = part.questions || [];
 
@@ -110,8 +131,10 @@ export default function Page() {
             handleDeletePart={handleDeletePart}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
-            handleDeleteOption={handleDeleteOption}
             handleDeleteQuestion={handleDeleteQuestion}
+            handleDeleteOption={handleDeleteOption}
+            handleUpdateTimePart={handleUpdateTimePart}
+            handleUpdateToltalScorePart={handleUpdateToltalScorePart}
           />
         );
       case 'multiple-choice-short':
@@ -123,23 +146,36 @@ export default function Page() {
             handleDeletePart={handleDeletePart}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
-            handleDeleteOption={handleDeleteOption}
             handleDeleteQuestion={handleDeleteQuestion}
+            handleDeleteOption={handleDeleteOption}
+            handleUpdateTimePart={handleUpdateTimePart}
+            handleUpdateToltalScorePart={handleUpdateToltalScorePart}
           />
         );
       case 'matching':
-        return <MatchingForm partId={part.id} />;
-      case 'fill-blank':
         return (
-          <FillBlankForm
-            part={part}
+          <MatchingForm
             partId={part.id}
             index={index}
             handleDeletePart={handleDeletePart}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
-            handleDeleteOption={handleDeleteOption}
             handleDeleteQuestion={handleDeleteQuestion}
+            handleUpdateTimePart={handleUpdateTimePart}
+            handleUpdateToltalScorePart={handleUpdateToltalScorePart}
+          />
+        );
+      case 'fill-blank':
+        return (
+          <FillBlankForm
+            partId={part.id}
+            index={index}
+            handleDeletePart={handleDeletePart}
+            handleDeleteQuestion={handleDeleteQuestion}
+            questions={partQuestions}
+            setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
+            handleUpdateTimePart={handleUpdateTimePart}
+            handleUpdateToltalScorePart={handleUpdateToltalScorePart}
           />
         );
       default:
@@ -184,6 +220,10 @@ export default function Page() {
           <Button
             startIcon={<DescriptionOutlined sx={{ fontSize: 20, transform: 'translateY(0px)' }} />}
             sx={{ ...uploadReadingStyles.publicButton, gridArea: 'item4' }}
+            onClick={() => {
+              // eslint-disable-next-line no-console
+              (console.log('Test: ', test), console.log('Part: ', parts));
+            }}
           >
             Public
           </Button>
@@ -218,11 +258,23 @@ export default function Page() {
             </Box>
             <FormControl fullWidth sx={uploadReadingStyles.formControl}>
               <FormLabel sx={uploadReadingStyles.labelInput}>Test name</FormLabel>
-              <OutlinedInput placeholder="Enter test name here" sx={uploadReadingStyles.input} />
+              <OutlinedInput
+                placeholder="Enter test name here"
+                onChange={(e) => {
+                  setTest({ ...test, name: e.target.value });
+                }}
+                sx={uploadReadingStyles.input}
+              />
             </FormControl>
             <FormControl fullWidth sx={uploadReadingStyles.formControl}>
               <FormLabel sx={uploadReadingStyles.labelInput}>Description</FormLabel>
-              <OutlinedInput placeholder="Enter description here" sx={uploadReadingStyles.input} />
+              <OutlinedInput
+                placeholder="Enter description here"
+                onChange={(e) => {
+                  setTest({ ...test, description: e.target.value });
+                }}
+                sx={uploadReadingStyles.input}
+              />
             </FormControl>
             <FormControl fullWidth sx={uploadReadingStyles.formControl}>
               <FormLabel sx={uploadReadingStyles.labelInput}>Level</FormLabel>
@@ -251,6 +303,9 @@ export default function Page() {
                       },
                     },
                   },
+                }}
+                onChange={(e) => {
+                  setTest({ ...test, level: e.target.value });
                 }}
               >
                 <MenuItem value="" disabled>

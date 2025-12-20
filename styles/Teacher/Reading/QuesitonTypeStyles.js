@@ -108,7 +108,7 @@ export const multipleChoiceStyles = {
     flexDirection: 'row',
     alignItems: 'center ',
     justifyContent: 'flex-start',
-    gap: 2,
+    gap: 1,
     border: '1px solid',
     borderColor: 'gray.main',
     borderRadius: '1rem',
@@ -153,8 +153,15 @@ export const multipleChoiceStyles = {
   optionInput: {
     flexGrow: 1,
     fontSize: { xs: '0.7rem', md: '0.9rem' },
-    color: 'text.gray',
-    // Xóa border mặc định
+    borderRadius: '1rem',
+    width: '100%',
+    height: 'auto',
+    alignItems: 'flex-start',
+    '& .MuiInputBase-input': {
+      resize: 'none',
+    },
+    py: 0.5,
+    px: 2,
     '& .MuiOutlinedInput-notchedOutline': {
       border: 'none',
     },
@@ -166,12 +173,42 @@ export const multipleChoiceStyles = {
     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
       border: 'none',
     },
-    // Xóa outline của input tag bên trong
-    '& input': {
-      padding: '8px 0', // Căn chỉnh lại padding nếu cần
-      outline: 'none',
-    },
   },
 };
 
-export const fillInTheBlankStyles = {};
+export const matchingStyles = {
+  linkOptionContainer: {
+    width: '100%',
+    height: 'auto',
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    alignItems: 'center ',
+    justifyContent: 'flex-start',
+    gap: 1,
+  },
+  questionLabel: {
+    width: { xs: '28px', md: '32px' },
+    height: { xs: '28px', md: '32px' },
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '50%',
+    backgroundColor: 'dark.main',
+    color: 'primary.contrastText',
+    fontSize: { xs: '0.8rem', md: '1rem' },
+    fontWeight: 600,
+    mt: { xs: 0.8, md: 0.6 },
+    flexShrink: 0,
+  },
+  selectAnswer: {
+    height: 44,
+    width: '100%',
+    borderRadius: '1rem',
+    fontSize: { xs: '0.7rem', md: '0.9rem' },
+    backgroundColor: '#fff',
+    '& .MuiSelect-select': {
+      py: 1,
+      px: 2,
+    },
+  },
+};

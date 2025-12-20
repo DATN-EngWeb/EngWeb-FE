@@ -155,6 +155,18 @@ export const uploadReadingStyles = {
     fontSize: { xs: '0.7rem', md: '0.9rem' },
     borderRadius: '1rem',
   },
+  inputMultiline: {
+    fontSize: { xs: '0.7rem', md: '0.9rem' },
+    borderRadius: '1rem',
+    width: '100%',
+    height: 'auto',
+    alignItems: 'flex-start',
+    '& .MuiInputBase-input': {
+      resize: 'none',
+    },
+    py: 1.5,
+    px: 2,
+  },
   // -------- Reading Content Container ---------
   addPartButton: {
     display: 'flex',

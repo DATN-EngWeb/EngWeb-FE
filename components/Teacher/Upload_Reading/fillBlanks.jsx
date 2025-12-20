@@ -9,13 +9,14 @@ import { uploadReadingStyles } from '../../../styles/Teacher/Reading/UploadReadi
 import { multipleChoiceStyles } from '../../../styles/Teacher/Reading/QuesitonTypeStyles';
 
 export default function FillBlankForm({
-  part,
   partId,
   index,
   handleDeletePart,
   handleDeleteQuestion,
   questions,
   setQuestions,
+  handleUpdateTimePart,
+  handleUpdateToltalScorePart,
 }) {
   const [isOpen, setIsOpen] = React.useState(true);
 
@@ -25,6 +26,13 @@ export default function FillBlankForm({
       text: '',
     };
     setQuestions([...questions, newQuestion]);
+  };
+
+  const handleUpdateQuestion = (questionId, value) => {
+    const updatedQuestions = questions.map((q) =>
+      q.id === questionId ? { ...q, text: value } : q,
+    );
+    setQuestions(updatedQuestions);
   };
 
   return (
@@ -100,17 +108,25 @@ export default function FillBlankForm({
           <Box sx={multipleChoiceStyles.totalScoreAndTime}>
             <FormControl fullWidth sx={uploadReadingStyles.formControl}>
               <FormLabel sx={uploadReadingStyles.labelInput}>Total score</FormLabel>
-              <OutlinedInput placeholder="Enter total score here" sx={uploadReadingStyles.input} />
+              <OutlinedInput
+                placeholder="Enter total score here"
+                sx={uploadReadingStyles.input}
+                onChange={(e) => handleUpdateToltalScorePart(partId, e.target.value)}
+              />
             </FormControl>
             <FormControl fullWidth sx={uploadReadingStyles.formControl}>
               <FormLabel sx={uploadReadingStyles.labelInput}>Time</FormLabel>
-              <OutlinedInput placeholder="Enter time here" sx={uploadReadingStyles.input} />
+              <OutlinedInput
+                placeholder="Enter time here"
+                sx={uploadReadingStyles.input}
+                onChange={(e) => handleUpdateTimePart(partId, e.target.value)}
+              />
             </FormControl>
           </Box>
-          {/* -------------- Description Section -------------- */}
+          {/* -------------- Passage Section -------------- */}
           <FormControl fullWidth sx={uploadReadingStyles.formControl}>
             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-              <FormLabel sx={uploadReadingStyles.labelInput}>Description</FormLabel>
+              <FormLabel sx={uploadReadingStyles.labelInput}>Passage</FormLabel>
               <Typography sx={multipleChoiceStyles.buttonAndIconContainer}>
                 <OpenInNewOutlinedIcon sx={{ fontSize: '1.1rem' }} />
                 Edit in editor
@@ -130,6 +146,7 @@ export default function FillBlankForm({
                 Add question
               </Typography>
             </Box>
+            {/* ----------- Questions Section --------- */}
             {questions.length == 0 ? (
               <Box sx={multipleChoiceStyles.questionsContainer}>
                 <Typography
@@ -157,23 +174,18 @@ export default function FillBlankForm({
                       <Box sx={multipleChoiceStyles.labelQuestionsContainer}>
                         <Box sx={multipleChoiceStyles.questionLabel}>{qIndex + 1}</Box>
                         <OutlinedInput
+                          multiline
                           placeholder="Enter question here"
-                          sx={{ ...uploadReadingStyles.input, width: '100%' }}
+                          sx={uploadReadingStyles.inputMultiline}
+                          onChange={(e) =>
+                            handleUpdateQuestion(partId, question.id, e.target.value)
+                          }
                         />
                         <DeleteOutlineIcon
                           onClick={() => handleDeleteQuestion(partId, question.id)}
                           sx={multipleChoiceStyles.trashIconQuestion}
                         />
                       </Box>
-                      <Box
-                        sx={{
-                          width: '100%',
-                          pl: 4,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: 1,
-                        }}
-                      ></Box>
                     </Box>
                   ))}
                 </Box>
