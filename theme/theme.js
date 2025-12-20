@@ -41,12 +41,21 @@ const theme = createTheme({
     text: {
       primary: '#383838',
       secondary: '#383838',
+      gray: '#ACACAC',
     },
     natural: {
       main: '#FFF4E9',
+      background: '#FFFBF0',
+      dark: '#FDF6E3',
+    },
+    gray: {
+      main: '#B5B5B5',
     },
     darkGrey: {
       main: '#383838',
+    },
+    dark: {
+      main: '#000000',
     },
     orange: {
       main: '#FF854B',
