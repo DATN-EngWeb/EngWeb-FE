@@ -9,6 +9,7 @@ import { uploadReadingStyles } from '../../../styles/Teacher/Reading/UploadReadi
 import { multipleChoiceStyles } from '../../../styles/Teacher/Reading/QuesitonTypeStyles';
 
 export default function FillBlankForm({
+  part,
   partId,
   index,
   handleDeletePart,
@@ -110,16 +111,18 @@ export default function FillBlankForm({
               <FormLabel sx={uploadReadingStyles.labelInput}>Total score</FormLabel>
               <OutlinedInput
                 placeholder="Enter total score here"
+                defaultValue={part.totalScore}
                 sx={uploadReadingStyles.input}
-                onChange={(e) => handleUpdateToltalScorePart(partId, e.target.value)}
+                onBlur={(e) => handleUpdateToltalScorePart(partId, e.target.value)}
               />
             </FormControl>
             <FormControl fullWidth sx={uploadReadingStyles.formControl}>
               <FormLabel sx={uploadReadingStyles.labelInput}>Time</FormLabel>
               <OutlinedInput
                 placeholder="Enter time here"
+                defaultValue={part.time}
                 sx={uploadReadingStyles.input}
-                onChange={(e) => handleUpdateTimePart(partId, e.target.value)}
+                onBlur={(e) => handleUpdateTimePart(partId, e.target.value)}
               />
             </FormControl>
           </Box>
@@ -176,10 +179,11 @@ export default function FillBlankForm({
                         <OutlinedInput
                           multiline
                           placeholder="Enter question here"
+                          defaultValue={question.text}
                           sx={uploadReadingStyles.inputMultiline}
-                          onChange={(e) =>
-                            handleUpdateQuestion(partId, question.id, e.target.value)
-                          }
+                          onBlur={(e) => {
+                            handleUpdateQuestion(question.id, e.target.value);
+                          }}
                         />
                         <DeleteOutlineIcon
                           onClick={() => handleDeleteQuestion(partId, question.id)}

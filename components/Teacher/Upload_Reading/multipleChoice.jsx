@@ -148,16 +148,18 @@ export default function MultipleChoiceForm({
               <FormLabel sx={uploadReadingStyles.labelInput}>Total score</FormLabel>
               <OutlinedInput
                 placeholder="Enter total score here"
+                defaultValue={part.totalScore}
                 sx={uploadReadingStyles.input}
-                onChange={(e) => handleUpdateTotalScorePart(partId, e.target.value)}
+                onBlur={(e) => handleUpdateTotalScorePart(partId, e.target.value)}
               />
             </FormControl>
             <FormControl fullWidth sx={uploadReadingStyles.formControl}>
               <FormLabel sx={uploadReadingStyles.labelInput}>Time</FormLabel>
               <OutlinedInput
                 placeholder="Enter time here"
+                defaultValue={part.time}
                 sx={uploadReadingStyles.input}
-                onChange={(e) => handleUpdateTimePart(partId, e.target.value)}
+                onBlur={(e) => handleUpdateTimePart(partId, e.target.value)}
               />
             </FormControl>
           </Box>
@@ -215,10 +217,9 @@ export default function MultipleChoiceForm({
                         <OutlinedInput
                           multiline
                           placeholder="Enter question here"
+                          defaultValue={question.text}
                           sx={uploadReadingStyles.inputMultiline}
-                          onChange={(e) =>
-                            handleUpdateQuestion(partId, question.id, e.target.value)
-                          }
+                          onBlur={(e) => handleUpdateQuestion(partId, question.id, e.target.value)}
                         />
                         <DeleteOutlineIcon
                           onClick={() => handleDeleteQuestion(partId, question.id)}
@@ -264,8 +265,8 @@ export default function MultipleChoiceForm({
                                 multiline
                                 placeholder="Enter option here"
                                 sx={multipleChoiceStyles.optionInput}
-                                value={option.content}
-                                onChange={(e) =>
+                                defaultValue={option.content}
+                                onBlur={(e) =>
                                   handleUpdateOption(question.id, option.id, e.target.value)
                                 }
                               />

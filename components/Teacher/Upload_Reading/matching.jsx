@@ -16,6 +16,7 @@ import { uploadReadingStyles } from '../../../styles/Teacher/Reading/UploadReadi
 import { Box, Typography } from '@mui/material';
 
 export default function MatchingForm({
+  part,
   partId,
   index,
   handleDeletePart,
@@ -137,16 +138,18 @@ export default function MatchingForm({
               <FormLabel sx={uploadReadingStyles.labelInput}>Total score</FormLabel>
               <OutlinedInput
                 placeholder="Enter total score here"
+                defaultValue={part.totalScore}
                 sx={uploadReadingStyles.input}
-                onChange={(e) => handleUpdateToltalScorePart(partId, e.target.value)}
+                onBlur={(e) => handleUpdateToltalScorePart(partId, e.target.value)}
               />
             </FormControl>
             <FormControl fullWidth sx={uploadReadingStyles.formControl}>
               <FormLabel sx={uploadReadingStyles.labelInput}>Time</FormLabel>
               <OutlinedInput
                 placeholder="Enter time here"
+                defaultValue={part.time}
                 sx={uploadReadingStyles.input}
-                onChange={(e) => handleUpdateTimePart(partId, e.target.value)}
+                onBlur={(e) => handleUpdateTimePart(partId, e.target.value)}
               />
             </FormControl>
           </Box>
@@ -204,7 +207,8 @@ export default function MatchingForm({
                         <OutlinedInput
                           multiline
                           placeholder="Enter sentence here"
-                          onChange={(e) => handleUpdateQuestion(question.id, e.target.value)}
+                          defaultValue={question.text}
+                          onBlur={(e) => handleUpdateQuestion(question.id, e.target.value)}
                           sx={uploadReadingStyles.inputMultiline}
                         />
                         <DeleteOutlineIcon

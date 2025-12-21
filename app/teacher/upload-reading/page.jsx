@@ -43,8 +43,8 @@ export default function Page() {
       id: Date.now(), // Dùng Date.now() để ID không bao giờ trùng
       title: `Part ${parts.length + 1}`,
       type: null,
-      totalScore: 0,
-      time: 0,
+      totalScore: null,
+      time: null,
       description: '',
       questions: [], // Mỗi part có một mảng câu hỏi riêng ở đây
     };
@@ -155,6 +155,7 @@ export default function Page() {
       case 'matching':
         return (
           <MatchingForm
+            part={part}
             partId={part.id}
             index={index}
             handleDeletePart={handleDeletePart}
@@ -168,6 +169,7 @@ export default function Page() {
       case 'fill-blank':
         return (
           <FillBlankForm
+            part={part}
             partId={part.id}
             index={index}
             handleDeletePart={handleDeletePart}
@@ -236,6 +238,7 @@ export default function Page() {
           >
             Test Editor
           </Typography>
+          {/* -------------------- Basic Information -------------------- */}
           <Box sx={uploadReadingStyles.basicInfoContainer}>
             <Box
               sx={{
