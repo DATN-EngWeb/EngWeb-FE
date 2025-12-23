@@ -1,4 +1,4 @@
-import ListeningTestEditor from '../../components/ListeningTest/ListeningTestEditor';
+import ListeningTestEditor from '../../../components/ListeningTest/ListeningTestEditor';
 
 export default function CreateListeningTestPage() {
   return <ListeningTestEditor />;

@@ -1,6 +1,16 @@
 'use client';
 
-import { Box, Typography, TextField, IconButton, Button, Grid, Paper, Stack } from '@mui/material';
+import {
+  Box,
+  Typography,
+  TextField,
+  IconButton,
+  Button,
+  Grid,
+  Paper,
+  Stack,
+  Radio,
+} from '@mui/material';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -10,29 +20,64 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import AddIcon from '@mui/icons-material/Add';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';
+import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import AudioUploader from '../Upload/AudioUploader';
-import ImageUploader from '../Upload/ImageUploader';
 import { useState } from 'react';
 
-export default function MultiChoiceImagePart({ index, part = {}, onChange, onDelete }) {
+const options = [
+  {
+    id: 'onetoone',
+    title: '1 audio - 1 question',
+    description: 'Each question has each audio',
+    icon: <HeadsetMicIcon sx={{ fontSize: 40, color: '#000' }} />,
+  },
+  {
+    id: 'onetomany',
+    title: '1 audio - many question',
+    description: 'One audio for all questions',
+    icon: <MusicNoteIcon sx={{ fontSize: 40, color: '#000' }} />,
+  },
+];
+
+export default function MultiChoiceTextPart({ index, part = {}, onChange, onDelete }) {
   const questions = Array.isArray(part.questions) ? part.questions : [];
+  const [audioFormat, setAudioFormat] = useState('onetoone');
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const updatePart = (newPart) => {
     if (onChange) onChange(newPart);
   };
 
-  const addQuestion = () => {
-    const newQ = {
+  const handleAudioFormatChange = (newFormat) => {
+    setAudioFormat(newFormat);
+    if (newFormat === 'onetoone') {
+      updatePart({ ...part, audio: null });
+    } else {
+      const newQs = questions.map((q) => ({
+        ...q,
+        audio: null,
+      }));
+      updatePart({ ...part, questions: newQs });
+    }
+  };
+
+  const addQuestion = (type) => {
+    let newQ = {
       id: Date.now().toString(),
       text: '',
       answers: [
-        { id: 'a-' + Date.now() + '-0', label: 'A', image: null },
-        { id: 'b-' + Date.now() + '-1', label: 'B', image: null },
-        { id: 'c-' + Date.now() + '-2', label: 'C', image: null },
+        { id: 'a-' + Date.now() + '-0', label: 'A' },
+        { id: 'b-' + Date.now() + '-1', label: 'B' },
+        { id: 'c-' + Date.now() + '-2', label: 'C' },
       ],
       correctIndex: null,
     };
+    if (type == 'onetoone') {
+      newQ = { ...newQ, audio: null };
+    }
+
     const newPart = { ...part, questions: [...questions, newQ] };
     updatePart(newPart);
   };
@@ -47,10 +92,19 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
     updatePart({ ...part, questions: newQs });
   };
 
+  const setAnswerText = (qIdx, aIdx, text) => {
+    const newQs = questions.map((q, i) => {
+      if (i !== qIdx) return q;
+      const newAnswers = q.answers.map((ans, j) => (j === aIdx ? { ...ans, text } : ans));
+      return { ...q, answers: newAnswers };
+    });
+    updatePart({ ...part, questions: newQs });
+  };
+
   const addAnswer = (qIdx) => {
     const q = questions[qIdx];
     const nextLabel = String.fromCharCode(65 + q.answers.length); // A,B,C...
-    const newAnswer = { id: `${q.id}-ans-${Date.now()}`, label: nextLabel, image: null };
+    const newAnswer = { id: `${q.id}-ans-${Date.now()}`, label: nextLabel };
     const newQs = questions.map((qq, i) =>
       i === qIdx ? { ...qq, answers: [...qq.answers, newAnswer] } : qq,
     );
@@ -87,20 +141,20 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
     updatePart({ ...part, questions: newQs });
   };
 
-  const handleImageChange = (qIdx, aIdx, image) => {
-    const newQs = questions.map((q, qi) => {
-      if (qi !== qIdx) return q;
-
-      const newAnswers = q.answers.map((ans, ai) => (ai === aIdx ? { ...ans, image } : ans));
-
-      return { ...q, answers: newAnswers };
-    });
-
-    updatePart({ ...part, questions: newQs });
+  const handleAudioChange = (qIdx, audio) => {
+    if (audioFormat === 'onetoone') {
+      const newQs = questions.map((q, qi) => {
+        if (qi !== qIdx) return q;
+        return { ...q, audio };
+      });
+      updatePart({ ...part, questions: newQs });
+    } else {
+      updatePart({ ...part, audio });
+    }
   };
 
   return (
-    <>
+    <Box>
       <Box
         sx={{
           display: 'flex',
@@ -124,11 +178,10 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
               Part {index + 1}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Multiple choice images · {questions.length} questions
+              Multiple choice texts · {questions.length} questions
             </Typography>
           </Box>
         </Box>
-
         <Box>
           <IconButton onClick={onDelete}>
             <DeleteOutlineIcon />
@@ -141,6 +194,54 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
 
       {!isCollapsed && (
         <>
+          <Typography variant="body2" mb={1}>
+            Audio Format
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+            {options.map((option) => {
+              const isActive = audioFormat === option.id;
+              return (
+                <Paper
+                  key={option.id}
+                  onClick={() => handleAudioFormatChange(option.id)}
+                  sx={{
+                    p: 2,
+                    cursor: 'pointer',
+                    borderRadius: '16px',
+                    border: '2px solid',
+                    borderColor: isActive ? 'yellow.main' : '#E0E0E0',
+                    backgroundColor: isActive ? 'natural.main' : 'background.paper',
+                    flex: 1,
+                    '&:hover': {
+                      borderColor: 'yellow.main',
+                    },
+                  }}
+                >
+                  <Stack direction="row" spacing={3} alignItems="center">
+                    {option.icon}
+                    <Box>
+                      <Typography
+                        sx={{
+                          color: 'primary.main',
+                          fontWeight: 600,
+                          fontSize: '16px',
+                        }}
+                      >
+                        {option.title}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{ color: '#9E9E9E', fontSize: '14px', mt: 0.5 }}
+                      >
+                        {option.description}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Paper>
+              );
+            })}
+          </Box>
+
           <Box sx={{ display: 'flex', gap: 3, mb: 3 }}>
             <Box sx={{ flex: 1 }}>
               <Typography variant="body2" mb={1}>
@@ -179,14 +280,18 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
             </Box>
           </Box>
 
-          <Typography variant="body2" mb={1}>
-            Audio File
-          </Typography>
-          <AudioUploader
-            value={part.audio}
-            onChange={(audio) => updatePart({ ...part, audio })}
-            accept="audio/mp3,audio/m4a"
-          />
+          {audioFormat === 'onetomany' && (
+            <>
+              <Typography variant="body2" mb={1}>
+                Audio File
+              </Typography>
+              <AudioUploader
+                value={part.audio}
+                onChange={(audio) => updatePart({ ...part, audio })}
+                accept="audio/mp3,audio/m4a"
+              />
+            </>
+          )}
 
           <Box sx={{ mb: 3 }}>
             <Box
@@ -278,102 +383,100 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
                     </IconButton>
                   </Box>
 
+                  {audioFormat === 'onetoone' && (
+                    <>
+                      <Typography variant="body2" mb={1}>
+                        Audio File
+                      </Typography>
+                      <AudioUploader
+                        value={q.audio}
+                        onChange={(audio) => handleAudioChange(qIdx, audio)}
+                        accept="audio/mp3,audio/m4a"
+                      />
+                    </>
+                  )}
+
                   <Typography variant="body2" color="text.secondary" mb={1}>
-                    Image answers (click to set correct):
+                    Text answers (click to set correct):
                   </Typography>
 
-                  <Grid container spacing={2}>
+                  <Stack spacing={1}>
                     {q.answers.map((ans, aIdx) => {
                       const isCorrect = q.correctIndex === aIdx;
 
                       return (
-                        <Grid
-                          item
-                          xs={4}
-                          key={ans.id}
+                        <Box
+                          key={ans.id || aIdx}
                           sx={{
-                            maxWidth: '31%',
-                            minWidth: '31%',
-                            width: '31%',
-                            flex: '0 0 31%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            p: '8px 16px',
+                            border: '1.5px solid #E0E0E0',
+                            borderRadius: '12px',
+                            width: '100%',
+                            mb: 2,
                           }}
                         >
-                          <Box
-                            onClick={() => setCorrect(qIdx, aIdx)}
+                          <Radio
+                            checked={isCorrect}
+                            onChange={() => setCorrect(qIdx, aIdx)}
                             sx={{
-                              border: '2px solid #ddd',
-                              borderRadius: 1,
-                              p: 2,
-                              minHeight: 200,
-                              display: 'flex',
-                              flexDirection: 'column',
-                              cursor: 'pointer',
+                              color: '#757575',
+                              '&.Mui-checked': { color: '#4A2B20' },
+                              p: 1,
+                              mr: 1,
+                            }}
+                          />
+
+                          <Typography
+                            sx={{
+                              fontWeight: 'bold',
+                              mr: 2,
+                              minWidth: '20px',
+                              color: '#000',
                             }}
                           >
-                            <Box
-                              sx={{
-                                flex: 1,
-                                width: '100%',
-                                height: 120,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                mb: 1,
-                                overflow: 'hidden',
-                              }}
-                            >
-                              <Box sx={{ width: '100%', height: '100%' }}>
-                                <ImageUploader
-                                  value={ans.image}
-                                  onChange={(img) => handleImageChange(qIdx, aIdx, img)}
-                                  height={120}
-                                />
-                              </Box>
-                            </Box>
+                            {String.fromCharCode(65 + aIdx)}.
+                          </Typography>
 
-                            <Button
-                              size="small"
-                              sx={{
-                                mt: 0.5,
-                                minWidth: 40,
-                                alignSelf: 'center',
-                                bgcolor: isCorrect ? 'yellow.main' : 'transparent',
-                                color: isCorrect ? 'common.white' : 'text.primary',
-                                border: '1px solid',
-                                borderColor: isCorrect ? 'yellow.main' : 'divider',
-                              }}
-                            >
-                              {ans.label}
-                            </Button>
+                          <TextField
+                            size="small"
+                            placeholder={`Answer ${String.fromCharCode(65 + aIdx)}...`}
+                            value={ans.text || ''}
+                            onChange={(e) => setAnswerText(qIdx, aIdx, e.target.value)}
+                            sx={{ flex: 1, minWidth: 0 }}
+                          />
 
-                            <IconButton
-                              size="small"
-                              color="error"
-                              sx={{ mt: 0.5, alignSelf: 'center' }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeAnswer(qIdx, aIdx);
-                              }}
-                            >
-                              <DeleteOutlineIcon />
-                            </IconButton>
-                          </Box>
-                        </Grid>
+                          <IconButton
+                            size="small"
+                            onClick={() => removeAnswer(qIdx, aIdx)}
+                            sx={{
+                              ml: 1,
+                              color: '#BDBDBD',
+                              '&:hover': { color: '#d32f2f' },
+                            }}
+                          >
+                            <DeleteOutlineIcon />
+                          </IconButton>
+                        </Box>
                       );
                     })}
-                  </Grid>
+                  </Stack>
 
-                  <Box mt={1}>
-                    <Button startIcon={<AddIcon />} size="small" onClick={() => addAnswer(qIdx)}>
-                      Add Answer
-                    </Button>
-                  </Box>
+                  <Button
+                    startIcon={<AddCircleOutlineIcon />}
+                    size="small"
+                    onClick={() => addAnswer(qIdx)}
+                    sx={{ mt: 1 }}
+                  >
+                    Add Answer
+                  </Button>
                 </Paper>
               ))}
             </Stack>
           )}
         </>
       )}
-    </>
+    </Box>
   );
 }

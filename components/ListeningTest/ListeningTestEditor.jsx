@@ -3,6 +3,9 @@
 import { Paper, Typography, Box } from '@mui/material';
 import BasicInformation from './BasicInformation';
 import MultiChoiceImagePart from './MultiChoiceImagePart';
+import MultiChoiceTextPart from './MultiChoiceTextPart';
+import FillInTheBlankPart from './FillInTheBlankPart';
+import MatchingPart from './MatchingPart';
 import SelectPartType from './SelectPartType';
 import TestEditorHeader from '../UploadTest/TestEditorHeader';
 import TestEditorActions from '../UploadTest/TestEditorActions';
@@ -19,13 +22,13 @@ export const PART_TYPES = [
     description: 'Students select the correct image',
   },
   {
-    id: 'text',
+    id: 'multichoice_texts',
     icon: <TextFields sx={{ fontSize: 40 }} />,
     title: 'Multiple choice text',
     description: 'Students select the correct text answer',
   },
   {
-    id: 'blanks',
+    id: 'fill_in_the_blanks',
     icon: <Edit sx={{ fontSize: 40 }} />,
     title: 'Fill in the blanks',
     description: 'Students complete missing words',
@@ -94,11 +97,11 @@ export default function ListeningTestEditor() {
   return (
     <Box
       sx={{
-        backgroundColor: '#FFF4E8',
+        backgroundColor: 'background.default',
         minHeight: '100vh',
-        p: 4,
-        paddingLeft: 10,
-        paddingRight: 10,
+        p: 2,
+        paddingLeft: 20,
+        paddingRight: 20,
       }}
     >
       <TestEditorHeader
@@ -111,7 +114,7 @@ export default function ListeningTestEditor() {
         onSaveDraft={() => handleSubmit('draft')}
         onPublish={() => handleSubmit('published')}
       />
-      <div style={{ paddingLeft: '300px', paddingRight: '300px' }}>
+      <div style={{ paddingLeft: '220px', paddingRight: '220px' }}>
         <Typography
           sx={{
             typography: 'h4',
@@ -135,7 +138,7 @@ export default function ListeningTestEditor() {
               p: 3,
               mb: 3,
               border: '2px solid',
-              borderColor: 'warning.main',
+              borderColor: 'yellow.main',
               borderRadius: 2,
             }}
           >
@@ -146,29 +149,64 @@ export default function ListeningTestEditor() {
                 onCancel={() => handleCancelPart(part.id)}
               />
             ) : (
-              part.type === 'multichoice_images' && (
-                <MultiChoiceImagePart
-                  key={part.id}
-                  index={index}
-                  part={part}
-                  onChange={(updatedPart) =>
-                    setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
-                  }
-                  onDelete={() => handleCancelPart(part.id)}
-                />
-              )
+              <>
+                {part.type === 'multichoice_images' && (
+                  <MultiChoiceImagePart
+                    index={index}
+                    part={part}
+                    onChange={(updatedPart) =>
+                      setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
+                    }
+                    onDelete={() => handleCancelPart(part.id)}
+                  />
+                )}
+
+                {part.type === 'multichoice_texts' && (
+                  <MultiChoiceTextPart
+                    index={index}
+                    part={part}
+                    onChange={(updatedPart) =>
+                      setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
+                    }
+                    onDelete={() => handleCancelPart(part.id)}
+                  />
+                )}
+
+                {part.type === 'fill_in_the_blanks' && (
+                  <FillInTheBlankPart
+                    index={index}
+                    part={part}
+                    onChange={(updatedPart) =>
+                      setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
+                    }
+                    onDelete={() => handleCancelPart(part.id)}
+                  />
+                )}
+
+                {part.type === 'matching' && (
+                  <MatchingPart
+                    index={index}
+                    part={part}
+                    onChange={(updatedPart) =>
+                      setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
+                    }
+                    onDelete={() => handleCancelPart(part.id)}
+                  />
+                )}
+              </>
             )}
           </Paper>
         ))}
         <Box
           sx={{
-            border: '2px dashed #ddd',
+            border: '2px dashed',
+            borderColor: 'divider',
             borderRadius: 2,
             p: 4,
             textAlign: 'center',
             color: 'text.secondary',
             cursor: 'pointer',
-            '&:hover': { bgcolor: '#efefefff' },
+            '&:hover': { bgcolor: 'action.hover' },
           }}
           onClick={handleAddPart}
         >

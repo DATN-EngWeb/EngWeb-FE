@@ -7,10 +7,10 @@ export default function PartTypeCard({ icon, title, description, onClick, select
       sx={{
         p: 2,
         cursor: 'pointer',
-        border: selected ? '2px solid #1976d2' : '1px solid #e0e0e0',
+        border: selected ? '2px solid #000000ff' : '1px solid #e0e0e0',
         transition: 'all 0.2s',
         '&:hover': {
-          borderColor: '#1976d2',
+          borderColor: '#000000ff',
           boxShadow: 2,
         },
         display: 'flex',
@@ -18,7 +18,7 @@ export default function PartTypeCard({ icon, title, description, onClick, select
         gap: 2,
       }}
     >
-      <Box sx={{ color: '#1976d2', display: 'flex' }}>{icon}</Box>
+      <Box sx={{ color: '#000000ff', display: 'flex' }}>{icon}</Box>
       <Box>
         <Typography variant="subtitle2" fontWeight="600">
           {title}
