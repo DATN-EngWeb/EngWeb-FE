@@ -33,7 +33,7 @@ async function handleResponse(response) {
 }
 
 export async function registerUser({ username, email, password, role }) {
-  const response = await fetch(`${ACCOUNTS_BASE_URL}/register`, {
+  const response = await fetch(`${ACCOUNTS_BASE_URL}/registration`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -51,7 +51,7 @@ export async function registerUser({ username, email, password, role }) {
 }
 
 export async function verifyRegistrationOtp({ userId, otpCode }) {
-  const response = await fetch(`${ACCOUNTS_BASE_URL}/verify-otp`, {
+  const response = await fetch(`${ACCOUNTS_BASE_URL}/verify-otp/registration`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ export async function verifyRegistrationOtp({ userId, otpCode }) {
 }
 
 export async function resendRegistrationOtp({ userId }) {
-  const response = await fetch(`${ACCOUNTS_BASE_URL}/resend-otp`, {
+  const response = await fetch(`${ACCOUNTS_BASE_URL}/resend-otp/registration`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -82,7 +82,7 @@ export async function resendRegistrationOtp({ userId }) {
 }
 
 export async function createTeacherProfile(formData) {
-  const response = await fetch(`${ACCOUNTS_BASE_URL}/teachers`, {
+  const response = await fetch(`${ACCOUNTS_BASE_URL}/teachers/submit-profile`, {
     method: 'POST',
     body: formData,
     cache: 'no-store',
