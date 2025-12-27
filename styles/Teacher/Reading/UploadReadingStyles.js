@@ -102,6 +102,13 @@ export const uploadReadingStyles = {
     boxShadow: '0 4px 3px 1px rgba(97, 97, 97, 0.2)',
   },
   // -------- Upload Reading Test Form Section ---------
+  nameTestAndTime: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 2,
+    width: '100%',
+  },
+
   uploadReadingFormSection: {
     width: '100%',
     height: 'auto',

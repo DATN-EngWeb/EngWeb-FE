@@ -4,6 +4,11 @@ export const multipleChoiceStyles = {
     flexDirection: 'row',
     alignItems: 'center',
   },
+  simpleBoxFlexColumn: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
   // -------- Heading Section ---------
   headingContainer: {
     display: 'flex',
@@ -32,17 +37,11 @@ export const multipleChoiceStyles = {
     width: 'fit-content',
     display: 'inline-flex',
     alignItems: 'center',
-    gap: 0,
+    gap: 0.5,
     fontSize: { xs: '0.8rem', md: '1rem' },
     cursor: 'pointer',
     '&:hover': { color: 'primary.main' },
     alignSelf: 'flex-start',
-  },
-  totalScoreAndTime: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: 2,
-    width: '100%',
   },
   questionsContainer: {
     width: '100%',

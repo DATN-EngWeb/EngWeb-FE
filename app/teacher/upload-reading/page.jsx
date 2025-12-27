@@ -15,12 +15,12 @@ import {
   MenuItem,
 } from '@mui/material';
 import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';
+import FileUploadIcon from '@mui/icons-material/FileUpload';
 import SendRounded from '@mui/icons-material/SendRounded';
 import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import AddIcon from '@mui/icons-material/Add';
 import ArticleOutlined from '@mui/icons-material/ArticleOutlined';
-import ViewListOutlined from '@mui/icons-material/ViewListOutlined';
 import EditNoteOutlined from '@mui/icons-material/EditNoteOutlined';
 import BorderColorOutlined from '@mui/icons-material/BorderColorOutlined';
 import Link from '@mui/icons-material/Link';
@@ -28,25 +28,27 @@ import { uploadReadingStyles } from '../../../styles/Teacher/Reading/UploadReadi
 import MultipleChoiceForm from '../../../components/Teacher/Upload_Reading/multipleChoice';
 import MatchingForm from '../../../components/Teacher/Upload_Reading/matching';
 import FillBlankForm from '../../../components/Teacher/Upload_Reading/fillBlanks';
-import Passage from 'next-auth/providers/passage';
 
 export default function Page() {
   const [test, setTest] = useState({
-    name: '',
+    title: '',
     level: '',
+    skill: 'R',
+    time: 60,
     description: '',
+    status: 'P',
   });
   const [parts, setParts] = useState([]);
 
   const handleAddPart = () => {
     const newPart = {
-      id: Date.now(), // Dùng Date.now() để ID không bao giờ trùng
-      title: `Part ${parts.length + 1}`,
-      type: null,
-      totalScore: null,
-      time: null,
+      id: Date.now(),
+      // Những fields sẽ được gửi đi
+      order: parts.length + 1,
+      format: null,
       description: '',
-      questions: [], // Mỗi part có một mảng câu hỏi riêng ở đây
+      scoreForEachQuestion: 10,
+      questions: [],
     };
     setParts([...parts, newPart]);
   };
@@ -74,7 +76,7 @@ export default function Page() {
     );
   };
 
-  const handleDeleteOption = (partId, questionId, optionId) => {
+  const handleDeleteOption = (partId, questionId, optionLabel) => {
     setParts((prevParts) =>
       prevParts.map((p) =>
         p.id === partId
@@ -85,14 +87,12 @@ export default function Page() {
                   ? {
                       ...q,
                       // Lọc bỏ optionId, sau đó cập nhật lại nhãn A, B, C nếu cần
-                      options: q.options
-                        .filter((a) => a.id !== optionId)
+                      answers: q.answers
+                        .filter((a) => a.option_label !== optionLabel)
                         .map((a, index) => ({
                           ...a,
-                          id: String.fromCharCode(65 + index), // Reset lại nhãn A, B, C theo thứ tự mới
+                          option_label: String.fromCharCode(65 + index), // Reset lại nhãn A, B, C theo thứ tự mới
                         })),
-                      // Nếu đáp án đúng (true_answer) chính là cái vừa xóa, hãy reset nó
-                      true_answer: q.true_answer === optionId ? '' : q.true_answer,
                     }
                   : q,
               ),
@@ -102,57 +102,78 @@ export default function Page() {
     );
   };
 
-  const handleSelectType = (partId, type) => {
-    setParts((prevParts) => prevParts.map((p) => (p.id === partId ? { ...p, type: type } : p)));
-  };
-
-  const handleUpdateToltalScorePart = (partId, newTotalScore) => {
+  const handleSelectType = (partId, format) => {
     setParts((prevParts) =>
-      prevParts.map((p) => (p.id === partId ? { ...p, totalScore: Number(newTotalScore) } : p)),
+      prevParts.map((p) => {
+        if (p.id === partId) {
+          if (format === 'G') {
+            // Nếu chuyển sang G: Thêm format và đảm bảo có content
+            return { ...p, format: format, content: p.content ?? '' };
+          } else {
+            // Nếu chuyển sang format khác: Loại bỏ trường content ra khỏi Object
+            const { content, ...rest } = p;
+            return { ...rest, format: format };
+          }
+        }
+        return p;
+      }),
+    );
+  };
+  const handleUpdateScoreForEachQuestionPart = (partId, newScoreForEachQuestion) => {
+    setParts((prevParts) =>
+      prevParts.map((p) =>
+        p.id === partId ? { ...p, scoreForEachQuestion: Number(newScoreForEachQuestion) } : p,
+      ),
     );
   };
 
-  const handleUpdateTimePart = (partId, newTime) => {
+  const handleUpdateDescriptionPart = (partId, newDescription) => {
     setParts((prevParts) =>
-      prevParts.map((p) => (p.id === partId ? { ...p, time: Number(newTime) } : p)),
+      prevParts.map((p) => (p.id === partId ? { ...p, description: newDescription } : p)),
     );
   };
 
   const renderPartEditor = (part, index) => {
     const partQuestions = part.questions || [];
 
-    switch (part.type) {
-      case 'multiple-choice-long':
+    // - 'F': Reading - Multiple choice (short text)
+    // - 'G': Reading - Multiple choice (long text)
+    // - 'H': Reading - Fill in the blank (multiple choice)
+    // - 'I': Reading - Fill in the blank (text)
+    // - 'J': Reading - Matching
+
+    switch (part.format) {
+      case 'G':
         return (
           <MultipleChoiceForm
             part={part}
             partId={part.id}
             index={index}
+            handleUpdateDescriptionPart={handleUpdateDescriptionPart}
             handleDeletePart={handleDeletePart}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
             handleDeleteQuestion={handleDeleteQuestion}
             handleDeleteOption={handleDeleteOption}
-            handleUpdateTimePart={handleUpdateTimePart}
-            handleUpdateToltalScorePart={handleUpdateToltalScorePart}
+            handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
           />
         );
-      case 'multiple-choice-short':
+      case 'F':
         return (
           <MultipleChoiceForm
             part={part}
             partId={part.id}
             index={index}
+            handleUpdateDescriptionPart={handleUpdateDescriptionPart}
             handleDeletePart={handleDeletePart}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
             handleDeleteQuestion={handleDeleteQuestion}
             handleDeleteOption={handleDeleteOption}
-            handleUpdateTimePart={handleUpdateTimePart}
-            handleUpdateToltalScorePart={handleUpdateToltalScorePart}
+            handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
           />
         );
-      case 'matching':
+      case 'J':
         return (
           <MatchingForm
             part={part}
@@ -162,11 +183,10 @@ export default function Page() {
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
             handleDeleteQuestion={handleDeleteQuestion}
-            handleUpdateTimePart={handleUpdateTimePart}
-            handleUpdateToltalScorePart={handleUpdateToltalScorePart}
+            handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
           />
         );
-      case 'fill-blank':
+      case 'I':
         return (
           <FillBlankForm
             part={part}
@@ -176,8 +196,7 @@ export default function Page() {
             handleDeleteQuestion={handleDeleteQuestion}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
-            handleUpdateTimePart={handleUpdateTimePart}
-            handleUpdateToltalScorePart={handleUpdateToltalScorePart}
+            handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
           />
         );
       default:
@@ -200,7 +219,11 @@ export default function Page() {
         {/* -------- Function Buttons Section --------- */}
         <Box sx={uploadReadingStyles.functionButtonsWrapper}>
           <Button
-            startIcon={<VisibilityOutlined />}
+            startIcon={
+              <VisibilityOutlined
+                sx={{ transform: { xs: 'translateY(0px)', md: 'translateY(3px)' } }}
+              />
+            }
             sx={{ ...uploadReadingStyles.previewButton, gridArea: 'item1' }}
           >
             Show Preview
@@ -220,7 +243,7 @@ export default function Page() {
             Save Draft
           </Button>
           <Button
-            startIcon={<DescriptionOutlined sx={{ fontSize: 20, transform: 'translateY(0px)' }} />}
+            startIcon={<FileUploadIcon sx={{ fontSize: 20, transform: 'translateY(0px)' }} />}
             sx={{ ...uploadReadingStyles.publicButton, gridArea: 'item4' }}
             onClick={() => {
               // eslint-disable-next-line no-console
@@ -259,24 +282,34 @@ export default function Page() {
               ></Box>
               <Typography sx={uploadReadingStyles.basicInfoHeading}>Basic infomation</Typography>
             </Box>
-            <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-              <FormLabel sx={uploadReadingStyles.labelInput}>Test name</FormLabel>
-              <OutlinedInput
-                placeholder="Enter test name here"
-                onChange={(e) => {
-                  setTest({ ...test, name: e.target.value });
-                }}
-                sx={uploadReadingStyles.input}
-              />
-            </FormControl>
+            <Box sx={uploadReadingStyles.nameTestAndTime}>
+              <FormControl fullWidth sx={uploadReadingStyles.formControl}>
+                <FormLabel sx={uploadReadingStyles.labelInput}>Test title</FormLabel>
+                <OutlinedInput
+                  placeholder="Enter test title here"
+                  defaultValue={test.title}
+                  onBlur={(e) => setTest({ ...test, title: e.target.value })}
+                  sx={uploadReadingStyles.input}
+                />
+              </FormControl>
+              <FormControl fullWidth sx={uploadReadingStyles.formControl}>
+                <FormLabel sx={uploadReadingStyles.labelInput}>Time</FormLabel>
+                <OutlinedInput
+                  placeholder="Enter time here"
+                  defaultValue={test.time}
+                  sx={uploadReadingStyles.input}
+                  onBlur={(e) => setTest({ ...test, time: Number(e.target.value) })}
+                />
+              </FormControl>
+            </Box>
             <FormControl fullWidth sx={uploadReadingStyles.formControl}>
               <FormLabel sx={uploadReadingStyles.labelInput}>Description</FormLabel>
               <OutlinedInput
+                multiline
                 placeholder="Enter description here"
-                onChange={(e) => {
-                  setTest({ ...test, description: e.target.value });
-                }}
-                sx={uploadReadingStyles.input}
+                defaultValue={test.description}
+                onBlur={(e) => setTest({ ...test, description: e.target.value })}
+                sx={uploadReadingStyles.inputMultiline}
               />
             </FormControl>
             <FormControl fullWidth sx={uploadReadingStyles.formControl}>
@@ -324,7 +357,7 @@ export default function Page() {
           {/* ------------ Parts Section ------------- */}
           {parts.map((part, index) => (
             <Box key={part.id} sx={uploadReadingStyles.basicInfoContainer}>
-              {!part.type ? (
+              {!part.format ? (
                 <>
                   <Box
                     sx={{
@@ -351,7 +384,7 @@ export default function Page() {
                     {/* Multiple Choice Long Text */}
                     <Button
                       sx={uploadReadingStyles.selectedPart}
-                      onClick={() => handleSelectType(part.id, 'multiple-choice-long')}
+                      onClick={() => handleSelectType(part.id, 'G')}
                     >
                       <ArticleOutlined sx={uploadReadingStyles.iconSelectedPart} />
                       <Box sx={uploadReadingStyles.partTextContainer}>
@@ -366,7 +399,7 @@ export default function Page() {
                     {/* Multiple Choice Short Text */}
                     <Button
                       sx={uploadReadingStyles.selectedPart}
-                      onClick={() => handleSelectType(part.id, 'multiple-choice-short')}
+                      onClick={() => handleSelectType(part.id, 'F')}
                     >
                       <EditNoteOutlined sx={uploadReadingStyles.iconSelectedPart} />
                       <Box sx={uploadReadingStyles.partTextContainer}>
@@ -381,7 +414,7 @@ export default function Page() {
                     {/* Fill in The Blanks */}
                     <Button
                       sx={uploadReadingStyles.selectedPart}
-                      onClick={() => handleSelectType(part.id, 'fill-blank')}
+                      onClick={() => handleSelectType(part.id, 'I')}
                     >
                       <BorderColorOutlined sx={uploadReadingStyles.iconSelectedPart} />
                       <Box sx={uploadReadingStyles.partTextContainer}>
@@ -396,7 +429,7 @@ export default function Page() {
                     {/* Matching */}
                     <Button
                       sx={uploadReadingStyles.selectedPart}
-                      onClick={() => handleSelectType(part.id, 'matching')}
+                      onClick={() => handleSelectType(part.id, 'J')}
                     >
                       <Link sx={uploadReadingStyles.iconSelectedPart} />
                       <Box sx={uploadReadingStyles.partTextContainer}>

@@ -16,8 +16,7 @@ export default function FillBlankForm({
   handleDeleteQuestion,
   questions,
   setQuestions,
-  handleUpdateTimePart,
-  handleUpdateToltalScorePart,
+  handleUpdateScoreForEachQuestionPart,
 }) {
   const [isOpen, setIsOpen] = React.useState(true);
 
@@ -105,27 +104,16 @@ export default function FillBlankForm({
       {/* ------------- Config Section ------------- */}
       {isOpen && (
         <>
-          {/* -------------- Total Score & Time Section -------------- */}
-          <Box sx={multipleChoiceStyles.totalScoreAndTime}>
-            <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-              <FormLabel sx={uploadReadingStyles.labelInput}>Total score</FormLabel>
-              <OutlinedInput
-                placeholder="Enter total score here"
-                defaultValue={part.totalScore}
-                sx={uploadReadingStyles.input}
-                onBlur={(e) => handleUpdateToltalScorePart(partId, e.target.value)}
-              />
-            </FormControl>
-            <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-              <FormLabel sx={uploadReadingStyles.labelInput}>Time</FormLabel>
-              <OutlinedInput
-                placeholder="Enter time here"
-                defaultValue={part.time}
-                sx={uploadReadingStyles.input}
-                onBlur={(e) => handleUpdateTimePart(partId, e.target.value)}
-              />
-            </FormControl>
-          </Box>
+          {/* -------------- Total Each Score -------------- */}
+          <FormControl fullWidth sx={uploadReadingStyles.formControl}>
+            <FormLabel sx={uploadReadingStyles.labelInput}>The score for each question</FormLabel>
+            <OutlinedInput
+              placeholder="Enter the score for each question here"
+              defaultValue={part.scoreForEachQuestion}
+              sx={uploadReadingStyles.input}
+              onBlur={(e) => handleUpdateScoreForEachQuestionPart(partId, e.target.value)}
+            />
+          </FormControl>
           {/* -------------- Passage Section -------------- */}
           <FormControl fullWidth sx={uploadReadingStyles.formControl}>
             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>

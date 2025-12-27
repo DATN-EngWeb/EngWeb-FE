@@ -19,40 +19,49 @@ export default function MultipleChoiceForm({
   handleDeletePart,
   handleDeleteOption,
   handleDeleteQuestion,
+  handleUpdateDescriptionPart,
   questions,
   setQuestions,
-  handleUpdateTotalScorePart,
-  handleUpdateTimePart,
+  handleUpdateScoreForEachQuestionPart,
 }) {
   const [isOpen, setIsOpen] = React.useState(true);
 
   const handleAddQuestion = () => {
     const newQuestion = {
       id: Date.now(),
-      text: '',
-      options: [{ id: 'A', content: '' }],
-      true_answer: '',
+      // Những fields gửi lên server
+      question_number: 1,
+      content: '',
+      explanation: '',
+      answers: [{ option_label: 'A', is_correct: false, answer_text: '' }],
     };
     setQuestions([...questions, newQuestion]);
   };
 
   const handleUpdateQuestion = (questionId, value) => {
     const updatedQuestions = questions.map((q) =>
-      q.id === questionId ? { ...q, text: value } : q,
+      q.id === questionId ? { ...q, content: value } : q,
     );
     setQuestions(updatedQuestions);
   };
 
-  const handleUpdateOption = (questionId, optionId, newContent) => {
+  const handleUpdateExplanation = (questionId, value) => {
+    const updatedQuestions = questions.map((q) =>
+      q.id === questionId ? { ...q, explanation: value } : q,
+    );
+    setQuestions(updatedQuestions);
+  };
+
+  const handleUpdateOption = (questionId, optionLabel, newContent) => {
     const updatedQuestions = questions.map((q) => {
       if (q.id === questionId) {
-        const updatedOptions = q.options.map((opt) => {
-          if (opt.id === optionId) {
-            return { ...opt, content: newContent };
+        const updatedOptions = q.answers.map((opt) => {
+          if (opt.option_label === optionLabel) {
+            return { ...opt, answer_text: newContent };
           }
           return opt;
         });
-        return { ...q, options: updatedOptions };
+        return { ...q, answers: updatedOptions };
       }
       return q;
     });
@@ -63,14 +72,31 @@ export default function MultipleChoiceForm({
     const updatedQuestions = questions.map((q) => {
       if (q.id === questionId) {
         // Tự động gán nhãn A, B, C, D dựa trên số lượng option hiện có
-        const label = String.fromCharCode(65 + q.options.length);
+        const label = String.fromCharCode(65 + q.answers.length);
         return {
           ...q,
-          options: [...q.options, { id: label, content: '' }],
+          answers: [...q.answers, { option_label: label, is_correct: false, answer_text: '' }],
         };
       }
       return q;
     });
+    setQuestions(updatedQuestions);
+  };
+
+  const handleSetCorrectOption = (questionId, optionLabel) => {
+    const updatedQuestions = questions.map((q) => {
+      if (q.id === questionId) {
+        const updatedOptions = q.answers.map((opt) => {
+          return {
+            ...opt,
+            is_correct: opt.option_label === optionLabel,
+          };
+        });
+        return { ...q, answers: updatedOptions };
+      }
+      return q;
+    });
+
     setQuestions(updatedQuestions);
   };
 
@@ -108,7 +134,7 @@ export default function MultipleChoiceForm({
           <Box sx={multipleChoiceStyles.headingContainer}>
             <Typography sx={multipleChoiceStyles.headingCard}>Part {index + 1}</Typography>
             <Typography sx={multipleChoiceStyles.descriptionCard}>
-              {`${part.type === 'multiple-choice-long' ? 'Multiple choice long text' : 'Multiple choice short text'} - ${questions.length} questions`}
+              {`${part.format === 'G' ? 'Multiple choice long text' : 'Multiple choice short text'} - ${questions.length} questions`}
             </Typography>
           </Box>
         </Box>
@@ -142,29 +168,18 @@ export default function MultipleChoiceForm({
       {/* ------------- Config Section ------------- */}
       {isOpen && (
         <>
-          {/* -------------- Total Score & Time Section -------------- */}
-          <Box sx={multipleChoiceStyles.totalScoreAndTime}>
-            <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-              <FormLabel sx={uploadReadingStyles.labelInput}>Total score</FormLabel>
-              <OutlinedInput
-                placeholder="Enter total score here"
-                defaultValue={part.totalScore}
-                sx={uploadReadingStyles.input}
-                onBlur={(e) => handleUpdateTotalScorePart(partId, e.target.value)}
-              />
-            </FormControl>
-            <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-              <FormLabel sx={uploadReadingStyles.labelInput}>Time</FormLabel>
-              <OutlinedInput
-                placeholder="Enter time here"
-                defaultValue={part.time}
-                sx={uploadReadingStyles.input}
-                onBlur={(e) => handleUpdateTimePart(partId, e.target.value)}
-              />
-            </FormControl>
-          </Box>
+          {/* -------------- Total Each Score -------------- */}
+          <FormControl fullWidth sx={uploadReadingStyles.formControl}>
+            <FormLabel sx={uploadReadingStyles.labelInput}>The score for each question</FormLabel>
+            <OutlinedInput
+              placeholder="Enter the score for each question here"
+              defaultValue={part.scoreForEachQuestion}
+              sx={uploadReadingStyles.input}
+              onBlur={(e) => handleUpdateScoreForEachQuestionPart(partId, e.target.value)}
+            />
+          </FormControl>
           {/* -------------- Description Section -------------- */}
-          {part.type === 'multiple-choice-long' && (
+          {part.format === 'G' ? (
             <FormControl fullWidth sx={uploadReadingStyles.formControl}>
               <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                 <FormLabel sx={uploadReadingStyles.labelInput}>Description</FormLabel>
@@ -174,6 +189,17 @@ export default function MultipleChoiceForm({
                 </Typography>{' '}
               </Box>
               <OutlinedInput placeholder="" disabled sx={uploadReadingStyles.input} />
+            </FormControl>
+          ) : (
+            <FormControl fullWidth sx={uploadReadingStyles.formControl}>
+              <FormLabel sx={uploadReadingStyles.labelInput}>Description</FormLabel>
+              <OutlinedInput
+                multiline
+                placeholder="Enter description here"
+                defaultValue={part.description}
+                sx={uploadReadingStyles.inputMultiline}
+                onBlur={(e) => handleUpdateDescriptionPart(partId, e.target.value)}
+              />
             </FormControl>
           )}
           {/* -------------- Questions Section -------------- */}
@@ -214,13 +240,61 @@ export default function MultipleChoiceForm({
                     <Box key={question.id} sx={multipleChoiceStyles.questionsContainer}>
                       <Box sx={multipleChoiceStyles.labelQuestionsContainer}>
                         <Box sx={multipleChoiceStyles.questionLabel}>{qIndex + 1}</Box>
-                        <OutlinedInput
-                          multiline
-                          placeholder="Enter question here"
-                          defaultValue={question.text}
-                          sx={uploadReadingStyles.inputMultiline}
-                          onBlur={(e) => handleUpdateQuestion(partId, question.id, e.target.value)}
-                        />
+                        {part.format === 'F' ? (
+                          <FormControl
+                            fullWidth
+                            sx={{ ...uploadReadingStyles.formControl, position: 'relative' }}
+                          >
+                            <FormControl
+                              fullWidth
+                              sx={{ ...uploadReadingStyles.formControl, position: 'relative' }}
+                            >
+                              <Typography
+                                sx={{
+                                  ...multipleChoiceStyles.buttonAndIconContainer,
+                                  position: 'absolute',
+                                  right: 24,
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                  zIndex: 1,
+                                }}
+                              >
+                                <OpenInNewOutlinedIcon sx={{ fontSize: '1.1rem' }} />
+                                Edit in editor
+                              </Typography>
+                              <OutlinedInput
+                                placeholder=""
+                                disabled
+                                sx={uploadReadingStyles.input}
+                              />
+                            </FormControl>
+                            <OutlinedInput
+                              multiline
+                              placeholder="Enter explaination here"
+                              defaultValue={question.explanation}
+                              sx={uploadReadingStyles.inputMultiline}
+                              onBlur={(e) => handleUpdateExplanation(question.id, e.target.value)}
+                            />
+                          </FormControl>
+                        ) : (
+                          <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
+                            <OutlinedInput
+                              multiline
+                              placeholder="Enter question here"
+                              defaultValue={question.text}
+                              sx={uploadReadingStyles.inputMultiline}
+                              onBlur={(e) => handleUpdateQuestion(question.id, e.target.value)}
+                            />
+                            <OutlinedInput
+                              multiline
+                              placeholder="Enter explaination here"
+                              defaultValue={question.explanation}
+                              sx={uploadReadingStyles.inputMultiline}
+                              onBlur={(e) => handleUpdateExplanation(question.id, e.target.value)}
+                            />
+                          </Box>
+                        )}
+                        {/* ---------------- Delete Icon ---------------- */}
                         <DeleteOutlineIcon
                           onClick={() => handleDeleteQuestion(partId, question.id)}
                           sx={multipleChoiceStyles.trashIconQuestion}
@@ -242,9 +316,16 @@ export default function MultipleChoiceForm({
                         </Typography>
                         {/* ---------- Option Section ----------- */}
                         <Box sx={multipleChoiceStyles.listOptionContainer}>
-                          {question.options.map((option, oIndex) => (
-                            <Box key={option.id} sx={multipleChoiceStyles.optionContainer}>
+                          {question.answers.map((option, oIndex) => (
+                            <Box
+                              key={option.option_label}
+                              sx={multipleChoiceStyles.optionContainer}
+                            >
                               <Checkbox
+                                checked={option.is_correct}
+                                onChange={() =>
+                                  handleSetCorrectOption(question.id, option.option_label)
+                                }
                                 icon={
                                   <RadioButtonUncheckedIcon sx={multipleChoiceStyles.uncheckIcon} />
                                 }
@@ -259,24 +340,32 @@ export default function MultipleChoiceForm({
                                 sx={multipleChoiceStyles.checkboxRoot}
                               />
                               <Typography sx={multipleChoiceStyles.optionLabel}>
-                                {option.id}.
+                                {option.option_label}.
                               </Typography>
                               <OutlinedInput
                                 multiline
                                 placeholder="Enter option here"
                                 sx={multipleChoiceStyles.optionInput}
-                                defaultValue={option.content}
+                                defaultValue={option.answer_text}
                                 onBlur={(e) =>
-                                  handleUpdateOption(question.id, option.id, e.target.value)
+                                  handleUpdateOption(
+                                    question.id,
+                                    option.option_label,
+                                    e.target.value,
+                                  )
                                 }
                               />
+                              {/* ---------------- Delete Icon ---------------- */}
                               <DeleteOutlineIcon
-                                onClick={() => handleDeleteOption(partId, question.id, option.id)}
+                                onClick={() =>
+                                  handleDeleteOption(partId, question.id, option.option_label)
+                                }
                                 sx={multipleChoiceStyles.trashIcon}
                               />
                             </Box>
                           ))}
                         </Box>
+                        {/* --------------- Add Option --------------- */}
                         <Typography
                           onClick={() => handleAddOption(question.id)}
                           sx={multipleChoiceStyles.buttonAndIconContainer}
