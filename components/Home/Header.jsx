@@ -41,11 +41,7 @@ export default function Header() {
 
   useEffect(() => {
     if (user?.avatar && typeof window !== 'undefined') {
-      // If avatar is a URL, use it directly; otherwise construct full URL
-      const avatarUrl = user.avatar.startsWith('http')
-        ? user.avatar
-        : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}${user.avatar}`;
-      setUserAvatar(avatarUrl);
+      setUserAvatar(user.avatar);
     }
   }, [user]);
 
