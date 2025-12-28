@@ -2,7 +2,13 @@
 
 import { Paper, Typography, TextField, Select, MenuItem, FormControl, Box } from '@mui/material';
 
-export default function BasicInformation({ testName, level, onTestNameChange, onLevelChange }) {
+export default function BasicInformation({
+  testName,
+  level,
+  description,
+  onTestNameChange,
+  onLevelChange,
+}) {
   return (
     <Paper sx={{ p: 3, mb: 4, border: '2px solid', borderColor: 'yellow.main', borderRadius: 4 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -48,6 +54,20 @@ export default function BasicInformation({ testName, level, onTestNameChange, on
             <MenuItem value="B2">B2</MenuItem>
           </Select>
         </FormControl>
+      </Box>
+
+      <Box sx={{ mt: 3, mb: 3 }}>
+        <Typography variant="body2" mb={1}>
+          Description
+        </Typography>
+        <TextField
+          id="description"
+          fullWidth
+          placeholder="Enter test description"
+          value={description}
+          onChange={(e) => onTestNameChange(e.target.value)}
+          size="small"
+        />
       </Box>
     </Paper>
   );

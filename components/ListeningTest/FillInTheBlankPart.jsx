@@ -11,11 +11,13 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import AddIcon from '@mui/icons-material/Add';
 import AudioUploader from '../Upload/AudioUploader';
+import ClientSideCustomEditor from '../Editor/ClientSideCustomEditor';
 import { useState } from 'react';
 
 export default function FillInTheBlankPart({ index, part = {}, onChange, onDelete }) {
   const answers = Array.isArray(part.answers) ? part.answers : [];
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [content, setContent] = useState('');
 
   const updatePart = (newPart) => {
     if (onChange) onChange(newPart);
@@ -140,17 +142,11 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
               <Typography variant="body2" mb={1}>
                 Description
               </Typography>
-              <Button startIcon={<AddIcon />} size="small">
-                Edit in editor
-              </Button>
             </Box>
-            <TextField
-              fullWidth
-              multiline
-              minRows={2}
-              placeholder="e.g., Listen to the audio between Alice and Sam and choose the correct picture..."
-              value={part.description ?? ''}
-              onChange={(e) => updatePart({ ...part, description: e.target.value })}
+            <ClientSideCustomEditor
+              data={content}
+              onChange={(newContent) => setContent(newContent)}
+              startingBlankId={1}
             />
           </Box>
 

@@ -1,0 +1,157 @@
+.custom-editor-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.custom-editor-wrapper .ck.ck-editor {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.custom-editor-wrapper .ck-editor__main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.custom-editor-wrapper .ck-editor__editable {
+  flex: 1;
+  height: auto !important;
+  min-height: 200px;
+  overflow-y: auto;
+}
+
+.custom-editor-wrapper .ck-content h1,
+.custom-editor-wrapper .ck-editor__editable h1 {
+  font-size: 3em;
+  font-weight: bold;
+}
+.custom-editor-wrapper .ck-content h2,
+.custom-editor-wrapper .ck-editor__editable h2 {
+  font-size: 2.25em;
+  font-weight: bold;
+}
+.custom-editor-wrapper .ck-content h3,
+.custom-editor-wrapper .ck-editor__editable h3 {
+  font-size: 1.5em;
+  font-weight: bold;
+}
+.custom-editor-wrapper .ck-content h4,
+.custom-editor-wrapper .ck-editor__editable h4 {
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+.custom-editor-wrapper .ck-content ol {
+  list-style-type: decimal;
+  margin-left: 30px;
+}
+
+.custom-editor-wrapper .ck-content ul {
+  list-style-type: disc;
+  margin-left: 30px;
+}
+
+/* Style for image caption to prevent it from being too large */
+.custom-editor-wrapper figure.image figcaption {
+  min-height: auto !important;
+  height: auto;
+  max-height: 50px;
+  padding: 4px;
+  font-size: 0.8em;
+  background-color: inherit;
+  color: inherit;
+}
+
+/* Keep image size normal */
+.custom-editor-wrapper figure.image {
+  margin: 10px 0;
+}
+
+.custom-editor-wrapper figure.image img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Block image style - display as block, centered */
+.custom-editor-wrapper figure.image-block {
+  display: block;
+  margin: 15px 0;
+  text-align: center;
+}
+
+.custom-editor-wrapper figure.image-block img {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Side image style - float to one side, text wrap */
+.custom-editor-wrapper figure.image-side {
+  float: left;
+  margin: 0 15px 15px 0;
+  max-width: 50%;
+}
+
+.custom-editor-wrapper figure.image-side img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Clear floats after side images */
+.custom-editor-wrapper {
+  clear: both;
+}
+
+/* Override prose styles for proper image display within custom-editor-wrapper */
+.custom-editor-wrapper.prose figure {
+  margin: 0;
+}
+
+.custom-editor-wrapper.prose figure img {
+  margin: 0;
+}
+
+/* Inline images in view page - image_resized class from CKEditor */
+.custom-editor-wrapper .ck-content img.image_resized,
+.custom-editor-wrapper .ck-content p img {
+  display: inline;
+  vertical-align: bottom;
+  height: auto !important;
+  aspect-ratio: auto !important;
+}
+
+.custom-editor-wrapper .image-inline {
+  margin-right: 10px;
+  margin-left: 10px;
+}
+/* Blank element styling */
+.blank-element {
+  display: inline;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  border-radius: 0;
+  font-style: normal;
+  color: inherit;
+  white-space: nowrap;
+}
+
+.blank-element::before {
+  content: '(' attr(data-blank-id) ') ';
+  color: #0066cc;
+}
+
+.blank-element::after {
+  content: '_____';
+  color: #0066cc;
+  display: inline;
+  margin: 0 1px;
+}
