@@ -104,11 +104,10 @@ export const uploadReadingStyles = {
   // -------- Upload Reading Test Form Section ---------
   nameTestAndTime: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: '70% 30%',
     gap: 2,
     width: '100%',
   },
-
   uploadReadingFormSection: {
     width: '100%',
     height: 'auto',

@@ -59,8 +59,66 @@ export default function Page() {
     );
   };
 
+  // Dành cho format H và I
+  const handleUpdateFormat = (partId, newFormat) => {
+    setParts((prevParts) =>
+      prevParts.map((p) => {
+        if (p.id === partId) {
+          const updatedQuestions = p.questions.map((q) => {
+            // 1. Tách tất cả các thuộc tính hiện tại của Question
+            const { content, answers, ...rest } = q;
+
+            // 2. Nếu ĐÍCH là 'I' (Text):
+            // answers sẽ lấy từ content cũ (nếu có) hoặc giữ nguyên nếu answers đang là chuỗi
+            if (newFormat === 'I') {
+              const finalAnswer = typeof answers === 'string' ? answers : content || '';
+              return {
+                ...rest, // Giữ id, question_number, explanation...
+                answers: finalAnswer,
+                // KHÔNG có trường content ở đây
+              };
+            }
+
+            // 3. Nếu ĐÍCH là 'H' (Multiple Choice):
+            // content sẽ lấy từ answers cũ (nếu là chuỗi) hoặc giữ nguyên content cũ
+            if (newFormat === 'H') {
+              const finalContent = typeof answers === 'string' ? answers : content || '';
+              return {
+                ...rest,
+                content: finalContent,
+                answers: [{ option_label: 'A', is_correct: true, answer_text: '' }],
+              };
+            }
+
+            return q;
+          });
+
+          // 4. Cấu trúc lại Part
+          const { content: partContent, ...partRest } = p;
+          if (newFormat === 'I') {
+            return { ...partRest, format: newFormat, questions: updatedQuestions };
+          } else {
+            return {
+              ...partRest,
+              format: newFormat,
+              questions: updatedQuestions,
+              content: partContent || '',
+            };
+          }
+        }
+        return p;
+      }),
+    );
+  };
+
   const handleDeletePart = (idToDelete) => {
-    setParts(parts.filter((part) => part.id !== idToDelete));
+    setParts((prevParts) => {
+      const filteredParts = prevParts.filter((part) => part.id !== idToDelete);
+      return filteredParts.map((part, index) => ({
+        ...part,
+        order: index + 1,
+      }));
+    });
   };
 
   const handleDeleteQuestion = (partId, questionId) => {
@@ -106,19 +164,18 @@ export default function Page() {
     setParts((prevParts) =>
       prevParts.map((p) => {
         if (p.id === partId) {
-          if (format === 'G') {
-            // Nếu chuyển sang G: Thêm format và đảm bảo có content
-            return { ...p, format: format, content: p.content ?? '' };
-          } else {
-            // Nếu chuyển sang format khác: Loại bỏ trường content ra khỏi Object
-            const { content, ...rest } = p;
-            return { ...rest, format: format };
+          const updatedPart = { ...p, format: format };
+          // Nếu là loại G hoặc H hoặc I
+          if (format === 'G' || format === 'H' || format === 'I') {
+            updatedPart.content = '';
           }
+          return updatedPart;
         }
         return p;
       }),
     );
   };
+
   const handleUpdateScoreForEachQuestionPart = (partId, newScoreForEachQuestion) => {
     setParts((prevParts) =>
       prevParts.map((p) =>
@@ -144,20 +201,6 @@ export default function Page() {
 
     switch (part.format) {
       case 'G':
-        return (
-          <MultipleChoiceForm
-            part={part}
-            partId={part.id}
-            index={index}
-            handleUpdateDescriptionPart={handleUpdateDescriptionPart}
-            handleDeletePart={handleDeletePart}
-            questions={partQuestions}
-            setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
-            handleDeleteQuestion={handleDeleteQuestion}
-            handleDeleteOption={handleDeleteOption}
-            handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
-          />
-        );
       case 'F':
         return (
           <MultipleChoiceForm
@@ -187,6 +230,7 @@ export default function Page() {
           />
         );
       case 'I':
+      case 'H':
         return (
           <FillBlankForm
             part={part}
@@ -194,8 +238,10 @@ export default function Page() {
             index={index}
             handleDeletePart={handleDeletePart}
             handleDeleteQuestion={handleDeleteQuestion}
+            handleDeleteOption={handleDeleteOption}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
+            setFormat={(newFormat) => handleUpdateFormat(part.id, newFormat)}
             handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
           />
         );

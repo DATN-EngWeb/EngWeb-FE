@@ -211,3 +211,13 @@ export const matchingStyles = {
     },
   },
 };
+
+export const fillBlankStyles = {
+  // -------- Input Section ---------
+  scoreAndCheckbox: {
+    display: 'grid',
+    gridTemplateColumns: '60% 40%',
+    gap: 2,
+    width: '100%',
+  },
+};

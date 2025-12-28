@@ -182,7 +182,7 @@ export default function MultipleChoiceForm({
           {part.format === 'G' ? (
             <FormControl fullWidth sx={uploadReadingStyles.formControl}>
               <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                <FormLabel sx={uploadReadingStyles.labelInput}>Description</FormLabel>
+                <FormLabel sx={uploadReadingStyles.labelInput}>Passage</FormLabel>
                 <Typography sx={multipleChoiceStyles.buttonAndIconContainer}>
                   <OpenInNewOutlinedIcon sx={{ fontSize: '1.1rem' }} />
                   Edit in editor
