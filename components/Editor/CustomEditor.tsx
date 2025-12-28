@@ -30,7 +30,6 @@ import {
   ImageResize,
 } from 'ckeditor5';
 import { BlankEditing, BlankUI } from './BlankPlugin';
-import editorStyles from '../../styles/Editor/Editor.module.css';
 import 'ckeditor5/ckeditor5.css';
 import 'ckeditor5/ckeditor5-content.css';
 
@@ -159,7 +158,7 @@ function CustomEditor({
   }, []);
 
   return (
-    <div className={editorStyles['custom-editor-wrapper']}>
+    <div className="custom-editor-wrapper">
       <CKEditor
         editor={ClassicEditor}
         data={data}
@@ -178,6 +177,12 @@ function CustomEditor({
         }}
         config={{
           licenseKey: 'GPL',
+          ui: {
+            viewportOffset: {
+              top: 0,
+              bottom: 0,
+            },
+          },
           plugins: [
             Essentials,
             Bold,
@@ -224,14 +229,16 @@ function CustomEditor({
               '|',
               'bulletedList',
               'numberedList',
+              '|',
               'outdent',
               'indent',
               '|',
-              'insertTable',
-              'insertImage',
-              'horizontalLine',
               'insertBlank',
+              'insertImage',
+              'insertTable',
+              'horizontalLine',
             ],
+            shouldNotGroupWhenFull: true,
           },
           table: {
             contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells'],

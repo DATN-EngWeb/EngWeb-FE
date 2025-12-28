@@ -143,11 +143,23 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
                 Description
               </Typography>
             </Box>
-            <ClientSideCustomEditor
-              data={content}
-              onChange={(newContent) => setContent(newContent)}
-              startingBlankId={1}
-            />
+            <Box
+              sx={{
+                height: '300px',
+                overflowY: 'auto',
+                border: '1px solid #d0d0d0',
+                borderRadius: '8px',
+                position: 'relative',
+                zIndex: 1,
+                overflow: 'visible',
+              }}
+            >
+              <ClientSideCustomEditor
+                data={content}
+                onChange={(newContent) => setContent(newContent)}
+                startingBlankId={1}
+              />
+            </Box>
           </Box>
 
           <Box

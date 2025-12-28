@@ -1,7 +1,10 @@
+/* CKEditor Custom Styles */
+
 .custom-editor-wrapper {
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
 }
 
 .custom-editor-wrapper .ck.ck-editor {
@@ -20,32 +23,42 @@
 
 .custom-editor-wrapper .ck-editor__editable {
   flex: 1;
-  height: auto !important;
+  height: auto;
   min-height: 200px;
   overflow-y: auto;
+  padding: 10px;
 }
 
+/* Heading styles */
 .custom-editor-wrapper .ck-content h1,
 .custom-editor-wrapper .ck-editor__editable h1 {
   font-size: 3em;
   font-weight: bold;
+  margin: 0.5em 0;
 }
+
 .custom-editor-wrapper .ck-content h2,
 .custom-editor-wrapper .ck-editor__editable h2 {
   font-size: 2.25em;
   font-weight: bold;
+  margin: 0.5em 0;
 }
+
 .custom-editor-wrapper .ck-content h3,
 .custom-editor-wrapper .ck-editor__editable h3 {
   font-size: 1.5em;
   font-weight: bold;
+  margin: 0.5em 0;
 }
+
 .custom-editor-wrapper .ck-content h4,
 .custom-editor-wrapper .ck-editor__editable h4 {
   font-size: 1.1em;
   font-weight: bold;
+  margin: 0.5em 0;
 }
 
+/* List styles */
 .custom-editor-wrapper .ck-content ol {
   list-style-type: decimal;
   margin-left: 30px;
@@ -56,9 +69,9 @@
   margin-left: 30px;
 }
 
-/* Style for image caption to prevent it from being too large */
+/* Image caption styles */
 .custom-editor-wrapper figure.image figcaption {
-  min-height: auto !important;
+  min-height: auto;
   height: auto;
   max-height: 50px;
   padding: 4px;
@@ -67,7 +80,7 @@
   color: inherit;
 }
 
-/* Keep image size normal */
+/* Image container styles */
 .custom-editor-wrapper figure.image {
   margin: 10px 0;
 }
@@ -104,33 +117,20 @@
   display: block;
 }
 
-/* Clear floats after side images */
-.custom-editor-wrapper {
-  clear: both;
-}
-
-/* Override prose styles for proper image display within custom-editor-wrapper */
-.custom-editor-wrapper.prose figure {
-  margin: 0;
-}
-
-.custom-editor-wrapper.prose figure img {
-  margin: 0;
-}
-
-/* Inline images in view page - image_resized class from CKEditor */
+/* Inline images */
 .custom-editor-wrapper .ck-content img.image_resized,
 .custom-editor-wrapper .ck-content p img {
   display: inline;
   vertical-align: bottom;
-  height: auto !important;
-  aspect-ratio: auto !important;
+  height: auto;
+  aspect-ratio: auto;
 }
 
 .custom-editor-wrapper .image-inline {
   margin-right: 10px;
   margin-left: 10px;
 }
+
 /* Blank element styling */
 .blank-element {
   display: inline;
