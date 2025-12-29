@@ -205,7 +205,14 @@ export default function FillBlankForm({
             {/* -------------- Chọn loại format (H hoặc I) -------------- */}
             <FormControl fullWidth sx={uploadReadingStyles.formControl}>
               <FormLabel sx={uploadReadingStyles.labelInput}>Answer Type</FormLabel>
-              <Box sx={{ display: 'flex', gap: 3, alignItems: 'center', height: '100%' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: { xs: 0, md: 2 },
+                  alignItems: 'center',
+                  height: '100%',
+                }}
+              >
                 {/* Lựa chọn 1: Multiple Choice (Format H) */}
                 <Box
                   sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
@@ -223,9 +230,10 @@ export default function FillBlankForm({
                     }
                     sx={multipleChoiceStyles.checkboxRoot}
                   />
-                  <Typography sx={{ fontSize: '0.9rem', ml: 1 }}>Multiple Choice</Typography>
+                  <Typography sx={{ fontSize: { xs: '0.7rem', md: '0.9rem' }, ml: 1 }}>
+                    Multiple Choice
+                  </Typography>
                 </Box>
-
                 {/* Lựa chọn 2: Text (Format I) */}
                 <Box
                   sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
@@ -243,7 +251,9 @@ export default function FillBlankForm({
                     }
                     sx={multipleChoiceStyles.checkboxRoot}
                   />
-                  <Typography sx={{ fontSize: '0.9rem', ml: 1 }}>Text</Typography>
+                  <Typography sx={{ fontSize: { xs: '0.7rem', md: '0.9rem' }, ml: 1 }}>
+                    Text
+                  </Typography>
                 </Box>
               </Box>
             </FormControl>

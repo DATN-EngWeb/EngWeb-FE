@@ -42,6 +42,7 @@ export const multipleChoiceStyles = {
     cursor: 'pointer',
     '&:hover': { color: 'primary.main' },
     alignSelf: 'flex-start',
+    userSelect: 'none',
   },
   questionsContainer: {
     width: '100%',
@@ -216,7 +217,7 @@ export const fillBlankStyles = {
   // -------- Input Section ---------
   scoreAndCheckbox: {
     display: 'grid',
-    gridTemplateColumns: '60% 40%',
+    gridTemplateColumns: { xs: '50% 50%', sm: '60% 40%' },
     gap: 2,
     width: '100%',
   },

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -40,6 +40,21 @@ export default function Page() {
   });
   const [parts, setParts] = useState([]);
 
+  const lastPartRef = useRef(null);
+  const prevPartsLengthRef = useRef(parts.length);
+
+  useEffect(() => {
+    if (parts.length > prevPartsLengthRef.current) {
+      if (lastPartRef.current) {
+        lastPartRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }
+    }
+    prevPartsLengthRef.current = parts.length;
+  }, [parts.length]);
+
   const handleAddPart = () => {
     const newPart = {
       id: Date.now(),
@@ -56,6 +71,12 @@ export default function Page() {
   const updatePartQuestions = (partId, newQuestions) => {
     setParts((prevParts) =>
       prevParts.map((p) => (p.id === partId ? { ...p, questions: newQuestions } : p)),
+    );
+  };
+
+  const updateAnswerPart = (partId, newAnswers) => {
+    setParts((prevParts) =>
+      prevParts.map((p) => (p.id === partId ? { ...p, answers: newAnswers } : p)),
     );
   };
 
@@ -166,8 +187,11 @@ export default function Page() {
         if (p.id === partId) {
           const updatedPart = { ...p, format: format };
           // Nếu là loại G hoặc H hoặc I
-          if (format === 'G' || format === 'H' || format === 'I') {
+          if (format === 'G' || format === 'H' || format === 'I' || format === 'J') {
             updatedPart.content = '';
+          }
+          if (format === 'J') {
+            updatedPart.answers = [];
           }
           return updatedPart;
         }
@@ -225,6 +249,7 @@ export default function Page() {
             handleDeletePart={handleDeletePart}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
+            setAnswers={(newAnswers) => updateAnswerPart(part.id, newAnswers)}
             handleDeleteQuestion={handleDeleteQuestion}
             handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
           />
@@ -402,7 +427,11 @@ export default function Page() {
           </Box>
           {/* ------------ Parts Section ------------- */}
           {parts.map((part, index) => (
-            <Box key={part.id} sx={uploadReadingStyles.basicInfoContainer}>
+            <Box
+              key={part.id}
+              ref={index === parts.length - 1 ? lastPartRef : null}
+              sx={uploadReadingStyles.basicInfoContainer}
+            >
               {!part.format ? (
                 <>
                   <Box

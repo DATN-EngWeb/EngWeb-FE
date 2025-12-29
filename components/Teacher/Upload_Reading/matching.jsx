@@ -1,4 +1,5 @@
 import React from 'react';
+import { useEffect } from 'react';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -23,6 +24,7 @@ export default function MatchingForm({
   handleDeleteQuestion,
   questions,
   setQuestions,
+  setAnswers,
   handleUpdateScoreForEachQuestionPart,
 }) {
   const [isOpen, setIsOpen] = React.useState(true);
@@ -30,10 +32,24 @@ export default function MatchingForm({
   const handleAddQuestion = () => {
     const newQuestion = {
       id: Date.now(),
-      text: '',
-      correctAnswer: '',
+      // Những fields gửi lên server
+      question_number: 1,
+      explanation: '',
+      answer_label: '',
     };
     setQuestions([...questions, newQuestion]);
+  };
+
+  const handleAddAnswer = () => {
+    const label = String.fromCharCode(65 + part.answers.length);
+    const newAnswer = {
+      id: Date.now(),
+      // Những fields gửi lên server
+      option_label: label,
+      answer_text: 'In the bar',
+      is_correct: true,
+    };
+    setAnswers([...part.answers, newAnswer]);
   };
 
   const handleUpdateCorrectAnswer = (currentQIndex, selectedLetter) => {
@@ -58,7 +74,7 @@ export default function MatchingForm({
 
   const handleUpdateQuestion = (questionId, value) => {
     const updatedQuestions = questions.map((q) =>
-      q.id === questionId ? { ...q, text: value } : q,
+      q.id === questionId ? { ...q, explanation: value } : q,
     );
     setQuestions(updatedQuestions);
   };
@@ -144,7 +160,7 @@ export default function MatchingForm({
           {/* -------------- Description Section -------------- */}
           <FormControl fullWidth sx={uploadReadingStyles.formControl}>
             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-              <FormLabel sx={uploadReadingStyles.labelInput}>Description</FormLabel>
+              <FormLabel sx={uploadReadingStyles.labelInput}>Passage</FormLabel>
               <Typography sx={multipleChoiceStyles.buttonAndIconContainer}>
                 <OpenInNewOutlinedIcon sx={{ fontSize: '1.1rem' }} />
                 Edit in editor
@@ -214,11 +230,18 @@ export default function MatchingForm({
             <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
               <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                 <FormLabel sx={uploadReadingStyles.labelInput}>Answer</FormLabel>
+                <Typography
+                  onClick={handleAddAnswer}
+                  sx={multipleChoiceStyles.buttonAndIconContainer}
+                >
+                  <AddIcon sx={{ fontSize: '1.4rem' }} />
+                  Add answer
+                </Typography>
               </Box>
               <Box sx={matchingStyles.linkOptionContainer}>
-                {questions.map((question, qIndex) => (
+                {part.answers.map((answer, aIndex) => (
                   <Box
-                    key={question.id}
+                    key={answer.id}
                     sx={{
                       ...multipleChoiceStyles.questionsContainer,
                       display: 'flex',
@@ -227,15 +250,15 @@ export default function MatchingForm({
                       gap: 1,
                     }}
                   >
-                    <Box sx={matchingStyles.questionLabel}>{1 + qIndex}</Box>
+                    <Box sx={matchingStyles.questionLabel}>{1 + aIndex}</Box>
                     <FormControl fullWidth sx={uploadReadingStyles.formControl}>
                       <Select
                         value={
-                          question.correctAnswer !== undefined && question.correctAnswer !== ''
-                            ? String.fromCharCode(65 + question.correctAnswer)
+                          answer.correctAnswer !== undefined && answer.correctAnswer !== ''
+                            ? String.fromCharCode(65 + answer.correctAnswer)
                             : ''
                         }
-                        onChange={(e) => handleUpdateCorrectAnswer(qIndex, e.target.value)}
+                        onChange={(e) => handleUpdateCorrectAnswer(aIndex, e.target.value)}
                         displayEmpty
                         sx={matchingStyles.selectAnswer}
                       >
@@ -243,9 +266,9 @@ export default function MatchingForm({
                           <em>Select</em>
                         </MenuItem>
                         {/* Hiện đầy đủ danh sách, không cần vô hiệu hóa */}
-                        {questions.map((_, optIndex) => (
-                          <MenuItem key={optIndex} value={String.fromCharCode(65 + optIndex)}>
-                            {String.fromCharCode(65 + optIndex)}
+                        {part.answers.map((_, aIndex) => (
+                          <MenuItem key={aIndex} value={String.fromCharCode(65 + aIndex)}>
+                            {String.fromCharCode(65 + aIndex)}
                           </MenuItem>
                         ))}
                       </Select>
