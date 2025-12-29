@@ -22,6 +22,7 @@ export default function MatchingForm({
   index,
   handleDeletePart,
   handleDeleteQuestion,
+  handleDeleteAnswer,
   questions,
   setQuestions,
   setAnswers,
@@ -46,37 +47,49 @@ export default function MatchingForm({
       id: Date.now(),
       // Những fields gửi lên server
       option_label: label,
-      answer_text: 'In the bar',
-      is_correct: true,
+      answer_text: '',
+      is_correct: false,
     };
     setAnswers([...part.answers, newAnswer]);
   };
 
-  const handleUpdateCorrectAnswer = (currentQIndex, selectedLetter) => {
-    if (!selectedLetter) return;
-    // 1. Quy đổi chữ cái được chọn thành số index (A=0, B=1, ...)
-    const newTargetAnswerIndex = String(selectedLetter).charCodeAt(0) - 65;
-    const updatedQuestions = questions.map((q, index) => {
-      // 2. Nếu đây là câu hỏi hiện tại đang thao tác
-      if (index === currentQIndex) {
-        return { ...q, correctAnswer: newTargetAnswerIndex };
+  const handleUpdateCorrectAnswer = (questionId, selectedLabel) => {
+    const updatedQuestions = questions.map((q) => {
+      // Nếu đây là câu hỏi đang được thao tác -> gán label mới
+      if (q.id === questionId) {
+        return { ...q, answer_label: selectedLabel };
       }
-      // 3. LOGIC ĐẢO NGƯỢC:
-      // Nếu có một câu hỏi khác ĐANG nắm giữ đáp án này (A=0),
-      // thì ta gỡ bỏ đáp án của câu đó (đặt về rỗng '')
-      if (q.correctAnswer === newTargetAnswerIndex) {
-        return { ...q, correctAnswer: '' };
+      // Nếu câu hỏi KHÁC cũng đang giữ label này -> reset label của nó về rỗng
+      if (q.answer_label === selectedLabel) {
+        return { ...q, answer_label: '' };
       }
       return q;
     });
     setQuestions(updatedQuestions);
+
+    // Gom tất cả các label đang được sử dụng làm đáp án đúng
+    const allCorrectLabels = updatedQuestions
+      .map((q) => q.answer_label)
+      .filter((label) => label !== ''); // Loại bỏ các label rỗng
+    const updatedAnswers = part.answers.map((ans) => ({
+      ...ans,
+      is_correct: allCorrectLabels.includes(ans.option_label),
+    }));
+    setAnswers(updatedAnswers);
   };
 
-  const handleUpdateQuestion = (questionId, value) => {
+  const handleUpdateExplanation = (questionId, value) => {
     const updatedQuestions = questions.map((q) =>
       q.id === questionId ? { ...q, explanation: value } : q,
     );
     setQuestions(updatedQuestions);
+  };
+
+  const handleUpdateAnswer = (optionLabel, newContent) => {
+    const updatedAnswer = part.answers.map((a) =>
+      a.option_label === optionLabel ? { ...a, answer_text: newContent } : a,
+    );
+    setAnswers(updatedAnswer);
   };
 
   return (
@@ -171,13 +184,13 @@ export default function MatchingForm({
           {/* -------------- Questions Section -------------- */}
           <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
             <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-              <FormLabel sx={uploadReadingStyles.labelInput}>Missing Sentence</FormLabel>
+              <FormLabel sx={uploadReadingStyles.labelInput}>Questions</FormLabel>
               <Typography
                 onClick={handleAddQuestion}
                 sx={multipleChoiceStyles.buttonAndIconContainer}
               >
                 <AddIcon sx={{ fontSize: '1.4rem' }} />
-                Add sentence
+                Add question
               </Typography>
             </Box>
             {questions.length == 0 ? (
@@ -196,7 +209,7 @@ export default function MatchingForm({
                   }}
                 >
                   <AddIcon sx={{ fontSize: { xs: '1rem', md: '1.4rem' } }} />
-                  Add your first sentence
+                  Add your first question
                 </Typography>
               </Box>
             ) : (
@@ -205,16 +218,41 @@ export default function MatchingForm({
                   {questions.map((question, qIndex) => (
                     <Box key={question.id} sx={multipleChoiceStyles.questionsContainer}>
                       <Box sx={multipleChoiceStyles.labelQuestionsContainer}>
-                        <Box sx={multipleChoiceStyles.questionLabel}>
-                          {String.fromCharCode(65 + qIndex)}
-                        </Box>
+                        <Box sx={multipleChoiceStyles.questionLabel}>{qIndex + 1}</Box>
                         <OutlinedInput
                           multiline
-                          placeholder="Enter sentence here"
-                          defaultValue={question.text}
-                          onBlur={(e) => handleUpdateQuestion(question.id, e.target.value)}
+                          placeholder="Enter explanation here"
+                          defaultValue={question.explanation}
+                          onBlur={(e) => handleUpdateExplanation(question.id, e.target.value)}
                           sx={uploadReadingStyles.inputMultiline}
                         />
+                        <FormControl
+                          sx={{
+                            ...uploadReadingStyles.formControl,
+                            width: { xs: '150px', md: '180px' },
+                          }}
+                        >
+                          <Select
+                            value={
+                              question.answer_label !== undefined && question.answer_label !== ''
+                                ? question.answer_label
+                                : ''
+                            }
+                            onChange={(e) => handleUpdateCorrectAnswer(question.id, e.target.value)}
+                            displayEmpty
+                            sx={matchingStyles.selectAnswer}
+                          >
+                            <MenuItem value="" disabled>
+                              <em>Select</em>
+                            </MenuItem>
+                            {/* Hiện đầy đủ danh sách, không cần vô hiệu hóa */}
+                            {part.answers.map((answer, aIndex) => (
+                              <MenuItem key={answer.id} value={String.fromCharCode(65 + aIndex)}>
+                                {String.fromCharCode(65 + aIndex)}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
                         <DeleteOutlineIcon
                           onClick={() => handleDeleteQuestion(partId, question.id)}
                           sx={multipleChoiceStyles.trashIconQuestion}
@@ -240,39 +278,22 @@ export default function MatchingForm({
               </Box>
               <Box sx={matchingStyles.linkOptionContainer}>
                 {part.answers.map((answer, aIndex) => (
-                  <Box
-                    key={answer.id}
-                    sx={{
-                      ...multipleChoiceStyles.questionsContainer,
-                      display: 'flex',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 1,
-                    }}
-                  >
-                    <Box sx={matchingStyles.questionLabel}>{1 + aIndex}</Box>
-                    <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-                      <Select
-                        value={
-                          answer.correctAnswer !== undefined && answer.correctAnswer !== ''
-                            ? String.fromCharCode(65 + answer.correctAnswer)
-                            : ''
-                        }
-                        onChange={(e) => handleUpdateCorrectAnswer(aIndex, e.target.value)}
-                        displayEmpty
-                        sx={matchingStyles.selectAnswer}
-                      >
-                        <MenuItem value="" disabled>
-                          <em>Select</em>
-                        </MenuItem>
-                        {/* Hiện đầy đủ danh sách, không cần vô hiệu hóa */}
-                        {part.answers.map((_, aIndex) => (
-                          <MenuItem key={aIndex} value={String.fromCharCode(65 + aIndex)}>
-                            {String.fromCharCode(65 + aIndex)}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
+                  <Box key={answer.id} sx={multipleChoiceStyles.optionContainer}>
+                    <Typography sx={multipleChoiceStyles.optionLabel}>
+                      {answer.option_label}.
+                    </Typography>
+                    <OutlinedInput
+                      multiline
+                      placeholder="Enter option here"
+                      sx={multipleChoiceStyles.optionInput}
+                      defaultValue={answer.answer_text}
+                      onBlur={(e) => handleUpdateAnswer(answer.option_label, e.target.value)}
+                    />
+                    {/* ---------------- Delete Icon ---------------- */}
+                    <DeleteOutlineIcon
+                      onClick={() => handleDeleteAnswer(partId, answer.option_label)}
+                      sx={multipleChoiceStyles.trashIcon}
+                    />
                   </Box>
                 ))}
               </Box>

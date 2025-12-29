@@ -155,6 +155,25 @@ export default function Page() {
     );
   };
 
+  // Dành cho format J - Matching
+  const handleDeleteAnswer = (partId, optionLabel) => {
+    setParts((prevParts) =>
+      prevParts.map((p) => {
+        if (p.id === partId) {
+          const updatedAnswers = p.answers.filter((a) => a.option_label !== optionLabel);
+
+          const reindexedAnswers = updatedAnswers.map((a, index) => ({
+            ...a,
+            option_label: String.fromCharCode(65 + index),
+          }));
+
+          return { ...p, answers: reindexedAnswers };
+        }
+        return p;
+      }),
+    );
+  };
+
   const handleDeleteOption = (partId, questionId, optionLabel) => {
     setParts((prevParts) =>
       prevParts.map((p) =>
@@ -247,10 +266,11 @@ export default function Page() {
             partId={part.id}
             index={index}
             handleDeletePart={handleDeletePart}
+            handleDeleteQuestion={handleDeleteQuestion}
+            handleDeleteAnswer={handleDeleteAnswer}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
             setAnswers={(newAnswers) => updateAnswerPart(part.id, newAnswers)}
-            handleDeleteQuestion={handleDeleteQuestion}
             handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
           />
         );
