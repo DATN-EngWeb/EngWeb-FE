@@ -6,6 +6,7 @@ interface CustomEditorProps {
   data: string;
   onChange: (val: string) => void;
   startingBlankId?: number;
+  onError?: (message: string) => void;
 }
 
 const DynamicCustomEditor = dynamic(() => import("./CustomEditor"), {

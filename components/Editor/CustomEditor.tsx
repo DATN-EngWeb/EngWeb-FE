@@ -55,9 +55,11 @@ class CustomUploadAdapter {
   private readonly MAX_FILE_SIZE_MB = MAX_FILE_SIZE_MB;
   private readonly MAX_IMAGES = MAX_IMAGES;
   private abortController = new AbortController();
+  private onError?: (message: string) => void;
 
-  constructor(loader: FileLoader) {
+  constructor(loader: FileLoader, onError?: (message: string) => void) {
     this.loader = loader;
+    this.onError = onError;
   }
 
   async upload(): Promise<UploadResponse> {
@@ -65,21 +67,17 @@ class CustomUploadAdapter {
 
     // Check number of images first
     if (currentImageCount > this.MAX_IMAGES) {
-      this.abortController.abort();
-      return Promise.reject(new Error(`Số lượng ảnh đã đạt giới hạn ${this.MAX_IMAGES} ảnh.`));
+      const errorMsg = `Number of images reach limit ${this.MAX_IMAGES} images`;
+      this.onError?.(errorMsg);
+      throw new Error(errorMsg);
     }
 
     // Check file size
     if (file.size > this.MAX_FILE_SIZE) {
       const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-      this.abortController.abort();
-      return Promise.reject(
-        new Error(
-          `Dung lượng ảnh (${fileSizeMB}MB) vượt quá giới hạn ${this.MAX_FILE_SIZE_MB.toFixed(
-            1,
-          )}MB`,
-        ),
-      );
+      const errorMsg = `Image volume (${fileSizeMB}MB) excess limit ${this.MAX_FILE_SIZE_MB.toFixed(1)}MB`;
+      this.onError?.(errorMsg);
+      throw new Error(errorMsg);
     }
 
     return new Promise((resolve, reject) => {
@@ -94,7 +92,9 @@ class CustomUploadAdapter {
       };
 
       reader.onerror = () => {
-        reject(new Error('Không thể đọc file ảnh'));
+        const errorMsg = 'Can not read image file';
+        this.onError?.(errorMsg);
+        reject(new Error(errorMsg));
       };
 
       reader.readAsDataURL(file);
@@ -110,12 +110,29 @@ function CustomEditor({
   data,
   onChange,
   startingBlankId = 1,
+  onError,
 }: {
   data: string;
   onChange: (data: string) => void;
   startingBlankId?: number;
+  onError?: (message: string) => void;
 }) {
   const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Override window.alert to use onError callback
+  React.useEffect(() => {
+    const originalAlert = window.alert;
+    window.alert = (message: any) => {
+      if (onError) {
+        onError(String(message));
+        return;
+      }
+      originalAlert(message);
+    };
+    return () => {
+      window.alert = originalAlert;
+    };
+  }, [onError]);
 
   const countImages = React.useCallback((html: string) => {
     const parser = new DOMParser();
@@ -173,7 +190,7 @@ function CustomEditor({
           };
         }) => {
           editor.plugins.get('FileRepository').createUploadAdapter = (loader: FileLoader) =>
-            new CustomUploadAdapter(loader);
+            new CustomUploadAdapter(loader, onError);
         }}
         config={{
           licenseKey: 'GPL',
@@ -181,6 +198,9 @@ function CustomEditor({
             viewportOffset: {
               top: 0,
               bottom: 0,
+            },
+            poweredBy: {
+              forceVisible: false,
             },
           },
           plugins: [
