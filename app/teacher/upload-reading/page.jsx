@@ -1,3 +1,5 @@
+/* eslint-env browser */
+/* eslint-disable no-console */
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -28,6 +30,7 @@ import { uploadReadingStyles } from '../../../styles/Teacher/Reading/UploadReadi
 import MultipleChoiceForm from '../../../components/Teacher/Upload_Reading/multipleChoice';
 import MatchingForm from '../../../components/Teacher/Upload_Reading/matching';
 import FillBlankForm from '../../../components/Teacher/Upload_Reading/fillBlanks';
+import { createNewTest, uploadReadingTestInChunks } from '../../../api/teacher/upload-reading';
 
 export default function Page() {
   const [test, setTest] = useState({
@@ -37,11 +40,14 @@ export default function Page() {
     time: 60,
     description: '',
     status: 'P',
+    completed_bonus: 0,
   });
   const [parts, setParts] = useState([]);
 
   const lastPartRef = useRef(null);
   const prevPartsLengthRef = useRef(parts.length);
+
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (parts.length > prevPartsLengthRef.current) {
@@ -54,6 +60,105 @@ export default function Page() {
     }
     prevPartsLengthRef.current = parts.length;
   }, [parts.length]);
+
+  const transformFormatData = (data) => {
+    // Biến đếm toàn cục, bắt đầu từ 1
+    let globalQuestionNumber = 1;
+
+    // Duyệt qua từng Part
+    return data.map((part) => {
+      // Duyệt qua từng Question trong Part
+      const updatedQuestions = part.questions.map((question) => {
+        return {
+          ...question,
+          question_number: globalQuestionNumber++,
+          score: part.scoreForEachQuestion,
+        };
+      });
+      const { scoreForEachQuestion, ...restPart } = part;
+      return {
+        ...restPart,
+        questions: updatedQuestions,
+      };
+    });
+  };
+
+  const handleUploadTest = async () => {
+    if (!test.title || !test.description) {
+      window.alert('Vui lòng điền đầy đủ tiêu đề và mô tả!');
+      return null;
+    }
+    if (!['A1', 'A2', 'B1', 'B2'].includes(test.level)) {
+      window.alert('Vui lòng chọn cấp độ hợp lệ (A1-B2)!');
+      return null;
+    }
+    const payload = {
+      title: test.title,
+      level: test.level,
+      skill: test.skill,
+      time: parseInt(test.time),
+      description: test.description,
+      completed_bonus: parseInt(test.completed_bonus) || 0,
+    };
+
+    try {
+      const token = localStorage.getItem('accessToken');
+
+      const response = await createNewTest(payload, token);
+
+      if (response.status === 201) {
+        const newTestId = response.data.id;
+        return newTestId;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      // Xử lý lỗi dựa trên mã lỗi trong tài liệu
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+
+        if (status === 400) {
+          window.alert('Lỗi dữ liệu: ' + JSON.stringify(data));
+        } else if (status === 403) {
+          window.alert('Bạn không có quyền giáo viên để tạo bài kiểm tra!');
+        } else {
+          window.alert('Đã xảy ra lỗi: ' + (data.detail || 'Không xác định'));
+        }
+      } else {
+        console.error('Lỗi kết nối:', error);
+      }
+      return null;
+    }
+  };
+
+  const handleUploadParts = async () => {
+    setIsLoading(true);
+    try {
+      // const newTestId = await handleUploadTest();
+      // if (!newTestId) {
+      //   setIsLoading(false);
+      //   return;
+      // }
+
+      const transformedParts = transformFormatData(parts);
+
+      // const token = localStorage.getItem('accessToken');
+      // const isSuccess = await uploadReadingTestInChunks(newTestId, transformedParts, token);
+
+      // if (isSuccess) {
+      //   window.alert('Toàn bộ bài thi đã được tải lên và xác nhận thành công!');
+      // }
+
+      console.log('Upload parts successful: ', transformedParts);
+    } catch (error) {
+      console.error('Error uploading parts:', error);
+      // Hiển thị thông báo lỗi chi tiết từ server nếu có
+      const message = error.message || 'Failed to upload parts. Please try again.';
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleAddPart = () => {
     const newPart = {
@@ -336,12 +441,10 @@ export default function Page() {
           <Button
             startIcon={<FileUploadIcon sx={{ fontSize: 20, transform: 'translateY(0px)' }} />}
             sx={{ ...uploadReadingStyles.publicButton, gridArea: 'item4' }}
-            onClick={() => {
-              // eslint-disable-next-line no-console
-              (console.log('Test: ', test), console.log('Part: ', parts));
-            }}
+            onClick={handleUploadParts}
+            disabled={isLoading}
           >
-            Public
+            {isLoading ? 'Uploading...' : 'Public'}
           </Button>
         </Box>
         {/* -------- Upload Reading Test Form Section --------- */}

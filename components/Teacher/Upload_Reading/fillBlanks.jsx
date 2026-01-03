@@ -42,8 +42,8 @@ export default function FillBlankForm({
       newQuestion.content = '';
       newQuestion.answers = [{ option_label: 'A', is_correct: true, answer_text: '' }];
     } else if (currentFormat === 'I') {
-      // Loại I: answers là chuỗi rỗng, KHÔNG có trường content
-      newQuestion.answers = '';
+      // Loại I: answer là chuỗi, KHÔNG có trường content
+      newQuestion.answer = '';
     }
 
     setQuestions([...questions, newQuestion]);
@@ -58,7 +58,7 @@ export default function FillBlankForm({
         }
         // Nếu không phải H (tức là I - Text), update vào answers
         else {
-          return { ...q, answers: value };
+          return { ...q, answer: value };
         }
       }
       return q;
