@@ -41,7 +41,14 @@ function LoginContent() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const storedRole = localStorage.getItem('userRole');
+      const getCookie = (name) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+      };
+
+      const storedRole = getCookie('userRole') || localStorage.getItem('userRole');
       if (storedRole) {
         setCurrentRole(storedRole);
       } else if (role) {
@@ -140,7 +147,7 @@ function LoginContent() {
         const userIdFromToken = decoded?.user_id;
         const roleFromToken = decoded?.role;
 
-        // Save tokens and user info
+        // Save tokens to localStorage
         if (typeof window !== 'undefined') {
           localStorage.setItem('accessToken', response.access);
           localStorage.setItem('refreshToken', response.refresh);
@@ -149,10 +156,17 @@ function LoginContent() {
           localStorage.setItem('userRole', roleFromToken || '');
           localStorage.setItem('avatar', response.avatar || '');
           localStorage.setItem('userStatus', response.status || '');
+
+          // Save role to cookie for middleware
+          document.cookie = `userRole=${roleFromToken}; path=/; max-age=2592000; SameSite=Lax`;
         }
 
-        // Redirect to home
-        router.push('/');
+        // Redirect based on role
+        if (roleFromToken === 'T') {
+          router.push('/teacher');
+        } else {
+          router.push('/');
+        }
         return;
       }
 
