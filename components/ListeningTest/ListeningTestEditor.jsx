@@ -1,31 +1,40 @@
 'use client';
 
-import { Paper, Typography, Box } from '@mui/material';
+import { Box, Paper, Typography, Snackbar, Alert, Backdrop, CircularProgress } from '@mui/material';
+import { Image, TextFields, Edit, Link } from '@mui/icons-material';
+import { useState } from 'react';
+
+import TestEditorHeader from '../UploadTest/TestEditorHeader';
+import TestEditorActions from '../UploadTest/TestEditorActions';
+import SelectPartType from './SelectPartType';
 import BasicInformation from './BasicInformation';
 import MultiChoiceImagePart from './MultiChoiceImagePart';
 import MultiChoiceTextPart from './MultiChoiceTextPart';
 import FillInTheBlankPart from './FillInTheBlankPart';
 import MatchingPart from './MatchingPart';
-import SelectPartType from './SelectPartType';
-import TestEditorHeader from '../UploadTest/TestEditorHeader';
-import TestEditorActions from '../UploadTest/TestEditorActions';
-import { useState } from 'react';
-import { buildTestPayload } from '../../utils/testPayload';
-import { buildFormData } from '../../utils/buildFormData';
-import { Image, TextFields, Edit, Link } from '@mui/icons-material';
 
-export const PART_TYPES = [
+import { validateTest, getValidationErrorMessage } from '../../utils/testValidation';
+import { collectFiles, transformPartsForSubmitWithUrls } from '../../utils/testTransformers';
+import {
+  createTest,
+  getPresignedUrl,
+  uploadToObjectStorage,
+  confirmUpload,
+  submitTestParts,
+} from '../../api/test';
+
+const PART_TYPES = [
   {
     id: 'multichoice_images',
     icon: <Image sx={{ fontSize: 40 }} />,
-    title: 'Multiple choice images',
+    title: 'Multiple choice image',
     description: 'Students select the correct image',
   },
   {
     id: 'multichoice_texts',
     icon: <TextFields sx={{ fontSize: 40 }} />,
     title: 'Multiple choice text',
-    description: 'Students select the correct text answer',
+    description: 'Students select the correct text',
   },
   {
     id: 'fill_in_the_blanks',
@@ -45,9 +54,13 @@ export default function ListeningTestEditor() {
   const [basicInfo, setBasicInfo] = useState({
     testName: '',
     level: '',
+    time: '',
+    description: '',
   });
-
   const [parts, setParts] = useState([]);
+  const [errors, setErrors] = useState(null);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleBasicInfoChange = (field, value) => {
     setBasicInfo((prev) => ({ ...prev, [field]: value }));
@@ -68,29 +81,94 @@ export default function ListeningTestEditor() {
   };
 
   const handleSelectPartType = (partId, type) => {
-    setParts((prev) => prev.map((p) => (p.id === partId ? { ...p, type } : p)));
+    setParts((prev) =>
+      prev.map((p) => {
+        if (p.id !== partId) return p;
+        if (type === 'multichoice_texts') {
+          return { ...p, type, audioFormat: p.audioFormat || 'onetoone' };
+        }
+        return { ...p, type };
+      }),
+    );
   };
 
   const handleSubmit = async (status) => {
-    console.log('Submitting test with status:', status);
+    setIsSaving(true);
+    const validationErrors = validateTest(basicInfo, parts);
+    if (validationErrors) {
+      setErrors(validationErrors);
+      const errorMessage = getValidationErrorMessage(validationErrors);
+      setSnackbar({ open: true, message: errorMessage, severity: 'error' });
+      setIsSaving(false);
+      return;
+    }
+    setErrors(null);
 
     try {
-      const payload = buildTestPayload({ basicInfo, parts, status });
-      const formData = buildFormData(payload, parts);
-
-      for (const [key, value] of formData.entries()) {
-        console.log(
-          key,
-          value instanceof File ? `File(name=${value.name}, size=${value.size})` : value,
-        );
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setSnackbar({ open: true, message: 'Authentication required', severity: 'error' });
+        setIsSaving(false);
+        return;
       }
-      // TODO: Call API and verify data
-      // await createListeningTest(payload);
 
-      alert(`Test ${status} successfully!`);
+      const basicInfoData = {
+        title: basicInfo.testName,
+        level: basicInfo.level,
+        skill: 'L',
+        time: parseInt(basicInfo.time),
+        description: basicInfo.description,
+        status: status === 'Draft' ? 'D' : status === 'In review' ? 'I' : 'P',
+      };
+
+      const response = await createTest(basicInfoData, token);
+      const testId = response.id;
+
+      const files = collectFiles(parts);
+      const filenameToUrl = {};
+      for (const f of files) {
+        const presign = await getPresignedUrl(
+          {
+            filename: f.filename,
+            fileSize: f.fileSize ?? f.file?.size,
+            mimeType: f.mimeType ?? f.file?.type,
+            category: 'tests',
+            testId,
+            part: f.partOrder,
+          },
+          token,
+        );
+
+        const uploadResult = await uploadToObjectStorage({
+          url: presign.url,
+          fields: presign.fields,
+          file: f.file,
+        });
+        const confirm = await confirmUpload(
+          {
+            key: presign.key,
+            fileSize: f.fileSize ?? f.file?.size,
+            mimeType: f.mimeType ?? f.file?.type,
+            etag: uploadResult.etag,
+          },
+          token,
+        );
+
+        filenameToUrl[f.filename] = confirm.file_url || presign.url;
+      }
+
+      const preparedParts = transformPartsForSubmitWithUrls(parts, filenameToUrl);
+      await submitTestParts({ testId, parts: preparedParts, token });
+
+      setSnackbar({ open: true, message: `Test ${status} successfully!`, severity: 'success' });
+
+      setBasicInfo({ testName: '', level: '', time: '', description: '' });
+      setParts([]);
+      setErrors(null);
+      setIsSaving(false);
     } catch (error) {
-      console.error('Submit error:', error);
-      alert(`Submit failed: ${error.message}`);
+      setSnackbar({ open: true, message: `Submit failed: ${error.message}`, severity: 'error' });
+      setIsSaving(false);
     }
   };
 
@@ -104,115 +182,127 @@ export default function ListeningTestEditor() {
         paddingRight: 20,
       }}
     >
-      <TestEditorHeader
-        title="Create New Listening Test"
-        description="Fill in the details below to create a new listening test for your students"
-      />
-      <TestEditorActions
-        onPreview={() => console.log('Preview')}
-        onSendReview={() => handleSubmit('review')}
-        onSaveDraft={() => handleSubmit('draft')}
-        onPublish={() => handleSubmit('published')}
-      />
-      <div style={{ paddingLeft: '220px', paddingRight: '220px' }}>
-        <Typography
-          sx={{
-            typography: 'h4',
-            color: 'primary.main',
-            marginBottom: '20px',
-          }}
-        >
-          Test editor
-        </Typography>
-
-        <BasicInformation
-          testName={basicInfo.testName}
-          level={basicInfo.level}
-          onTestNameChange={(v) => handleBasicInfoChange('testName', v)}
-          onLevelChange={(v) => handleBasicInfoChange('level', v)}
+      <Box sx={{ filter: isSaving ? 'blur' : 'none' }}>
+        <TestEditorHeader
+          title="Create New Listening Test"
+          description="Fill in the details below to create a new listening test for your students"
         />
-        {parts.map((part, index) => (
-          <Paper
-            key={part.id}
+        <TestEditorActions
+          onPreview={() => {}}
+          onSendReview={() => handleSubmit('In review')}
+          onSaveDraft={() => handleSubmit('Draft')}
+          onPublish={() => handleSubmit('Published')}
+        />
+        <div style={{ paddingLeft: '180px', paddingRight: '180px' }}>
+          <Typography sx={{ typography: 'h4', color: 'primary.main', marginBottom: '20px' }}>
+            Test editor
+          </Typography>
+
+          <BasicInformation
+            {...basicInfo}
+            onChange={handleBasicInfoChange}
+            errors={errors?.basicInfo}
+          />
+
+          {parts.map((part, index) => (
+            <Paper
+              key={part.id}
+              sx={{ p: 3, mb: 3, border: '2px solid', borderColor: 'yellow.main', borderRadius: 2 }}
+            >
+              {!part.type ? (
+                <SelectPartType
+                  partTypes={PART_TYPES}
+                  onSelectType={(typeId) => handleSelectPartType(part.id, typeId)}
+                  onCancel={() => handleCancelPart(part.id)}
+                />
+              ) : (
+                <>
+                  {part.type === 'multichoice_images' && (
+                    <MultiChoiceImagePart
+                      index={index}
+                      part={part}
+                      onChange={(updatedPart) =>
+                        setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
+                      }
+                      onDelete={() => handleCancelPart(part.id)}
+                    />
+                  )}
+
+                  {part.type === 'multichoice_texts' && (
+                    <MultiChoiceTextPart
+                      index={index}
+                      part={part}
+                      onChange={(updatedPart) =>
+                        setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
+                      }
+                      onDelete={() => handleCancelPart(part.id)}
+                    />
+                  )}
+
+                  {part.type === 'fill_in_the_blanks' && (
+                    <FillInTheBlankPart
+                      index={index}
+                      part={part}
+                      onChange={(updatedPart) =>
+                        setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
+                      }
+                      onDelete={() => handleCancelPart(part.id)}
+                    />
+                  )}
+
+                  {part.type === 'matching' && (
+                    <MatchingPart
+                      index={index}
+                      part={part}
+                      onChange={(updatedPart) =>
+                        setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
+                      }
+                      onDelete={() => handleCancelPart(part.id)}
+                    />
+                  )}
+                </>
+              )}
+            </Paper>
+          ))}
+
+          <Box
             sx={{
-              p: 3,
-              mb: 3,
-              border: '2px solid',
-              borderColor: 'yellow.main',
+              border: '2px dashed',
+              borderColor: 'divider',
+              bgcolor: 'primary.contrastText',
               borderRadius: 2,
+              p: 4,
+              textAlign: 'center',
+              color: 'text.secondary',
+              cursor: 'pointer',
             }}
+            onClick={handleAddPart}
           >
-            {!part.type ? (
-              <SelectPartType
-                partTypes={PART_TYPES}
-                onSelectType={(typeId) => handleSelectPartType(part.id, typeId)}
-                onCancel={() => handleCancelPart(part.id)}
-              />
-            ) : (
-              <>
-                {part.type === 'multichoice_images' && (
-                  <MultiChoiceImagePart
-                    index={index}
-                    part={part}
-                    onChange={(updatedPart) =>
-                      setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
-                    }
-                    onDelete={() => handleCancelPart(part.id)}
-                  />
-                )}
+            + Add new part
+          </Box>
+        </div>
+      </Box>
 
-                {part.type === 'multichoice_texts' && (
-                  <MultiChoiceTextPart
-                    index={index}
-                    part={part}
-                    onChange={(updatedPart) =>
-                      setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
-                    }
-                    onDelete={() => handleCancelPart(part.id)}
-                  />
-                )}
-
-                {part.type === 'fill_in_the_blanks' && (
-                  <FillInTheBlankPart
-                    index={index}
-                    part={part}
-                    onChange={(updatedPart) =>
-                      setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
-                    }
-                    onDelete={() => handleCancelPart(part.id)}
-                  />
-                )}
-
-                {part.type === 'matching' && (
-                  <MatchingPart
-                    index={index}
-                    part={part}
-                    onChange={(updatedPart) =>
-                      setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
-                    }
-                    onDelete={() => handleCancelPart(part.id)}
-                  />
-                )}
-              </>
-            )}
-          </Paper>
-        ))}
-        <Box
-          sx={{
-            border: '2px dashed',
-            borderColor: 'divider',
-            borderRadius: 2,
-            p: 4,
-            textAlign: 'center',
-            color: 'text.secondary',
-            cursor: 'pointer',
-            '&:hover': { bgcolor: 'action.hover' },
-          }}
-          onClick={handleAddPart}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          severity={snackbar.severity}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
         >
-          + Add new part
-        </Box>
-      </div>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+
+      <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1000 }}
+        open={isSaving}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </Box>
   );
 }

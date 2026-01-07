@@ -6,15 +6,12 @@ import {
   TextField,
   IconButton,
   Button,
-  Grid,
   Paper,
   Stack,
   Radio,
+  Snackbar,
+  Alert,
 } from '@mui/material';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs from 'dayjs';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
@@ -24,6 +21,7 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import AudioUploader from '../Upload/AudioUploader';
+import ClientSideCustomEditor from '../Editor/ClientSideCustomEditor';
 import { useState } from 'react';
 
 const options = [
@@ -43,8 +41,10 @@ const options = [
 
 export default function MultiChoiceTextPart({ index, part = {}, onChange, onDelete }) {
   const questions = Array.isArray(part.questions) ? part.questions : [];
-  const [audioFormat, setAudioFormat] = useState('onetoone');
+  const [audioFormat, setAudioFormat] = useState(part.audioFormat || 'onetoone');
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '' });
+  const [content, setContent] = useState(part.content || '');
 
   const updatePart = (newPart) => {
     if (onChange) onChange(newPart);
@@ -53,13 +53,13 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
   const handleAudioFormatChange = (newFormat) => {
     setAudioFormat(newFormat);
     if (newFormat === 'onetoone') {
-      updatePart({ ...part, audio: null });
+      updatePart({ ...part, audioFormat: newFormat, audio: null });
     } else {
       const newQs = questions.map((q) => ({
         ...q,
         audio: null,
       }));
-      updatePart({ ...part, questions: newQs });
+      updatePart({ ...part, audioFormat: newFormat, questions: newQs });
     }
   };
 
@@ -113,6 +113,10 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
 
   const removeAnswer = (qIdx, aIdx) => {
     const q = questions[qIdx];
+    if (q.answers.length <= 2) {
+      setSnackbar({ open: true, message: 'At least 2 answers are required' });
+      return;
+    }
     const newAnswers = q.answers.filter((_, i) => i !== aIdx);
     // re-label answers A,B,C...
     const relabeled = newAnswers.map((ans, i) => ({ ...ans, label: String.fromCharCode(65 + i) }));
@@ -155,6 +159,16 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
 
   return (
     <Box>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert severity="warning" onClose={() => setSnackbar({ ...snackbar, open: false })}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
       <Box
         sx={{
           display: 'flex',
@@ -194,8 +208,23 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
 
       {!isCollapsed && (
         <>
+          <Box sx={{ display: 'flex', gap: 3, mb: 3 }}>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="body2" mb={1}>
+                The score for each question <span style={{ color: 'red' }}>*</span>
+              </Typography>
+              <TextField
+                fullWidth
+                size="small"
+                type="number"
+                value={part.totalScore ?? ''}
+                onChange={(e) => updatePart({ ...part, totalScore: e.target.value })}
+              />
+            </Box>
+          </Box>
+
           <Typography variant="body2" mb={1}>
-            Audio Format
+            Audio Format <span style={{ color: 'red' }}>*</span>
           </Typography>
           <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
             {options.map((option) => {
@@ -242,57 +271,6 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
             })}
           </Box>
 
-          <Box sx={{ display: 'flex', gap: 3, mb: 3 }}>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="body2" mb={1}>
-                Total score
-              </Typography>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                value={part.totalScore ?? ''}
-                onChange={(e) => updatePart({ ...part, totalScore: e.target.value })}
-              />
-            </Box>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="body2" mb={1}>
-                Time (HH:MM)
-              </Typography>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <TimePicker
-                  value={part.time ? dayjs(part.time, 'HH:mm') : dayjs('00:05', 'HH:mm')}
-                  onChange={(newValue) => {
-                    const timeString = newValue ? newValue.format('HH:mm') : '00:05';
-                    updatePart({ ...part, time: timeString });
-                  }}
-                  ampm={false}
-                  views={['hours', 'minutes']}
-                  minutesStep={1}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      fullWidth: true,
-                    },
-                  }}
-                />
-              </LocalizationProvider>
-            </Box>
-          </Box>
-
-          {audioFormat === 'onetomany' && (
-            <>
-              <Typography variant="body2" mb={1}>
-                Audio File
-              </Typography>
-              <AudioUploader
-                value={part.audio}
-                onChange={(audio) => updatePart({ ...part, audio })}
-                accept="audio/mp3,audio/m4a"
-              />
-            </>
-          )}
-
           <Box sx={{ mb: 3 }}>
             <Box
               sx={{
@@ -302,11 +280,8 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
               }}
             >
               <Typography variant="body2" mb={1}>
-                Description
+                Description <span style={{ color: 'red' }}>*</span>
               </Typography>
-              <Button startIcon={<AddIcon />} size="small">
-                Edit in editor
-              </Button>
             </Box>
             <TextField
               fullWidth
@@ -318,6 +293,54 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
             />
           </Box>
 
+          {audioFormat === 'onetomany' && (
+            <>
+              <Typography variant="body2" mb={1}>
+                Audio File <span style={{ color: 'red' }}>*</span>
+              </Typography>
+              <AudioUploader
+                value={part.audio}
+                onChange={(audio) => updatePart({ ...part, audio })}
+                accept="audio/mp3,audio/m4a"
+              />
+
+              <Box sx={{ mb: 3 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Typography variant="body2" mb={1}>
+                    Content
+                  </Typography>
+                </Box>
+                <Box
+                  sx={{
+                    height: '300px',
+                    overflowY: 'auto',
+                    border: '1px solid #d0d0d0',
+                    borderRadius: '8px',
+                    position: 'relative',
+                    zIndex: 1,
+                    overflow: 'visible',
+                  }}
+                >
+                  <ClientSideCustomEditor
+                    data={content}
+                    onChange={(newContent) => {
+                      setContent(newContent);
+                      updatePart({ ...part, content: newContent });
+                    }}
+                    onError={(message) => setSnackbar({ open: true, message })}
+                    startingBlankId={1}
+                  />
+                </Box>
+              </Box>
+            </>
+          )}
+
           <Box
             sx={{
               display: 'flex',
@@ -326,7 +349,9 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
               mb: 1,
             }}
           >
-            <Typography variant="body2">Questions</Typography>
+            <Typography variant="body2">
+              Questions <span style={{ color: 'red' }}>*</span>
+            </Typography>
             <Button startIcon={<AddIcon />} size="small" onClick={addQuestion}>
               Add question
             </Button>
@@ -352,7 +377,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
             <Stack spacing={2}>
               {questions.map((q, qIdx) => (
                 <Paper key={q.id} variant="outlined" sx={{ p: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
                     <Box
                       sx={{
                         width: 28,
@@ -373,7 +398,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
                     <TextField
                       size="small"
                       fullWidth
-                      placeholder="Enter question text..."
+                      placeholder="Enter question text"
                       value={q.text}
                       onChange={(e) => setQuestionText(qIdx, e.target.value)}
                     />
@@ -383,10 +408,25 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
                     </IconButton>
                   </Box>
 
+                  <Box sx={{ ml: 5, mr: 7, mb: 2 }}>
+                    <TextField
+                      size="small"
+                      fullWidth
+                      placeholder="Enter explanation"
+                      value={q.explanation || ''}
+                      onChange={(e) => {
+                        const newQs = questions.map((question, i) =>
+                          i === qIdx ? { ...question, explanation: e.target.value } : question,
+                        );
+                        updatePart({ ...part, questions: newQs });
+                      }}
+                    />
+                  </Box>
+
                   {audioFormat === 'onetoone' && (
                     <>
                       <Typography variant="body2" mb={1}>
-                        Audio File
+                        Audio File <span style={{ color: 'red' }}>*</span>
                       </Typography>
                       <AudioUploader
                         value={q.audio}

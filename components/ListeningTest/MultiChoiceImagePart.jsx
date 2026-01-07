@@ -1,15 +1,23 @@
 'use client';
 
-import { Box, Typography, TextField, IconButton, Button, Grid, Paper, Stack } from '@mui/material';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs from 'dayjs';
+import {
+  Box,
+  Typography,
+  TextField,
+  IconButton,
+  Button,
+  Grid,
+  Paper,
+  Stack,
+  Snackbar,
+  Alert,
+} from '@mui/material';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import AddIcon from '@mui/icons-material/Add';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import AudioUploader from '../Upload/AudioUploader';
 import ImageUploader from '../Upload/ImageUploader';
 import { useState } from 'react';
@@ -17,6 +25,7 @@ import { useState } from 'react';
 export default function MultiChoiceImagePart({ index, part = {}, onChange, onDelete }) {
   const questions = Array.isArray(part.questions) ? part.questions : [];
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '' });
 
   const updatePart = (newPart) => {
     if (onChange) onChange(newPart);
@@ -59,6 +68,10 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
 
   const removeAnswer = (qIdx, aIdx) => {
     const q = questions[qIdx];
+    if (q.answers.length <= 2) {
+      setSnackbar({ open: true, message: 'At least 2 answers are required' });
+      return;
+    }
     const newAnswers = q.answers.filter((_, i) => i !== aIdx);
     // re-label answers A,B,C...
     const relabeled = newAnswers.map((ans, i) => ({ ...ans, label: String.fromCharCode(65 + i) }));
@@ -101,6 +114,16 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
 
   return (
     <>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert severity="warning" onClose={() => setSnackbar({ ...snackbar, open: false })}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
       <Box
         sx={{
           display: 'flex',
@@ -144,7 +167,7 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
           <Box sx={{ display: 'flex', gap: 3, mb: 3 }}>
             <Box sx={{ flex: 1 }}>
               <Typography variant="body2" mb={1}>
-                Total score
+                The score for each question <span style={{ color: 'red' }}>*</span>
               </Typography>
               <TextField
                 fullWidth
@@ -154,33 +177,10 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
                 onChange={(e) => updatePart({ ...part, totalScore: e.target.value })}
               />
             </Box>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="body2" mb={1}>
-                Time (HH:MM)
-              </Typography>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <TimePicker
-                  value={part.time ? dayjs(part.time, 'HH:mm') : dayjs('00:05', 'HH:mm')}
-                  onChange={(newValue) => {
-                    const timeString = newValue ? newValue.format('HH:mm') : '00:05';
-                    updatePart({ ...part, time: timeString });
-                  }}
-                  ampm={false}
-                  views={['hours', 'minutes']}
-                  minutesStep={1}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      fullWidth: true,
-                    },
-                  }}
-                />
-              </LocalizationProvider>
-            </Box>
           </Box>
 
           <Typography variant="body2" mb={1}>
-            Audio File
+            Audio File <span style={{ color: 'red' }}>*</span>
           </Typography>
           <AudioUploader
             value={part.audio}
@@ -197,11 +197,8 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
               }}
             >
               <Typography variant="body2" mb={1}>
-                Description
+                Description <span style={{ color: 'red' }}>*</span>
               </Typography>
-              <Button startIcon={<AddIcon />} size="small">
-                Edit in editor
-              </Button>
             </Box>
             <TextField
               fullWidth
@@ -221,7 +218,9 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
               mb: 1,
             }}
           >
-            <Typography variant="body2">Questions</Typography>
+            <Typography variant="body2">
+              Questions <span style={{ color: 'red' }}>*</span>
+            </Typography>
             <Button startIcon={<AddIcon />} size="small" onClick={addQuestion}>
               Add question
             </Button>
@@ -247,7 +246,7 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
             <Stack spacing={2}>
               {questions.map((q, qIdx) => (
                 <Paper key={q.id} variant="outlined" sx={{ p: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
                     <Box
                       sx={{
                         width: 28,
@@ -268,7 +267,7 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
                     <TextField
                       size="small"
                       fullWidth
-                      placeholder="Enter question text..."
+                      placeholder="Enter question text"
                       value={q.text}
                       onChange={(e) => setQuestionText(qIdx, e.target.value)}
                     />
@@ -276,6 +275,21 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
                     <IconButton color="error" onClick={() => removeQuestion(qIdx)}>
                       <DeleteOutlineIcon />
                     </IconButton>
+                  </Box>
+
+                  <Box sx={{ ml: 5, mr: 7, mb: 2 }}>
+                    <TextField
+                      size="small"
+                      fullWidth
+                      placeholder="Enter explanation"
+                      value={q.explanation || ''}
+                      onChange={(e) => {
+                        const newQs = questions.map((question, i) =>
+                          i === qIdx ? { ...question, explanation: e.target.value } : question,
+                        );
+                        updatePart({ ...part, questions: newQs });
+                      }}
+                    />
                   </Box>
 
                   <Typography variant="body2" color="text.secondary" mb={1}>
@@ -364,7 +378,11 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
                   </Grid>
 
                   <Box mt={1}>
-                    <Button startIcon={<AddIcon />} size="small" onClick={() => addAnswer(qIdx)}>
+                    <Button
+                      startIcon={<AddCircleOutlineIcon />}
+                      size="small"
+                      onClick={() => addAnswer(qIdx)}
+                    >
                       Add Answer
                     </Button>
                   </Box>

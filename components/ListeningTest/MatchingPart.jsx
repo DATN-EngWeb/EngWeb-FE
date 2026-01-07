@@ -6,17 +6,12 @@ import {
   TextField,
   IconButton,
   Button,
-  Grid,
   Paper,
   Stack,
   Select,
   MenuItem,
   FormControl,
 } from '@mui/material';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs from 'dayjs';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
@@ -40,13 +35,27 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
       text: '',
       selectedAnswerId: null,
     };
-    const newPart = { ...part, questions: [...questions, newQuestion] };
+    let newAnswers = answers;
+
+    if (questions.length >= answers.length) {
+      const newAnswer = {
+        id: Date.now().toString() + '-ans',
+        text: '',
+      };
+      newAnswers = [...answers, newAnswer];
+    }
+    const newPart = { ...part, questions: [...questions, newQuestion], answers: newAnswers };
     updatePart(newPart);
   };
 
   const removeQuestion = (qIdx) => {
     const newQuestions = questions.filter((_, i) => i !== qIdx);
-    updatePart({ ...part, questions: newQuestions });
+    let newAnswers = answers;
+
+    if (newQuestions.length < answers.length) {
+      newAnswers = answers.slice(0, answers.length - 1);
+    }
+    updatePart({ ...part, questions: newQuestions, answers: newAnswers });
   };
 
   const setQuestionText = (qIdx, text) => {
@@ -66,16 +75,30 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
       id: Date.now().toString(),
       text: '',
     };
-    const newPart = { ...part, answers: [...answers, newAnswer] };
+    let newQuestions = questions;
+
+    if (answers.length >= questions.length) {
+      const newQuestion = {
+        id: Date.now().toString() + '-q',
+        text: '',
+        selectedAnswerId: null,
+      };
+      newQuestions = [...questions, newQuestion];
+    }
+    const newPart = { ...part, answers: [...answers, newAnswer], questions: newQuestions };
     updatePart(newPart);
   };
 
   const removeAnswer = (aIdx) => {
     const removedAnswer = answers[aIdx];
     const newAnswers = answers.filter((_, i) => i !== aIdx);
-    const newQuestions = questions.map((q) =>
+    let newQuestions = questions.map((q) =>
       q.selectedAnswerId === removedAnswer.id ? { ...q, selectedAnswerId: null } : q,
     );
+
+    if (newAnswers.length < questions.length) {
+      newQuestions = newQuestions.slice(0, newQuestions.length - 1);
+    }
     updatePart({ ...part, answers: newAnswers, questions: newQuestions });
   };
 
@@ -129,7 +152,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
           <Box sx={{ display: 'flex', gap: 3, mb: 3 }}>
             <Box sx={{ flex: 1 }}>
               <Typography variant="body2" mb={1}>
-                Total score
+                The score for each question <span style={{ color: 'red' }}>*</span>
               </Typography>
               <TextField
                 fullWidth
@@ -139,33 +162,10 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                 onChange={(e) => updatePart({ ...part, totalScore: e.target.value })}
               />
             </Box>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="body2" mb={1}>
-                Time (HH:MM)
-              </Typography>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <TimePicker
-                  value={part.time ? dayjs(part.time, 'HH:mm') : dayjs('00:05', 'HH:mm')}
-                  onChange={(newValue) => {
-                    const timeString = newValue ? newValue.format('HH:mm') : '00:05';
-                    updatePart({ ...part, time: timeString });
-                  }}
-                  ampm={false}
-                  views={['hours', 'minutes']}
-                  minutesStep={1}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      fullWidth: true,
-                    },
-                  }}
-                />
-              </LocalizationProvider>
-            </Box>
           </Box>
 
           <Typography variant="body2" mb={1}>
-            Audio File
+            Audio File <span style={{ color: 'red' }}>*</span>
           </Typography>
           <AudioUploader
             value={part.audio}
@@ -182,11 +182,8 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
               }}
             >
               <Typography variant="body2" mb={1}>
-                Description
+                Description <span style={{ color: 'red' }}>*</span>
               </Typography>
-              <Button startIcon={<AddIcon />} size="small">
-                Edit in editor
-              </Button>
             </Box>
             <TextField
               fullWidth
@@ -206,7 +203,9 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
               mb: 1,
             }}
           >
-            <Typography variant="body2">Questions</Typography>
+            <Typography variant="body2">
+              Questions <span style={{ color: 'red' }}>*</span>
+            </Typography>
             <Button startIcon={<AddIcon />} size="small" onClick={addQuestion}>
               Add question
             </Button>
@@ -259,15 +258,12 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                       sx={{ flex: 1 }}
                     />
 
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                    <FormControl size="small" sx={{ width: 70 }}>
                       <Select
                         value={question.selectedAnswerId || ''}
                         onChange={(e) => setQuestionAnswer(qIdx, e.target.value)}
                         displayEmpty
                       >
-                        <MenuItem value="">
-                          <em>Select answer</em>
-                        </MenuItem>
                         {answers.map((answer, aIdx) => (
                           <MenuItem key={answer.id} value={answer.id}>
                             {String.fromCharCode(65 + aIdx)}
@@ -279,6 +275,20 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                     <IconButton color="error" onClick={() => removeQuestion(qIdx)}>
                       <DeleteOutlineIcon />
                     </IconButton>
+                  </Box>
+                  <Box sx={{ ml: 5.5, mr: 7, mt: 1 }}>
+                    <TextField
+                      size="small"
+                      fullWidth
+                      placeholder="Enter explanation"
+                      value={question.explanation || ''}
+                      onChange={(e) => {
+                        const newQs = questions.map((question, i) =>
+                          i === qIdx ? { ...question, explanation: e.target.value } : question,
+                        );
+                        updatePart({ ...part, questions: newQs });
+                      }}
+                    />
                   </Box>
                 </Paper>
               ))}
@@ -293,7 +303,9 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
               mb: 1,
             }}
           >
-            <Typography variant="body2">Answers</Typography>
+            <Typography variant="body2">
+              Answers <span style={{ color: 'red' }}>*</span>
+            </Typography>
             <Button startIcon={<AddIcon />} size="small" onClick={addAnswer}>
               Add answer
             </Button>
@@ -339,7 +351,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
 
                     <TextField
                       size="small"
-                      placeholder="Answer text..."
+                      placeholder="Answer text"
                       value={answer.text}
                       onChange={(e) => setAnswerText(aIdx, e.target.value)}
                       sx={{ flex: 1 }}

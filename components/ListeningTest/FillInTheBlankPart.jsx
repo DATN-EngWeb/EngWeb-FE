@@ -1,15 +1,20 @@
+/* global DOMParser */
 'use client';
 
-import { Box, Typography, TextField, IconButton, Button, Grid, Paper, Stack } from '@mui/material';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs from 'dayjs';
+import {
+  Box,
+  Typography,
+  TextField,
+  IconButton,
+  Paper,
+  Stack,
+  Snackbar,
+  Alert,
+} from '@mui/material';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import AddIcon from '@mui/icons-material/Add';
 import AudioUploader from '../Upload/AudioUploader';
 import ClientSideCustomEditor from '../Editor/ClientSideCustomEditor';
 import { useState } from 'react';
@@ -17,24 +22,39 @@ import { useState } from 'react';
 export default function FillInTheBlankPart({ index, part = {}, onChange, onDelete }) {
   const answers = Array.isArray(part.answers) ? part.answers : [];
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState(part.content || '');
+  const [snackbar, setSnackbar] = useState({ open: false, message: '' });
 
   const updatePart = (newPart) => {
     if (onChange) onChange(newPart);
   };
 
-  const addAnswer = () => {
-    const newAnswer = {
-      id: Date.now().toString(),
-      text: '',
-    };
-    const newPart = { ...part, answers: [...answers, newAnswer] };
-    updatePart(newPart);
+  const countBlanks = (html) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    return doc.querySelectorAll('.blank-element').length;
   };
 
-  const removeAnswer = (aIdx) => {
-    const newAnswers = answers.filter((_, i) => i !== aIdx);
-    updatePart({ ...part, answers: newAnswers });
+  const syncAnswersWithBlanks = (newContent) => {
+    const blankCount = countBlanks(newContent);
+    const currentAnswerCount = answers.length;
+
+    let newAnswers = [...answers];
+
+    if (blankCount > currentAnswerCount) {
+      // Add answers
+      for (let i = currentAnswerCount; i < blankCount; i++) {
+        newAnswers.push({
+          id: `${Date.now()}-${i}`,
+          text: '',
+        });
+      }
+    } else if (blankCount < currentAnswerCount) {
+      // Remove answers from the end
+      newAnswers = newAnswers.slice(0, blankCount);
+    }
+
+    updatePart({ ...part, content: newContent, answers: newAnswers });
   };
 
   const setAnswerText = (aIdx, text) => {
@@ -44,6 +64,16 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
 
   return (
     <>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={() => setSnackbar({ ...snackbar, open: false })}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
       <Box
         sx={{
           display: 'flex',
@@ -87,7 +117,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
           <Box sx={{ display: 'flex', gap: 3, mb: 3 }}>
             <Box sx={{ flex: 1 }}>
               <Typography variant="body2" mb={1}>
-                Total score
+                The score for each question <span style={{ color: 'red' }}>*</span>
               </Typography>
               <TextField
                 fullWidth
@@ -97,33 +127,10 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
                 onChange={(e) => updatePart({ ...part, totalScore: e.target.value })}
               />
             </Box>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="body2" mb={1}>
-                Time (HH:MM)
-              </Typography>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <TimePicker
-                  value={part.time ? dayjs(part.time, 'HH:mm') : dayjs('00:05', 'HH:mm')}
-                  onChange={(newValue) => {
-                    const timeString = newValue ? newValue.format('HH:mm') : '00:05';
-                    updatePart({ ...part, time: timeString });
-                  }}
-                  ampm={false}
-                  views={['hours', 'minutes']}
-                  minutesStep={1}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      fullWidth: true,
-                    },
-                  }}
-                />
-              </LocalizationProvider>
-            </Box>
           </Box>
 
           <Typography variant="body2" mb={1}>
-            Audio File
+            Audio File <span style={{ color: 'red' }}>*</span>
           </Typography>
           <AudioUploader
             value={part.audio}
@@ -140,7 +147,29 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
               }}
             >
               <Typography variant="body2" mb={1}>
-                Description
+                Description <span style={{ color: 'red' }}>*</span>
+              </Typography>
+            </Box>
+            <TextField
+              fullWidth
+              multiline
+              minRows={2}
+              placeholder="e.g., Listen to the audio between Alice and Sam and choose the correct picture..."
+              value={part.description ?? ''}
+              onChange={(e) => updatePart({ ...part, description: e.target.value })}
+            />
+          </Box>
+
+          <Box sx={{ mb: 3 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <Typography variant="body2" mb={1}>
+                Content <span style={{ color: 'red' }}>*</span>
               </Typography>
             </Box>
             <Box
@@ -156,7 +185,11 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
             >
               <ClientSideCustomEditor
                 data={content}
-                onChange={(newContent) => setContent(newContent)}
+                onChange={(newContent) => {
+                  setContent(newContent);
+                  syncAnswersWithBlanks(newContent);
+                }}
+                onError={(message) => setSnackbar({ open: true, message })}
                 startingBlankId={1}
               />
             </Box>
@@ -170,10 +203,9 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
               mb: 1,
             }}
           >
-            <Typography variant="body2">Answers</Typography>
-            <Button startIcon={<AddIcon />} size="small" onClick={addAnswer}>
-              Add answer
-            </Button>
+            <Typography variant="body2">
+              Answers <span style={{ color: 'red' }}>*</span>
+            </Typography>
           </Box>
 
           {answers.length === 0 ? (
@@ -186,17 +218,13 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
                 color: 'text.secondary',
               }}
             >
-              No answers yet
-              <br />
-              <Button startIcon={<AddIcon />} sx={{ mt: 1 }} onClick={addAnswer}>
-                Add your answer
-              </Button>
+              No blanks inserted yet. Use the editor toolbar to insert blanks.
             </Box>
           ) : (
             <Stack spacing={2}>
               {answers.map((answer, aIdx) => (
                 <Paper key={answer.id} variant="outlined" sx={{ p: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
                     <Box
                       sx={{
                         width: 28,
@@ -217,14 +245,25 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
                     <TextField
                       size="small"
                       fullWidth
-                      placeholder="Enter answer text..."
+                      placeholder="Enter answer text"
                       value={answer.text}
                       onChange={(e) => setAnswerText(aIdx, e.target.value)}
                     />
+                  </Box>
 
-                    <IconButton color="error" onClick={() => removeAnswer(aIdx)}>
-                      <DeleteOutlineIcon />
-                    </IconButton>
+                  <Box sx={{ ml: 5, mr: 7 }}>
+                    <TextField
+                      size="small"
+                      fullWidth
+                      placeholder="Enter explanation"
+                      value={answer.explanation || ''}
+                      onChange={(e) => {
+                        const newAnswers = answers.map((ans, i) =>
+                          i === aIdx ? { ...ans, explanation: e.target.value } : ans,
+                        );
+                        updatePart({ ...part, answers: newAnswers });
+                      }}
+                    />
                   </Box>
                 </Paper>
               ))}
