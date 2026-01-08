@@ -18,21 +18,29 @@ const theme = createTheme({
       main: '#43A574',
       light: '#6BB58F',
       dark: '#2E7D52',
+      pastel: '#E8F5E9',
+      highlight: '#33E4D3',
+      greenLight: '#D9F6A3',
+      green_dark: '#0F655D',
+      main_dark: '#51740F',
     },
     warning: {
-      main: '#FFD25A',
+      main: '#FFC83D',
       light: '#FFDC7A',
       dark: '#E6B84A',
+      pastel: '#FFF8E1',
     },
     info: {
       main: '#89C0FF',
       light: '#A8D2FF',
       dark: '#6A9EE6',
+      pastel: '#E3F2FD',
     },
     error: {
       main: '#FF939A',
       light: '#FFB3B8',
       dark: '#E6737A',
+      pastel: '#FFEBEE',
     },
     background: {
       default: '#FFF4E9',
@@ -53,6 +61,7 @@ const theme = createTheme({
     },
     darkGrey: {
       main: '#383838',
+      light: '#6e7575ff',
     },
     dark: {
       main: '#000000',

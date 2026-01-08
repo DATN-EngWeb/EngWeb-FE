@@ -49,6 +49,11 @@ function FacebookCallbackContent() {
           localStorage.setItem('userRole', roleFromToken || '');
           localStorage.setItem('avatar', response.avatar || '');
           localStorage.setItem('userStatus', response.status || '');
+
+          // Save role to cookie for middleware
+          if (roleFromToken) {
+            document.cookie = `userRole=${roleFromToken}; path=/; max-age=2592000; SameSite=Lax`;
+          }
         }
       }
 

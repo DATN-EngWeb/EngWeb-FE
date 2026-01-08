@@ -1,6 +1,5 @@
 'use client';
 
-/* global localStorage */
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -10,15 +9,23 @@ export function useAuth(redirectTo = '/login') {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
 
+  const getCookie = (name) => {
+    if (typeof window === 'undefined') return null;
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+  };
+
   const clearAuthData = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('userId');
       localStorage.removeItem('username');
-      localStorage.removeItem('userRole');
       localStorage.removeItem('avatar');
       localStorage.removeItem('userStatus');
+      document.cookie = 'userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
     }
     setIsAuthenticated(false);
     setUser(null);
@@ -41,7 +48,7 @@ export function useAuth(redirectTo = '/login') {
       const token = localStorage.getItem('accessToken');
       const userId = localStorage.getItem('userId');
       const username = localStorage.getItem('username');
-      const role = localStorage.getItem('userRole');
+      const role = getCookie('userRole') || localStorage.getItem('userRole');
       const avatar = localStorage.getItem('avatar');
       const status = localStorage.getItem('userStatus');
 
