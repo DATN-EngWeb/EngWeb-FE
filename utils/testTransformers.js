@@ -1,3 +1,6 @@
+/* eslint-env browser */
+/* global Blob */
+
 export const collectFiles = (parts) => {
   const files = [];
 
@@ -187,4 +190,101 @@ export const transformPartsForSubmitWithUrls = (parts, urlMap) => {
       return null;
     })
     .filter(Boolean);
+};
+
+export const collectFilesReading = (parts) => {
+  const files = [];
+
+  // Hàm tiện ích: Biến chuỗi HTML (từ CKEditor) thành File object
+  const createHtmlFile = (content, filename, partOrder) => {
+    // Dùng Blob để đảm bảo encoding chuẩn cho HTML
+    const blob = new Blob([content], { type: 'text/html' });
+    const file = new File([blob], filename, { type: 'text/html' });
+
+    return {
+      filename: filename,
+      file: file,
+      fileSize: file.size,
+      mimeType: 'text/html',
+      partOrder: partOrder,
+    };
+  };
+
+  parts.forEach((part, _index) => {
+    if (!part.format) return;
+
+    const partOrder = part.order;
+
+    // 1. Xử lý Content của Part (Ví dụ: Format G, H, I, J)
+    if (part.content && typeof part.content === 'string' && part.content.trim().length > 0) {
+      files.push(createHtmlFile(part.content, `part_${partOrder}_content.html`, partOrder));
+    }
+
+    // 2. Xử lý Content của từng Question (Ví dụ: Format F)
+    if (part.format === 'F' && part.questions && Array.isArray(part.questions)) {
+      part.questions.forEach((q, qIndex) => {
+        const qNum = q.question_number || qIndex + 1;
+
+        if (q.content && typeof q.content === 'string' && q.content.trim().length > 0) {
+          files.push(
+            createHtmlFile(q.content, `part_${partOrder}_question_${qNum}_content.html`, partOrder),
+          );
+        }
+      });
+    }
+  });
+
+  return files;
+};
+
+export const transformReadingPartsWithUrls = (parts, urlMap) => {
+  // Hàm helper: Tìm URL trong map, nếu không có thì trả về string rỗng hoặc giữ nguyên
+  const resolve = (filename) => {
+    return urlMap[filename] || null;
+  };
+
+  return parts.map((part) => {
+    // Clone part để tránh mutate state gốc
+    const newPart = { ...part };
+
+    // QUAN TRỌNG: Phải dùng part.order để khớp với logic của collectFilesReading
+    const partOrder = part.order;
+
+    // -----------------------------------------------------------
+    // 1. Thay thế URL cho Content của Part
+    // (Khớp với logic: part_${partOrder}_content.html)
+    // -----------------------------------------------------------
+    const partContentFilename = `part_${partOrder}_content.html`;
+    const partContentUrl = resolve(partContentFilename);
+
+    // Nếu tìm thấy URL trong map (tức là file đã được tạo và upload trước đó)
+    if (partContentUrl) {
+      newPart.content = partContentUrl;
+    }
+
+    // -----------------------------------------------------------
+    // 2. Thay thế URL cho Content của từng Question
+    // (Chỉ áp dụng cho Format F - Khớp với logic collectFilesReading)
+    // -----------------------------------------------------------
+    if (part.format === 'F' && Array.isArray(part.questions)) {
+      newPart.questions = part.questions.map((q, qIndex) => {
+        const newQuestion = { ...q };
+        const qNum = q.question_number || qIndex + 1;
+
+        // Tạo lại tên file để dò trong urlMap
+        // Khớp với logic: part_${partOrder}_question_${qNum}_content.html
+        const questionContentFilename = `part_${partOrder}_question_${qNum}_content.html`;
+        const questionContentUrl = resolve(questionContentFilename);
+
+        // Nếu tìm thấy URL, ghi đè vào field content
+        if (questionContentUrl) {
+          newQuestion.content = questionContentUrl;
+        }
+
+        return newQuestion;
+      });
+    }
+
+    return newPart;
+  });
 };

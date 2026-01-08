@@ -15,6 +15,8 @@ import {
   FormLabel,
   Select,
   MenuItem,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
@@ -26,11 +28,16 @@ import ArticleOutlined from '@mui/icons-material/ArticleOutlined';
 import EditNoteOutlined from '@mui/icons-material/EditNoteOutlined';
 import BorderColorOutlined from '@mui/icons-material/BorderColorOutlined';
 import Link from '@mui/icons-material/Link';
-import { uploadReadingStyles } from '../../../styles/Teacher/Reading/UploadReadingStyles';
-import MultipleChoiceForm from '../../../components/Teacher/Upload_Reading/multipleChoice';
-import MatchingForm from '../../../components/Teacher/Upload_Reading/matching';
-import FillBlankForm from '../../../components/Teacher/Upload_Reading/fillBlanks';
-import { createNewTest, uploadReadingTestContent } from '../../../api/teacher/upload-reading';
+import { uploadReadingStyles } from '../../../../styles/Teacher/Reading/UploadReadingStyles';
+import MultipleChoiceForm from '../../../../components/Teacher/Upload_Reading/multipleChoice';
+import MatchingForm from '../../../../components/Teacher/Upload_Reading/matching';
+import FillBlankForm from '../../../../components/Teacher/Upload_Reading/fillBlanks';
+import { createNewTest, uploadReadingTestContent } from '../../../../api/teacher/upload-reading';
+import {
+  collectFilesReading,
+  transformReadingPartsWithUrls,
+} from '../../../../utils/testTransformers';
+import { getPresignedUrl, uploadToObjectStorage, confirmUpload } from '../../../../api/test';
 
 export default function Page() {
   const [test, setTest] = useState({
@@ -48,6 +55,7 @@ export default function Page() {
   const prevPartsLengthRef = useRef(parts.length);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
 
   useEffect(() => {
     if (parts.length > prevPartsLengthRef.current) {
@@ -87,11 +95,19 @@ export default function Page() {
   // Hàm xử lý tải lên Test và trả về testId mới tạo
   const handleUploadTest = async () => {
     if (!test.title || !test.description) {
-      window.alert('Vui lòng điền đầy đủ tiêu đề và mô tả!');
+      setSnackbar({
+        open: true,
+        message: 'Vui lòng điền đầy đủ tiêu đề và mô tả!',
+        severity: 'error',
+      });
       return null;
     }
     if (!['A1', 'A2', 'B1', 'B2'].includes(test.level)) {
-      window.alert('Vui lòng chọn cấp độ hợp lệ (A1-B2)!');
+      setSnackbar({
+        open: true,
+        message: 'Vui lòng chọn cấp độ hợp lệ (A1-B2)!',
+        severity: 'error',
+      });
       return null;
     }
     const payload = {
@@ -100,11 +116,17 @@ export default function Page() {
       skill: test.skill,
       time: parseInt(test.time),
       description: test.description,
+      status: 'D',
       completed_bonus: parseInt(test.completed_bonus) || 0,
     };
 
     try {
       const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setSnackbar({ open: true, message: 'Authentication required', severity: 'error' });
+        setIsLoading(false);
+        return;
+      }
 
       const response = await createNewTest(payload, token);
 
@@ -116,19 +138,28 @@ export default function Page() {
       }
     } catch (error) {
       // Xử lý lỗi dựa trên mã lỗi trong tài liệu
-      if (error.response) {
-        const status = error.response.status;
-        const data = error.response.data;
+      if (error.status) {
+        const status = error.status;
 
         if (status === 400) {
-          window.alert('Lỗi dữ liệu: ' + JSON.stringify(data));
+          setSnackbar({
+            open: true,
+            message: 'Title must be filled. Level must be one of A1, A2, B1, B2.',
+            severity: 'error',
+          });
+        } else if (status === 401) {
+          setSnackbar({
+            open: true,
+            message: 'Authentication required. Please log in again.',
+            severity: 'error',
+          });
         } else if (status === 403) {
-          window.alert('Bạn không có quyền giáo viên để tạo bài kiểm tra!');
-        } else {
-          window.alert('Đã xảy ra lỗi: ' + (data.detail || 'Không xác định'));
+          setSnackbar({
+            open: true,
+            message: 'You do not have permission to perform this action.',
+            severity: 'error',
+          });
         }
-      } else {
-        console.error('Lỗi kết nối:', error);
       }
       return null;
     }
@@ -144,22 +175,76 @@ export default function Page() {
         return;
       }
 
-      // console.log('New Test ID: ', newTestId);
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setSnackbar({ open: true, message: 'Authentication required', severity: 'error' });
+        setIsLoading(false);
+        return;
+      }
 
       const transformedParts = transformFormatData(parts);
 
-      // const token = localStorage.getItem('accessToken');
-      // const isSuccess = await uploadReadingTestContent(newTestId, transformedParts, token);
+      console.log('Transformed Parts:', transformedParts);
 
-      // if (isSuccess) {
-      //   window.alert('Toàn bộ bài thi đã được tải lên và xác nhận thành công!');
-      // }
+      const files = collectFilesReading(transformedParts);
+      console.log('Fliles to Upload:', files);
+      const filenameToUrl = {};
+      for (const f of files) {
+        const presign = await getPresignedUrl(
+          {
+            filename: f.filename,
+            fileSize: f.fileSize ?? f.file?.size,
+            mimeType: f.mimeType ?? f.file?.type,
+            category: 'tests',
+            testId: newTestId,
+            part: f.partOrder,
+          },
+          token,
+        );
 
-      console.log('Upload parts successful: ', transformedParts);
+        const uploadResult = await uploadToObjectStorage({
+          url: presign.url,
+          fields: presign.fields,
+          file: f.file,
+        });
+        const confirm = await confirmUpload(
+          {
+            key: presign.key,
+            fileSize: f.fileSize ?? f.file?.size,
+            mimeType: f.mimeType ?? f.file?.type,
+            etag: uploadResult.etag,
+          },
+          token,
+        );
+
+        filenameToUrl[f.filename] = confirm.file_url || presign.url;
+      }
+
+      console.log('Filename to URL Map:', filenameToUrl);
+
+      const preparedParts = transformReadingPartsWithUrls(transformedParts, filenameToUrl);
+
+      console.log('Prepared Parts for Submission:', preparedParts);
+
+      const response = await uploadReadingTestContent(newTestId, preparedParts, token);
+
+      if (response && response.success) {
+        setSnackbar({ open: true, message: 'Upload test successfully!', severity: 'success' });
+      }
     } catch (error) {
-      console.error('Error uploading parts:', error);
-      // Hiển thị thông báo lỗi chi tiết từ server nếu có
-      const message = error.message || 'Failed to upload parts. Please try again.';
+      if (error.status === 400) {
+        setSnackbar({
+          open: true,
+          message: 'Invalid data format. Please check your input.',
+          severity: 'error',
+        });
+      } else if (error.status === 404) {
+        setSnackbar({
+          open: true,
+          message: 'Test not found.',
+          severity: 'error',
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -181,12 +266,6 @@ export default function Page() {
   const updatePartQuestions = (partId, newQuestions) => {
     setParts((prevParts) =>
       prevParts.map((p) => (p.id === partId ? { ...p, questions: newQuestions } : p)),
-    );
-  };
-
-  const updateAnswerPart = (partId, newAnswers) => {
-    setParts((prevParts) =>
-      prevParts.map((p) => (p.id === partId ? { ...p, answers: newAnswers } : p)),
     );
   };
 
@@ -353,7 +432,6 @@ export default function Page() {
             handleDeleteQuestion={handleDeleteQuestion}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
-            setAnswers={(newAnswers) => updateAnswerPart(part.id, newAnswers)}
             handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
             handleUpdateContentPart={handleUpdateContentPart}
             handleEditorError={handleEditorError}
@@ -384,6 +462,19 @@ export default function Page() {
 
   return (
     <Box sx={uploadReadingStyles.mainContainer}>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          severity={snackbar.severity}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
       <Container maxWidth="lg">
         {/* -------- Title Section --------- */}
         <Box sx={uploadReadingStyles.cardTitle}>
