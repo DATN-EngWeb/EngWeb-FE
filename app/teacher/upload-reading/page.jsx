@@ -30,7 +30,7 @@ import { uploadReadingStyles } from '../../../styles/Teacher/Reading/UploadReadi
 import MultipleChoiceForm from '../../../components/Teacher/Upload_Reading/multipleChoice';
 import MatchingForm from '../../../components/Teacher/Upload_Reading/matching';
 import FillBlankForm from '../../../components/Teacher/Upload_Reading/fillBlanks';
-import { createNewTest, uploadReadingTestInChunks } from '../../../api/teacher/upload-reading';
+import { createNewTest, uploadReadingTestContent } from '../../../api/teacher/upload-reading';
 
 export default function Page() {
   const [test, setTest] = useState({
@@ -69,13 +69,14 @@ export default function Page() {
     return data.map((part) => {
       // Duyệt qua từng Question trong Part
       const updatedQuestions = part.questions.map((question) => {
+        const { id, ...restQuestion } = question;
         return {
-          ...question,
+          ...restQuestion,
           question_number: globalQuestionNumber++,
           score: part.scoreForEachQuestion,
         };
       });
-      const { scoreForEachQuestion, ...restPart } = part;
+      const { id, scoreForEachQuestion, ...restPart } = part;
       return {
         ...restPart,
         questions: updatedQuestions,
@@ -83,6 +84,7 @@ export default function Page() {
     });
   };
 
+  // Hàm xử lý tải lên Test và trả về testId mới tạo
   const handleUploadTest = async () => {
     if (!test.title || !test.description) {
       window.alert('Vui lòng điền đầy đủ tiêu đề và mô tả!');
@@ -106,8 +108,8 @@ export default function Page() {
 
       const response = await createNewTest(payload, token);
 
-      if (response.status === 201) {
-        const newTestId = response.data.id;
+      if (response && response.id) {
+        const newTestId = response.id;
         return newTestId;
       } else {
         return null;
@@ -132,19 +134,22 @@ export default function Page() {
     }
   };
 
+  // Hàm xử lý tải lên các Part của bài thi
   const handleUploadParts = async () => {
     setIsLoading(true);
     try {
-      // const newTestId = await handleUploadTest();
-      // if (!newTestId) {
-      //   setIsLoading(false);
-      //   return;
-      // }
+      const newTestId = await handleUploadTest();
+      if (!newTestId) {
+        setIsLoading(false);
+        return;
+      }
+
+      // console.log('New Test ID: ', newTestId);
 
       const transformedParts = transformFormatData(parts);
 
       // const token = localStorage.getItem('accessToken');
-      // const isSuccess = await uploadReadingTestInChunks(newTestId, transformedParts, token);
+      // const isSuccess = await uploadReadingTestContent(newTestId, transformedParts, token);
 
       // if (isSuccess) {
       //   window.alert('Toàn bộ bài thi đã được tải lên và xác nhận thành công!');
@@ -190,47 +195,30 @@ export default function Page() {
     setParts((prevParts) =>
       prevParts.map((p) => {
         if (p.id === partId) {
-          const updatedQuestions = p.questions.map((q) => {
-            // 1. Tách tất cả các thuộc tính hiện tại của Question
-            const { content, answers, ...rest } = q;
+          // 1. Tạo câu hỏi mặc định tùy theo Format
+          const newQuestion = {
+            id: Date.now(),
+            question_number: 1,
+            explanation: '',
+            score: p.scoreForEachQuestion || 10, // Lấy score mặc định của Part
+          };
 
-            // 2. Nếu ĐÍCH là 'I' (Text):
-            // answers sẽ lấy từ content cũ (nếu có) hoặc giữ nguyên nếu answers đang là chuỗi
-            if (newFormat === 'I') {
-              const finalAnswer = typeof answers === 'string' ? answers : content || '';
-              return {
-                ...rest, // Giữ id, question_number, explanation...
-                answers: finalAnswer,
-                // KHÔNG có trường content ở đây
-              };
-            }
-
-            // 3. Nếu ĐÍCH là 'H' (Multiple Choice):
-            // content sẽ lấy từ answers cũ (nếu là chuỗi) hoặc giữ nguyên content cũ
-            if (newFormat === 'H') {
-              const finalContent = typeof answers === 'string' ? answers : content || '';
-              return {
-                ...rest,
-                content: finalContent,
-                answers: [{ option_label: 'A', is_correct: true, answer_text: '' }],
-              };
-            }
-
-            return q;
-          });
-
-          // 4. Cấu trúc lại Part
-          const { content: partContent, ...partRest } = p;
-          if (newFormat === 'I') {
-            return { ...partRest, format: newFormat, questions: updatedQuestions };
-          } else {
-            return {
-              ...partRest,
-              format: newFormat,
-              questions: updatedQuestions,
-              content: partContent || '',
-            };
+          if (newFormat === 'H') {
+            // Loại H: Cần content và mảng answers có 1 lựa chọn mặc định
+            newQuestion.content = '';
+            newQuestion.answers = [{ option_label: 'A', is_correct: true, answer_text: '' }];
+          } else if (newFormat === 'I') {
+            // Loại I: answers vẫn là mảng nhưng chứa 1 phần tử
+            newQuestion.answers = [{ is_correct: true, answer_text: '' }];
+            // Lưu ý: Loại I không có trường content trong Question theo logic của bạn
           }
+
+          // 2. Trả về Part với Format mới nhưng GIỮ LẠI content và description
+          return {
+            ...p, // Giữ lại id, order, description, content, scoreForEachQuestion...
+            format: newFormat, // Cập nhật format mới
+            questions: [newQuestion], // Reset mảng questions về 1 câu mới phù hợp format
+          };
         }
         return p;
       }),
@@ -257,25 +245,6 @@ export default function Page() {
             }
           : p,
       ),
-    );
-  };
-
-  // Dành cho format J - Matching
-  const handleDeleteAnswer = (partId, optionLabel) => {
-    setParts((prevParts) =>
-      prevParts.map((p) => {
-        if (p.id === partId) {
-          const updatedAnswers = p.answers.filter((a) => a.option_label !== optionLabel);
-
-          const reindexedAnswers = updatedAnswers.map((a, index) => ({
-            ...a,
-            option_label: String.fromCharCode(65 + index),
-          }));
-
-          return { ...p, answers: reindexedAnswers };
-        }
-        return p;
-      }),
     );
   };
 
@@ -314,9 +283,6 @@ export default function Page() {
           if (format === 'G' || format === 'H' || format === 'I' || format === 'J') {
             updatedPart.content = '';
           }
-          if (format === 'J') {
-            updatedPart.answers = [];
-          }
           return updatedPart;
         }
         return p;
@@ -336,6 +302,17 @@ export default function Page() {
     setParts((prevParts) =>
       prevParts.map((p) => (p.id === partId ? { ...p, description: newDescription } : p)),
     );
+  };
+
+  const handleUpdateContentPart = (partId, newContent) => {
+    setParts((prevParts) =>
+      prevParts.map((p) => (p.id === partId ? { ...p, content: newContent } : p)),
+    );
+  };
+
+  const handleEditorError = (partId, message) => {
+    // Cách 1: Log lỗi
+    console.error(`Lỗi tại Part ${partId}: ${message}`);
   };
 
   const renderPartEditor = (part, index) => {
@@ -362,6 +339,8 @@ export default function Page() {
             handleDeleteQuestion={handleDeleteQuestion}
             handleDeleteOption={handleDeleteOption}
             handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
+            handleUpdateContentPart={handleUpdateContentPart}
+            handleEditorError={handleEditorError}
           />
         );
       case 'J':
@@ -372,11 +351,12 @@ export default function Page() {
             index={index}
             handleDeletePart={handleDeletePart}
             handleDeleteQuestion={handleDeleteQuestion}
-            handleDeleteAnswer={handleDeleteAnswer}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
             setAnswers={(newAnswers) => updateAnswerPart(part.id, newAnswers)}
             handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
+            handleUpdateContentPart={handleUpdateContentPart}
+            handleEditorError={handleEditorError}
           />
         );
       case 'I':
@@ -393,6 +373,8 @@ export default function Page() {
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
             setFormat={(newFormat) => handleUpdateFormat(part.id, newFormat)}
             handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
+            handleUpdateContentPart={handleUpdateContentPart}
+            handleEditorError={handleEditorError}
           />
         );
       default:

@@ -15,6 +15,7 @@ import {
 } from '../../../styles/Teacher/Reading/QuesitonTypeStyles';
 import { uploadReadingStyles } from '../../../styles/Teacher/Reading/UploadReadingStyles';
 import { Box, Typography } from '@mui/material';
+import ClientSideCustomEditor from '../../../components/Editor/ClientSideCustomEditor';
 
 export default function MatchingForm({
   part,
@@ -22,13 +23,32 @@ export default function MatchingForm({
   index,
   handleDeletePart,
   handleDeleteQuestion,
-  handleDeleteAnswer,
   questions,
   setQuestions,
-  setAnswers,
   handleUpdateScoreForEachQuestionPart,
+  handleUpdateContentPart,
+  handleEditorError,
 }) {
   const [isOpen, setIsOpen] = React.useState(true);
+  const [answers, setLocalAnswers] = React.useState(() => {
+    return questions.map((_, i) => ({
+      option_label: String.fromCharCode(65 + i),
+      answer_text: '',
+    }));
+  });
+
+  useEffect(() => {
+    setLocalAnswers((prevAnswers) => {
+      return questions.map((_, i) => {
+        const label = String.fromCharCode(65 + i);
+        const existingAnswer = prevAnswers.find((a) => a.option_label === label);
+        return {
+          option_label: label,
+          answer_text: existingAnswer ? existingAnswer.answer_text : '',
+        };
+      });
+    });
+  }, [questions.length]);
 
   const handleAddQuestion = () => {
     const newQuestion = {
@@ -36,46 +56,37 @@ export default function MatchingForm({
       // Những fields gửi lên server
       question_number: 1,
       explanation: '',
-      answer_label: '',
+      answers: [
+        {
+          option_label: '',
+          is_correct: true,
+          answer_text: '',
+        },
+      ],
     };
     setQuestions([...questions, newQuestion]);
   };
 
-  const handleAddAnswer = () => {
-    const label = String.fromCharCode(65 + part.answers.length);
-    const newAnswer = {
-      id: Date.now(),
-      // Những fields gửi lên server
-      option_label: label,
-      answer_text: '',
-      is_correct: false,
-    };
-    setAnswers([...part.answers, newAnswer]);
-  };
-
   const handleUpdateCorrectAnswer = (questionId, selectedLabel) => {
+    const sourceAnswer = answers.find((ans) => ans.option_label === selectedLabel);
+    const textToSave = sourceAnswer ? sourceAnswer.answer_text : '';
+
     const updatedQuestions = questions.map((q) => {
-      // Nếu đây là câu hỏi đang được thao tác -> gán label mới
       if (q.id === questionId) {
-        return { ...q, answer_label: selectedLabel };
+        return {
+          ...q,
+          answers: [{ ...q.answers[0], option_label: selectedLabel, answer_text: textToSave }],
+        };
       }
-      // Nếu câu hỏi KHÁC cũng đang giữ label này -> reset label của nó về rỗng
-      if (q.answer_label === selectedLabel) {
-        return { ...q, answer_label: '' };
+
+      if (q.answers && q.answers[0] && q.answers[0].option_label === selectedLabel) {
+        return { ...q, answers: [{ ...q.answers[0], option_label: '', answer_text: '' }] };
       }
+
       return q;
     });
-    setQuestions(updatedQuestions);
 
-    // Gom tất cả các label đang được sử dụng làm đáp án đúng
-    const allCorrectLabels = updatedQuestions
-      .map((q) => q.answer_label)
-      .filter((label) => label !== ''); // Loại bỏ các label rỗng
-    const updatedAnswers = part.answers.map((ans) => ({
-      ...ans,
-      is_correct: allCorrectLabels.includes(ans.option_label),
-    }));
-    setAnswers(updatedAnswers);
+    setQuestions(updatedQuestions);
   };
 
   const handleUpdateExplanation = (questionId, value) => {
@@ -86,10 +97,22 @@ export default function MatchingForm({
   };
 
   const handleUpdateAnswer = (optionLabel, newContent) => {
-    const updatedAnswer = part.answers.map((a) =>
+    const nextLocalAnswers = answers.map((a) =>
       a.option_label === optionLabel ? { ...a, answer_text: newContent } : a,
     );
-    setAnswers(updatedAnswer);
+    setLocalAnswers(nextLocalAnswers);
+
+    const nextQuestions = questions.map((q) => {
+      if (q.answers && q.answers.length > 0 && q.answers[0].option_label === optionLabel) {
+        return {
+          ...q,
+          answers: [{ ...q.answers[0], answer_text: newContent }],
+        };
+      }
+      return q;
+    });
+
+    setQuestions(nextQuestions);
   };
 
   return (
@@ -179,7 +202,12 @@ export default function MatchingForm({
                 Edit in editor
               </Typography>{' '}
             </Box>
-            <OutlinedInput placeholder="" disabled sx={uploadReadingStyles.input} />
+            <ClientSideCustomEditor
+              data={part.content || ''}
+              onChange={(content) => handleUpdateContentPart(part.id, content)}
+              onError={(msg) => handleEditorError(part.id, msg)}
+              startingBlankId={1}
+            />
           </FormControl>
           {/* -------------- Questions Section -------------- */}
           <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
@@ -234,8 +262,11 @@ export default function MatchingForm({
                         >
                           <Select
                             value={
-                              question.answer_label !== undefined && question.answer_label !== ''
-                                ? question.answer_label
+                              question.answers &&
+                              question.answers[0] &&
+                              question.answers[0].option_label !== undefined &&
+                              question.answers[0].option_label !== ''
+                                ? question.answers[0].option_label
                                 : ''
                             }
                             onChange={(e) => handleUpdateCorrectAnswer(question.id, e.target.value)}
@@ -246,8 +277,11 @@ export default function MatchingForm({
                               <em>Select</em>
                             </MenuItem>
                             {/* Hiện đầy đủ danh sách, không cần vô hiệu hóa */}
-                            {part.answers.map((answer, aIndex) => (
-                              <MenuItem key={answer.id} value={String.fromCharCode(65 + aIndex)}>
+                            {answers.map((answer, aIndex) => (
+                              <MenuItem
+                                key={answer.option_label}
+                                value={String.fromCharCode(65 + aIndex)}
+                              >
                                 {String.fromCharCode(65 + aIndex)}
                               </MenuItem>
                             ))}
@@ -264,35 +298,23 @@ export default function MatchingForm({
               </>
             )}
           </Box>
-          {questions.length > 0 && (
+          {answers.length > 0 && (
             <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
               <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                 <FormLabel sx={uploadReadingStyles.labelInput}>Answer</FormLabel>
-                <Typography
-                  onClick={handleAddAnswer}
-                  sx={multipleChoiceStyles.buttonAndIconContainer}
-                >
-                  <AddIcon sx={{ fontSize: '1.4rem' }} />
-                  Add answer
-                </Typography>
               </Box>
               <Box sx={matchingStyles.linkOptionContainer}>
-                {part.answers.map((answer, aIndex) => (
-                  <Box key={answer.id} sx={multipleChoiceStyles.optionContainer}>
+                {answers.map((answer, aIndex) => (
+                  <Box key={answer.option_label} sx={multipleChoiceStyles.optionContainer}>
                     <Typography sx={multipleChoiceStyles.optionLabel}>
                       {answer.option_label}.
                     </Typography>
                     <OutlinedInput
                       multiline
-                      placeholder="Enter option here"
+                      placeholder="Enter an answer here"
                       sx={multipleChoiceStyles.optionInput}
                       defaultValue={answer.answer_text}
                       onBlur={(e) => handleUpdateAnswer(answer.option_label, e.target.value)}
-                    />
-                    {/* ---------------- Delete Icon ---------------- */}
-                    <DeleteOutlineIcon
-                      onClick={() => handleDeleteAnswer(partId, answer.option_label)}
-                      sx={multipleChoiceStyles.trashIcon}
                     />
                   </Box>
                 ))}

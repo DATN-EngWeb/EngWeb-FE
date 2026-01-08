@@ -12,6 +12,7 @@ import {
   multipleChoiceStyles,
   fillBlankStyles,
 } from '../../../styles/Teacher/Reading/QuesitonTypeStyles';
+import ClientSideCustomEditor from '../../../components/Editor/ClientSideCustomEditor';
 
 export default function FillBlankForm({
   part,
@@ -24,6 +25,8 @@ export default function FillBlankForm({
   setQuestions,
   setFormat,
   handleUpdateScoreForEachQuestionPart,
+  handleUpdateContentPart,
+  handleEditorError,
 }) {
   const [isOpen, setIsOpen] = React.useState(true);
 
@@ -36,16 +39,14 @@ export default function FillBlankForm({
       explanation: '',
     };
 
-    // Logic riêng cho 2 loại H và I
+    // Loại H: Cần content và answers với option_label
+    // Loại I: Chỉ cần answers với không có option_label
     if (currentFormat === 'H') {
-      // Loại H: Cần content và mảng 4 đáp án
       newQuestion.content = '';
       newQuestion.answers = [{ option_label: 'A', is_correct: true, answer_text: '' }];
     } else if (currentFormat === 'I') {
-      // Loại I: answer là chuỗi, KHÔNG có trường content
-      newQuestion.answer = '';
+      newQuestion.answers = [{ is_correct: true, answer_text: '' }];
     }
-
     setQuestions([...questions, newQuestion]);
   };
 
@@ -58,7 +59,7 @@ export default function FillBlankForm({
         }
         // Nếu không phải H (tức là I - Text), update vào answers
         else {
-          return { ...q, answer: value };
+          return { ...q, answers: [{ ...q.answers[0], answer_text: value }] };
         }
       }
       return q;
@@ -265,9 +266,14 @@ export default function FillBlankForm({
               <Typography sx={multipleChoiceStyles.buttonAndIconContainer}>
                 <OpenInNewOutlinedIcon sx={{ fontSize: '1.1rem' }} />
                 Edit in editor
-              </Typography>{' '}
+              </Typography>
             </Box>
-            <OutlinedInput placeholder="" disabled sx={uploadReadingStyles.input} />
+            <ClientSideCustomEditor
+              data={part.content || ''}
+              onChange={(content) => handleUpdateContentPart(part.id, content)}
+              onError={(msg) => handleEditorError(part.id, msg)}
+              startingBlankId={1}
+            />
           </FormControl>
           <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
             {/* --------- Heading of Question Section --------- */}
@@ -319,7 +325,11 @@ export default function FillBlankForm({
                             placeholder={
                               part.format === 'H' ? 'Enter question' : 'Enter correct answer'
                             }
-                            defaultValue={part.format === 'H' ? question.content : question.answers}
+                            defaultValue={
+                              part.format === 'H'
+                                ? question.content
+                                : question.answers[0].answer_text
+                            }
                             sx={uploadReadingStyles.inputMultiline}
                             onBlur={(e) => handleUpdateQuestion(question.id, e.target.value)}
                           />
@@ -356,7 +366,7 @@ export default function FillBlankForm({
                           <Box sx={multipleChoiceStyles.listOptionContainer}>
                             {question.answers.map((option, oIndex) => (
                               <Box
-                                key={option.option_label}
+                                key={option.option_label + Date.now()}
                                 sx={multipleChoiceStyles.optionContainer}
                               >
                                 <Checkbox

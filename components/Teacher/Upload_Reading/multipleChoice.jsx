@@ -11,6 +11,7 @@ import { FormControl, FormLabel, OutlinedInput } from '@mui/material';
 import { multipleChoiceStyles } from '../../../styles/Teacher/Reading/QuesitonTypeStyles';
 import { uploadReadingStyles } from '../../../styles/Teacher/Reading/UploadReadingStyles';
 import { Box, Typography } from '@mui/material';
+import ClientSideCustomEditor from '../../../components/Editor/ClientSideCustomEditor';
 
 export default function MultipleChoiceForm({
   part,
@@ -23,6 +24,8 @@ export default function MultipleChoiceForm({
   questions,
   setQuestions,
   handleUpdateScoreForEachQuestionPart,
+  handleUpdateContentPart,
+  handleEditorError,
 }) {
   const [isOpen, setIsOpen] = React.useState(true);
 
@@ -33,7 +36,11 @@ export default function MultipleChoiceForm({
       question_number: 1,
       content: '',
       explanation: '',
-      answers: [{ option_label: 'A', is_correct: false, answer_text: '' }],
+      answers: [
+        { option_label: 'A', is_correct: true, answer_text: '' },
+        { option_label: 'B', is_correct: false, answer_text: '' },
+        { option_label: 'C', is_correct: false, answer_text: '' },
+      ],
     };
     setQuestions([...questions, newQuestion]);
   };
@@ -43,6 +50,10 @@ export default function MultipleChoiceForm({
       q.id === questionId ? { ...q, content: value } : q,
     );
     setQuestions(updatedQuestions);
+  };
+
+  const handleEditorErrorQuestion = (questionId, msg) => {
+    window.alert(`Question ${questionId}: ${msg}`);
   };
 
   const handleUpdateExplanation = (questionId, value) => {
@@ -188,7 +199,12 @@ export default function MultipleChoiceForm({
                   Edit in editor
                 </Typography>{' '}
               </Box>
-              <OutlinedInput placeholder="" disabled sx={uploadReadingStyles.input} />
+              <ClientSideCustomEditor
+                data={part.content || ''}
+                onChange={(content) => handleUpdateContentPart(part.id, content)}
+                onError={(msg) => handleEditorError(part.id, msg)}
+                startingBlankId={1}
+              />
             </FormControl>
           ) : (
             <FormControl fullWidth sx={uploadReadingStyles.formControl}>
@@ -249,23 +265,11 @@ export default function MultipleChoiceForm({
                               fullWidth
                               sx={{ ...uploadReadingStyles.formControl, position: 'relative' }}
                             >
-                              <Typography
-                                sx={{
-                                  ...multipleChoiceStyles.buttonAndIconContainer,
-                                  position: 'absolute',
-                                  right: 24,
-                                  top: '50%',
-                                  transform: 'translateY(-50%)',
-                                  zIndex: 1,
-                                }}
-                              >
-                                <OpenInNewOutlinedIcon sx={{ fontSize: '1.1rem' }} />
-                                Edit in editor
-                              </Typography>
-                              <OutlinedInput
-                                placeholder=""
-                                disabled
-                                sx={uploadReadingStyles.input}
+                              <ClientSideCustomEditor
+                                data={part.content || ''}
+                                onChange={(content) => handleUpdateQuestion(question.id, content)}
+                                onError={(msg) => handleEditorErrorQuestion(question.id, msg)}
+                                startingBlankId={1}
                               />
                             </FormControl>
                             <OutlinedInput
@@ -318,7 +322,7 @@ export default function MultipleChoiceForm({
                         <Box sx={multipleChoiceStyles.listOptionContainer}>
                           {question.answers.map((option, oIndex) => (
                             <Box
-                              key={option.option_label}
+                              key={option.option_label + Date.now()}
                               sx={multipleChoiceStyles.optionContainer}
                             >
                               <Checkbox

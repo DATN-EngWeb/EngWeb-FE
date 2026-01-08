@@ -46,7 +46,7 @@ export async function createNewTest(testData, accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  const response = await fetch(`${TESTS_BASE_URL}/create/`, {
+  const response = await fetch(`${TESTS_BASE_URL}`, {
     method: 'POST',
     headers,
     body: JSON.stringify(testData),
@@ -57,34 +57,30 @@ export async function createNewTest(testData, accessToken) {
 }
 
 // Hàm upload nội dung Reading Test (Parts)
-// Endpoint: /api/tests/reading/{test_id}/
+// Endpoint: /api/tests/receptive/{test_id}/
 export async function uploadReadingTestContent(testId, partsData, accessToken) {
-  const headers = {};
+  // 1. Cấu hình Headers cho JSON
+  const headers = {
+    'Content-Type': 'application/json',
+  };
 
-  // Chỉ thêm Authorization, KHÔNG thêm 'Content-Type': 'multipart/form-data'
-  // để browser tự động set boundary.
   if (accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  const formData = new FormData();
+  // 2. Bọc dữ liệu đúng theo Schema: { "data": { "parts": [...] } }
+  // Dữ liệu này khớp với khung màu đen trong ảnh Swagger của bạn
+  const bodyPayload = {
+    data: {
+      parts: partsData,
+    },
+  };
 
-  // Field 'data' chứa JSON structure bọc trong object { "parts": [...] }
-  const jsonBody = JSON.stringify({
-    parts: partsData,
-  });
-
-  formData.append('data', jsonBody);
-
-  // NOTE: Nếu sau này cần upload ảnh đi kèm
-  // (như question_image_1.png trong tài liệu),
-  // Sẽ append file vào đây:
-  // formData.append('question_image_1.png', fileObject);
-
-  const response = await fetch(`${TESTS_BASE_URL}/reading/${testId}/`, {
+  // 3. Thực hiện gọi API
+  const response = await fetch(`${TESTS_BASE_URL}/receptive/${testId}/`, {
     method: 'POST',
-    headers,
-    body: formData,
+    headers: headers,
+    body: JSON.stringify(bodyPayload),
     cache: 'no-store',
   });
 
