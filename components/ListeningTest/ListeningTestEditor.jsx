@@ -3,6 +3,12 @@
 import { Box, Paper, Typography, Snackbar, Alert, Backdrop, CircularProgress } from '@mui/material';
 import { Image, TextFields, Edit, Link } from '@mui/icons-material';
 import { useState } from 'react';
+import {
+  container,
+  contentWrap,
+  panelPaper,
+  addPartBox,
+} from '../../styles/Teacher/Listening/ListeningStyles';
 
 import TestEditorHeader from '../UploadTest/TestEditorHeader';
 import TestEditorActions from '../UploadTest/TestEditorActions';
@@ -114,6 +120,7 @@ export default function ListeningTestEditor() {
 
       const basicInfoData = {
         title: basicInfo.testName,
+        type: 'R',
         level: basicInfo.level,
         skill: 'L',
         time: parseInt(basicInfo.time),
@@ -173,15 +180,7 @@ export default function ListeningTestEditor() {
   };
 
   return (
-    <Box
-      sx={{
-        backgroundColor: 'background.default',
-        minHeight: '100vh',
-        p: 2,
-        paddingLeft: 20,
-        paddingRight: 20,
-      }}
-    >
+    <Box sx={container}>
       <Box sx={{ filter: isSaving ? 'blur' : 'none' }}>
         <TestEditorHeader
           title="Create New Listening Test"
@@ -193,94 +192,80 @@ export default function ListeningTestEditor() {
           onSaveDraft={() => handleSubmit('Draft')}
           onPublish={() => handleSubmit('Published')}
         />
-        <div style={{ paddingLeft: '180px', paddingRight: '180px' }}>
-          <Typography sx={{ typography: 'h4', color: 'primary.main', marginBottom: '20px' }}>
-            Test editor
-          </Typography>
+        <Box sx={contentWrap}>
+          <Box sx={{ px: { xs: 0, lg: '200px' } }}>
+            <Typography sx={{ typography: 'h4', color: 'primary.main', marginBottom: '20px' }}>
+              Test editor
+            </Typography>
+            <BasicInformation
+              {...basicInfo}
+              onChange={handleBasicInfoChange}
+              errors={errors?.basicInfo}
+            />
 
-          <BasicInformation
-            {...basicInfo}
-            onChange={handleBasicInfoChange}
-            errors={errors?.basicInfo}
-          />
+            {parts.map((part, index) => (
+              <Paper key={part.id} sx={panelPaper}>
+                {!part.type ? (
+                  <SelectPartType
+                    partTypes={PART_TYPES}
+                    onSelectType={(typeId) => handleSelectPartType(part.id, typeId)}
+                    onCancel={() => handleCancelPart(part.id)}
+                  />
+                ) : (
+                  <>
+                    {part.type === 'multichoice_images' && (
+                      <MultiChoiceImagePart
+                        index={index}
+                        part={part}
+                        onChange={(updatedPart) =>
+                          setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
+                        }
+                        onDelete={() => handleCancelPart(part.id)}
+                      />
+                    )}
 
-          {parts.map((part, index) => (
-            <Paper
-              key={part.id}
-              sx={{ p: 3, mb: 3, border: '2px solid', borderColor: 'yellow.main', borderRadius: 2 }}
-            >
-              {!part.type ? (
-                <SelectPartType
-                  partTypes={PART_TYPES}
-                  onSelectType={(typeId) => handleSelectPartType(part.id, typeId)}
-                  onCancel={() => handleCancelPart(part.id)}
-                />
-              ) : (
-                <>
-                  {part.type === 'multichoice_images' && (
-                    <MultiChoiceImagePart
-                      index={index}
-                      part={part}
-                      onChange={(updatedPart) =>
-                        setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
-                      }
-                      onDelete={() => handleCancelPart(part.id)}
-                    />
-                  )}
+                    {part.type === 'multichoice_texts' && (
+                      <MultiChoiceTextPart
+                        index={index}
+                        part={part}
+                        onChange={(updatedPart) =>
+                          setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
+                        }
+                        onDelete={() => handleCancelPart(part.id)}
+                      />
+                    )}
 
-                  {part.type === 'multichoice_texts' && (
-                    <MultiChoiceTextPart
-                      index={index}
-                      part={part}
-                      onChange={(updatedPart) =>
-                        setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
-                      }
-                      onDelete={() => handleCancelPart(part.id)}
-                    />
-                  )}
+                    {part.type === 'fill_in_the_blanks' && (
+                      <FillInTheBlankPart
+                        index={index}
+                        part={part}
+                        onChange={(updatedPart) =>
+                          setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
+                        }
+                        onDelete={() => handleCancelPart(part.id)}
+                      />
+                    )}
 
-                  {part.type === 'fill_in_the_blanks' && (
-                    <FillInTheBlankPart
-                      index={index}
-                      part={part}
-                      onChange={(updatedPart) =>
-                        setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
-                      }
-                      onDelete={() => handleCancelPart(part.id)}
-                    />
-                  )}
+                    {part.type === 'matching' && (
+                      <MatchingPart
+                        index={index}
+                        part={part}
+                        onChange={(updatedPart) =>
+                          setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
+                        }
+                        onDelete={() => handleCancelPart(part.id)}
+                      />
+                    )}
+                  </>
+                )}
+              </Paper>
+            ))}
 
-                  {part.type === 'matching' && (
-                    <MatchingPart
-                      index={index}
-                      part={part}
-                      onChange={(updatedPart) =>
-                        setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
-                      }
-                      onDelete={() => handleCancelPart(part.id)}
-                    />
-                  )}
-                </>
-              )}
-            </Paper>
-          ))}
-
-          <Box
-            sx={{
-              border: '2px dashed',
-              borderColor: 'divider',
-              bgcolor: 'primary.contrastText',
-              borderRadius: 2,
-              p: 4,
-              textAlign: 'center',
-              color: 'text.secondary',
-              cursor: 'pointer',
-            }}
-            onClick={handleAddPart}
-          >
-            + Add new part
+            <Box sx={addPartBox} onClick={handleAddPart}>
+              + Add new part
+            </Box>
           </Box>
-        </div>
+        </Box>
       </Box>
 
       <Snackbar
