@@ -23,6 +23,15 @@ import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import AudioUploader from '../Upload/AudioUploader';
 import ClientSideCustomEditor from '../Editor/ClientSideCustomEditor';
 import { useState } from 'react';
+import {
+  sectionHeader,
+  accentBar,
+  emptyStateBox,
+  scrollEditorBox,
+  numberIndicator,
+  partHeader,
+  rowContent,
+} from '../../styles/Teacher/Listening/ListeningStyles';
 
 const options = [
   {
@@ -169,23 +178,9 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
           {snackbar.message}
         </Alert>
       </Snackbar>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2,
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box
-            sx={{
-              width: '4px',
-              height: '36px',
-              backgroundColor: 'yellow.main',
-              borderRadius: '1rem',
-            }}
-          />
+      <Box sx={partHeader}>
+        <Box sx={sectionHeader}>
+          <Box sx={accentBar} />
           <DragIndicatorIcon color="disabled" />
           <Box>
             <Typography fontWeight={600} sx={{ color: 'primary.main' }}>
@@ -208,22 +203,22 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
 
       {!isCollapsed && (
         <>
-          <Box sx={{ display: 'flex', gap: 3, mb: 3 }}>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="body2" mb={1}>
+          <Box sx={{ mb: 3 }}>
+            <Box sx={rowContent}>
+              <Typography variant="body2">
                 The score for each question <span style={{ color: 'red' }}>*</span>
               </Typography>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                value={part.totalScore ?? ''}
-                onChange={(e) => updatePart({ ...part, totalScore: e.target.value })}
-              />
             </Box>
+            <TextField
+              fullWidth
+              size="small"
+              type="number"
+              value={part.totalScore ?? ''}
+              onChange={(e) => updatePart({ ...part, totalScore: e.target.value })}
+            />
           </Box>
 
-          <Typography variant="body2" mb={1}>
+          <Typography variant="body2">
             Audio Format <span style={{ color: 'red' }}>*</span>
           </Typography>
           <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
@@ -272,14 +267,8 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
           </Box>
 
           <Box sx={{ mb: 3 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <Typography variant="body2" mb={1}>
+            <Box sx={rowContent}>
+              <Typography variant="body2">
                 Description <span style={{ color: 'red' }}>*</span>
               </Typography>
             </Box>
@@ -295,7 +284,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
 
           {audioFormat === 'onetomany' && (
             <>
-              <Typography variant="body2" mb={1}>
+              <Typography variant="body2">
                 Audio File <span style={{ color: 'red' }}>*</span>
               </Typography>
               <AudioUploader
@@ -305,28 +294,10 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
               />
 
               <Box sx={{ mb: 3 }}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}
-                >
-                  <Typography variant="body2" mb={1}>
-                    Content
-                  </Typography>
+                <Box sx={rowContent}>
+                  <Typography variant="body2">Content</Typography>
                 </Box>
-                <Box
-                  sx={{
-                    height: '300px',
-                    overflowY: 'auto',
-                    border: '1px solid #d0d0d0',
-                    borderRadius: '8px',
-                    position: 'relative',
-                    zIndex: 1,
-                    overflow: 'visible',
-                  }}
-                >
+                <Box sx={scrollEditorBox}>
                   <ClientSideCustomEditor
                     data={content}
                     onChange={(newContent) => {
@@ -341,14 +312,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
             </>
           )}
 
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mb: 1,
-            }}
-          >
+          <Box sx={rowContent}>
             <Typography variant="body2">
               Questions <span style={{ color: 'red' }}>*</span>
             </Typography>
@@ -358,15 +322,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
           </Box>
 
           {questions.length === 0 ? (
-            <Box
-              sx={{
-                border: '1px solid #ddd',
-                borderRadius: 2,
-                p: 3,
-                textAlign: 'center',
-                color: 'text.secondary',
-              }}
-            >
+            <Box sx={emptyStateBox}>
               No questions yet
               <br />
               <Button startIcon={<AddIcon />} sx={{ mt: 1 }} onClick={addQuestion}>
@@ -378,22 +334,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
               {questions.map((q, qIdx) => (
                 <Paper key={q.id} variant="outlined" sx={{ p: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                    <Box
-                      sx={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: '50%',
-                        bgcolor: 'black',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 14,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {qIdx + 1}
-                    </Box>
+                    <Box sx={numberIndicator}>{qIdx + 1}</Box>
 
                     <TextField
                       size="small"
@@ -408,7 +349,8 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
                     </IconButton>
                   </Box>
 
-                  <Box sx={{ ml: 5, mr: 7, mb: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <Box sx={{ width: 28 }} />
                     <TextField
                       size="small"
                       fullWidth
@@ -425,7 +367,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
 
                   {audioFormat === 'onetoone' && (
                     <>
-                      <Typography variant="body2" mb={1}>
+                      <Typography variant="body2">
                         Audio File <span style={{ color: 'red' }}>*</span>
                       </Typography>
                       <AudioUploader
@@ -436,7 +378,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
                     </>
                   )}
 
-                  <Typography variant="body2" color="text.secondary" mb={1}>
+                  <Typography variant="body2" color="text.secondary">
                     Text answers (click to set correct):
                   </Typography>
 

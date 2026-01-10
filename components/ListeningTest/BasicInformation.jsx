@@ -1,25 +1,24 @@
 'use client';
 
 import { Paper, Typography, TextField, Select, MenuItem, FormControl, Box } from '@mui/material';
+import {
+  panelPaper,
+  sectionHeader,
+  accentBar,
+  twoColRow,
+} from '../../styles/Teacher/Listening/ListeningStyles';
 
 export default function BasicInformation({ testName, level, time, description, onChange, errors }) {
   return (
-    <Paper sx={{ p: 3, mb: 4, border: '2px solid', borderColor: 'yellow.main', borderRadius: 4 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-        <Box
-          sx={{
-            width: '4px',
-            height: '36px',
-            backgroundColor: 'yellow.main',
-            borderRadius: '1rem',
-          }}
-        />
+    <Paper sx={panelPaper}>
+      <Box sx={sectionHeader}>
+        <Box sx={accentBar} />
         <Typography fontWeight={600} sx={{ color: 'primary.main' }}>
           Basic information
         </Typography>
       </Box>
 
-      <Box sx={{ display: 'flex', gap: 3, mb: 3 }}>
+      <Box sx={twoColRow}>
         <Box sx={{ flex: 1 }}>
           <Typography variant="body2" mb={1}>
             Title <span style={{ color: 'red' }}>*</span>

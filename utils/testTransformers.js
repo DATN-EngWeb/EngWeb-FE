@@ -95,7 +95,7 @@ export const transformPartsForSubmitWithUrls = (parts, urlMap) => {
           order,
           format: isOneToOne ? 'B' : 'C',
           description: part.description || '',
-          content: isOneToOne ? undefined : resolve(`part${order}_content.html`),
+          content: !isOneToOne && part.content ? resolve(`part${order}_content.html`) : undefined,
           resources: isOneToOne
             ? undefined
             : {
@@ -168,6 +168,7 @@ export const transformPartsForSubmitWithUrls = (parts, urlMap) => {
 
             return {
               question_number: q.question_number || qIdx + 1,
+              content: q.text || '',
               explanation: q.explanation || '',
               score: parseFloat(part.totalScore) || 0,
               answers: answerObj

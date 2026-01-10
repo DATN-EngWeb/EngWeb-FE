@@ -18,6 +18,15 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import AudioUploader from '../Upload/AudioUploader';
 import ClientSideCustomEditor from '../Editor/ClientSideCustomEditor';
 import { useState } from 'react';
+import {
+  sectionHeader,
+  accentBar,
+  scrollEditorBox,
+  emptyStateBox,
+  numberIndicator,
+  partHeader,
+  rowContent,
+} from '../../styles/Teacher/Listening/ListeningStyles';
 
 export default function FillInTheBlankPart({ index, part = {}, onChange, onDelete }) {
   const answers = Array.isArray(part.answers) ? part.answers : [];
@@ -74,23 +83,9 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
           {snackbar.message}
         </Alert>
       </Snackbar>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2,
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box
-            sx={{
-              width: '4px',
-              height: '36px',
-              backgroundColor: 'yellow.main',
-              borderRadius: '1rem',
-            }}
-          />
+      <Box sx={partHeader}>
+        <Box sx={sectionHeader}>
+          <Box sx={accentBar} />
           <DragIndicatorIcon color="disabled" />
           <Box>
             <Typography fontWeight={600} sx={{ color: 'primary.main' }}>
@@ -114,22 +109,22 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
 
       {!isCollapsed && (
         <>
-          <Box sx={{ display: 'flex', gap: 3, mb: 3 }}>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="body2" mb={1}>
+          <Box sx={{ mb: 3 }}>
+            <Box sx={rowContent}>
+              <Typography variant="body2">
                 The score for each question <span style={{ color: 'red' }}>*</span>
               </Typography>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                value={part.totalScore ?? ''}
-                onChange={(e) => updatePart({ ...part, totalScore: e.target.value })}
-              />
             </Box>
+            <TextField
+              fullWidth
+              size="small"
+              type="number"
+              value={part.totalScore ?? ''}
+              onChange={(e) => updatePart({ ...part, totalScore: e.target.value })}
+            />
           </Box>
 
-          <Typography variant="body2" mb={1}>
+          <Typography variant="body2">
             Audio File <span style={{ color: 'red' }}>*</span>
           </Typography>
           <AudioUploader
@@ -139,14 +134,8 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
           />
 
           <Box sx={{ mb: 3 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <Typography variant="body2" mb={1}>
+            <Box sx={rowContent}>
+              <Typography variant="body2">
                 Description <span style={{ color: 'red' }}>*</span>
               </Typography>
             </Box>
@@ -161,28 +150,12 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
           </Box>
 
           <Box sx={{ mb: 3 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <Typography variant="body2" mb={1}>
+            <Box sx={rowContent}>
+              <Typography variant="body2">
                 Content <span style={{ color: 'red' }}>*</span>
               </Typography>
             </Box>
-            <Box
-              sx={{
-                height: '300px',
-                overflowY: 'auto',
-                border: '1px solid #d0d0d0',
-                borderRadius: '8px',
-                position: 'relative',
-                zIndex: 1,
-                overflow: 'visible',
-              }}
-            >
+            <Box sx={scrollEditorBox}>
               <ClientSideCustomEditor
                 data={content}
                 onChange={(newContent) => {
@@ -195,29 +168,14 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
             </Box>
           </Box>
 
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mb: 1,
-            }}
-          >
+          <Box sx={rowContent}>
             <Typography variant="body2">
               Answers <span style={{ color: 'red' }}>*</span>
             </Typography>
           </Box>
 
           {answers.length === 0 ? (
-            <Box
-              sx={{
-                border: '1px solid #ddd',
-                borderRadius: 2,
-                p: 3,
-                textAlign: 'center',
-                color: 'text.secondary',
-              }}
-            >
+            <Box sx={emptyStateBox}>
               No blanks inserted yet. Use the editor toolbar to insert blanks.
             </Box>
           ) : (
@@ -225,22 +183,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
               {answers.map((answer, aIdx) => (
                 <Paper key={answer.id} variant="outlined" sx={{ p: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                    <Box
-                      sx={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: '50%',
-                        bgcolor: 'black',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 14,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {aIdx + 1}
-                    </Box>
+                    <Box sx={numberIndicator}>{aIdx + 1}</Box>
 
                     <TextField
                       size="small"
@@ -251,7 +194,8 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
                     />
                   </Box>
 
-                  <Box sx={{ ml: 5, mr: 7 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ width: 28 }} />
                     <TextField
                       size="small"
                       fullWidth
