@@ -1,6 +1,7 @@
 import { ThemeProvider } from '../theme/ThemeProvider';
 import EmotionCacheProvider from '../lib/registry';
 import './globals.css';
+import './globals-editor.css';
 
 export const metadata = {
   title: 'NENS',

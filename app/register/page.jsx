@@ -40,10 +40,18 @@ function RegisterContent() {
     if (role) {
       setCurrentRole(role);
       localStorage.setItem('userRole', role);
+      document.cookie = `userRole=${role}; path=/; max-age=2592000; SameSite=Lax`;
       return;
     }
 
-    const storedRole = localStorage.getItem('userRole');
+    const getCookie = (name) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+      return null;
+    };
+
+    const storedRole = getCookie('userRole') || localStorage.getItem('userRole');
     if (storedRole) {
       setCurrentRole(storedRole);
     }
@@ -100,6 +108,7 @@ function RegisterContent() {
           localStorage.setItem('registrationUserId', String(userId));
           localStorage.setItem('registrationRole', selectedRole);
           localStorage.setItem('userRole', selectedRole);
+          document.cookie = `userRole=${selectedRole}; path=/; max-age=2592000; SameSite=Lax`;
         }
 
         router.push(`/verify-otp?user_id=${userId}&role=${selectedRole}`);
