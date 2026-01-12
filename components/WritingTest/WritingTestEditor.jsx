@@ -1,6 +1,15 @@
 'use client';
 
-import { Paper, Typography, Box, Divider } from '@mui/material';
+import {
+  Paper,
+  Typography,
+  Box,
+  Divider,
+  Snackbar,
+  Alert,
+  Backdrop,
+  CircularProgress,
+} from '@mui/material';
 import { useState, useEffect } from 'react';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 
@@ -12,6 +21,14 @@ import * as styles from '../../styles/Teacher/writing/WritingStyles';
 import ClientSideCustomEditor from '../Editor/ClientSideCustomEditor';
 import SignpostIcon from '@mui/icons-material/Signpost';
 import { Button, Collapse } from '@mui/material';
+import {
+  createTest,
+  submitWritingTest,
+  getPresignedUrl,
+  uploadToObjectStorage,
+  confirmUpload,
+} from '../../api/test';
+import { uploadHtmlContent, uploadMediaFile } from '../../utils/uploadHelpers';
 
 export default function WritingTestEditor() {
   const [showPreview, setShowPreview] = useState(true);
@@ -20,12 +37,14 @@ export default function WritingTestEditor() {
   const [showSuggestion, setShowSuggestion] = useState(false);
   const [basicOpen, setBasicOpen] = useState(true);
   const [settingOpen, setSettingOpen] = useState(true);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
+  const [errors, setErrors] = useState(null);
 
   const [testData, setTestData] = useState({
     testName: '',
-    level: 'A2',
-    topics: 'General',
-    format: 'essay',
+    level: '',
+    topics: '',
+    format: '',
   });
 
   const [settings, setSettings] = useState({
@@ -34,7 +53,7 @@ export default function WritingTestEditor() {
     score: 10,
   });
 
-  const [questions, setQuestions] = useState([{ id: 'Q1', description: '', suggestion: '' }]);
+  const [questions, setQuestions] = useState([{ description: '', suggestion: '' }]);
 
   useEffect(() => {
     setMounted(true);
@@ -46,6 +65,69 @@ export default function WritingTestEditor() {
 
   if (!mounted) return null;
 
+  const handleSubmit = async (status) => {
+    setIsSaving(true);
+    setErrors(null);
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setSnackbar({ open: true, message: 'Authentication required', severity: 'error' });
+        setIsSaving(false);
+        return;
+      }
+      const basicInfoData = {
+        title: testData.testName,
+        level: testData.level,
+        type: 'P',
+        skill: 'W',
+        status: status === 'Draft' ? 'D' : status === 'In review' ? 'I' : 'P',
+        time: parseInt(settings.timeLimit),
+        completed_bonus: settings.score,
+        description: 'Writing test overview',
+      };
+
+      const response = await createTest(basicInfoData, token);
+      const testId = response.id;
+
+      const formatMapper = {
+        email: 'E',
+        article: 'A',
+        story: 'S',
+        essay: 'Y',
+        letter: 'L',
+        reviews: 'R',
+      };
+
+      const url = await uploadHtmlContent(questions[0].description, testId, token);
+
+      const detailedData = {
+        format: formatMapper[testData.format] || 'E',
+        topic: testData.topics,
+        description: url,
+        min_word: parseInt(settings.minWords),
+        glue_text: questions[0].suggestion,
+        glue_resources: {
+          image: null,
+          audio: null,
+        },
+      };
+
+      await submitWritingTest({ testId, data: detailedData, token });
+
+      setSnackbar({ open: true, message: 'Test submitted successfully', severity: 'success' });
+      setIsSaving(false);
+      setTestData({ testName: '', level: '', topics: '', format: '' });
+      setSettings({ timeLimit: 30, minWords: 200, score: 10 });
+      setQuestions([{ description: '', suggestion: '' }]);
+      setErrors(null);
+      setIsSaving(false);
+    } catch (error) {
+      setSnackbar({ open: true, message: `Submit failed: ${error.message}`, severity: 'error' });
+      setIsSaving(false);
+    }
+  };
+
   return (
     <Box sx={{ ...styles.container, display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ filter: isSaving ? 'blur(2px)' : 'none' }}>
@@ -53,9 +135,9 @@ export default function WritingTestEditor() {
         <TestEditorActions
           onPreview={() => setShowPreview(!showPreview)}
           isPreviewActive={showPreview}
-          onSaveDraft={() => {}}
-          onSendReview={() => {}}
-          onPublish={() => {}}
+          onSaveDraft={() => handleSubmit('Draft')}
+          onSendReview={() => handleSubmit('In review')}
+          onPublish={() => handleSubmit('Published')}
         />
       </Box>
 
@@ -166,7 +248,12 @@ export default function WritingTestEditor() {
                   Preview
                 </Typography>
                 <Paper sx={styles.PREVIEW_PAPER_STYLE}>
-                  <Typography variant="h5" align="center" fontWeight={700}>
+                  <Typography
+                    variant="h5"
+                    align="center"
+                    fontWeight={700}
+                    sx={{ mb: 2, color: 'primary.main' }}
+                  >
                     {testData.testName || 'Writing Test Title'}
                   </Typography>
                   <Divider sx={{ my: 2 }} />
@@ -245,6 +332,26 @@ export default function WritingTestEditor() {
           )}
         </PanelGroup>
       </Box>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          severity={snackbar.severity}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+
+      <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1000 }}
+        open={isSaving}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </Box>
   );
 }

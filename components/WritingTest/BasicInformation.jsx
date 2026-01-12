@@ -13,9 +13,16 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from '@mui/material';
 import { InfoOutlined, ExpandLess, ExpandMore } from '@mui/icons-material';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import {
   panelPaper,
@@ -23,17 +30,34 @@ import {
   accentBar,
   twoColRow,
 } from '../../styles/Teacher/writing/WritingStyles';
-
-const CRITERIA_DATA = {
-  A1: 'Criteria for A1: Focus on basic vocabulary and simple sentence structures...',
-  A2: 'Criteria for A2: Focus on routine tasks and direct exchange of information...',
-  B1: 'Criteria for B1: Focus on main points of clear standard input on familiar matters...',
-  B2: 'Criteria for B2: Focus on complex text, technical discussions, and fluency...',
-};
+import { getCriteria } from '../../api/test';
 
 export default function BasicInformation({ testName, level, format, topics, onChange, errors }) {
   const [openCriteria, setOpenCriteria] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
+
+  const [criteriaData, setCriteriaData] = useState([]);
+
+  useEffect(() => {
+    const fetchCriteriaData = async () => {
+      if (!level) return;
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('accessToken');
+        const data = await getCriteria(level, token);
+
+        setCriteriaData(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Fetch Error:', error);
+        setCriteriaData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCriteriaData();
+  }, [level]);
 
   if (collapsed) {
     return (
@@ -45,6 +69,7 @@ export default function BasicInformation({ testName, level, format, topics, onCh
           mb: 2,
           alignSelf: 'flex-start',
           textTransform: 'none',
+          mr: 5,
         }}
       >
         Edit Basic Information
@@ -103,8 +128,14 @@ export default function BasicInformation({ testName, level, format, topics, onCh
                 value={format}
                 onChange={(e) => onChange('format', e.target.value)}
                 displayEmpty
+                renderValue={(selected) => {
+                  if (!selected) {
+                    return <span style={{ color: '#a0a0a0' }}>Choose format</span>;
+                  }
+                  return selected;
+                }}
               >
-                <MenuItem value="" disabled>
+                <MenuItem value="" disabled placeholder="Enter title">
                   Choose format
                 </MenuItem>
                 <MenuItem value="email">Email</MenuItem>
@@ -126,6 +157,12 @@ export default function BasicInformation({ testName, level, format, topics, onCh
                 value={level}
                 onChange={(e) => onChange('level', e.target.value)}
                 displayEmpty
+                renderValue={(selected) => {
+                  if (!selected) {
+                    return <span style={{ color: '#a0a0a0' }}>Choose level</span>;
+                  }
+                  return selected;
+                }}
               >
                 <MenuItem value="" disabled>
                   Choose level
@@ -155,30 +192,68 @@ export default function BasicInformation({ testName, level, format, topics, onCh
         </Box>
       </Box>
 
-      {level && format && (
+      {level && (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Button
             size="small"
             variant="contained"
             color="warning"
-            startIcon={<InfoOutlined />}
+            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <InfoOutlined />}
             onClick={() => setOpenCriteria(true)}
-            sx={{ textTransform: 'none', borderRadius: '8px', mgt: 2 }}
+            disabled={loading}
+            sx={{ textTransform: 'none', borderRadius: '8px', mt: 2 }}
           >
-            View Criteria
+            {loading ? 'Loading...' : 'View Criteria'}
           </Button>
         </Box>
       )}
 
       {/* ===== CRITERIA MODAL ===== */}
-      <Dialog open={openCriteria} onClose={() => setOpenCriteria(false)} maxWidth="sm" fullWidth>
+      <Dialog open={openCriteria} onClose={() => setOpenCriteria(false)} maxWidth="md" fullWidth>
         <DialogTitle sx={{ fontWeight: 700, color: 'primary.main' }}>
           Writing Criteria – Level {level}
         </DialogTitle>
         <DialogContent dividers>
-          <Typography sx={{ whiteSpace: 'pre-line' }}>
-            {CRITERIA_DATA[level] || 'No criteria available.'}
-          </Typography>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress />
+            </Box>
+          ) : Array.isArray(criteriaData) && criteriaData.length > 0 ? (
+            <TableContainer component={Box}>
+              <Table size="small" stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
+                      Band
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
+                      Content
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
+                      Organisation
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
+                      Language
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {criteriaData.map((item) => (
+                    <TableRow key={item.id} hover>
+                      <TableCell sx={{ fontWeight: 'bold', color: 'orange' }}>
+                        {item.band}
+                      </TableCell>
+                      <TableCell>{item.content}</TableCell>
+                      <TableCell>{item.organisation}</TableCell>
+                      <TableCell>{item.language}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            <Typography>No criteria data found.</Typography>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenCriteria(false)} variant="outlined">

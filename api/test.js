@@ -34,7 +34,7 @@ async function handleResponse(response) {
 }
 
 export const createTest = async (basicInfo, token) => {
-  const response = await fetch(`${TESTS_BASE_URL}`, {
+  const response = await fetch(`${TESTS_BASE_URL}/overview`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -123,5 +123,29 @@ export const submitTestParts = async ({ testId, parts, token }) => {
     body: JSON.stringify({ data: { parts } }),
   });
 
+  return handleResponse(response);
+};
+
+export const getCriteria = async (level, token) => {
+  const response = await fetch(`${TESTS_BASE_URL}/writing-criteria?level=${level}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return handleResponse(response);
+};
+
+export const submitWritingTest = async ({ testId, data, token }) => {
+  const response = await fetch(`${TESTS_BASE_URL}/productive/${testId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ data }),
+  });
   return handleResponse(response);
 };
