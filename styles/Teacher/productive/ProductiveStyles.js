@@ -33,6 +33,7 @@ export const panelPaper = {
   borderRadius: '12px',
   backgroundColor: 'primary.contrastText',
   boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.03)',
+  //minWidth: { lg: '400px', md: '350px' },
 };
 
 export const sectionHeader = {
@@ -45,7 +46,6 @@ export const sectionHeader = {
 export const accentBar = {
   width: '4px',
   height: '24px',
-  backgroundColor: 'success.main',
   borderRadius: '4px',
   mr: 1.5,
 };
@@ -55,13 +55,10 @@ export const twoColRow = {
   gap: 2,
   mb: 3,
   flexDirection: { xs: 'column', sm: 'row' },
-};
-
-export const threeColRow = {
-  display: 'flex',
-  gap: 2,
-  mb: 3,
-  flexDirection: { xs: 'column', sm: 'row' },
+  '& > *': {
+    flex: 1,
+    width: '100%',
+  },
 };
 
 export const SECTION_LABEL = (color) => ({
@@ -83,8 +80,8 @@ export const SECTION_LABEL = (color) => ({
 
 export const STICKY_PREVIEW_WRAPPER = {
   position: 'sticky',
-  // top: '24px',
   transition: 'all 0.3s ease',
+  //minWidth: '300px',
 };
 
 export const PREVIEW_PAPER_STYLE = {

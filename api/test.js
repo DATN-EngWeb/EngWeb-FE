@@ -138,7 +138,7 @@ export const getCriteria = async (level, token) => {
   return handleResponse(response);
 };
 
-export const submitWritingTest = async ({ testId, data, token }) => {
+export const submitProductiveTest = async ({ testId, data, token }) => {
   const response = await fetch(`${TESTS_BASE_URL}/productive/${testId}`, {
     method: 'POST',
     headers: {

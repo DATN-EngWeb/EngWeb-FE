@@ -7,10 +7,10 @@ import {
   panelPaper,
   sectionHeader,
   accentBar,
-  threeColRow,
-} from '../../styles/Teacher/writing/WritingStyles';
+  twoColRow,
+} from '../../styles/Teacher/productive/ProductiveStyles';
 
-export default function TestSetting({ timeLimit, minWords, score, onChange, errors }) {
+export default function TestSetting({ skill, timeLimit, minWords, score, onChange, errors }) {
   const [collapsed, setCollapsed] = useState(false);
 
   if (collapsed) {
@@ -34,7 +34,7 @@ export default function TestSetting({ timeLimit, minWords, score, onChange, erro
     <Paper sx={panelPaper}>
       <Box sx={sectionHeader}>
         <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-          <Box sx={accentBar} />
+          <Box sx={{ ...accentBar, backgroundColor: 'success.main' }} />
           <Typography fontWeight={600} sx={{ color: 'primary.main' }}>
             Test settings
           </Typography>
@@ -52,10 +52,10 @@ export default function TestSetting({ timeLimit, minWords, score, onChange, erro
         </Box>
       </Box>
 
-      <Box sx={threeColRow}>
+      <Box sx={twoColRow}>
         <Box sx={{ flex: 1 }}>
           <Typography variant="body2" mb={1}>
-            Time Limit (minutes) <span style={{ color: 'red' }}>*</span>
+            Time (minutes) <span style={{ color: 'red' }}>*</span>
           </Typography>
           <TextField
             id="timeLimit"
@@ -68,21 +68,23 @@ export default function TestSetting({ timeLimit, minWords, score, onChange, erro
             error={errors?.timeLimit}
           />
         </Box>
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="body2" mb={1}>
-            Min words <span style={{ color: 'red' }}>*</span>
-          </Typography>
-          <TextField
-            id="minWords"
-            fullWidth
-            placeholder="200"
-            type={'number'}
-            value={minWords ?? 200}
-            onChange={(e) => onChange('minWords', e.target.value)}
-            size="small"
-            error={errors?.minWords}
-          />
-        </Box>
+        {skill === 'W' && (
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="body2" mb={1}>
+              Min words <span style={{ color: 'red' }}>*</span>
+            </Typography>
+            <TextField
+              id="minWords"
+              fullWidth
+              placeholder="200"
+              type={'number'}
+              value={minWords ?? 200}
+              onChange={(e) => onChange('minWords', e.target.value)}
+              size="small"
+              error={errors?.minWords}
+            />
+          </Box>
+        )}
         <Box sx={{ flex: 1 }}>
           <Typography variant="body2" mb={1}>
             Score <span style={{ color: 'red' }}>*</span>

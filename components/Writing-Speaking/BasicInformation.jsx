@@ -23,24 +23,46 @@ import {
 } from '@mui/material';
 import { InfoOutlined, ExpandLess, ExpandMore } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
-
 import {
   panelPaper,
   sectionHeader,
   accentBar,
   twoColRow,
-} from '../../styles/Teacher/writing/WritingStyles';
+} from '../../styles/Teacher/productive/ProductiveStyles';
 import { getCriteria } from '../../api/test';
 
-export default function BasicInformation({ testName, level, format, topics, onChange, errors }) {
+export default function BasicInformation({
+  skill,
+  testName,
+  level,
+  format,
+  topics,
+  onChange,
+  errors,
+}) {
   const [openCriteria, setOpenCriteria] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
 
   const [criteriaData, setCriteriaData] = useState([]);
+  const writingFormats = [
+    { value: 'Email', label: 'Email' },
+    { value: 'Article', label: 'Article' },
+    { value: 'Story', label: 'Story' },
+    { value: 'Essay', label: 'Essay' },
+    { value: 'Letter', label: 'Letter' },
+    { value: 'Reviews', label: 'Reviews' },
+  ];
+
+  const speakingFormats = [
+    { value: 'Narrative', label: 'Narrative' },
+    { value: 'Description', label: 'Description' },
+    { value: 'Social Argument', label: 'Social Argument' },
+    { value: 'Reading Aloud', label: 'Reading Aloud' },
+  ];
 
   useEffect(() => {
+    if (skill !== 'W') return;
     const fetchCriteriaData = async () => {
       if (!level) return;
       setLoading(true);
@@ -57,7 +79,13 @@ export default function BasicInformation({ testName, level, format, topics, onCh
       }
     };
     fetchCriteriaData();
-  }, [level]);
+  }, [level, skill]);
+
+  useEffect(() => {
+    if (skill !== 'W') {
+      setCriteriaData([]);
+    }
+  }, [skill]);
 
   if (collapsed) {
     return (
@@ -82,7 +110,7 @@ export default function BasicInformation({ testName, level, format, topics, onCh
       {/* ===== HEADER ===== */}
       <Box sx={sectionHeader}>
         <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-          <Box sx={accentBar} />
+          <Box sx={{ ...accentBar, backgroundColor: 'warning.dark' }} />
           <Typography fontWeight={600} sx={{ color: 'primary.main' }}>
             Basic information
           </Typography>
@@ -138,12 +166,13 @@ export default function BasicInformation({ testName, level, format, topics, onCh
                 <MenuItem value="" disabled placeholder="Enter title">
                   Choose format
                 </MenuItem>
-                <MenuItem value="email">Email</MenuItem>
-                <MenuItem value="article">Article</MenuItem>
-                <MenuItem value="story">Story</MenuItem>
-                <MenuItem value="essay">Essay</MenuItem>
-                <MenuItem value="letter">Letter</MenuItem>
-                <MenuItem value="reviews">Reviews</MenuItem>
+                {(skill === 'W' ? writingFormats : skill === 'S' ? speakingFormats : []).map(
+                  (item) => (
+                    <MenuItem key={item.value} value={item.value}>
+                      {item.label}
+                    </MenuItem>
+                  ),
+                )}
               </Select>
             </FormControl>
           </Box>
@@ -192,7 +221,7 @@ export default function BasicInformation({ testName, level, format, topics, onCh
         </Box>
       </Box>
 
-      {level && (
+      {level && skill === 'W' && (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Button
             size="small"
@@ -209,58 +238,60 @@ export default function BasicInformation({ testName, level, format, topics, onCh
       )}
 
       {/* ===== CRITERIA MODAL ===== */}
-      <Dialog open={openCriteria} onClose={() => setOpenCriteria(false)} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ fontWeight: 700, color: 'primary.main' }}>
-          Writing Criteria – Level {level}
-        </DialogTitle>
-        <DialogContent dividers>
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-              <CircularProgress />
-            </Box>
-          ) : Array.isArray(criteriaData) && criteriaData.length > 0 ? (
-            <TableContainer component={Box}>
-              <Table size="small" stickyHeader>
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                      Band
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                      Content
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                      Organisation
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                      Language
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {criteriaData.map((item) => (
-                    <TableRow key={item.id} hover>
-                      <TableCell sx={{ fontWeight: 'bold', color: 'orange' }}>
-                        {item.band}
+      {skill === 'W' && (
+        <Dialog open={openCriteria} onClose={() => setOpenCriteria(false)} maxWidth="md" fullWidth>
+          <DialogTitle sx={{ fontWeight: 700, color: 'primary.main' }}>
+            Writing Criteria – Level {level}
+          </DialogTitle>
+          <DialogContent dividers>
+            {loading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                <CircularProgress />
+              </Box>
+            ) : Array.isArray(criteriaData) && criteriaData.length > 0 ? (
+              <TableContainer component={Box}>
+                <Table size="small" stickyHeader>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
+                        Band
                       </TableCell>
-                      <TableCell>{item.content}</TableCell>
-                      <TableCell>{item.organisation}</TableCell>
-                      <TableCell>{item.language}</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
+                        Content
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
+                        Organisation
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
+                        Language
+                      </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          ) : (
-            <Typography>No criteria data found.</Typography>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenCriteria(false)} variant="outlined">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
+                  </TableHead>
+                  <TableBody>
+                    {criteriaData.map((item) => (
+                      <TableRow key={item.id} hover>
+                        <TableCell sx={{ fontWeight: 'bold', color: 'orange' }}>
+                          {item.band}
+                        </TableCell>
+                        <TableCell>{item.content}</TableCell>
+                        <TableCell>{item.organisation}</TableCell>
+                        <TableCell>{item.language}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              <Typography>No criteria data found.</Typography>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenCriteria(false)} variant="outlined">
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </Paper>
   );
 }

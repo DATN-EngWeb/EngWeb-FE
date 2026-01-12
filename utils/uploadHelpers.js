@@ -64,6 +64,7 @@ export const uploadMediaFile = async (file, testId, token) => {
       mimeType: file.type,
       category: 'tests',
       testId,
+      part: 1,
     },
     token,
   );
