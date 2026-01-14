@@ -6,10 +6,9 @@ if (!API_BASE_URL) {
   throw new Error('NEXT_PUBLIC_API_BASE_URL is required but not set in .env');
 }
 
-// Định nghĩa Base URL cho phần Tests (tương tự như ACCOUNTS_BASE_URL)
 const TESTS_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/tests`;
 
-// Hàm xử lý response chung (Copy từ mẫu của bạn để đảm bảo đồng bộ cách bắt lỗi)
+// Hàm xử lý response chung
 async function handleResponse(response) {
   const contentType = response.headers.get('content-type') || '';
   const data = contentType.includes('application/json')
@@ -35,8 +34,6 @@ async function handleResponse(response) {
   throw error;
 }
 
-// Hàm createNewTest viết lại theo phong cách fetch và handleResponse
-// Lưu ý: accessToken được truyền vào tham số (giống hàm logout ở mẫu)
 export async function createNewTest(testData, accessToken) {
   const headers = {
     'Content-Type': 'application/json',
@@ -46,7 +43,7 @@ export async function createNewTest(testData, accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  const response = await fetch(`${TESTS_BASE_URL}`, {
+  const response = await fetch(`${TESTS_BASE_URL}/overview`, {
     method: 'POST',
     headers,
     body: JSON.stringify(testData),
@@ -56,8 +53,6 @@ export async function createNewTest(testData, accessToken) {
   return handleResponse(response);
 }
 
-// Hàm upload nội dung Reading Test (Parts)
-// Endpoint: /api/tests/receptive/{test_id}/
 export async function uploadReadingTestContent(testId, partsData, accessToken) {
   const headers = {
     'Content-Type': 'application/json',
@@ -82,3 +77,35 @@ export async function uploadReadingTestContent(testId, partsData, accessToken) {
 
   return handleResponse(response);
 }
+
+export async function getRecepiveTestDetails(testId, accessToken) {
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  const response = await fetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
+    method: 'GET',
+    headers,
+    cache: 'no-store',
+  });
+
+  return handleResponse(response);
+}
+
+export const fetchHtmlContent = async (url) => {
+  if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+    return url;
+  }
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Fetch failed');
+    return await response.text();
+  } catch (error) {
+    console.error(`Lỗi tải nội dung từ: ${url}`, error);
+    return '';
+  }
+};

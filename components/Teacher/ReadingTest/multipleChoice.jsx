@@ -266,7 +266,7 @@ export default function MultipleChoiceForm({
                               sx={{ ...uploadReadingStyles.formControl, position: 'relative' }}
                             >
                               <ClientSideCustomEditor
-                                data={part.content || ''}
+                                data={question.content || ''}
                                 onChange={(content) => handleUpdateQuestion(question.id, content)}
                                 onError={(msg) => handleEditorErrorQuestion(question.id, msg)}
                                 startingBlankId={1}
@@ -285,7 +285,7 @@ export default function MultipleChoiceForm({
                             <OutlinedInput
                               multiline
                               placeholder="Enter question here"
-                              defaultValue={question.text}
+                              defaultValue={question.content}
                               sx={uploadReadingStyles.inputMultiline}
                               onBlur={(e) => handleUpdateQuestion(question.id, e.target.value)}
                             />

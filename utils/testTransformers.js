@@ -238,16 +238,14 @@ export const collectFilesReading = (parts) => {
 };
 
 export const transformReadingPartsWithUrls = (parts, urlMap) => {
-  // Hàm helper: Tìm URL trong map, nếu không có thì trả về string rỗng hoặc giữ nguyên
   const resolve = (filename) => {
     return urlMap[filename] || null;
   };
 
   return parts.map((part) => {
-    // Clone part để tránh mutate state gốc
     const newPart = { ...part };
 
-    // QUAN TRỌNG: Phải dùng part.order để khớp với logic của collectFilesReading
+    // Dùng part.order để khớp với logic của collectFilesReading
     const partOrder = part.order;
 
     // -----------------------------------------------------------
@@ -264,7 +262,7 @@ export const transformReadingPartsWithUrls = (parts, urlMap) => {
 
     // -----------------------------------------------------------
     // 2. Thay thế URL cho Content của từng Question
-    // (Chỉ áp dụng cho Format F - Khớp với logic collectFilesReading)
+    // (Chỉ áp dụng cho Format F)
     // -----------------------------------------------------------
     if (part.format === 'F' && Array.isArray(part.questions)) {
       newPart.questions = part.questions.map((q, qIndex) => {
@@ -286,5 +284,28 @@ export const transformReadingPartsWithUrls = (parts, urlMap) => {
     }
 
     return newPart;
+  });
+};
+
+export const transformFormatData = (data) => {
+  // Biến đếm toàn cục, bắt đầu từ 1
+  let globalQuestionNumber = 1;
+
+  // Duyệt qua từng Part
+  return data.map((part) => {
+    // Duyệt qua từng Question trong Part
+    const updatedQuestions = part.questions.map((question) => {
+      const { _id, ...restQuestion } = question;
+      return {
+        ...restQuestion,
+        question_number: globalQuestionNumber++,
+        score: part.scoreForEachQuestion,
+      };
+    });
+    const { _id, _scoreForEachQuestion, ...restPart } = part;
+    return {
+      ...restPart,
+      questions: updatedQuestions,
+    };
   });
 };

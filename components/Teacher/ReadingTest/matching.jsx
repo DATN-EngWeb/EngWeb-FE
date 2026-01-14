@@ -18,6 +18,7 @@ import { Box, Typography } from '@mui/material';
 import ClientSideCustomEditor from '../../../components/Editor/ClientSideCustomEditor';
 
 export default function MatchingForm({
+  localAnswers,
   part,
   partId,
   index,
@@ -31,6 +32,9 @@ export default function MatchingForm({
 }) {
   const [isOpen, setIsOpen] = React.useState(true);
   const [answers, setLocalAnswers] = React.useState(() => {
+    if (localAnswers && localAnswers.length > 0) {
+      return localAnswers;
+    }
     return questions.map((_, i) => ({
       option_label: String.fromCharCode(65 + i),
       answer_text: '',

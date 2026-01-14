@@ -3,6 +3,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import {
   Box,
   Container,
@@ -28,19 +29,25 @@ import ArticleOutlined from '@mui/icons-material/ArticleOutlined';
 import EditNoteOutlined from '@mui/icons-material/EditNoteOutlined';
 import BorderColorOutlined from '@mui/icons-material/BorderColorOutlined';
 import Link from '@mui/icons-material/Link';
-import { uploadReadingStyles } from '../../../../styles/Teacher/Reading/UploadReadingStyles';
-import MultipleChoiceForm from '../../../../components/Teacher/ReadingTest/multipleChoice';
-import MatchingForm from '../../../../components/Teacher/ReadingTest/matching';
-import FillBlankForm from '../../../../components/Teacher/ReadingTest/fillBlanks';
-import { createNewTest, uploadReadingTestContent } from '../../../../api/teacher/upload-reading';
+import { uploadReadingStyles } from '../../../../../styles/Teacher/Reading/UploadReadingStyles';
+import MultipleChoiceForm from '../../../../../components/Teacher/ReadingTest/multipleChoice';
+import MatchingForm from '../../../../../components/Teacher/ReadingTest/matching';
+import FillBlankForm from '../../../../../components/Teacher/ReadingTest/fillBlanks';
+import {
+  createNewTest,
+  uploadReadingTestContent,
+  getRecepiveTestDetails,
+  fetchHtmlContent,
+} from '../../../../../api/teacher/upload-reading';
 import {
   collectFilesReading,
   transformReadingPartsWithUrls,
   transformFormatData,
-} from '../../../../utils/testTransformers';
-import { getPresignedUrl, uploadToObjectStorage, confirmUpload } from '../../../../api/test';
+} from '../../../../../utils/testTransformers';
+import { getPresignedUrl, uploadToObjectStorage, confirmUpload } from '../../../../../api/test';
 
 export default function Page() {
+  const { test_id } = useParams();
   const [test, setTest] = useState({
     title: '',
     type: 'R',
@@ -57,6 +64,131 @@ export default function Page() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
+
+  const extractLocalAnswersFromQuestions = (questions) => {
+    if (!questions || !Array.isArray(questions)) return [];
+
+    const answersMap = new Map();
+
+    questions.forEach((q) => {
+      if (q.answers && Array.isArray(q.answers)) {
+        q.answers.forEach((ans) => {
+          if (ans.option_label) {
+            const currentText = answersMap.get(ans.option_label);
+            if (!answersMap.has(ans.option_label) || (!currentText && ans.answer_text)) {
+              answersMap.set(ans.option_label, ans.answer_text || '');
+            }
+          }
+        });
+      }
+    });
+
+    return Array.from(answersMap.entries())
+      .map(([label, text]) => ({
+        option_label: label,
+        answer_text: text,
+      }))
+      .sort((a, b) => a.option_label.localeCompare(b.option_label));
+  };
+
+  useEffect(() => {
+    const fetchTestData = async () => {
+      if (!test_id) return;
+
+      try {
+        const accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) {
+          setSnackbar({ open: true, message: 'Authentication required', severity: 'error' });
+          return;
+        }
+        const svData = await getRecepiveTestDetails(test_id, accessToken);
+
+        setTest({
+          title: svData.title || '',
+          type: svData.type || 'R',
+          level: svData.level || '',
+          skill: svData.skill || 'R',
+          time: svData.time > 10000 ? 60 : svData.time,
+          description: svData.description || '',
+          status: svData.status || 'D',
+        });
+
+        const rawParts = svData.receptive_test?.receptive_parts || [];
+
+        const processedParts = await Promise.all(
+          rawParts.map(async (part, pIndex) => {
+            const newPart = {
+              id: part.id || `part_${Date.now()}_${pIndex}`,
+              order: part.order,
+              format: part.format,
+              description: part.description,
+              scoreForEachQuestion: part.receptive_questions?.[0]?.score,
+              content: part.content,
+              questions: part.receptive_questions || [],
+            };
+
+            if (
+              newPart.content &&
+              typeof newPart.content === 'string' &&
+              newPart.content.startsWith('http')
+            ) {
+              newPart.content = await fetchHtmlContent(newPart.content);
+            }
+
+            if (newPart.questions && Array.isArray(newPart.questions)) {
+              newPart.questions = await Promise.all(
+                newPart.questions.map(async (q, qIndex) => {
+                  const newQ = {
+                    id: q.id || `q_${Date.now()}_${pIndex}_${qIndex}`,
+                    question_number: q.question_number,
+                    explanation: q.explanation,
+                    score: q.score,
+                    content: q.content,
+
+                    answers: q.receptive_answers || [],
+                  };
+
+                  // Fetch HTML Content cho Question (Format F)
+                  if (
+                    newQ.content &&
+                    typeof newQ.content === 'string' &&
+                    newQ.content.startsWith('http')
+                  ) {
+                    newQ.content = await fetchHtmlContent(newQ.content);
+                  }
+
+                  return newQ;
+                }),
+              );
+            }
+
+            // Logic riêng cho Format J (Matching) - Extract Answers
+            if (newPart.format === 'J') {
+              const extractedAnswers = extractLocalAnswersFromQuestions(newPart.questions);
+              // Nếu không có answer nào (lỗi data cũ), tự tạo answers rỗng A, B, C...
+              if (extractedAnswers.length === 0 && newPart.questions) {
+                newPart.questions.forEach((_, i) => {
+                  extractedAnswers.push({
+                    option_label: String.fromCharCode(65 + i),
+                    answer_text: '',
+                  });
+                });
+              }
+              newPart.initialLocalAnswers = extractedAnswers;
+            }
+
+            return newPart;
+          }),
+        );
+
+        setParts(processedParts);
+      } catch (error) {
+        console.error('Lỗi tải dữ liệu bài thi:', error);
+      }
+    };
+
+    fetchTestData();
+  }, [test_id]);
 
   useEffect(() => {
     if (parts.length > prevPartsLengthRef.current) {
@@ -396,6 +528,7 @@ export default function Page() {
       case 'J':
         return (
           <MatchingForm
+            localAnswers={part.initialLocalAnswers || []}
             part={part}
             partId={part.id}
             index={index}
@@ -556,7 +689,7 @@ export default function Page() {
               <FormLabel sx={uploadReadingStyles.labelInput}>Level</FormLabel>
               <Select
                 displayEmpty
-                defaultValue=""
+                value={test.level || ''}
                 sx={{
                   ...uploadReadingStyles.input,
                   '& .MuiSelect-icon': {
