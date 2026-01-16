@@ -97,7 +97,7 @@ export default function BasicInformation({
           mb: 2,
           alignSelf: 'flex-start',
           textTransform: 'none',
-          mr: 5,
+          mr: 2,
         }}
       >
         Edit Basic Information

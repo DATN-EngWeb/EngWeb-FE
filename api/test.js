@@ -1,5 +1,6 @@
 /* eslint-env browser */
 /* global fetch */
+/* global URLSearchParams */
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 if (!API_BASE_URL) {
@@ -147,5 +148,25 @@ export const submitProductiveTest = async ({ testId, data, token }) => {
     },
     body: JSON.stringify({ data }),
   });
+  return handleResponse(response);
+};
+
+export const getListTest = async (token, isTeacher = false, status = null) => {
+  const params = new URLSearchParams();
+
+  if (isTeacher) params.append('mine', 'true');
+  if (status) params.append('status', status);
+
+  const queryString = params.toString() ? `?${params.toString()}` : '';
+  const url = `${TESTS_BASE_URL}/overview${queryString}`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
   return handleResponse(response);
 };
