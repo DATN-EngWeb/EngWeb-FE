@@ -1,3 +1,129 @@
+const getAudioObj = (url) => (url ? { name: url.split('/').pop(), url } : null);
+
+const transformAnswers = (answers, type) =>
+  answers.map((a, i) => ({
+    id: `${type}-${a.id}-${i}`,
+    label: a.option_label || String.fromCharCode(65 + i),
+    ...(type === 'image'
+      ? { image: getAudioObj(a.resources?.image) }
+      : { text: a.answer_text || '' }),
+    is_correct: a.is_correct,
+  }));
+
+export const transformApiResponseToParts = (apiData) => {
+  if (!apiData?.receptive_test?.receptive_parts) return [];
+
+  const formatMap = {
+    A: 'multichoice_images',
+    B: 'multichoice_texts',
+    C: 'multichoice_texts',
+    D: 'fill_in_the_blanks',
+    E: 'matching',
+  };
+
+  return apiData.receptive_test.receptive_parts
+    .map((part) => {
+      const type = formatMap[part.format];
+      if (!type) return null;
+
+      const base = {
+        id: crypto.randomUUID(),
+        type,
+        order: part.order,
+        description: part.description || '',
+        totalScore: part.score,
+      };
+
+      if (type === 'multichoice_images') {
+        return {
+          ...base,
+          audio: getAudioObj(part.resources?.audio),
+          questions: (part.receptive_questions || []).map((q, i) => {
+            const answers = transformAnswers(q.receptive_answers, 'image');
+            return {
+              id: q.id,
+              question_number: q.question_number || i + 1,
+              text: q.content || '',
+              explanation: q.explanation || '',
+              answers,
+              correctIndex: answers.findIndex((a) => a.is_correct),
+            };
+          }),
+        };
+      }
+
+      if (type === 'multichoice_texts') {
+        return {
+          ...base,
+          audioFormat: part.format === 'C' ? 'onetomany' : 'onetoone',
+          ...(part.format === 'C' && {
+            audio: getAudioObj(part.resources?.audio),
+            _contentUrl: part.content?.startsWith('http') ? part.content : null,
+          }),
+          questions: (part.receptive_questions || []).map((q, i) => {
+            const answers = transformAnswers(q.receptive_answers, 'text');
+            return {
+              id: q.id,
+              question_number: q.question_number || i + 1,
+              text: q.content || '',
+              explanation: q.explanation || '',
+              answers,
+              correctIndex: answers.findIndex((a) => a.is_correct),
+              ...(part.format === 'B' &&
+                q.resources?.audio && { audio: getAudioObj(q.resources.audio) }),
+            };
+          }),
+        };
+      }
+
+      if (type === 'fill_in_the_blanks') {
+        return {
+          ...base,
+          audio: getAudioObj(part.resources?.audio),
+          _contentUrl: part.content?.startsWith('http') ? part.content : null,
+          answers: (part.receptive_questions || []).map((q) => ({
+            id: `blank-${q.id}`,
+            text: q.receptive_answers?.[0]?.answer_text || '',
+            explanation: q.explanation || '',
+          })),
+          questions: (part.receptive_questions || []).map((q, i) => ({
+            id: q.id,
+            question_number: q.question_number || i + 1,
+            text: q.content || '',
+            explanation: q.explanation || '',
+          })),
+        };
+      }
+
+      if (type === 'matching') {
+        const ansMap = new Map();
+        (part.receptive_questions || []).forEach((q) =>
+          q.receptive_answers?.forEach(
+            (a) =>
+              !ansMap.has(a.id) &&
+              ansMap.set(a.id, { id: `ans-${a.id}`, text: a.answer_text || '' }),
+          ),
+        );
+
+        return {
+          ...base,
+          audio: getAudioObj(part.resources?.audio),
+          questions: (part.receptive_questions || []).map((q, i) => ({
+            id: q.id,
+            question_number: q.question_number || i + 1,
+            text: q.content || '',
+            explanation: q.explanation || '',
+            selectedAnswerId: q.receptive_answers?.[0] ? `ans-${q.receptive_answers[0].id}` : null,
+          })),
+          answers: Array.from(ansMap.values()),
+        };
+      }
+
+      return null;
+    })
+    .filter(Boolean);
+};
+
 export const collectFiles = (parts) => {
   const files = [];
 

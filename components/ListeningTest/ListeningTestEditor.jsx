@@ -2,7 +2,8 @@
 
 import { Box, Paper, Typography, Snackbar, Alert, Backdrop, CircularProgress } from '@mui/material';
 import { Image, TextFields, Edit, Link } from '@mui/icons-material';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
   container,
   contentWrap,
@@ -20,13 +21,19 @@ import FillInTheBlankPart from './FillInTheBlankPart';
 import MatchingPart from './MatchingPart';
 
 import { validateTest, getValidationErrorMessage } from '../../utils/testValidation';
-import { collectFiles, transformPartsForSubmitWithUrls } from '../../utils/testTransformers';
+import {
+  collectFiles,
+  transformPartsForSubmitWithUrls,
+  transformApiResponseToParts,
+} from '../../utils/testTransformers';
 import {
   createTest,
   getPresignedUrl,
   uploadToObjectStorage,
   confirmUpload,
   submitTestParts,
+  getRecepiveTestDetails,
+  fetchHtmlContent,
 } from '../../api/test';
 
 const PART_TYPES = [
@@ -57,6 +64,9 @@ const PART_TYPES = [
 ];
 
 export default function ListeningTestEditor() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const testId = searchParams.get('testId');
   const [basicInfo, setBasicInfo] = useState({
     testName: '',
     level: '',
@@ -67,6 +77,80 @@ export default function ListeningTestEditor() {
   const [errors, setErrors] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(!!testId);
+  const [editingTestId, setEditingTestId] = useState(testId || null);
+
+  useEffect(() => {
+    if (!testId) return;
+
+    const loadTestData = async () => {
+      try {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+          setSnackbar({ open: true, message: 'Authentication required', severity: 'error' });
+          setIsLoading(false);
+          return;
+        }
+
+        const data = await getRecepiveTestDetails(testId, token);
+
+        if (data.status !== 'D') {
+          setSnackbar({
+            open: true,
+            message: 'Only draft tests can be edited',
+            severity: 'error',
+          });
+          setTimeout(() => router.push('/teacher/upload-test/listening'), 1500);
+          setIsLoading(false);
+          return;
+        }
+
+        setEditingTestId(data.id);
+
+        setBasicInfo({
+          testName: data.title || '',
+          level: data.level || '',
+          time: data.time?.toString() || '',
+          description: data.description || '',
+        });
+
+        let transformedParts = transformApiResponseToParts(data);
+
+        transformedParts = await Promise.all(
+          transformedParts.map(async (part) => {
+            if (part._contentUrl) {
+              const htmlContent = await fetchHtmlContent(part._contentUrl);
+              return {
+                ...part,
+                content: htmlContent,
+                _contentUrl: undefined,
+              };
+            }
+            return { ...part, _contentUrl: undefined };
+          }),
+        );
+
+        setParts(transformedParts);
+
+        setSnackbar({
+          open: true,
+          message: 'Test loaded successfully',
+          severity: 'success',
+        });
+      } catch (error) {
+        console.error('Error loading test:', error);
+        setSnackbar({
+          open: true,
+          message: `Failed to load test: ${error.message}`,
+          severity: 'error',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadTestData();
+  }, [testId]);
 
   const handleBasicInfoChange = (field, value) => {
     setBasicInfo((prev) => ({ ...prev, [field]: value }));
@@ -118,18 +202,22 @@ export default function ListeningTestEditor() {
         return;
       }
 
-      const basicInfoData = {
-        title: basicInfo.testName,
-        type: 'R',
-        level: basicInfo.level,
-        skill: 'L',
-        time: parseInt(basicInfo.time),
-        description: basicInfo.description,
-        status: status === 'Draft' ? 'D' : status === 'In review' ? 'I' : 'P',
-      };
+      let finalTestId = editingTestId;
 
-      const response = await createTest(basicInfoData, token);
-      const testId = response.id;
+      if (!editingTestId) {
+        const basicInfoData = {
+          title: basicInfo.testName,
+          type: 'R',
+          level: basicInfo.level,
+          skill: 'L',
+          time: parseInt(basicInfo.time),
+          description: basicInfo.description,
+          status: status === 'Draft' ? 'D' : status === 'In review' ? 'I' : 'P',
+        };
+
+        const response = await createTest(basicInfoData, token);
+        const testId = response.id;
+      }
 
       const files = collectFiles(parts);
       const filenameToUrl = {};
@@ -165,13 +253,14 @@ export default function ListeningTestEditor() {
       }
 
       const preparedParts = transformPartsForSubmitWithUrls(parts, filenameToUrl);
-      await submitTestParts({ testId, parts: preparedParts, token });
+      await submitTestParts({ testId: finalTestId, parts: preparedParts, token });
 
       setSnackbar({ open: true, message: `Test ${status} successfully!`, severity: 'success' });
 
       setBasicInfo({ testName: '', level: '', time: '', description: '' });
       setParts([]);
       setErrors(null);
+      setEditingTestId(null);
       setIsSaving(false);
     } catch (error) {
       setSnackbar({ open: true, message: `Submit failed: ${error.message}`, severity: 'error' });
@@ -284,7 +373,7 @@ export default function ListeningTestEditor() {
 
       <Backdrop
         sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1000 }}
-        open={isSaving}
+        open={isSaving || isLoading}
       >
         <CircularProgress color="inherit" />
       </Backdrop>

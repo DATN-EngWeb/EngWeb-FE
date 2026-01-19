@@ -22,7 +22,7 @@ import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import AudioUploader from '../Upload/AudioUploader';
 import ClientSideCustomEditor from '../Editor/ClientSideCustomEditor';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   sectionHeader,
   accentBar,
@@ -54,6 +54,11 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '' });
   const [content, setContent] = useState(part.content || '');
+
+  useEffect(() => {
+    setAudioFormat(part.audioFormat || 'onetoone');
+    setContent(part.content || '');
+  }, [part.audioFormat, part.content]);
 
   const updatePart = (newPart) => {
     if (onChange) onChange(newPart);

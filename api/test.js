@@ -34,7 +34,7 @@ async function handleResponse(response) {
 }
 
 export const createTest = async (basicInfo, token) => {
-  const response = await fetch(`${TESTS_BASE_URL}`, {
+  const response = await fetch(`${TESTS_BASE_URL}/overview`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -124,4 +124,31 @@ export const submitTestParts = async ({ testId, parts, token }) => {
   });
 
   return handleResponse(response);
+};
+
+export async function getRecepiveTestDetails(testId, token) {
+  const response = await fetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    cache: 'no-store',
+  });
+
+  return handleResponse(response);
+}
+
+export const fetchHtmlContent = async (url) => {
+  if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+    return url;
+  }
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Fetch failed');
+    return await response.text();
+  } catch (error) {
+    console.error(`Error when loading content from: ${url}`, error);
+    return '';
+  }
 };
