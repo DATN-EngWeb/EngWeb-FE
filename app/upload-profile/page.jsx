@@ -193,11 +193,11 @@ function UploadProfileContent({ userId }) {
         throw new Error('User ID is missing. Please register again.');
       }
 
-      /* global FormData */
       const submitFormData = new FormData();
 
       // Add user_id
-      submitFormData.append('user_id', userId);
+      // Add user_id
+      submitFormData.append('user.id', userId);
 
       // Add user fields
       submitFormData.append('user.full_name', formData.full_name.trim());
@@ -205,14 +205,14 @@ function UploadProfileContent({ userId }) {
       submitFormData.append('user.avatar', avatar);
 
       // Add teacher fields
-      submitFormData.append('current_workplace', formData.current_workplace.trim());
-      submitFormData.append('teacher_type', formData.teacher_type);
-      submitFormData.append('experience_year', String(formData.experience_year));
-      submitFormData.append('introduction', formData.introduction.trim());
+      submitFormData.append('teacher.current_workplace', formData.current_workplace.trim());
+      submitFormData.append('teacher.teacher_type', formData.teacher_type);
+      submitFormData.append('teacher.experience_year', String(formData.experience_year));
+      submitFormData.append('teacher.introduction', formData.introduction.trim());
 
       // Append credential files (multiple files with same key)
       validCredentials.forEach((cred) => {
-        submitFormData.append('credentials', cred);
+        submitFormData.append('teacher.credentials', cred);
       });
 
       await createTeacherProfile(submitFormData);

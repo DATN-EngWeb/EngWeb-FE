@@ -221,6 +221,23 @@ export async function googleLogin(code, role = 'S') {
   return handleResponse(response);
 }
 
+export async function changePassword({ oldPassword, newPassword }, token) {
+  const response = await fetch(`${ACCOUNTS_BASE_URL}/change-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      old_password: oldPassword,
+      new_password: newPassword,
+    }),
+    cache: 'no-store',
+  });
+
+  return handleResponse(response);
+}
+
 export async function facebookLogin(code, role = 'S') {
   const response = await fetch(`${ACCOUNTS_BASE_URL}/auth/facebook/login`, {
     method: 'POST',
