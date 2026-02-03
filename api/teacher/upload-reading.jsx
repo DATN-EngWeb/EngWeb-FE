@@ -109,3 +109,22 @@ export const fetchHtmlContent = async (url) => {
     return '';
   }
 };
+
+export async function updateReadingTestContent(testId, updatePayload, accessToken) {
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  const response = await fetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
+    method: 'PATCH',
+    headers: headers,
+    body: JSON.stringify(updatePayload),
+    cache: 'no-store',
+  });
+
+  return handleResponse(response);
+}

@@ -15,6 +15,7 @@ import {
 import ClientSideCustomEditor from '../../../components/Editor/ClientSideCustomEditor';
 
 export default function FillBlankForm({
+  flag,
   part,
   partId,
   index,
@@ -32,20 +33,37 @@ export default function FillBlankForm({
 
   const handleAddQuestion = () => {
     const currentFormat = part.format;
+    const activeQuestions = questions.filter((q) => q.action !== 'delete');
 
     const newQuestion = {
       id: Date.now(),
-      question_number: 1,
+      question_number: activeQuestions.length + 1,
       explanation: '',
+      ...(flag === 'update' && { action: 'create' }),
     };
 
     // Loại H: Cần content và answers với option_label
-    // Loại I: Chỉ cần answers với không có option_label
+    // Loại I: Chỉ cần answers và không có option_label
     if (currentFormat === 'H') {
       newQuestion.content = '';
-      newQuestion.answers = [{ option_label: 'A', is_correct: true, answer_text: '' }];
+      newQuestion.answers = [
+        {
+          id: 0,
+          option_label: 'A',
+          is_correct: true,
+          answer_text: '',
+          ...(flag === 'update' && { action: 'create' }),
+        },
+      ];
     } else if (currentFormat === 'I') {
-      newQuestion.answers = [{ is_correct: true, answer_text: '' }];
+      newQuestion.answers = [
+        {
+          id: 0,
+          is_correct: true,
+          answer_text: '',
+          ...(flag === 'update' && { action: 'create' }),
+        },
+      ];
     }
     setQuestions([...questions, newQuestion]);
   };
@@ -55,11 +73,25 @@ export default function FillBlankForm({
       if (q.id === questionId) {
         // Nếu là format H (Multiple Choice), update vào content câu hỏi
         if (part.format === 'H') {
-          return { ...q, content: value };
+          return {
+            ...q,
+            content: value,
+            ...(flag === 'update' && !q.action && { action: 'update' }),
+          };
         }
         // Nếu không phải H (tức là I - Text), update vào answers
         else {
-          return { ...q, answers: [{ ...q.answers[0], answer_text: value }] };
+          return {
+            ...q,
+            ...(flag === 'update' && !q.action && { action: 'update' }),
+            answers: [
+              {
+                ...q.answers[0],
+                answer_text: value,
+                ...(flag === 'update' && !q.answers[0].action && { action: 'update' }),
+              },
+            ],
+          };
         }
       }
       return q;
@@ -69,52 +101,72 @@ export default function FillBlankForm({
 
   const handleUpdateExplanation = (questionId, value) => {
     const updatedQuestions = questions.map((q) =>
-      q.id === questionId ? { ...q, explanation: value } : q,
+      q.id === questionId
+        ? { ...q, explanation: value, ...(flag === 'update' && !q.action && { action: 'update' }) }
+        : q,
     );
     setQuestions(updatedQuestions);
   };
 
   const handleSetCorrectOption = (questionId, optionLabel) => {
-    const updatedQuestions = questions.map((q) => {
-      if (q.id === questionId) {
-        const updatedOptions = q.answers.map((opt) => {
-          return {
+    setQuestions(
+      questions.map((q) => {
+        if (q.id !== questionId) return q;
+
+        return {
+          ...q,
+          ...(flag === 'update' && !q.action && { action: 'update' }),
+          answers: q.answers.map((opt) => ({
             ...opt,
             is_correct: opt.option_label === optionLabel,
-          };
-        });
-        return { ...q, answers: updatedOptions };
-      }
-      return q;
-    });
-
-    setQuestions(updatedQuestions);
+            ...(flag === 'update' && !opt.action && { action: 'update' }),
+          })),
+        };
+      }),
+    );
   };
 
   const handleUpdateOption = (questionId, optionLabel, newContent) => {
-    const updatedQuestions = questions.map((q) => {
-      if (q.id === questionId) {
-        const updatedOptions = q.answers.map((opt) => {
-          if (opt.option_label === optionLabel) {
-            return { ...opt, answer_text: newContent };
-          }
-          return opt;
-        });
-        return { ...q, answers: updatedOptions };
-      }
-      return q;
-    });
-    setQuestions(updatedQuestions);
+    setQuestions(
+      questions.map((q) => {
+        if (q.id !== questionId) return q;
+
+        return {
+          ...q,
+          ...(flag === 'update' && !q.action && { action: 'update' }),
+          answers: q.answers.map((opt) =>
+            opt.option_label === optionLabel
+              ? {
+                  ...opt,
+                  answer_text: newContent,
+                  ...(flag === 'update' && !opt.action && { action: 'update' }),
+                }
+              : opt,
+          ),
+        };
+      }),
+    );
   };
 
   const handleAddOption = (questionId) => {
     const updatedQuestions = questions.map((q) => {
       if (q.id === questionId) {
         // Tự động gán nhãn A, B, C, D dựa trên số lượng option hiện có
-        const label = String.fromCharCode(65 + q.answers.length);
+        const activeAns = q.answers.filter((a) => a.action !== 'delete');
+        const label = String.fromCharCode(65 + activeAns.length);
         return {
           ...q,
-          answers: [...q.answers, { option_label: label, is_correct: false, answer_text: '' }],
+          ...(flag === 'update' && !q.action && { action: 'update' }),
+          answers: [
+            ...q.answers,
+            {
+              id: Date.now(),
+              option_label: label,
+              is_correct: false,
+              answer_text: '',
+              ...(flag === 'update' && { action: 'create' }),
+            },
+          ],
         };
       }
       return q;
@@ -156,7 +208,7 @@ export default function FillBlankForm({
           <Box sx={multipleChoiceStyles.headingContainer}>
             <Typography sx={multipleChoiceStyles.headingCard}>Part {index + 1}</Typography>
             <Typography sx={multipleChoiceStyles.descriptionCard}>
-              Fill in the blanks - {questions.length} questions
+              Fill in the blanks - {questions.filter((q) => q.action !== 'delete').length} questions
             </Typography>
           </Box>
         </Box>
@@ -288,7 +340,7 @@ export default function FillBlankForm({
               </Typography>
             </Box>
             {/* ----------- Questions Section --------- */}
-            {questions.length == 0 ? (
+            {questions.filter((q) => q.action !== 'delete').length === 0 ? (
               <Box sx={multipleChoiceStyles.questionsContainer}>
                 <Typography
                   onClick={handleAddQuestion}
@@ -310,123 +362,133 @@ export default function FillBlankForm({
             ) : (
               <>
                 <Box sx={multipleChoiceStyles.listOptionContainer}>
-                  {questions.map((question, qIndex) => (
-                    <Box
-                      key={`${part.format}-${question.id}`}
-                      sx={multipleChoiceStyles.questionsContainer}
-                    >
-                      <Box sx={multipleChoiceStyles.labelQuestionsContainer}>
-                        <Box sx={multipleChoiceStyles.questionLabel}>{qIndex + 1}</Box>
-                        {/* ------------- Question and Explanation Section ------------- */}
-                        <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
-                          <OutlinedInput
-                            key={`${part.format}-${question.id}`}
-                            multiline
-                            placeholder={
-                              part.format === 'H' ? 'Enter question' : 'Enter correct answer'
-                            }
-                            defaultValue={
-                              part.format === 'H'
-                                ? question.content
-                                : question.answers[0].answer_text
-                            }
-                            sx={uploadReadingStyles.inputMultiline}
-                            onBlur={(e) => handleUpdateQuestion(question.id, e.target.value)}
-                          />
-                          <OutlinedInput
-                            multiline
-                            placeholder="Enter explaination here"
-                            defaultValue={question.explanation}
-                            sx={uploadReadingStyles.inputMultiline}
-                            onBlur={(e) => handleUpdateExplanation(question.id, e.target.value)}
-                          />
-                        </Box>
-                        {/* ---------------- Delete Icon ---------------- */}
-                        <DeleteOutlineIcon
-                          onClick={() => handleDeleteQuestion(partId, question.id)}
-                          sx={multipleChoiceStyles.trashIconQuestion}
-                        />
-                      </Box>
-                      {part.format === 'H' && (
-                        <Box
-                          sx={{
-                            width: '100%',
-                            pl: 4,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 1,
-                          }}
-                        >
-                          <Typography
-                            sx={{ color: 'text.gray', fontSize: { xs: '0.7rem', md: '0.9rem' } }}
-                          >
-                            Text answers (Click to set correct answer)
-                          </Typography>
-                          {/* ---------- Option Section ----------- */}
-                          <Box sx={multipleChoiceStyles.listOptionContainer}>
-                            {question.answers.map((option, oIndex) => (
-                              <Box
-                                key={option.option_label + Date.now()}
-                                sx={multipleChoiceStyles.optionContainer}
-                              >
-                                <Checkbox
-                                  checked={option.is_correct}
-                                  onChange={() =>
-                                    handleSetCorrectOption(question.id, option.option_label)
-                                  }
-                                  icon={
-                                    <RadioButtonUncheckedIcon
-                                      sx={multipleChoiceStyles.uncheckIcon}
-                                    />
-                                  }
-                                  checkedIcon={
-                                    <Box sx={multipleChoiceStyles.checkedIconWrapper}>
-                                      <RadioButtonUncheckedIcon
-                                        sx={multipleChoiceStyles.outerCircle}
-                                      />
-                                      <CircleIcon sx={multipleChoiceStyles.innerCircle} />
-                                    </Box>
-                                  }
-                                  sx={multipleChoiceStyles.checkboxRoot}
-                                />
-                                <Typography sx={multipleChoiceStyles.optionLabel}>
-                                  {option.option_label}.
-                                </Typography>
-                                <OutlinedInput
-                                  multiline
-                                  placeholder="Enter option here"
-                                  sx={multipleChoiceStyles.optionInput}
-                                  defaultValue={option.answer_text}
-                                  onBlur={(e) =>
-                                    handleUpdateOption(
-                                      question.id,
-                                      option.option_label,
-                                      e.target.value,
-                                    )
-                                  }
-                                />
-                                {/* ---------------- Delete Icon ---------------- */}
-                                <DeleteOutlineIcon
-                                  onClick={() =>
-                                    handleDeleteOption(partId, question.id, option.option_label)
-                                  }
-                                  sx={multipleChoiceStyles.trashIcon}
-                                />
-                              </Box>
-                            ))}
+                  {questions
+                    .filter((question) => question.action !== 'delete')
+                    .sort((a, b) => (a.question_number || 0) - (b.question_number || 0))
+                    .map((question, qIndex) => (
+                      <Box
+                        key={`${part.format}-${question.id}`}
+                        sx={multipleChoiceStyles.questionsContainer}
+                      >
+                        <Box sx={multipleChoiceStyles.labelQuestionsContainer}>
+                          <Box sx={multipleChoiceStyles.questionLabel}>{qIndex + 1}</Box>
+                          {/* ------------- Question and Explanation Section ------------- */}
+                          <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
+                            <OutlinedInput
+                              key={`${part.format}-${question.id}`}
+                              multiline
+                              placeholder={
+                                part.format === 'H' ? 'Enter question' : 'Enter correct answer'
+                              }
+                              defaultValue={
+                                part.format === 'H'
+                                  ? question.content
+                                  : question.answers[0].answer_text
+                              }
+                              sx={uploadReadingStyles.inputMultiline}
+                              onBlur={(e) => handleUpdateQuestion(question.id, e.target.value)}
+                            />
+                            <OutlinedInput
+                              multiline
+                              placeholder="Enter explaination here"
+                              defaultValue={question.explanation}
+                              sx={uploadReadingStyles.inputMultiline}
+                              onBlur={(e) => handleUpdateExplanation(question.id, e.target.value)}
+                            />
                           </Box>
-                          {/* --------------- Add Option --------------- */}
-                          <Typography
-                            onClick={() => handleAddOption(question.id)}
-                            sx={multipleChoiceStyles.buttonAndIconContainer}
-                          >
-                            <AddIcon sx={{ fontSize: '1.4rem' }} />
-                            Add option
-                          </Typography>
+                          {/* ---------------- Delete Icon ---------------- */}
+                          <DeleteOutlineIcon
+                            onClick={() => handleDeleteQuestion(partId, question.id)}
+                            sx={multipleChoiceStyles.trashIconQuestion}
+                          />
                         </Box>
-                      )}
-                    </Box>
-                  ))}
+                        {part.format === 'H' && (
+                          <Box
+                            sx={{
+                              width: '100%',
+                              pl: 4,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: 1,
+                            }}
+                          >
+                            <Typography
+                              sx={{ color: 'text.gray', fontSize: { xs: '0.7rem', md: '0.9rem' } }}
+                            >
+                              Text answers (Click to set correct answer)
+                            </Typography>
+                            {/* ---------- Option Section ----------- */}
+                            <Box sx={multipleChoiceStyles.listOptionContainer}>
+                              {question.answers
+                                .filter((option) => option.action !== 'delete')
+                                .sort((a, b) => {
+                                  const labelA = a.option_label || '';
+                                  const labelB = b.option_label || '';
+                                  return labelA.localeCompare(labelB);
+                                })
+                                .map((option, oIndex) => (
+                                  <Box
+                                    key={`${question.id}-${option.id}`}
+                                    sx={multipleChoiceStyles.optionContainer}
+                                  >
+                                    <Checkbox
+                                      checked={option.is_correct}
+                                      onChange={() =>
+                                        handleSetCorrectOption(question.id, option.option_label)
+                                      }
+                                      icon={
+                                        <RadioButtonUncheckedIcon
+                                          sx={multipleChoiceStyles.uncheckIcon}
+                                        />
+                                      }
+                                      checkedIcon={
+                                        <Box sx={multipleChoiceStyles.checkedIconWrapper}>
+                                          <RadioButtonUncheckedIcon
+                                            sx={multipleChoiceStyles.outerCircle}
+                                          />
+                                          <CircleIcon sx={multipleChoiceStyles.innerCircle} />
+                                        </Box>
+                                      }
+                                      sx={multipleChoiceStyles.checkboxRoot}
+                                    />
+                                    <Typography sx={multipleChoiceStyles.optionLabel}>
+                                      {option.option_label}.
+                                    </Typography>
+                                    <OutlinedInput
+                                      multiline
+                                      placeholder="Enter option here"
+                                      sx={multipleChoiceStyles.optionInput}
+                                      defaultValue={option.answer_text}
+                                      onBlur={(e) =>
+                                        handleUpdateOption(
+                                          question.id,
+                                          option.option_label,
+                                          e.target.value,
+                                        )
+                                      }
+                                    />
+                                    {/* ---------------- Delete Icon ---------------- */}
+                                    <DeleteOutlineIcon
+                                      onClick={() =>
+                                        handleDeleteOption(partId, question.id, option.option_label)
+                                      }
+                                      sx={multipleChoiceStyles.trashIcon}
+                                    />
+                                  </Box>
+                                ))}
+                            </Box>
+                            {/* --------------- Add Option --------------- */}
+                            <Typography
+                              onClick={() => handleAddOption(question.id)}
+                              sx={multipleChoiceStyles.buttonAndIconContainer}
+                            >
+                              <AddIcon sx={{ fontSize: '1.4rem' }} />
+                              Add option
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    ))}
                 </Box>
               </>
             )}

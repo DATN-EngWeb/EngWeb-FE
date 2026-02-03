@@ -165,11 +165,14 @@ export default function Page() {
       const files = collectFilesReading(transformedParts);
       const filenameToUrl = {};
       for (const f of files) {
+        const currentMimeType = f.mimeType ?? f.file?.type ?? 'text/html';
+        const currentSize = f.fileSize ?? f.file?.size;
+
         const presign = await getPresignedUrl(
           {
             filename: f.filename,
-            fileSize: f.fileSize ?? f.file?.size,
-            mimeType: f.mimeType ?? f.file?.type,
+            fileSize: currentSize,
+            mimeType: currentMimeType,
             category: 'tests',
             testId: newTestId,
             part: f.partOrder,
@@ -181,12 +184,22 @@ export default function Page() {
           url: presign.url,
           fields: presign.fields,
           file: f.file,
+          mimeType: currentMimeType,
         });
+
+        const storageKey =
+          presign.key ||
+          (presign.fields
+            ? typeof presign.fields === 'string'
+              ? JSON.parse(presign.fields).key
+              : presign.fields.key
+            : null);
+
         const confirm = await confirmUpload(
           {
-            key: presign.key,
-            fileSize: f.fileSize ?? f.file?.size,
-            mimeType: f.mimeType ?? f.file?.type,
+            key: storageKey,
+            fileSize: currentSize,
+            mimeType: currentMimeType,
             etag: uploadResult.etag,
           },
           token,
@@ -197,11 +210,10 @@ export default function Page() {
 
       const preparedParts = transformReadingPartsWithUrls(transformedParts, filenameToUrl);
 
-      const response = await uploadReadingTestContent(newTestId, preparedParts, token);
+      // console.log('Prepared Parts for Upload:', preparedParts);
 
-      if (response && response.success) {
-        setSnackbar({ open: true, message: 'Upload test successfully!', severity: 'success' });
-      }
+      const response = await uploadReadingTestContent(newTestId, preparedParts, token);
+      setSnackbar({ open: true, message: 'Upload test successfully!', severity: 'success' });
     } catch (error) {
       if (error.status === 400) {
         setSnackbar({
@@ -247,7 +259,7 @@ export default function Page() {
         if (p.id === partId) {
           // 1. Tạo câu hỏi mặc định tùy theo Format
           const newQuestion = {
-            id: Date.now(),
+            id: 0,
             question_number: 1,
             explanation: '',
             score: p.scoreForEachQuestion || 10, // Lấy score mặc định của Part
@@ -256,10 +268,10 @@ export default function Page() {
           if (newFormat === 'H') {
             // Loại H: Cần content và mảng answers có 1 lựa chọn mặc định
             newQuestion.content = '';
-            newQuestion.answers = [{ option_label: 'A', is_correct: true, answer_text: '' }];
+            newQuestion.answers = [{ id: 0, option_label: 'A', is_correct: true, answer_text: '' }];
           } else if (newFormat === 'I') {
             // Loại I: answers vẫn là mảng nhưng chứa 1 phần tử
-            newQuestion.answers = [{ is_correct: true, answer_text: '' }];
+            newQuestion.answers = [{ id: 0, is_correct: true, answer_text: '' }];
             // Lưu ý: Loại I không có trường content trong Question theo logic của bạn
           }
 
@@ -287,14 +299,28 @@ export default function Page() {
 
   const handleDeleteQuestion = (partId, questionId) => {
     setParts((prevParts) =>
-      prevParts.map((p) =>
-        p.id === partId
-          ? {
-              ...p,
-              questions: p.questions.filter((q) => q.id !== questionId),
-            }
-          : p,
-      ),
+      prevParts.map((p) => {
+        if (p.id !== partId) return p;
+
+        const filteredQuestions = p.questions.filter((q) => q.id !== questionId);
+
+        let currentNumber = 1;
+        const renumberedQuestions = filteredQuestions.map((q) => {
+          if (q.question_number === currentNumber) {
+            currentNumber++;
+            return q;
+          }
+          return {
+            ...q,
+            question_number: currentNumber++,
+          };
+        });
+
+        return {
+          ...p,
+          questions: renumberedQuestions,
+        };
+      }),
     );
   };
 

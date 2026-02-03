@@ -18,6 +18,7 @@ import { Box, Typography } from '@mui/material';
 import ClientSideCustomEditor from '../../../components/Editor/ClientSideCustomEditor';
 
 export default function MatchingForm({
+  flag,
   localAnswers,
   part,
   partId,
@@ -36,38 +37,70 @@ export default function MatchingForm({
       return localAnswers;
     }
     return questions.map((_, i) => ({
+      id: i,
       option_label: String.fromCharCode(65 + i),
       answer_text: '',
     }));
   });
 
+  const activeCount = questions.filter((q) => q.action !== 'delete').length;
+
   useEffect(() => {
+    const activeQuestions = questions.filter((q) => q.action !== 'delete');
+    const activeLabels = activeQuestions.map((_, i) => String.fromCharCode(65 + i));
+
     setLocalAnswers((prevAnswers) => {
-      return questions.map((_, i) => {
-        const label = String.fromCharCode(65 + i);
+      return activeLabels.map((label, i) => {
         const existingAnswer = prevAnswers.find((a) => a.option_label === label);
         return {
+          id: existingAnswer ? existingAnswer.id : i,
           option_label: label,
           answer_text: existingAnswer ? existingAnswer.answer_text : '',
         };
       });
     });
-  }, [questions.length]);
+
+    let needsFix = false;
+    const validatedQuestions = questions.map((q) => {
+      if (q.action === 'delete') return q;
+
+      const currentLabel = q.answers?.[0]?.option_label;
+
+      if (currentLabel && !activeLabels.includes(currentLabel)) {
+        needsFix = true;
+        return {
+          ...q,
+          answers: [{ ...q.answers[0], option_label: '', answer_text: '' }],
+          ...(flag === 'update' && !q.action && { action: 'update' }),
+        };
+      }
+      return q;
+    });
+
+    if (needsFix) {
+      setQuestions(validatedQuestions);
+    }
+  }, [activeCount]);
 
   const handleAddQuestion = () => {
+    const activeQs = questions.filter((q) => q.action !== 'delete');
+
     const newQuestion = {
       id: Date.now(),
-      // Những fields gửi lên server
-      question_number: 1,
+      question_number: activeQs.length + 1,
       explanation: '',
       answers: [
         {
+          id: 0,
           option_label: '',
           is_correct: true,
           answer_text: '',
+          ...(flag === 'update' && { action: 'create' }),
         },
       ],
+      ...(flag === 'update' && { action: 'create' }),
     };
+
     setQuestions([...questions, newQuestion]);
   };
 
@@ -77,25 +110,47 @@ export default function MatchingForm({
 
     const updatedQuestions = questions.map((q) => {
       if (q.id === questionId) {
+        const targetAns = q.answers[0];
         return {
           ...q,
-          answers: [{ ...q.answers[0], option_label: selectedLabel, answer_text: textToSave }],
+          ...(flag === 'update' && !q.action && { action: 'update' }),
+          answers: [
+            {
+              ...targetAns,
+              option_label: selectedLabel,
+              answer_text: textToSave,
+              ...(flag === 'update' && !targetAns.action && { action: 'update' }),
+            },
+          ],
         };
       }
 
       if (q.answers && q.answers[0] && q.answers[0].option_label === selectedLabel) {
-        return { ...q, answers: [{ ...q.answers[0], option_label: '', answer_text: '' }] };
+        const otherAns = q.answers[0];
+        return {
+          ...q,
+          ...(flag === 'update' && !q.action && { action: 'update' }),
+          answers: [
+            {
+              ...otherAns,
+              option_label: '',
+              answer_text: '',
+              ...(flag === 'update' && !otherAns.action && { action: 'update' }),
+            },
+          ],
+        };
       }
 
       return q;
     });
-
     setQuestions(updatedQuestions);
   };
 
   const handleUpdateExplanation = (questionId, value) => {
     const updatedQuestions = questions.map((q) =>
-      q.id === questionId ? { ...q, explanation: value } : q,
+      q.id === questionId
+        ? { ...q, explanation: value, ...(flag === 'update' && !q.action && { action: 'update' }) }
+        : q,
     );
     setQuestions(updatedQuestions);
   };
@@ -108,14 +163,21 @@ export default function MatchingForm({
 
     const nextQuestions = questions.map((q) => {
       if (q.answers && q.answers.length > 0 && q.answers[0].option_label === optionLabel) {
+        const currentAns = q.answers[0];
         return {
           ...q,
-          answers: [{ ...q.answers[0], answer_text: newContent }],
+          ...(flag === 'update' && !q.action && { action: 'update' }),
+          answers: [
+            {
+              ...currentAns,
+              answer_text: newContent,
+              ...(flag === 'update' && !currentAns.action && { action: 'update' }),
+            },
+          ],
         };
       }
       return q;
     });
-
     setQuestions(nextQuestions);
   };
 
@@ -153,7 +215,7 @@ export default function MatchingForm({
           <Box sx={multipleChoiceStyles.headingContainer}>
             <Typography sx={multipleChoiceStyles.headingCard}>Part {index + 1}</Typography>
             <Typography sx={multipleChoiceStyles.descriptionCard}>
-              Matching - {questions.length} questions
+              Matching - {questions.filter((q) => q.action !== 'delete').length} questions
             </Typography>
           </Box>
         </Box>
@@ -225,7 +287,7 @@ export default function MatchingForm({
                 Add question
               </Typography>
             </Box>
-            {questions.length == 0 ? (
+            {questions.filter((q) => q.action !== 'delete').length === 0 ? (
               <Box sx={multipleChoiceStyles.questionsContainer}>
                 <Typography
                   onClick={handleAddQuestion}
@@ -247,57 +309,59 @@ export default function MatchingForm({
             ) : (
               <>
                 <Box sx={multipleChoiceStyles.listOptionContainer}>
-                  {questions.map((question, qIndex) => (
-                    <Box key={question.id} sx={multipleChoiceStyles.questionsContainer}>
-                      <Box sx={multipleChoiceStyles.labelQuestionsContainer}>
-                        <Box sx={multipleChoiceStyles.questionLabel}>{qIndex + 1}</Box>
-                        <OutlinedInput
-                          multiline
-                          placeholder="Enter explanation here"
-                          defaultValue={question.explanation}
-                          onBlur={(e) => handleUpdateExplanation(question.id, e.target.value)}
-                          sx={uploadReadingStyles.inputMultiline}
-                        />
-                        <FormControl
-                          sx={{
-                            ...uploadReadingStyles.formControl,
-                            width: { xs: '150px', md: '180px' },
-                          }}
-                        >
-                          <Select
-                            value={
-                              question.answers &&
-                              question.answers[0] &&
-                              question.answers[0].option_label !== undefined &&
-                              question.answers[0].option_label !== ''
-                                ? question.answers[0].option_label
-                                : ''
-                            }
-                            onChange={(e) => handleUpdateCorrectAnswer(question.id, e.target.value)}
-                            displayEmpty
-                            sx={matchingStyles.selectAnswer}
+                  {questions
+                    .filter((question) => question.action !== 'delete')
+                    .sort((a, b) => (a.question_number || 0) - (b.question_number || 0))
+                    .map((question, qIndex) => (
+                      <Box key={question.id} sx={multipleChoiceStyles.questionsContainer}>
+                        <Box sx={multipleChoiceStyles.labelQuestionsContainer}>
+                          <Box sx={multipleChoiceStyles.questionLabel}>{qIndex + 1}</Box>
+                          <OutlinedInput
+                            multiline
+                            placeholder="Enter explanation here"
+                            defaultValue={question.explanation}
+                            onBlur={(e) => handleUpdateExplanation(question.id, e.target.value)}
+                            sx={uploadReadingStyles.inputMultiline}
+                          />
+                          <FormControl
+                            sx={{
+                              ...uploadReadingStyles.formControl,
+                              width: { xs: '150px', md: '180px' },
+                            }}
                           >
-                            <MenuItem value="" disabled>
-                              <em>Select</em>
-                            </MenuItem>
-                            {/* Hiện đầy đủ danh sách, không cần vô hiệu hóa */}
-                            {answers.map((answer, aIndex) => (
-                              <MenuItem
-                                key={answer.option_label}
-                                value={String.fromCharCode(65 + aIndex)}
-                              >
-                                {String.fromCharCode(65 + aIndex)}
+                            <Select
+                              value={
+                                question.answers &&
+                                question.answers[0] &&
+                                question.answers[0].option_label !== undefined &&
+                                question.answers[0].option_label !== ''
+                                  ? question.answers[0].option_label
+                                  : ''
+                              }
+                              onChange={(e) =>
+                                handleUpdateCorrectAnswer(question.id, e.target.value)
+                              }
+                              displayEmpty
+                              sx={matchingStyles.selectAnswer}
+                            >
+                              <MenuItem value="" disabled>
+                                <em>Select</em>
                               </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                        <DeleteOutlineIcon
-                          onClick={() => handleDeleteQuestion(partId, question.id)}
-                          sx={multipleChoiceStyles.trashIconQuestion}
-                        />
+                              {/* Hiện đầy đủ danh sách, không cần vô hiệu hóa */}
+                              {answers.map((answer) => (
+                                <MenuItem key={answer.option_label} value={answer.option_label}>
+                                  {answer.option_label}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                          <DeleteOutlineIcon
+                            onClick={() => handleDeleteQuestion(partId, question.id)}
+                            sx={multipleChoiceStyles.trashIconQuestion}
+                          />
+                        </Box>
                       </Box>
-                    </Box>
-                  ))}
+                    ))}
                 </Box>
               </>
             )}
@@ -308,7 +372,7 @@ export default function MatchingForm({
                 <FormLabel sx={uploadReadingStyles.labelInput}>Answer</FormLabel>
               </Box>
               <Box sx={matchingStyles.linkOptionContainer}>
-                {answers.map((answer, aIndex) => (
+                {answers.map((answer, _aIndex) => (
                   <Box key={answer.option_label} sx={multipleChoiceStyles.optionContainer}>
                     <Typography sx={multipleChoiceStyles.optionLabel}>
                       {answer.option_label}.

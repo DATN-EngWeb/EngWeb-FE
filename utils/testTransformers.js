@@ -288,24 +288,128 @@ export const transformReadingPartsWithUrls = (parts, urlMap) => {
 };
 
 export const transformFormatData = (data) => {
-  // Biến đếm toàn cục, bắt đầu từ 1
-  let globalQuestionNumber = 1;
-
-  // Duyệt qua từng Part
   return data.map((part) => {
-    // Duyệt qua từng Question trong Part
     const updatedQuestions = part.questions.map((question) => {
-      const { _id, ...restQuestion } = question;
+      const { id: _id, answers, ...restQuestion } = question;
+      const updatedAnswers =
+        answers?.map((ans) => {
+          const { id: _id, ...restAnswer } = ans;
+          return restAnswer;
+        }) || [];
       return {
         ...restQuestion,
-        question_number: globalQuestionNumber++,
+        answers: updatedAnswers,
         score: part.scoreForEachQuestion,
       };
     });
-    const { _id, _scoreForEachQuestion, ...restPart } = part;
+    const { id: _id, scoreForEachQuestion: _scoreForEachQuestion, ...restPart } = part;
     return {
       ...restPart,
       questions: updatedQuestions,
     };
   });
+};
+
+export const transformFormatUpdateData = (data) => {
+  const validActions = ['create', 'update', 'delete'];
+
+  return data
+    .filter((part) => validActions.includes(part.action))
+    .map((part) => {
+      const { id, scoreForEachQuestion, questions, ...restPart } = part;
+
+      const updatedQuestions = (questions || [])
+        .filter((q) => validActions.includes(q.action))
+        .map((question) => {
+          const { id, answers, ...restQuestion } = question;
+
+          const updatedAnswers = (answers || [])
+            .filter((ans) => validActions.includes(ans.action))
+            .map((ans) => {
+              const { id, ...restAnswer } = ans;
+              return {
+                ...(restAnswer.action !== 'create' && { id }),
+                ...restAnswer,
+              };
+            });
+
+          return {
+            ...restQuestion,
+            answers: updatedAnswers,
+            score: scoreForEachQuestion,
+            ...(restQuestion.action !== 'create' && { id }),
+          };
+        });
+
+      return {
+        ...restPart,
+        questions: updatedQuestions,
+        ...(restPart.action !== 'create' && { id }),
+      };
+    });
+};
+
+export const buildReceptiveTestPayload = (test, preparedParts, status) => {
+  return {
+    title: test.title,
+    type: test.type,
+    level: test.level,
+    skill: test.skill,
+    time: test.time,
+    description: test.description,
+    status: status || test.status,
+    receptive_test: {
+      receptive_parts: preparedParts.map((part) => {
+        if (part.action === 'delete') {
+          return { id: part.id, action: 'delete' };
+        }
+
+        const { format } = part;
+        return {
+          action: part.action,
+          id: part.id || 0,
+          order: part.order || 0,
+          format: format || '',
+          // F ko có content; G, H, I, J ko có description
+          ...(format !== 'F' && { content: part.content || '' }),
+          ...(!['G', 'H', 'I', 'J'].includes(format) && {
+            description: part.description || '',
+          }),
+          resources: part.resources || '',
+
+          receptive_questions: (part.questions || []).map((q) => {
+            if (q.action === 'delete') {
+              return { id: q.id, action: 'delete' };
+            }
+
+            return {
+              action: q.action,
+              id: q.id || 0,
+              question_number: q.question_number || 0,
+              // I và J ko có content
+              ...(!['I', 'J'].includes(format) && { content: q.content || '' }),
+              explanation: q.explanation || '',
+              score: q.score || 0,
+              resources: q.resources || '',
+
+              receptive_answers: (q.answers || []).map((ans) => {
+                if (ans.action === 'delete') {
+                  return { id: ans.id, action: 'delete' };
+                }
+
+                return {
+                  action: ans.action,
+                  id: ans.id || 0,
+                  // I không có option_label
+                  ...(format !== 'I' && { option_label: ans.option_label || '' }),
+                  answer_text: ans.answer_text || '',
+                  is_correct: !!ans.is_correct,
+                };
+              }),
+            };
+          }),
+        };
+      }),
+    },
+  };
 };

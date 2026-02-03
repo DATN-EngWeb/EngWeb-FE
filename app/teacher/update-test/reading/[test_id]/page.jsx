@@ -34,15 +34,15 @@ import MultipleChoiceForm from '../../../../../components/Teacher/ReadingTest/mu
 import MatchingForm from '../../../../../components/Teacher/ReadingTest/matching';
 import FillBlankForm from '../../../../../components/Teacher/ReadingTest/fillBlanks';
 import {
-  createNewTest,
-  uploadReadingTestContent,
+  updateReadingTestContent,
   getRecepiveTestDetails,
   fetchHtmlContent,
 } from '../../../../../api/teacher/upload-reading';
 import {
   collectFilesReading,
   transformReadingPartsWithUrls,
-  transformFormatData,
+  transformFormatUpdateData,
+  buildReceptiveTestPayload,
 } from '../../../../../utils/testTransformers';
 import { getPresignedUrl, uploadToObjectStorage, confirmUpload } from '../../../../../api/test';
 
@@ -101,9 +101,11 @@ export default function Page() {
           setSnackbar({ open: true, message: 'Authentication required', severity: 'error' });
           return;
         }
+
         const svData = await getRecepiveTestDetails(test_id, accessToken);
 
         setTest({
+          id: svData.id ?? '',
           title: svData.title || '',
           type: svData.type || 'R',
           level: svData.level || '',
@@ -111,64 +113,68 @@ export default function Page() {
           time: svData.time > 10000 ? 60 : svData.time,
           description: svData.description || '',
           status: svData.status || 'D',
+          flag: 'update',
         });
 
         const rawParts = svData.receptive_test?.receptive_parts || [];
 
         const processedParts = await Promise.all(
           rawParts.map(async (part, pIndex) => {
+            const { format } = part;
+
             const newPart = {
-              id: part.id || `part_${Date.now()}_${pIndex}`,
+              id: part.id ?? `part_${Date.now()}_${pIndex}`,
               order: part.order,
-              format: part.format,
-              description: part.description,
+              format: format,
               scoreForEachQuestion: part.receptive_questions?.[0]?.score,
-              content: part.content,
-              questions: part.receptive_questions || [],
+              // F ko có content; G, H, I, J ko có description
+              ...(format !== 'F' && { content: part.content }),
+              ...(!['G', 'H', 'I', 'J'].includes(format) && { description: part.description }),
             };
 
-            if (
-              newPart.content &&
-              typeof newPart.content === 'string' &&
-              newPart.content.startsWith('http')
-            ) {
+            // Fetch nội dung HTML cho Part nếu có content
+            if (newPart.content?.startsWith?.('http')) {
               newPart.content = await fetchHtmlContent(newPart.content);
             }
 
-            if (newPart.questions && Array.isArray(newPart.questions)) {
+            if (part.receptive_questions && Array.isArray(part.receptive_questions)) {
               newPart.questions = await Promise.all(
-                newPart.questions.map(async (q, qIndex) => {
+                part.receptive_questions.map(async (q, qIndex) => {
                   const newQ = {
-                    id: q.id || `q_${Date.now()}_${pIndex}_${qIndex}`,
+                    id: q.id ?? `q_${pIndex}_${qIndex}`,
                     question_number: q.question_number,
                     explanation: q.explanation,
                     score: q.score,
-                    content: q.content,
-
-                    answers: q.receptive_answers || [],
+                    // I và J ko có content
+                    ...(!['I', 'J'].includes(format) && { content: q.content }),
                   };
 
-                  // Fetch HTML Content cho Question (Format F)
-                  if (
-                    newQ.content &&
-                    typeof newQ.content === 'string' &&
-                    newQ.content.startsWith('http')
-                  ) {
+                  if (newQ.content?.startsWith?.('http')) {
                     newQ.content = await fetchHtmlContent(newQ.content);
                   }
+
+                  newQ.answers = (q.receptive_answers || []).map((ans) => {
+                    const { resources, ...restAns } = ans;
+
+                    // I không có option_label
+                    if (format === 'I') {
+                      const { option_label, ...ansNoLabel } = restAns;
+                      return ansNoLabel;
+                    }
+                    return restAns;
+                  });
 
                   return newQ;
                 }),
               );
             }
 
-            // Logic riêng cho Format J (Matching) - Extract Answers
-            if (newPart.format === 'J') {
+            if (format === 'J') {
               const extractedAnswers = extractLocalAnswersFromQuestions(newPart.questions);
-              // Nếu không có answer nào (lỗi data cũ), tự tạo answers rỗng A, B, C...
               if (extractedAnswers.length === 0 && newPart.questions) {
                 newPart.questions.forEach((_, i) => {
                   extractedAnswers.push({
+                    id: i,
                     option_label: String.fromCharCode(65 + i),
                     answer_text: '',
                   });
@@ -202,89 +208,10 @@ export default function Page() {
     prevPartsLengthRef.current = parts.length;
   }, [parts.length]);
 
-  // Hàm xử lý tải lên Test và trả về testId mới tạo
-  const handleUploadTest = async (status) => {
-    if (!test.title || !test.description) {
-      setSnackbar({
-        open: true,
-        message: 'Please fill in all required fields!',
-        severity: 'error',
-      });
-      return null;
-    }
-    if (!['A1', 'A2', 'B1', 'B2'].includes(test.level)) {
-      setSnackbar({
-        open: true,
-        message: 'Please select a valid level (A1-B2)!',
-        severity: 'error',
-      });
-      return null;
-    }
-    const payload = {
-      title: test.title,
-      type: test.type,
-      level: test.level,
-      skill: test.skill,
-      time: parseInt(test.time),
-      description: test.description,
-      status: status,
-    };
-
-    try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        setSnackbar({ open: true, message: 'Authentication required', severity: 'error' });
-        setIsLoading(false);
-        return;
-      }
-
-      const response = await createNewTest(payload, token);
-
-      if (response && response.id) {
-        const newTestId = response.id;
-        return newTestId;
-      } else {
-        return null;
-      }
-    } catch (error) {
-      // Xử lý lỗi dựa trên mã lỗi trong tài liệu
-      if (error.status) {
-        const status = error.status;
-
-        if (status === 400) {
-          setSnackbar({
-            open: true,
-            message: 'All fields are required.',
-            severity: 'error',
-          });
-        } else if (status === 401) {
-          setSnackbar({
-            open: true,
-            message: 'Authentication required. Please log in again.',
-            severity: 'error',
-          });
-        } else if (status === 403) {
-          setSnackbar({
-            open: true,
-            message: 'You do not have permission to perform this action.',
-            severity: 'error',
-          });
-        }
-      }
-      return null;
-    }
-  };
-
   // Hàm xử lý tải lên các Part của bài thi
   const handleUploadParts = async (status) => {
     setIsLoading(true);
     try {
-      const newTestId = await handleUploadTest(status);
-      if (!newTestId) {
-        setIsLoading(false);
-        return;
-      }
-
       const token = localStorage.getItem('accessToken');
       if (!token) {
         setSnackbar({ open: true, message: 'Authentication required', severity: 'error' });
@@ -292,18 +219,21 @@ export default function Page() {
         return;
       }
 
-      const transformedParts = transformFormatData(parts);
+      const transformedParts = transformFormatUpdateData(parts);
 
       const files = collectFilesReading(transformedParts);
       const filenameToUrl = {};
       for (const f of files) {
+        const currentMimeType = f.mimeType ?? f.file?.type ?? 'text/html';
+        const currentSize = f.fileSize ?? f.file?.size;
+
         const presign = await getPresignedUrl(
           {
             filename: f.filename,
-            fileSize: f.fileSize ?? f.file?.size,
-            mimeType: f.mimeType ?? f.file?.type,
+            fileSize: currentSize,
+            mimeType: currentMimeType,
             category: 'tests',
-            testId: newTestId,
+            testId: test_id,
             part: f.partOrder,
           },
           token,
@@ -313,12 +243,22 @@ export default function Page() {
           url: presign.url,
           fields: presign.fields,
           file: f.file,
+          mimeType: currentMimeType,
         });
+
+        const storageKey =
+          presign.key ||
+          (presign.fields
+            ? typeof presign.fields === 'string'
+              ? JSON.parse(presign.fields).key
+              : presign.fields.key
+            : null);
+
         const confirm = await confirmUpload(
           {
-            key: presign.key,
-            fileSize: f.fileSize ?? f.file?.size,
-            mimeType: f.mimeType ?? f.file?.type,
+            key: storageKey,
+            fileSize: currentSize,
+            mimeType: currentMimeType,
             etag: uploadResult.etag,
           },
           token,
@@ -329,11 +269,10 @@ export default function Page() {
 
       const preparedParts = transformReadingPartsWithUrls(transformedParts, filenameToUrl);
 
-      const response = await uploadReadingTestContent(newTestId, preparedParts, token);
+      const requestBody = buildReceptiveTestPayload(test, preparedParts, status);
 
-      if (response && response.success) {
-        setSnackbar({ open: true, message: 'Upload test successfully!', severity: 'success' });
-      }
+      const response = await updateReadingTestContent(test_id, requestBody, token);
+      setSnackbar({ open: true, message: 'Update test successfully!', severity: 'success' });
     } catch (error) {
       if (error.status === 400) {
         setSnackbar({
@@ -344,7 +283,13 @@ export default function Page() {
       } else if (error.status === 404) {
         setSnackbar({
           open: true,
-          message: 'Test not found.',
+          message: 'Test not found. Or test type is not reading.',
+          severity: 'error',
+        });
+      } else if (error.status === 403) {
+        setSnackbar({
+          open: true,
+          message: 'You do not have permission to update this test.',
           severity: 'error',
         });
       }
@@ -354,21 +299,31 @@ export default function Page() {
   };
 
   const handleAddPart = () => {
+    const activeParts = parts.filter((p) => p.action !== 'delete');
+
     const newPart = {
       id: Date.now(),
-      // Những fields sẽ được gửi đi
-      order: parts.length + 1,
+      order: activeParts.length + 1,
       format: null,
       description: '',
       scoreForEachQuestion: 10,
       questions: [],
+      ...(test.flag === 'update' && { action: 'create' }),
     };
     setParts([...parts, newPart]);
   };
 
   const updatePartQuestions = (partId, newQuestions) => {
     setParts((prevParts) =>
-      prevParts.map((p) => (p.id === partId ? { ...p, questions: newQuestions } : p)),
+      prevParts.map((p) =>
+        p.id === partId
+          ? {
+              ...p,
+              questions: newQuestions,
+              ...(test.flag === 'update' && !p.action && { action: 'update' }),
+            }
+          : p,
+      ),
     );
   };
 
@@ -377,29 +332,49 @@ export default function Page() {
     setParts((prevParts) =>
       prevParts.map((p) => {
         if (p.id === partId) {
-          // 1. Tạo câu hỏi mặc định tùy theo Format
+          const deletedOldQuestions = (p.questions || [])
+            .map((q) => {
+              if (q.action === 'create') return null;
+              return { id: q.id, action: 'delete' };
+            })
+            .filter(Boolean);
+
+          // Tạo câu hỏi mặc định tùy theo Format
           const newQuestion = {
             id: Date.now(),
             question_number: 1,
             explanation: '',
             score: p.scoreForEachQuestion || 10, // Lấy score mặc định của Part
+            ...(test.flag === 'update' && { action: 'create' }),
           };
 
           if (newFormat === 'H') {
-            // Loại H: Cần content và mảng answers có 1 lựa chọn mặc định
+            // Loại H: Cần content và mảng answers
             newQuestion.content = '';
-            newQuestion.answers = [{ option_label: 'A', is_correct: true, answer_text: '' }];
+            newQuestion.answers = [
+              {
+                option_label: 'A',
+                is_correct: true,
+                answer_text: '',
+                ...(test.flag === 'update' && { action: 'create' }),
+              },
+            ];
           } else if (newFormat === 'I') {
-            // Loại I: answers vẫn là mảng nhưng chứa 1 phần tử
-            newQuestion.answers = [{ is_correct: true, answer_text: '' }];
-            // Lưu ý: Loại I không có trường content trong Question theo logic của bạn
+            // Loại I: answers vẫn là mảng nhưng chứa 1 phần tử, không có trường content trong Question
+            newQuestion.answers = [
+              {
+                is_correct: true,
+                answer_text: '',
+                ...(test.flag === 'update' && { action: 'create' }),
+              },
+            ];
           }
 
-          // 2. Trả về Part với Format mới nhưng GIỮ LẠI content và description
           return {
-            ...p, // Giữ lại id, order, description, content, scoreForEachQuestion...
-            format: newFormat, // Cập nhật format mới
-            questions: [newQuestion], // Reset mảng questions về 1 câu mới phù hợp format
+            ...p,
+            format: newFormat,
+            questions: [...deletedOldQuestions, newQuestion],
+            ...(test.flag === 'update' && !p.action && { action: 'update' }),
           };
         }
         return p;
@@ -409,50 +384,139 @@ export default function Page() {
 
   const handleDeletePart = (idToDelete) => {
     setParts((prevParts) => {
-      const filteredParts = prevParts.filter((part) => part.id !== idToDelete);
-      return filteredParts.map((part, index) => ({
-        ...part,
-        order: index + 1,
-      }));
+      let updatedParts;
+
+      if (test?.flag === 'update') {
+        updatedParts = prevParts
+          .map((part) => {
+            if (part.id === idToDelete) {
+              if (part.action === 'create') return null;
+              return { id: part.id, action: 'delete' };
+            }
+            return part;
+          })
+          .filter(Boolean);
+      } else {
+        updatedParts = prevParts.filter((part) => part.id !== idToDelete);
+      }
+
+      let visibleIndex = 1;
+      return updatedParts.map((part) => {
+        if (part.action === 'delete') return part;
+        return {
+          ...part,
+          order: visibleIndex++,
+        };
+      });
     });
   };
 
   const handleDeleteQuestion = (partId, questionId) => {
     setParts((prevParts) =>
-      prevParts.map((p) =>
-        p.id === partId
-          ? {
-              ...p,
-              questions: p.questions.filter((q) => q.id !== questionId),
+      prevParts.map((p) => {
+        if (p.id !== partId) return p;
+
+        let updatedQuestions;
+        if (test?.flag === 'update') {
+          updatedQuestions = p.questions
+            .map((q) => {
+              if (q.id === questionId) {
+                if (q.action === 'create') return null;
+                return { id: q.id, action: 'delete' };
+              }
+              return q;
+            })
+            .filter(Boolean);
+        } else {
+          updatedQuestions = p.questions.filter((q) => q.id !== questionId);
+        }
+
+        let currentNumber = 1;
+        updatedQuestions = updatedQuestions.map((q) => {
+          if (q.action === 'delete') return q;
+
+          if (q.question_number !== currentNumber) {
+            return {
+              ...q,
+              question_number: currentNumber++,
+            };
+          }
+
+          currentNumber++;
+          return q;
+        });
+
+        if (p.format === 'J') {
+          const activeQsCount = updatedQuestions.filter((q) => q.action !== 'delete').length;
+          const maxLabelCode = 65 + activeQsCount - 1;
+
+          updatedQuestions = updatedQuestions.map((q) => {
+            if (q.action === 'delete') return q;
+
+            const currentLabel = q.answers?.[0]?.option_label;
+            if (currentLabel && currentLabel.charCodeAt(0) > maxLabelCode) {
+              return {
+                ...q,
+                answers: [{ ...q.answers[0], option_label: '', answer_text: '' }],
+                ...(test.flag === 'update' && !q.action && { action: 'update' }),
+              };
             }
-          : p,
-      ),
+            return q;
+          });
+        }
+
+        return {
+          ...p,
+          questions: updatedQuestions,
+          ...(test?.flag === 'update' && !p.action && { action: 'update' }),
+        };
+      }),
     );
   };
 
   const handleDeleteOption = (partId, questionId, optionLabel) => {
     setParts((prevParts) =>
-      prevParts.map((p) =>
-        p.id === partId
-          ? {
-              ...p,
-              questions: p.questions.map((q) =>
-                q.id === questionId
-                  ? {
-                      ...q,
-                      // Lọc bỏ optionId, sau đó cập nhật lại nhãn A, B, C nếu cần
-                      answers: q.answers
-                        .filter((a) => a.option_label !== optionLabel)
-                        .map((a, index) => ({
-                          ...a,
-                          option_label: String.fromCharCode(65 + index), // Reset lại nhãn A, B, C theo thứ tự mới
-                        })),
-                    }
-                  : q,
-              ),
+      prevParts.map((p) => {
+        if (p.id !== partId) return p;
+
+        return {
+          ...p,
+          questions: p.questions.map((q) => {
+            if (q.id !== questionId) return q;
+
+            let updatedAnswers;
+            if (test?.flag === 'update') {
+              updatedAnswers = q.answers
+                .map((a) => {
+                  if (a.option_label === optionLabel) {
+                    if (a.action === 'create') return null;
+                    return { id: a.id, action: 'delete' };
+                  }
+                  return a;
+                })
+                .filter(Boolean);
+            } else {
+              updatedAnswers = q.answers.filter((a) => a.option_label !== optionLabel);
             }
-          : p,
-      ),
+
+            let visibleIndex = 0;
+            const reindexedAnswers = updatedAnswers.map((a) => {
+              if (a.action === 'delete') return a;
+              return {
+                ...a,
+                option_label: String.fromCharCode(65 + visibleIndex++),
+              };
+            });
+
+            return {
+              ...q,
+              answers: reindexedAnswers,
+              ...(test?.flag === 'update' && !q.action && { action: 'update' }),
+            };
+          }),
+          ...(test?.flag === 'update' && !p.action && { action: 'update' }),
+        };
+      }),
     );
   };
 
@@ -482,13 +546,29 @@ export default function Page() {
 
   const handleUpdateDescriptionPart = (partId, newDescription) => {
     setParts((prevParts) =>
-      prevParts.map((p) => (p.id === partId ? { ...p, description: newDescription } : p)),
+      prevParts.map((p) =>
+        p.id === partId
+          ? {
+              ...p,
+              description: newDescription,
+              ...(test.flag === 'update' && !p.action && { action: 'update' }),
+            }
+          : p,
+      ),
     );
   };
 
   const handleUpdateContentPart = (partId, newContent) => {
     setParts((prevParts) =>
-      prevParts.map((p) => (p.id === partId ? { ...p, content: newContent } : p)),
+      prevParts.map((p) =>
+        p.id === partId
+          ? {
+              ...p,
+              content: newContent,
+              ...(test.flag === 'update' && !p.action && { action: 'update' }),
+            }
+          : p,
+      ),
     );
   };
 
@@ -511,6 +591,7 @@ export default function Page() {
       case 'F':
         return (
           <MultipleChoiceForm
+            flag={test.flag}
             part={part}
             partId={part.id}
             index={index}
@@ -528,6 +609,7 @@ export default function Page() {
       case 'J':
         return (
           <MatchingForm
+            flag={test.flag}
             localAnswers={part.initialLocalAnswers || []}
             part={part}
             partId={part.id}
@@ -545,6 +627,7 @@ export default function Page() {
       case 'H':
         return (
           <FillBlankForm
+            flag={test.flag}
             part={part}
             partId={part.id}
             index={index}
@@ -728,112 +811,115 @@ export default function Page() {
             </FormControl>
           </Box>
           {/* ------------ Parts Section ------------- */}
-          {parts.map((part, index) => (
-            <Box
-              key={part.id}
-              ref={index === parts.length - 1 ? lastPartRef : null}
-              sx={uploadReadingStyles.basicInfoContainer}
-            >
-              {!part.format ? (
-                <>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      gap: 2,
-                      justifyContent: 'flex-start',
-                      alignItems: 'center',
-                    }}
-                  >
+          {parts
+            .filter((part) => part.action !== 'delete')
+            .sort((a, b) => (a.order || 0) - (b.order || 0))
+            .map((part, index) => (
+              <Box
+                key={part.id}
+                ref={index === parts.length - 1 ? lastPartRef : null}
+                sx={uploadReadingStyles.basicInfoContainer}
+              >
+                {!part.format ? (
+                  <>
                     <Box
                       sx={{
-                        width: '4px',
-                        height: '36px',
-                        backgroundColor: 'yellow.main',
-                        borderRadius: '1rem',
+                        display: 'flex',
+                        flexDirection: 'row',
+                        gap: 2,
+                        justifyContent: 'flex-start',
+                        alignItems: 'center',
                       }}
-                    ></Box>
-                    <Typography sx={uploadReadingStyles.basicInfoHeading}>
-                      Select Part Type
-                    </Typography>
-                  </Box>
-                  <Box sx={uploadReadingStyles.partContentContainer}>
-                    {/* Multiple Choice Long Text */}
-                    <Button
-                      sx={uploadReadingStyles.selectedPart}
-                      onClick={() => handleSelectType(part.id, 'G')}
                     >
-                      <ArticleOutlined sx={uploadReadingStyles.iconSelectedPart} />
-                      <Box sx={uploadReadingStyles.partTextContainer}>
-                        <Typography sx={uploadReadingStyles.partTitle}>
-                          Multiple Choice Long Text
-                        </Typography>
-                        <Typography sx={uploadReadingStyles.partDescription}>
-                          Students select the correct answer.
-                        </Typography>
-                      </Box>
-                    </Button>
-                    {/* Multiple Choice Short Text */}
+                      <Box
+                        sx={{
+                          width: '4px',
+                          height: '36px',
+                          backgroundColor: 'yellow.main',
+                          borderRadius: '1rem',
+                        }}
+                      ></Box>
+                      <Typography sx={uploadReadingStyles.basicInfoHeading}>
+                        Select Part Type
+                      </Typography>
+                    </Box>
+                    <Box sx={uploadReadingStyles.partContentContainer}>
+                      {/* Multiple Choice Long Text */}
+                      <Button
+                        sx={uploadReadingStyles.selectedPart}
+                        onClick={() => handleSelectType(part.id, 'G')}
+                      >
+                        <ArticleOutlined sx={uploadReadingStyles.iconSelectedPart} />
+                        <Box sx={uploadReadingStyles.partTextContainer}>
+                          <Typography sx={uploadReadingStyles.partTitle}>
+                            Multiple Choice Long Text
+                          </Typography>
+                          <Typography sx={uploadReadingStyles.partDescription}>
+                            Students select the correct answer.
+                          </Typography>
+                        </Box>
+                      </Button>
+                      {/* Multiple Choice Short Text */}
+                      <Button
+                        sx={uploadReadingStyles.selectedPart}
+                        onClick={() => handleSelectType(part.id, 'F')}
+                      >
+                        <EditNoteOutlined sx={uploadReadingStyles.iconSelectedPart} />
+                        <Box sx={uploadReadingStyles.partTextContainer}>
+                          <Typography sx={uploadReadingStyles.partTitle}>
+                            Multiple Choice Short Text
+                          </Typography>
+                          <Typography sx={uploadReadingStyles.partDescription}>
+                            Students select the correct answer.
+                          </Typography>
+                        </Box>
+                      </Button>
+                      {/* Fill in The Blanks */}
+                      <Button
+                        sx={uploadReadingStyles.selectedPart}
+                        onClick={() => handleSelectType(part.id, 'I')}
+                      >
+                        <BorderColorOutlined sx={uploadReadingStyles.iconSelectedPart} />
+                        <Box sx={uploadReadingStyles.partTextContainer}>
+                          <Typography sx={uploadReadingStyles.partTitle}>
+                            Fill In The Blanks
+                          </Typography>
+                          <Typography sx={uploadReadingStyles.partDescription}>
+                            Students complete the missing words.
+                          </Typography>
+                        </Box>
+                      </Button>
+                      {/* Matching */}
+                      <Button
+                        sx={uploadReadingStyles.selectedPart}
+                        onClick={() => handleSelectType(part.id, 'J')}
+                      >
+                        <Link sx={uploadReadingStyles.iconSelectedPart} />
+                        <Box sx={uploadReadingStyles.partTextContainer}>
+                          <Typography sx={uploadReadingStyles.partTitle}>Matching</Typography>
+                          <Typography sx={uploadReadingStyles.partDescription}>
+                            Students match items together.
+                          </Typography>
+                        </Box>
+                      </Button>
+                    </Box>
                     <Button
-                      sx={uploadReadingStyles.selectedPart}
-                      onClick={() => handleSelectType(part.id, 'F')}
+                      sx={{
+                        color: 'text.gray',
+                        fontSize: { xs: '0.7rem', md: '0.9rem' },
+                        textTransform: 'none',
+                        px: 2,
+                      }}
+                      onClick={() => handleDeletePart(part.id)}
                     >
-                      <EditNoteOutlined sx={uploadReadingStyles.iconSelectedPart} />
-                      <Box sx={uploadReadingStyles.partTextContainer}>
-                        <Typography sx={uploadReadingStyles.partTitle}>
-                          Multiple Choice Short Text
-                        </Typography>
-                        <Typography sx={uploadReadingStyles.partDescription}>
-                          Students select the correct answer.
-                        </Typography>
-                      </Box>
+                      Cancel
                     </Button>
-                    {/* Fill in The Blanks */}
-                    <Button
-                      sx={uploadReadingStyles.selectedPart}
-                      onClick={() => handleSelectType(part.id, 'I')}
-                    >
-                      <BorderColorOutlined sx={uploadReadingStyles.iconSelectedPart} />
-                      <Box sx={uploadReadingStyles.partTextContainer}>
-                        <Typography sx={uploadReadingStyles.partTitle}>
-                          Fill In The Blanks
-                        </Typography>
-                        <Typography sx={uploadReadingStyles.partDescription}>
-                          Students complete the missing words.
-                        </Typography>
-                      </Box>
-                    </Button>
-                    {/* Matching */}
-                    <Button
-                      sx={uploadReadingStyles.selectedPart}
-                      onClick={() => handleSelectType(part.id, 'J')}
-                    >
-                      <Link sx={uploadReadingStyles.iconSelectedPart} />
-                      <Box sx={uploadReadingStyles.partTextContainer}>
-                        <Typography sx={uploadReadingStyles.partTitle}>Matching</Typography>
-                        <Typography sx={uploadReadingStyles.partDescription}>
-                          Students match items together.
-                        </Typography>
-                      </Box>
-                    </Button>
-                  </Box>
-                  <Button
-                    sx={{
-                      color: 'text.gray',
-                      fontSize: { xs: '0.7rem', md: '0.9rem' },
-                      textTransform: 'none',
-                      px: 2,
-                    }}
-                    onClick={() => handleDeletePart(part.id)}
-                  >
-                    Cancel
-                  </Button>
-                </>
-              ) : (
-                renderPartEditor(part, index)
-              )}
-            </Box>
-          ))}
+                  </>
+                ) : (
+                  renderPartEditor(part, index)
+                )}
+              </Box>
+            ))}
           {/* -------- Add New Part Button --------- */}
           <Button
             startIcon={<AddIcon />}

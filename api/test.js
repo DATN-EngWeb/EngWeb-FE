@@ -65,18 +65,36 @@ export const getPresignedUrl = async (
       part,
     }),
   });
-
   return handleResponse(response);
 };
 
-export const uploadToObjectStorage = async ({ url, fields, file }) => {
+export const uploadToObjectStorage = async ({ url, fields, file, mimeType }) => {
+  const isGCS = url.includes('storage.googleapis.com');
+
+  if (isGCS) {
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': mimeType || file.type || 'text/html',
+      },
+      body: file,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`GCS Upload Failed: ${response.status} - ${errorText}`);
+    }
+
+    const etag = response.headers.get('ETag')?.replaceAll('"', '') || null;
+    return { etag };
+  }
+
   const formData = new FormData();
   const parsedFields = typeof fields === 'string' ? JSON.parse(fields) : fields || {};
 
   Object.entries(parsedFields).forEach(([key, value]) => {
     formData.append(key, value);
   });
-
   formData.append('file', file);
 
   const response = await fetch(url, {
@@ -84,12 +102,7 @@ export const uploadToObjectStorage = async ({ url, fields, file }) => {
     body: formData,
   });
 
-  if (!response.ok) {
-    const error = new Error('Upload to object storage failed');
-    error.status = response.status;
-    error.data = await response.text().catch(() => null);
-    throw error;
-  }
+  if (!response.ok) throw new Error('Upload via POST Policy failed');
 
   const etag = response.headers.get('ETag')?.replaceAll('"', '') || null;
   return { etag };
@@ -109,7 +122,6 @@ export const confirmUpload = async ({ key, fileSize, mimeType, etag }, token) =>
       etag,
     }),
   });
-
   return handleResponse(response);
 };
 
