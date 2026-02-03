@@ -66,7 +66,6 @@ export const getPresignedUrl = async (
       part,
     }),
   });
-
   return handleResponse(response);
 };
 
@@ -113,7 +112,6 @@ export const confirmUpload = async ({ key, fileSize, mimeType, etag }, token) =>
       etag,
     }),
   });
-
   return handleResponse(response);
 };
 
