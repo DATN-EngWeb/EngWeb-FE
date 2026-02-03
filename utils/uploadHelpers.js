@@ -28,7 +28,7 @@ export const uploadHtmlContent = async (htmlString, testId, token) => {
     // 3. upload to S3/Object Storage
     const { etag } = await uploadToObjectStorage({
       url: presign.url,
-      fields: presign.fields,
+      mimeType: file.type,
       file: file,
     });
 
@@ -71,7 +71,7 @@ export const uploadMediaFile = async (file, testId, token) => {
 
   const { etag } = await uploadToObjectStorage({
     url: presign.url,
-    fields: presign.fields,
+    mimeType: file.type,
     file: file,
   });
 

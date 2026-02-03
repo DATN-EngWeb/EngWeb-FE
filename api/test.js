@@ -70,19 +70,22 @@ export const getPresignedUrl = async (
   return handleResponse(response);
 };
 
-export const uploadToObjectStorage = async ({ url, fields, file }) => {
-  const formData = new FormData();
-  const parsedFields = typeof fields === 'string' ? JSON.parse(fields) : fields || {};
+export const uploadToObjectStorage = async ({ url, mimeType, file }) => {
+  // const formData = new FormData();
+  // const parsedFields = typeof fields === 'string' ? JSON.parse(fields) : fields || {};
 
-  Object.entries(parsedFields).forEach(([key, value]) => {
-    formData.append(key, value);
-  });
+  // Object.entries(parsedFields).forEach(([key, value]) => {
+  //   formData.append(key, value);
+  // });
 
-  formData.append('file', file);
+  // formData.append('file', file);
 
   const response = await fetch(url, {
-    method: 'POST',
-    body: formData,
+    method: 'PUT',
+    headers: {
+      'Content-Type': mimeType,
+    },
+    body: file,
   });
 
   if (!response.ok) {

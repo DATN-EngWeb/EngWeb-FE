@@ -1,14 +1,7 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getListTest } from '../../api/test';
 import { ReviewTestPageStyles as styles } from '../../styles/Teacher/ReviewTest/ReviewTestPageStyles';
-import RateReviewIcon from '@mui/icons-material/RateReview';
-import FilterIcon from '@mui/icons-material/FilterList';
-import SearchIcon from '@mui/icons-material/Search';
-import WaitingIcon from '@mui/icons-material/HourglassBottom';
-import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import SendIcon from '@mui/icons-material/Send';
 import {
   Paper,
   Typography,
@@ -26,197 +19,198 @@ import {
   InputAdornment,
   Select,
   MenuItem,
-  Link,
+  Avatar,
 } from '@mui/material';
+import {
+  RateReview as RateReviewIcon,
+  FilterList as FilterIcon,
+  Search as SearchIcon,
+  HourglassBottom as WaitingIcon,
+  AssignmentInd as AssignmentIndIcon,
+  CheckCircle as CheckCircleIcon,
+  Send as SendIcon,
+} from '@mui/icons-material';
+
+// --- Constants ---
+const STATUS_MAP = {
+  P: { label: 'Published', color: 'success.main' },
+  D: { label: 'Draft', color: 'text.secondary' },
+  I: { label: 'In Review', color: 'warning.main' },
+  R: { label: 'Removed', color: 'error.main' },
+};
+
+// --- Sub-components ---
 const StatCard = ({ icon, count, value, variant }) => (
   <Box sx={styles.statBadge(variant)}>
     <Box sx={styles.iconWrapper(variant)}>{icon}</Box>
-
     <Box sx={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
       <Typography sx={styles.statValue}>{count}</Typography>
       <Typography sx={styles.statLabel}>{value}</Typography>
     </Box>
   </Box>
 );
+
 export default function ReviewTestPage() {
   const [mounted, setMounted] = useState(false);
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [isMined, setIsMinded] = useState(false);
+  const [isMine, setIsMine] = useState(false);
+
+  // Filters state
   const [searchQuery, setSearchQuery] = useState('');
   const [skillFilter, setSkillFilter] = useState('All Skills');
   const [levelFilter, setLevelFilter] = useState('All Levels');
-  const [sortBy, setSortBy] = useState('All Status');
+  const [statusFilter, setStatusFilter] = useState('All Status');
+
+  // 1. Fetch Data
   const fetchTests = useCallback(async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const result = isMined
-        ? await getListTest(token, true)
-        : await getListTest(token, false, 'I');
-      const testsArray = result?.results || [];
-      setTests(testsArray);
+      // Fix logic: isMine ? true (lấy của mình) : false (lấy của người khác để review)
+      const result = await getListTest(token, isMine, isMine ? undefined : 'I');
+      setTests(result?.results || []);
     } catch (error) {
-      setError('Failed to fetch tests. Please try again later.');
+      console.error(error);
       setTests([]);
     } finally {
       setLoading(false);
     }
-  }, [isMined]);
+  }, [isMine]);
 
   useEffect(() => {
     setMounted(true);
     fetchTests();
-  }, [isMined]);
+  }, [fetchTests]);
+
+  // 2. Logic lọc dữ liệu (Client-side filtering)
+  const filteredTests = useMemo(() => {
+    return tests.filter((test) => {
+      const matchesSearch =
+        test.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        test.created_by?.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSkill = skillFilter === 'All Skills' || test.skill === skillFilter;
+      const matchesLevel = levelFilter === 'All Levels' || test.level === levelFilter;
+      // Thêm logic lọc theo status nếu cần
+      return matchesSearch && matchesSkill && matchesLevel;
+    });
+  }, [tests, searchQuery, skillFilter, levelFilter]);
 
   if (!mounted) return null;
 
-  const options = isMined
-    ? [
-        { label: 'All Status', value: 'All Status' },
-        { label: 'Published', value: 'Published' },
-        { label: 'In Review', value: 'In Review' },
-        { label: 'Draft', value: 'Draft' },
-        { label: 'Removed', value: 'Removed' },
-      ]
-    : [
-        { label: 'All Status', value: 'All Status' },
-        { label: 'Reviewed', value: 'Reviewed' },
-        { label: 'Wait Review', value: 'Wait Review' },
-      ];
+  const statusOptions = isMine
+    ? ['All Status', 'Published', 'In Review', 'Draft', 'Removed']
+    : ['All Status', 'Reviewed', 'Wait Review'];
 
   return (
     <Box component="main" sx={styles.contentWrapper}>
+      {/* Header Section */}
       <Box sx={styles.welcomeHeader}>
         <Typography variant="h1" sx={styles.welcomeTitle}>
           List Review Test
         </Typography>
-        <Typography variant="body1" sx={styles.welcomeSub}>
+        <Typography variant="body1" sx={styles.welcomeSub} mb={3}>
           Review exam questions from colleagues or follow up on review requests from others.
         </Typography>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-start', gap: 11 }}>
+
+        <Stack direction="row" spacing={4}>
           <StatCard
-            icon={<WaitingIcon fontSize="medium" sx={{ color: 'warning.dark' }} />}
+            icon={<WaitingIcon sx={{ color: 'warning.dark' }} />}
             count="2"
-            value="Waiting for Review"
+            value="Waiting Review"
             variant="purple"
           />
           <StatCard
-            icon={<SendIcon fontSize="medium" sx={{ color: 'warning.dark' }} />}
+            icon={<SendIcon sx={{ color: 'warning.dark' }} />}
             count="3"
-            value="My test are waiting feedback"
+            value="My Feedbacks"
             variant="yellow"
           />
           <StatCard
-            icon={<CheckCircleIcon fontSize="medium" sx={{ color: 'success.dark' }} />}
+            icon={<CheckCircleIcon sx={{ color: 'success.dark' }} />}
             count="5"
-            value="Has been reviewed"
+            value="Reviewed"
             variant="green"
           />
-        </Box>
+        </Stack>
       </Box>
 
+      {/* Filter Section */}
       <Box sx={styles.filterSection}>
         <TextField
           placeholder="Search by test name or teacher"
+          size="small"
+          fullWidth
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           sx={styles.searchInput}
-          size="small"
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ color: 'darkGrey.light' }} />
-                </InputAdornment>
-              ),
-            },
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
           }}
         />
 
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
+        <Stack direction="row" spacing={2}>
           <Select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
             size="small"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
             sx={styles.selectFilter}
-            displayEmpty
-            renderValue={(value) =>
-              value === 'all' ? (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}> Status</Box>
-              ) : (
-                value
-              )
-            }
           >
-            {options.map((opt) => (
-              <MenuItem key={opt.value} value={opt.value}>
-                {opt.label}
+            {statusOptions.map((opt) => (
+              <MenuItem key={opt} value={opt}>
+                {opt}
               </MenuItem>
             ))}
           </Select>
+
           <Select
+            size="small"
             value={skillFilter}
             onChange={(e) => setSkillFilter(e.target.value)}
-            size="small"
             sx={styles.selectFilter}
-            displayEmpty
-            renderValue={(value) =>
-              value === 'All Skills' ? (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <FilterIcon fontSize="small" /> All Skills
-                </Box>
-              ) : (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <FilterIcon fontSize="small" /> {value}
-                </Box>
-              )
-            }
           >
-            <MenuItem value="All Skills">All Skills</MenuItem>
-            <MenuItem value="Writing">Writing</MenuItem>
-            <MenuItem value="Speaking">Speaking</MenuItem>
-            <MenuItem value="Reading">Reading</MenuItem>
-            <MenuItem value="Listening">Listening</MenuItem>
+            {['All Skills', 'Writing', 'Speaking', 'Reading', 'Listening'].map((s) => (
+              <MenuItem key={s} value={s}>
+                {s}
+              </MenuItem>
+            ))}
           </Select>
 
           <Select
+            size="small"
             value={levelFilter}
             onChange={(e) => setLevelFilter(e.target.value)}
-            size="small"
             sx={styles.selectFilter}
-            displayEmpty
-            renderValue={(v) => (v === 'All Levels' ? 'All Levels' : `Level ${v}`)}
           >
             <MenuItem value="All Levels">All Levels</MenuItem>
-            <MenuItem value="A1">Level A1</MenuItem>
-            <MenuItem value="A2">Level A2</MenuItem>
-            <MenuItem value="B1">Level B1</MenuItem>
-            <MenuItem value="B2">Level B2</MenuItem>
+            {['A1', 'A2', 'B1', 'B2'].map((l) => (
+              <MenuItem key={l} value={l}>
+                Level {l}
+              </MenuItem>
+            ))}
           </Select>
-        </Box>
+        </Stack>
       </Box>
 
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+      {/* Switcher */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', my: 2 }}>
         <Box sx={styles.switcherWrapper}>
-          <Stack direction="row" sx={styles.switcher} onClick={() => setIsMinded(!isMined)}>
+          <Stack direction="row" sx={styles.switcher}>
             <Button
-              disableElevation
               startIcon={<RateReviewIcon />}
-              sx={{ ...styles.switchButton, ...(!isMined ? styles.switchActive : {}) }}
+              sx={{ ...styles.switchButton, ...(!isMine && styles.switchActive) }}
+              onClick={() => setIsMine(false)}
             >
               Waiting for Review
             </Button>
-
             <Button
-              disableElevation
               startIcon={<AssignmentIndIcon />}
-              sx={{
-                ...styles.switchButton,
-                ...(isMined ? styles.switchActive : {}),
-              }}
-              onClick={() => setIsMinded(true)}
+              sx={{ ...styles.switchButton, ...(isMine && styles.switchActive) }}
+              onClick={() => setIsMine(true)}
             >
               My List Tests
             </Button>
@@ -224,147 +218,68 @@ export default function ReviewTestPage() {
         </Box>
       </Box>
 
-      <Box sx={{ mt: 4, mb: 15 }}>
-        {isMined ? (
-          <Paper>
-            {loading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                <CircularProgress />
-              </Box>
-            ) : Array.isArray(tests) && tests.length > 0 ? (
-              <TableContainer component={Box}>
-                <Table size="small" stickyHeader>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                        Test Name
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                        Skill
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                        Level
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                        Reviewed By
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                        Created At
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                        Status
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                        Actions
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {tests.map((item) => (
-                      <TableRow key={item.id} hover>
-                        <TableCell>{item.title}</TableCell>
-                        <TableCell>{item.skill}</TableCell>
-                        <TableCell>{item.level}</TableCell>
-                        <TableCell>{item.reviewedBy}</TableCell>
-                        <TableCell>
-                          {item.created_at
-                            ? new Date(item.created_at).toLocaleDateString('vi-VN')
-                            : 'N/A'}
-                        </TableCell>
-                        <TableCell>
-                          {item.status === 'P'
-                            ? 'Published'
-                            : item.status === 'D'
-                              ? 'Draft'
-                              : item.status === 'I'
-                                ? 'In Review'
-                                : 'Removed'}
-                        </TableCell>
-                        <TableCell>
-                          <Button>{item.status === 'I' ? 'View Test' : 'View Feedback'}</Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            ) : (
-              <Typography sx={{ justifyContent: 'center', display: 'flex' }}>
-                No test created.
-              </Typography>
-            )}
-          </Paper>
+      {/* Table Section */}
+      <TableContainer component={Paper} sx={{ mt: 2, maxHeight: 600 }}>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
+            <CircularProgress />
+          </Box>
         ) : (
-          <Paper>
-            {loading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                <CircularProgress />
-              </Box>
-            ) : Array.isArray(tests) && tests.length > 0 ? (
-              <TableContainer component={Box}>
-                <Table size="small" stickyHeader>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                        Teacher
+          <Table stickyHeader size="small">
+            <TableHead>
+              <TableRow>
+                {!isMine && <TableCell sx={styles.tableHeadCell}>Teacher</TableCell>}
+                <TableCell sx={styles.tableHeadCell}>Test Name</TableCell>
+                <TableCell sx={styles.tableHeadCell}>Skill</TableCell>
+                <TableCell sx={styles.tableHeadCell}>Level</TableCell>
+                <TableCell sx={styles.tableHeadCell}>Created Date</TableCell>
+                <TableCell sx={styles.tableHeadCell}>Status</TableCell>
+                <TableCell sx={styles.tableHeadCell}>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredTests.length > 0 ? (
+                filteredTests.map((item) => (
+                  <TableRow key={item.id} hover>
+                    {!isMine && (
+                      <TableCell>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Avatar src={item.created_by?.avatar} sx={{ width: 24, height: 24 }} />
+                          <Typography variant="body2">{item.created_by?.full_name}</Typography>
+                        </Stack>
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                        Test Name
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                        Skill
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                        Level
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                        Created Date
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                        Status
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                        Actions
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {tests.map((item) => (
-                      <TableRow key={item.id} hover>
-                        <TableCell>{item.created_by}</TableCell>
-                        <TableCell>{item.title}</TableCell>
-                        <TableCell>{item.skill}</TableCell>
-                        <TableCell>{item.level}</TableCell>
-                        <TableCell>
-                          {item.created_at
-                            ? new Date(item.created_at).toLocaleDateString('vi-VN')
-                            : 'N/A'}
-                        </TableCell>
-                        <TableCell>
-                          {item.status === 'P'
-                            ? 'Published'
-                            : item.status === 'D'
-                              ? 'Draft'
-                              : item.status === 'I'
-                                ? 'In Review'
-                                : 'Removed'}
-                        </TableCell>
-                        <TableCell>
-                          <Button>{item.status === 'I' ? 'View Test' : 'View Feedback'}</Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            ) : (
-              <Typography sx={{ justifyContent: 'center', display: 'flex' }}>
-                No test wait for review.
-              </Typography>
-            )}
-          </Paper>
+                    )}
+                    <TableCell>{item.title}</TableCell>
+                    <TableCell>{item.skill}</TableCell>
+                    <TableCell>{item.level}</TableCell>
+                    <TableCell>
+                      {item.created_at
+                        ? new Date(item.created_at).toLocaleDateString('vi-VN')
+                        : 'N/A'}
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ color: STATUS_MAP[item.status]?.color }}>
+                        {STATUS_MAP[item.status]?.label || 'Unknown'}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Button size="small" variant="outlined">
+                        {item.status === 'I' ? 'Review Now' : 'View Feedback'}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
+                    No tests found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         )}
-      </Box>
+      </TableContainer>
     </Box>
   );
 }

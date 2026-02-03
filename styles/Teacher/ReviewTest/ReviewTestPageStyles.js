@@ -131,4 +131,12 @@ export const ReviewTestPageStyles = {
     borderRadius: '12px',
     '& .MuiOutlinedInput-notchedOutline': { borderColor: 'background.paper' },
   },
+  tableHeadCell: {
+    fontWeight: 'bold',
+    backgroundColor: '#f5f5f5 !important',
+    color: '#333',
+    py: 2,
+    px: 1.5,
+    ml: 0.5,
+  },
 };
