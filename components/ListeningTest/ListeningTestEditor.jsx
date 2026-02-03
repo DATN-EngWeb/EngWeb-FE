@@ -67,6 +67,7 @@ export default function ListeningTestEditor() {
   const [errors, setErrors] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
   const [isSaving, setIsSaving] = useState(false);
+  const [showPreview, setShowPreview] = useState(true);
 
   const handleBasicInfoChange = (field, value) => {
     setBasicInfo((prev) => ({ ...prev, [field]: value }));
@@ -187,7 +188,8 @@ export default function ListeningTestEditor() {
           description="Fill in the details below to create a new listening test for your students"
         />
         <TestEditorActions
-          onPreview={() => {}}
+          onPreview={() => setShowPreview(!showPreview)}
+          isPreviewActive={showPreview}
           onSendReview={() => handleSubmit('In review')}
           onSaveDraft={() => handleSubmit('Draft')}
           onPublish={() => handleSubmit('Published')}
