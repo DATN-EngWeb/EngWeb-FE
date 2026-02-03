@@ -241,9 +241,8 @@ export default function Page() {
 
         const uploadResult = await uploadToObjectStorage({
           url: presign.url,
-          fields: presign.fields,
-          file: f.file,
           mimeType: currentMimeType,
+          file: f.file,
         });
 
         const storageKey =
