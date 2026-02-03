@@ -77,7 +77,7 @@ export default function TeacherHeader() {
                 My List Test
               </Button>
             </Link>
-            <Link href="/teacher/review-tests" style={navLinkStyles}>
+            <Link href="/teacher/review-test" style={navLinkStyles}>
               <Button color="inherit" sx={navButtonStyles}>
                 List Review Test
               </Button>

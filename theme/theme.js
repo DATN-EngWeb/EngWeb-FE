@@ -42,6 +42,12 @@ const theme = createTheme({
       dark: '#E6737A',
       pastel: '#FFEBEE',
     },
+    purple: {
+      main: '#A569BD',
+      light: '#C288D6',
+      dark: '#884EA0',
+      pastel: '#F3E5F5',
+    },
     background: {
       default: '#FFF4E9',
       paper: '#FFFFFF',

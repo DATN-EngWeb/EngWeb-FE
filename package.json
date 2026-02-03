@@ -13,7 +13,6 @@
     "lint-staged": "lint-staged"
   },
   "dependencies": {
-    "@ckeditor/ckeditor5-list": "^47.3.0",
     "@ckeditor/ckeditor5-react": "^11.0.1",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
@@ -24,6 +23,7 @@
     "next-auth": "^4.24.11",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-resizable-panels": "^4.3.3",
     "styled-components": "^6.1.19"
   },
   "devDependencies": {

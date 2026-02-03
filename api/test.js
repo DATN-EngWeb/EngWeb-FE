@@ -1,5 +1,6 @@
 /* eslint-env browser */
 /* global fetch */
+/* global URLSearchParams */
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 if (!API_BASE_URL) {
@@ -34,7 +35,7 @@ async function handleResponse(response) {
 }
 
 export const createTest = async (basicInfo, token) => {
-  const response = await fetch(`${TESTS_BASE_URL}`, {
+  const response = await fetch(`${TESTS_BASE_URL}/overview`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -98,8 +99,11 @@ export const uploadToObjectStorage = async ({ url, fields, file, mimeType }) => 
   formData.append('file', file);
 
   const response = await fetch(url, {
-    method: 'POST',
-    body: formData,
+    method: 'PUT',
+    headers: {
+      'Content-Type': mimeType,
+    },
+    body: file,
   });
 
   if (!response.ok) throw new Error('Upload via POST Policy failed');
@@ -133,6 +137,50 @@ export const submitTestParts = async ({ testId, parts, token }) => {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ data: { parts } }),
+  });
+
+  return handleResponse(response);
+};
+
+export const getCriteria = async (level, token) => {
+  const response = await fetch(`${TESTS_BASE_URL}/writing-criteria?level=${level}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return handleResponse(response);
+};
+
+export const submitProductiveTest = async ({ testId, data, token }) => {
+  const response = await fetch(`${TESTS_BASE_URL}/productive/${testId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ data }),
+  });
+  return handleResponse(response);
+};
+
+export const getListTest = async (token, isTeacher = false, status = null) => {
+  const params = new URLSearchParams();
+
+  if (isTeacher) params.append('mine', 'true');
+  if (status) params.append('status', status);
+
+  const queryString = params.toString() ? `?${params.toString()}` : '';
+  const url = `${TESTS_BASE_URL}/overview${queryString}`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
   });
 
   return handleResponse(response);

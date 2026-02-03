@@ -4,7 +4,12 @@ export const validateBasicInfo = (basicInfo) => {
 
   if (!basicInfo.testName?.trim()) errors.testName = true;
   if (!basicInfo.level?.trim()) errors.level = true;
-  if (!basicInfo.time || parseInt(basicInfo.time) <= 0) errors.time = true;
+  const timeValue = parseInt(basicInfo.time);
+  if (!basicInfo.time || isNaN(timeValue) || timeValue === 0) {
+    errors.time = true;
+  } else if (timeValue < 0) {
+    errors.timeNegative = true;
+  }
   if (!basicInfo.description?.trim()) errors.description = true;
 
   return errors;
@@ -14,7 +19,12 @@ export const validateBasicInfo = (basicInfo) => {
 export const validateMultiChoiceImagePart = (part) => {
   const errors = { questions: {} };
 
-  if (!part.totalScore || parseFloat(part.totalScore) <= 0) errors.totalScore = true;
+  const scoreValue = parseFloat(part.totalScore);
+  if (!part.totalScore || isNaN(scoreValue) || scoreValue === 0) {
+    errors.totalScore = true;
+  } else if (scoreValue < 0) {
+    errors.totalScoreNegative = true;
+  }
   if (!part.description?.trim()) errors.description = true;
   if (!part.audio?.file) errors.audio = true;
 
@@ -45,6 +55,7 @@ export const validateMultiChoiceImagePart = (part) => {
   return Object.keys(errors.questions || {}).length > 0 ||
     errors.noQuestions ||
     errors.totalScore ||
+    errors.totalScoreNegative ||
     errors.description ||
     errors.audio
     ? errors
@@ -55,7 +66,12 @@ export const validateMultiChoiceImagePart = (part) => {
 export const validateMultiChoiceTextPart = (part) => {
   const errors = { questions: {} };
 
-  if (!part.totalScore || parseFloat(part.totalScore) <= 0) errors.totalScore = true;
+  const scoreValue = parseFloat(part.totalScore);
+  if (!part.totalScore || isNaN(scoreValue) || scoreValue === 0) {
+    errors.totalScore = true;
+  } else if (scoreValue < 0) {
+    errors.totalScoreNegative = true;
+  }
   if (!part.description?.trim()) errors.description = true;
 
   if (!part.questions || part.questions.length === 0) {
@@ -95,6 +111,7 @@ export const validateMultiChoiceTextPart = (part) => {
     errors.partAudio ||
     errors.noQuestions ||
     errors.totalScore ||
+    errors.totalScoreNegative ||
     errors.description
     ? errors
     : {};
@@ -104,7 +121,12 @@ export const validateMultiChoiceTextPart = (part) => {
 export const validateFillInTheBlankPart = (part) => {
   const errors = {};
 
-  if (!part.totalScore || parseFloat(part.totalScore) <= 0) errors.totalScore = true;
+  const scoreValue = parseFloat(part.totalScore);
+  if (!part.totalScore || isNaN(scoreValue) || scoreValue === 0) {
+    errors.totalScore = true;
+  } else if (scoreValue < 0) {
+    errors.totalScoreNegative = true;
+  }
   if (!part.audio?.file) errors.audio = true;
   if (!part.description?.trim()) errors.description = true;
 
@@ -121,14 +143,19 @@ export const validateFillInTheBlankPart = (part) => {
     if (!errors.answerExplanations.some(Boolean)) delete errors.answerExplanations;
   }
 
-  return errors;
+  return Object.keys(errors).length > 0 ? errors : {};
 };
 
 // Validate MatchingPart
 export const validateMatchingPart = (part) => {
   const errors = {};
 
-  if (!part.totalScore || parseFloat(part.totalScore) <= 0) errors.totalScore = true;
+  const scoreValue = parseFloat(part.totalScore);
+  if (!part.totalScore || isNaN(scoreValue) || scoreValue === 0) {
+    errors.totalScore = true;
+  } else if (scoreValue < 0) {
+    errors.totalScoreNegative = true;
+  }
   if (!part.audio?.file) errors.audio = true;
   if (!part.description?.trim()) errors.description = true;
 
@@ -156,7 +183,7 @@ export const validateMatchingPart = (part) => {
     if (!errors.answers.some(Boolean)) delete errors.answers;
   }
 
-  return errors;
+  return Object.keys(errors).length > 0 ? errors : {};
 };
 
 // Main validation
@@ -206,6 +233,8 @@ export const validateTest = (basicInfo, parts) => {
 export const getValidationErrorMessage = (errors) => {
   if (!errors) return null;
 
+  if (errors.basicInfo?.timeNegative) return 'Test time cannot be negative';
+  if (errors.parts?.some((p) => p?.totalScoreNegative)) return 'Score cannot be negative';
   if (errors.noParts) return 'Test must have at least 1 part';
   if (errors.parts?.some((p) => p?.noQuestions)) return 'Each part must have at least 1 question';
   if (

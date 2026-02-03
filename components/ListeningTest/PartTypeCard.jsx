@@ -1,21 +1,17 @@
 import { Paper, Typography, Box } from '@mui/material';
+import { partTypeCard } from '../../styles/Teacher/Listening/ListeningStyles';
 
 export default function PartTypeCard({ icon, title, description, onClick, selected }) {
   return (
     <Paper
       onClick={onClick}
       sx={{
-        p: 2,
-        cursor: 'pointer',
+        ...partTypeCard,
         border: selected ? '2px solid #000000ff' : '1px solid #e0e0e0',
-        transition: 'all 0.2s',
         '&:hover': {
           borderColor: '#000000ff',
           boxShadow: 2,
         },
-        display: 'flex',
-        alignItems: 'center',
-        gap: 2,
       }}
     >
       <Box sx={{ color: '#000000ff', display: 'flex' }}>{icon}</Box>

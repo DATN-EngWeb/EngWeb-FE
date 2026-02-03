@@ -19,6 +19,14 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import AddIcon from '@mui/icons-material/Add';
 import AudioUploader from '../Upload/AudioUploader';
 import { useState } from 'react';
+import {
+  sectionHeader,
+  accentBar,
+  emptyStateBox,
+  numberIndicator,
+  partHeader,
+  rowContent,
+} from '../../styles/Teacher/Listening/ListeningStyles';
 
 export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
   const questions = Array.isArray(part.questions) ? part.questions : [];
@@ -109,30 +117,16 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
 
   return (
     <>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          mb: 2,
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box
-            sx={{
-              width: '4px',
-              height: '36px',
-              backgroundColor: 'yellow.main',
-              borderRadius: '1rem',
-            }}
-          />
+      <Box sx={partHeader}>
+        <Box sx={sectionHeader}>
+          <Box sx={accentBar} />
           <DragIndicatorIcon color="disabled" />
           <Box>
             <Typography fontWeight={600} sx={{ color: 'primary.main' }}>
               Part {index + 1}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Multiple choice texts · {questions.length} questions
+              Matching · {questions.length} questions
             </Typography>
           </Box>
         </Box>
@@ -149,22 +143,22 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
 
       {!isCollapsed && (
         <>
-          <Box sx={{ display: 'flex', gap: 3, mb: 3 }}>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="body2" mb={1}>
+          <Box sx={{ mb: 3 }}>
+            <Box sx={rowContent}>
+              <Typography variant="body2">
                 The score for each question <span style={{ color: 'red' }}>*</span>
               </Typography>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                value={part.totalScore ?? ''}
-                onChange={(e) => updatePart({ ...part, totalScore: e.target.value })}
-              />
             </Box>
+            <TextField
+              fullWidth
+              size="small"
+              type="number"
+              value={part.totalScore ?? ''}
+              onChange={(e) => updatePart({ ...part, totalScore: e.target.value })}
+            />
           </Box>
 
-          <Typography variant="body2" mb={1}>
+          <Typography variant="body2">
             Audio File <span style={{ color: 'red' }}>*</span>
           </Typography>
           <AudioUploader
@@ -174,14 +168,8 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
           />
 
           <Box sx={{ mb: 3 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <Typography variant="body2" mb={1}>
+            <Box sx={rowContent}>
+              <Typography variant="body2">
                 Description <span style={{ color: 'red' }}>*</span>
               </Typography>
             </Box>
@@ -195,14 +183,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
             />
           </Box>
 
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mb: 1,
-            }}
-          >
+          <Box sx={rowContent}>
             <Typography variant="body2">
               Questions <span style={{ color: 'red' }}>*</span>
             </Typography>
@@ -212,16 +193,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
           </Box>
 
           {questions.length === 0 ? (
-            <Box
-              sx={{
-                border: '1px solid #ddd',
-                borderRadius: 2,
-                p: 3,
-                textAlign: 'center',
-                color: 'text.secondary',
-                mb: 3,
-              }}
-            >
+            <Box sx={{ ...emptyStateBox, mb: 3 }}>
               No questions yet
               <br />
               <Button startIcon={<AddIcon />} sx={{ mt: 1 }} onClick={addQuestion}>
@@ -233,22 +205,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
               {questions.map((question, qIdx) => (
                 <Paper key={question.id} variant="outlined" sx={{ p: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box
-                      sx={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: '50%',
-                        bgcolor: 'black',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 14,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {qIdx + 1}
-                    </Box>
+                    <Box sx={numberIndicator}>{qIdx + 1}</Box>
 
                     <TextField
                       size="small"
@@ -295,14 +252,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
             </Stack>
           )}
 
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mb: 1,
-            }}
-          >
+          <Box sx={rowContent}>
             <Typography variant="body2">
               Answers <span style={{ color: 'red' }}>*</span>
             </Typography>
@@ -312,15 +262,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
           </Box>
 
           {answers.length === 0 ? (
-            <Box
-              sx={{
-                border: '1px solid #ddd',
-                borderRadius: 2,
-                p: 3,
-                textAlign: 'center',
-                color: 'text.secondary',
-              }}
-            >
+            <Box sx={emptyStateBox}>
               No answers yet
               <br />
               <Button startIcon={<AddIcon />} sx={{ mt: 1 }} onClick={addAnswer}>
@@ -332,22 +274,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
               {answers.map((answer, aIdx) => (
                 <Paper key={answer.id} variant="outlined" sx={{ p: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box
-                      sx={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: '50%',
-                        bgcolor: 'black',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 14,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {String.fromCharCode(65 + aIdx)}
-                    </Box>
+                    <Box sx={numberIndicator}>{String.fromCharCode(65 + aIdx)}</Box>
 
                     <TextField
                       size="small"
