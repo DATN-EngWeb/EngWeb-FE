@@ -1,0 +1,52 @@
+export const listeningtestStyles = {
+  mainContainer: {
+    py: { xs: 1, md: 2 },
+    backgroundColor: 'background.paper',
+  },
+  // -------- Test Heading Section ---------
+  testHeadingContainer: {
+    height: 'auto',
+    width: '100%',
+    borderRadius: '1rem',
+    backgroundColor: '#fff',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 1,
+    px: 3,
+    py: 2,
+  },
+  backButton: {
+    color: 'gray.main',
+    fontSize: { xs: '0.7rem', md: '1rem' },
+    fontWeight: 500,
+    cursor: 'pointer',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 0,
+    transform: 'translateX(-10px)',
+  },
+  submitButton: {
+    backgroundColor: 'yellow.main',
+    color: 'primary.main',
+    fontSize: { xs: '0.7rem', md: '1rem' },
+    fontWeight: 500,
+    textTransform: 'none',
+    '&:hover': {
+      backgroundColor: 'warning.dark',
+      boxShadow: 'none',
+    },
+    px: 2.5,
+  },
+  nameTestAndFormatPart: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 0.5,
+  },
+  nameTest: {},
+  formatName: {},
+};
