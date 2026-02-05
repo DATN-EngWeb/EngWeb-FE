@@ -45,6 +45,7 @@ export const TeacherHomepageStyles = {
     marginLeft: { xs: '0px', sm: '10px' },
   }),
   filterSection: {
+    mt: 4,
     display: 'flex',
     flexDirection: { xs: 'column', lg: 'row' },
     gap: 2,

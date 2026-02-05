@@ -161,3 +161,25 @@ export const getListTest = async (token, params = {}) => {
   });
   return handleResponse(response);
 };
+
+export const getProductiveTestDetails = async (testId, token) => {
+  const response = await fetch(`${TESTS_BASE_URL}/full-test/productive/${testId}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return handleResponse(response);
+};
+
+export const updateProductiveTest = async (testId, data, token) => {
+  const response = await fetch(`${TESTS_BASE_URL}/full-test/productive/${testId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(response);
+};

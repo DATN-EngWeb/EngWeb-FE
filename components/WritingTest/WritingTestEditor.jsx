@@ -5,7 +5,6 @@ import ProductiveEditor from './../Writing-Speaking/ProductiveEditor';
 import ProductivePreview from './../Writing-Speaking/ProductivePreview';
 import { createTest, submitProductiveTest } from '../../api/test';
 import { uploadHtmlContent } from '../../utils/uploadHelpers';
-import { getValidationProductiveErrorMessage } from '../../utils/testValidation';
 
 export default function WritingTestEditor() {
   const [mounted, setMounted] = useState(false);

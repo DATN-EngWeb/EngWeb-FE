@@ -1,12 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button, Box, Typography, Divider } from '@mui/material';
 import {
   VisibilityOutlined as EyeIcon,
   DeleteOutline as TrashIcon,
   ModeEditOutlineOutlined as PencilIcon,
   PersonOutline as UserIcon,
+  CheckCircle as SuccessIcon,
+  Autorenew as PendingIcon,
+  Description as DraftIcon,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 
@@ -20,7 +23,7 @@ const levelTheme = {
   A2: { border: 'info.light', text: 'info.main', bg: 'info.pastel', badge: 'info.main' },
   B1: {
     border: 'warning.light',
-    text: 'warning.main',
+    text: 'secondary.dark',
     bg: 'warning.pastel',
     badge: 'warning.main',
     borderColor: 'purple.light',
@@ -76,7 +79,17 @@ const IconButtonAction = ({ icon, color, isDelete = false, onClick }) => (
   </Button>
 );
 
-const TestCard = ({ title, description, status, created_at, submissions, level, test_details }) => {
+const TestCard = ({
+  id,
+  title,
+  description,
+  status,
+  skill,
+  created_at,
+  submissions,
+  level,
+  test_details,
+}) => {
   const [randomDelay, setRandomDelay] = useState('0s');
 
   const currentLevelTheme = levelTheme[level] || levelTheme.A1;
@@ -93,6 +106,16 @@ const TestCard = ({ title, description, status, created_at, submissions, level, 
     setRandomDelay(`${Math.random() * 0.2}s`);
   }, []);
 
+  const skillMap = useMemo(
+    () => ({
+      R: 'reading',
+      L: 'listening',
+      S: 'speaking',
+      W: 'writing',
+    }),
+    [],
+  );
+
   const displayDate = new Date(created_at).toLocaleDateString('vi-VN', {
     day: '2-digit',
     month: '2-digit',
@@ -102,15 +125,55 @@ const TestCard = ({ title, description, status, created_at, submissions, level, 
   const router = useRouter();
 
   const handleEdit = () => {
-    router.push(`/teacher/EditTest/${test_details.id}`);
+    skill = skillMap[skill];
+    router.push(`/teacher/update-test/${skill}/${id}`);
   };
   const handleDelete = () => {
     // const confirmDelete = confirm("Are you sure you want to delete this test?");
     // if (!confirmDelete) return;
   };
   const handleViewTest = () => {
-    router.push(`/teacher/ViewTest/${test_details.id}`);
+    skill = skillMap[skill];
+    router.push(`/teacher/update-test/${skill}/${id}`);
   };
+
+  const getStatusStyles = (status) => {
+    switch (status) {
+      case 'P': // Published
+        return {
+          label: 'Published',
+          color: 'success.main',
+          icon: <SuccessIcon sx={{ fontSize: '1rem', color: 'success.main' }} />,
+        };
+      case 'I': // In Review
+        return {
+          label: 'In review',
+          color: 'secondary.dark',
+          icon: (
+            <PendingIcon
+              sx={{
+                fontSize: '1rem',
+                color: 'secondary.dark',
+                animation: 'spin 2s linear infinite',
+                '@keyframes spin': {
+                  '0%': { transform: 'rotate(0deg)' },
+                  '100%': { transform: 'rotate(360deg)' },
+                },
+              }}
+            />
+          ),
+        };
+      case 'D': // Draft
+      default:
+        return {
+          label: 'Draft',
+          color: 'primary.main',
+          icon: <DraftIcon sx={{ fontSize: '1rem', color: 'primary.main' }} />,
+        };
+    }
+  };
+
+  const statusStyle = getStatusStyles(status);
 
   return (
     <Box
@@ -215,7 +278,7 @@ const TestCard = ({ title, description, status, created_at, submissions, level, 
             display: 'flex',
             alignItems: 'center',
             gap: 0.5,
-            color: currentLevelTheme.badge,
+            color: currentLevelTheme.text,
             backgroundColor: 'background.paper',
             borderRadius: '10px',
             py: 0.2,
@@ -229,6 +292,18 @@ const TestCard = ({ title, description, status, created_at, submissions, level, 
             }}
           >
             {submissions} submissions
+          </Typography>
+        </Box>
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          {statusStyle.icon}
+          <Typography
+            sx={{
+              fontSize: '0.8rem',
+              color: statusStyle.color,
+            }}
+          >
+            {statusStyle.label}
           </Typography>
         </Box>
       </Box>

@@ -26,7 +26,7 @@ import {
 } from '@mui/icons-material';
 import { TeacherHomepageStyles as styles } from '../../styles/Teacher/TeacherHomepageStyles.js';
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 9;
 
 const StatCard = ({ icon, value, variant }) => (
   <Box sx={styles.statBadge(variant)}>
@@ -47,6 +47,7 @@ const StatCard = ({ icon, value, variant }) => (
 export default function TeacherHome() {
   const [searchQuery, setSearchQuery] = useState('');
   const [skillFilter, setSkillFilter] = useState('All Skills');
+  const [statusFilter, setStatusFilter] = useState('All Status');
   const [levelFilter, setLevelFilter] = useState('All Levels');
   const [sortBy, setSortBy] = useState('Newest List');
   const [currentPage, setCurrentPage] = useState(1);
@@ -63,6 +64,15 @@ export default function TeacherHome() {
       Listening: 'L',
       Speaking: 'S',
       Writing: 'W',
+    }),
+    [],
+  );
+
+  const StatusMap = useMemo(
+    () => ({
+      Publish: 'P',
+      'In Review': 'I',
+      Draft: 'D',
     }),
     [],
   );
@@ -118,20 +128,31 @@ export default function TeacherHome() {
       if (searchQuery) params.search = searchQuery;
       if (levelFilter !== 'All Levels') params.level = levelFilter;
       if (skillFilter !== 'All Skills') params.skill = skillMap[skillFilter];
-
+      if (statusFilter !== 'All Status') params.status = StatusMap[statusFilter];
       // Get ordering value from map, use default if not found
       params.ordering = orderingMap[sortBy] || '-created_at';
 
       const result = await getListTest(token, params);
 
       setTests(result?.results || []);
+      console.log(result);
       setTotalCount(result?.count || 0);
     } catch (error) {
       setTests([]);
     } finally {
       setLoading(false);
     }
-  }, [currentPage, searchQuery, levelFilter, skillFilter, sortBy, skillMap, orderingMap]);
+  }, [
+    currentPage,
+    searchQuery,
+    levelFilter,
+    skillFilter,
+    statusFilter,
+    sortBy,
+    skillMap,
+    StatusMap,
+    orderingMap,
+  ]);
 
   // Call fetch when any filter changes
   useEffect(() => {
@@ -175,6 +196,14 @@ export default function TeacherHome() {
         </Box>
       </Box>
 
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Link href="/teacher/upload-test" passHref>
+          <Button variant="contained" startIcon={<PlusIcon />} sx={styles.createBtn}>
+            Create Test
+          </Button>
+        </Link>
+      </Box>
+
       <Box sx={styles.filterSection}>
         <TextField
           placeholder="Search by name or topic"
@@ -197,6 +226,30 @@ export default function TeacherHome() {
         />
 
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
+          <Select
+            value={statusFilter}
+            onChange={handleFilterChange(setStatusFilter)}
+            size="small"
+            sx={styles.selectFilter}
+            displayEmpty
+            renderValue={(value) =>
+              value === 'All Status' ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <FilterIcon fontSize="small" /> All Status
+                </Box>
+              ) : (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <FilterIcon fontSize="small" /> {value}
+                </Box>
+              )
+            }
+          >
+            <MenuItem value="All Status">All Status</MenuItem>
+            <MenuItem value="Publish">Publish</MenuItem>
+            <MenuItem value="In Review">In Review</MenuItem>
+            <MenuItem value="Draft">Draft</MenuItem>
+          </Select>
+
           <Select
             value={skillFilter}
             onChange={handleFilterChange(setSkillFilter)}
@@ -255,11 +308,6 @@ export default function TeacherHome() {
             <MenuItem value="Oldest List">Oldest List</MenuItem>
             <MenuItem value="Most Submissions">Most Submissions</MenuItem>
           </Select>
-          <Link href="/teacher/upload-test" passHref>
-            <Button variant="contained" startIcon={<PlusIcon />} sx={styles.createBtn}>
-              Create Test
-            </Button>
-          </Link>
         </Box>
       </Box>
 
@@ -280,12 +328,12 @@ export default function TeacherHome() {
       {/* Dynamic Pagination Section */}
       {totalPages > 1 && (
         <Box sx={styles.paginationContainer}>
-          {/* Nút Back */}
+          {/* Back */}
           <IconButton disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
             <ChevronLeft />
           </IconButton>
 
-          {/* Danh sách trang */}
+          {/* pagination */}
           {getPaginationRange(currentPage, totalPages).map((page, i) => {
             if (page === '...') {
               return (
@@ -313,7 +361,7 @@ export default function TeacherHome() {
             );
           })}
 
-          {/* Nút Next */}
+          {/* Next */}
           <IconButton
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage((p) => p + 1)}
