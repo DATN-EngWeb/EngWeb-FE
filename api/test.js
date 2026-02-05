@@ -70,15 +70,6 @@ export const getPresignedUrl = async (
 };
 
 export const uploadToObjectStorage = async ({ url, mimeType, file }) => {
-  // const formData = new FormData();
-  // const parsedFields = typeof fields === 'string' ? JSON.parse(fields) : fields || {};
-
-  // Object.entries(parsedFields).forEach(([key, value]) => {
-  //   formData.append(key, value);
-  // });
-
-  // formData.append('file', file);
-
   const response = await fetch(url, {
     method: 'PUT',
     headers: {
@@ -160,4 +151,46 @@ export const getListTest = async (token, params = {}) => {
     },
   });
   return handleResponse(response);
+};
+
+export const updateTestParts = async ({ testId, basicInfo, receptiveTestData, token }) => {
+  const response = await fetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      ...(basicInfo && basicInfo),
+      receptive_test: receptiveTestData,
+    }),
+  });
+
+  return handleResponse(response);
+};
+
+export async function getRecepiveTestDetails(testId, token) {
+  const response = await fetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    cache: 'no-store',
+  });
+
+  return handleResponse(response);
+}
+
+export const fetchHtmlContent = async (url) => {
+  if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+    return url;
+  }
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Fetch failed');
+    return await response.text();
+  } catch (_error) {
+    return '';
+  }
 };

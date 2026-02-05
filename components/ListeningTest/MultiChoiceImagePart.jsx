@@ -46,6 +46,7 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
     const newQ = {
       id: Date.now().toString(),
       text: '',
+      score: part.score || 0,
       answers: [
         { id: 'a-' + Date.now() + '-0', label: 'A', image: null },
         { id: 'b-' + Date.now() + '-1', label: 'B', image: null },
@@ -107,7 +108,16 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
   };
 
   const setCorrect = (qIdx, aIdx) => {
-    const newQs = questions.map((q, i) => (i === qIdx ? { ...q, correctIndex: aIdx } : q));
+    const newQs = questions.map((q, i) => {
+      if (i !== qIdx) return q;
+
+      const newAnswers = q.answers.map((ans, ai) => ({
+        ...ans,
+        is_correct: ai === aIdx,
+      }));
+
+      return { ...q, correctIndex: aIdx, answers: newAnswers };
+    });
     updatePart({ ...part, questions: newQs });
   };
 
@@ -171,8 +181,15 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
               fullWidth
               size="small"
               type="number"
-              value={part.totalScore ?? ''}
-              onChange={(e) => updatePart({ ...part, totalScore: e.target.value })}
+              value={part.score ?? ''}
+              onChange={(e) => {
+                const scoreValue = parseFloat(e.target.value) || 0;
+                const newQuestions = questions.map((q) => ({
+                  ...q,
+                  score: scoreValue,
+                }));
+                updatePart({ ...part, score: scoreValue, questions: newQuestions });
+              }}
             />
           </Box>
 
@@ -253,7 +270,6 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
                       }}
                     />
                   </Box>
-
                   <Typography variant="body2" color="text.secondary">
                     Image answers (click to set correct):
                   </Typography>

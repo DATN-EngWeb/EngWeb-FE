@@ -119,8 +119,15 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
               fullWidth
               size="small"
               type="number"
-              value={part.totalScore ?? ''}
-              onChange={(e) => updatePart({ ...part, totalScore: e.target.value })}
+              value={part.score ?? ''}
+              onChange={(e) => {
+                const scoreValue = parseFloat(e.target.value) || 0;
+                const newAnswers = answers.map((a) => ({
+                  ...a,
+                  score: scoreValue,
+                }));
+                updatePart({ ...part, score: scoreValue, answers: newAnswers });
+              }}
             />
           </Box>
 
