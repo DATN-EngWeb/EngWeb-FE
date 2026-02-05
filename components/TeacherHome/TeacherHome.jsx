@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { getListTest } from '../../api/test';
 import Link from 'next/link';
 import TestCard from '../TestCard.jsx';
 import {
@@ -12,6 +13,7 @@ import {
   Select,
   Button,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import {
   MenuBook as LibraryIcon,
@@ -23,6 +25,8 @@ import {
   ChevronRight,
 } from '@mui/icons-material';
 import { TeacherHomepageStyles as styles } from '../../styles/Teacher/TeacherHomepageStyles.js';
+
+const ITEMS_PER_PAGE = 8;
 
 const StatCard = ({ icon, value, variant }) => (
   <Box sx={styles.statBadge(variant)}>
@@ -47,99 +51,70 @@ export default function TeacherHome() {
   const [sortBy, setSortBy] = useState('Newest List');
   const [currentPage, setCurrentPage] = useState(1);
 
-  const mockTests = [
-    {
-      id: 1,
-      title: 'Writing Test Name',
-      description: 'Short quiz to evaluate your understanding of basic concepts',
-      skill: 'Writing',
-      date: '2024-01-15',
-      submissions: 24,
-      format: 'Essay',
-      level: 'A1',
-    },
-    {
-      id: 2,
-      title: 'Speaking Test Name',
-      description: 'Short quiz to evaluate your understanding of basic concepts',
-      skill: 'Speaking',
-      date: '2024-01-15',
-      submissions: 24,
-      format: 'Individual speaking',
-      level: 'A2',
-    },
-    {
-      id: 3,
-      title: 'Listening Test Name',
-      description: 'Short quiz to evaluate your understanding of basic concepts',
-      skill: 'Listening',
-      date: '2024-01-15',
-      submissions: 24,
-      level: 'B2',
-    },
-    {
-      id: 4,
-      title: 'Reading Test Name',
-      description: 'Short quiz to evaluate your understanding of basic concepts',
-      skill: 'Reading',
-      date: '2024-01-15',
-      submissions: 24,
-      level: 'B1',
-    },
-    {
-      id: 5,
-      title: 'Listening Test Name',
-      description: 'Short quiz to evaluate your understanding of basic concepts',
-      skill: 'Listening',
-      date: '2024-01-15',
-      submissions: 24,
-      level: 'B2',
-    },
-    {
-      id: 6,
-      title: 'Writing Test Name',
-      description: 'Short quiz to evaluate your understanding of basic concepts',
-      skill: 'Writing',
-      date: '2024-01-15',
-      submissions: 24,
-      format: 'Translate',
-      level: 'A2',
-    },
-  ];
+  const [mounted, setMounted] = useState(false);
+  const [tests, setTests] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchTests = useCallback(async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const result = await getListTest(token, true, null);
+      setTests(result?.results || []);
+    } catch (error) {
+      console.error('Lỗi khi tải danh sách bài test:', error);
+      setTests([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTests();
+  }, [fetchTests]);
 
   const filteredAndSortedTests = useMemo(() => {
-    let result = [...mockTests];
+    let result = [...tests];
 
+    // Filter theo tìm kiếm
     if (searchQuery) {
       result = result.filter((test) =>
-        test.title.toLowerCase().includes(searchQuery.toLowerCase()),
+        test.title?.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     }
 
+    // Filter theo kỹ năng
     if (skillFilter !== 'All Skills') {
-      result = result.filter((test) => {
-        return test.skill && test.skill.includes(skillFilter);
-      });
+      result = result.filter((test) => test.skill?.includes(skillFilter));
     }
 
+    // Filter theo cấp độ
     if (levelFilter !== 'All Levels') {
       result = result.filter((test) => test.level === levelFilter);
     }
 
+    // Sắp xếp
     result.sort((a, b) => {
-      if (sortBy === 'Newest List') {
-        return new Date(b.date) - new Date(a.date);
-      }
-      if (sortBy === 'Oldest List') {
-        return new Date(a.date) - new Date(b.date);
-      }
-      if (sortBy === 'Most Submissions') {
-        return b.submissions - a.submissions;
-      }
+      if (sortBy === 'Newest List') return new Date(b.date || 0) - new Date(a.date || 0);
+      if (sortBy === 'Oldest List') return new Date(a.date || 0) - new Date(b.date || 0);
+      if (sortBy === 'Most Submissions') return (b.submissions || 0) - (a.submissions || 0);
       return 0;
     });
 
     return result;
+  }, [tests, searchQuery, skillFilter, levelFilter, sortBy]);
+
+  // 3. Logic Phân trang (Cắt mảng dữ liệu)
+  const totalPages = Math.ceil(filteredAndSortedTests.length / ITEMS_PER_PAGE);
+
+  const paginatedTests = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredAndSortedTests.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredAndSortedTests, currentPage]);
+
+  // Reset về trang 1 khi thay đổi bộ lọc
+  useEffect(() => {
+    setCurrentPage(1);
   }, [searchQuery, skillFilter, levelFilter, sortBy]);
 
   return (
@@ -252,7 +227,12 @@ export default function TeacherHome() {
       </Box>
 
       <Box sx={styles.testGrid}>
-        {filteredAndSortedTests.length > 0 ? (
+        {loading ? (
+          <Box sx={{ gridColumn: '1/-1', textAlign: 'center', py: 10 }}>
+            <CircularProgress color="warning" />
+            <Typography sx={{ mt: 2 }}>Loading tests...</Typography>
+          </Box>
+        ) : filteredAndSortedTests.length > 0 ? (
           filteredAndSortedTests.map((test) => <TestCard key={test.id} {...test} />)
         ) : (
           <Typography sx={{ gridColumn: '1/-1', textAlign: 'center', py: 12 }}>
@@ -261,52 +241,45 @@ export default function TeacherHome() {
         )}
       </Box>
 
-      <Box sx={styles.paginationContainer}>
-        <IconButton onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}>
-          <ChevronLeft />
-        </IconButton>
+      {/* Dynamic Pagination Section */}
+      {totalPages > 1 && (
+        <Box sx={styles.paginationContainer}>
+          <IconButton disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
+            <ChevronLeft />
+          </IconButton>
 
-        {[1, 2, 3].map((page) => (
-          <Button
-            key={page}
-            variant={currentPage === page ? 'contained' : 'text'}
-            onClick={() => setCurrentPage(page)}
-            sx={{
-              minWidth: 40,
-              height: 40,
-              borderRadius: '8px',
-              bgcolor: currentPage === page ? 'warning.light' : 'transparent',
-              color: 'primary.dark',
-              '&:hover': {
-                bgcolor: currentPage === page ? 'yellow.main' : 'primary.contrastText',
-              },
-            }}
+          {[...Array(totalPages)].map((_, index) => {
+            const pageNum = index + 1;
+            return (
+              <Button
+                key={pageNum}
+                variant={currentPage === pageNum ? 'contained' : 'text'}
+                onClick={() => setCurrentPage(pageNum)}
+                sx={{
+                  minWidth: 40,
+                  height: 40,
+                  borderRadius: '8px',
+                  bgcolor: currentPage === pageNum ? 'warning.light' : 'transparent',
+                  color: 'primary.dark',
+                  mx: 0.5,
+                  '&:hover': {
+                    bgcolor: currentPage === pageNum ? 'yellow.main' : 'rgba(0,0,0,0.04)',
+                  },
+                }}
+              >
+                {pageNum}
+              </Button>
+            );
+          })}
+
+          <IconButton
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage((p) => p + 1)}
           >
-            {page}
-          </Button>
-        ))}
-        <Typography sx={{ color: 'primary.dark', px: 1.5 }}>...</Typography>
-        <Button
-          variant={currentPage === 10 ? 'contained' : 'text'}
-          onClick={() => setCurrentPage(10)}
-          sx={{
-            minWidth: 40,
-            height: 40,
-            borderRadius: '8px',
-            bgcolor: currentPage === 10 ? 'warning.light' : 'transparent',
-            color: 'primary.dark',
-            '&:hover': {
-              bgcolor: currentPage === 10 ? 'yellow.main' : 'primary.contrastText',
-            },
-          }}
-        >
-          10
-        </Button>
-
-        <IconButton onClick={() => setCurrentPage((p) => Math.min(10, p + 1))}>
-          <ChevronRight />
-        </IconButton>
-      </Box>
+            <ChevronRight />
+          </IconButton>
+        </Box>
+      )}
     </Box>
   );
 }
