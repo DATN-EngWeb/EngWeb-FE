@@ -1,5 +1,6 @@
 /* eslint-env browser */
 /* global fetch */
+/* global URLSearchParams */
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 if (!API_BASE_URL) {
@@ -65,7 +66,6 @@ export const getPresignedUrl = async (
       part,
     }),
   });
-
   return handleResponse(response);
 };
 
@@ -103,7 +103,6 @@ export const confirmUpload = async ({ key, fileSize, mimeType, etag }, token) =>
       etag,
     }),
   });
-
   return handleResponse(response);
 };
 
@@ -117,6 +116,40 @@ export const submitTestParts = async ({ testId, parts, token }) => {
     body: JSON.stringify({ data: { parts } }),
   });
 
+  return handleResponse(response);
+};
+
+export const getCriteria = async (level, token) => {
+  const response = await fetch(`${TESTS_BASE_URL}/writing-criteria?level=${level}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return handleResponse(response);
+};
+
+export const submitProductiveTest = async ({ testId, data, token }) => {
+  const response = await fetch(`${TESTS_BASE_URL}/productive/${testId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ data }),
+  });
+  return handleResponse(response);
+};
+
+export const getListTest = async (token, params = {}) => {
+  const query = new URLSearchParams(params).toString();
+  const response = await fetch(`${TESTS_BASE_URL}/overview?${query}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return handleResponse(response);
 };
 

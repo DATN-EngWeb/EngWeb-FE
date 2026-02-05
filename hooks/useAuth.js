@@ -1,6 +1,5 @@
 'use client';
 
-/* global localStorage */
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 

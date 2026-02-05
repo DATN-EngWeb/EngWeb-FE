@@ -8,6 +8,7 @@ import {
   ModeEditOutlineOutlined as PencilIcon,
   PersonOutline as UserIcon,
 } from '@mui/icons-material';
+import { useRouter } from 'next/navigation';
 
 const levelTheme = {
   A1: {
@@ -22,30 +23,40 @@ const levelTheme = {
     text: 'warning.main',
     bg: 'warning.pastel',
     badge: 'warning.main',
+    borderColor: 'purple.light',
   },
   B2: { border: 'error.light', text: 'error.main', bg: 'error.pastel', badge: 'error.main' },
 };
 
 const FormatTheme = {
-  'Individual speaking': { bg: 'success.greenLight', text: 'success.green_dark' },
-  Pronunciation: { bg: 'info.light', text: 'info.main' },
-  Essay: { bg: 'success.highlight', text: 'success.main_dark' },
-  Article: { bg: 'pink.main', text: 'error.main' },
-  Email: { bg: 'darkGrey.light', text: 'white' },
-  Translate: { bg: 'success.greenLight', text: 'success.main_dark' },
+  A: { bg: 'success.greenLight', text: 'success.green_dark' },
+  B: { bg: 'info.light', text: 'info.main' },
+  C: { bg: 'success.highlight', text: 'success.main_dark' },
+  D: { bg: 'white', text: 'error.main' },
+  E: { bg: 'darkGrey.light', text: 'white' },
+  F: { bg: 'success.greenLight', text: 'success.main_dark' },
+  G: { bg: 'success.highlight', text: 'success.main_dark' },
+  H: { bg: 'error.main', text: 'white' },
+  I: { bg: 'purple.pastel', text: 'purple.main' },
+  J: { bg: 'darkGrey.light', text: 'white' },
 };
 
-const getFormatCategory = (format) => {
-  const writing = ['Essay', 'Email', 'Translate', 'Article'];
-  const speaking = ['Individual speaking', 'Pronunciation'];
-
-  if (writing.includes(format)) return { label: format, type: 'writing' };
-  if (speaking.includes(format)) return { label: format, type: 'speaking' };
-  return { label: format, type: 'other' };
+const Formatlabels = {
+  A: 'Email',
+  B: 'Article',
+  C: 'Story',
+  D: 'Essay',
+  E: 'Letter',
+  F: 'Reviews',
+  G: 'Narrative',
+  H: 'Description',
+  I: 'Social argument',
+  J: 'Read Aloud',
 };
 
-const IconButtonAction = ({ icon, color, isDelete = false }) => (
+const IconButtonAction = ({ icon, color, isDelete = false, onClick }) => (
   <Button
+    onClick={onClick}
     sx={{
       minWidth: '40px',
       height: '40px',
@@ -65,24 +76,49 @@ const IconButtonAction = ({ icon, color, isDelete = false }) => (
   </Button>
 );
 
-const TestCard = ({ title, description, date, submissions, format, level }) => {
+const TestCard = ({ title, description, status, created_at, submissions, level, test_details }) => {
   const [randomDelay, setRandomDelay] = useState('0s');
 
   const currentLevelTheme = levelTheme[level] || levelTheme.A1;
-  const formatInfo = format ? getFormatCategory(format) : null;
+  const formatCode = test_details?.format;
 
-  // Lấy style cho format badge, mặc định dùng màu của level nếu không tìm thấy format cụ thể
-  const currentFormatStyle = FormatTheme[format] || { bg: currentLevelTheme.badge, text: 'white' };
+  const formatText = Formatlabels[formatCode];
+
+  const currentFormatStyle = FormatTheme[formatCode] || {
+    bg: currentLevelTheme.badge,
+    text: 'white',
+  };
 
   useEffect(() => {
     setRandomDelay(`${Math.random() * 0.2}s`);
   }, []);
+
+  const displayDate = new Date(created_at).toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+
+  const router = useRouter();
+
+  const handleEdit = () => {
+    router.push(`/teacher/EditTest/${test_details.id}`);
+  };
+  const handleDelete = () => {
+    // const confirmDelete = confirm("Are you sure you want to delete this test?");
+    // if (!confirmDelete) return;
+  };
+  const handleViewTest = () => {
+    router.push(`/teacher/ViewTest/${test_details.id}`);
+  };
 
   return (
     <Box
       sx={{
         backgroundColor: currentLevelTheme.bg,
         borderRadius: '16px',
+        border: '1px solid',
+        borderColor: currentLevelTheme.border,
         p: 2.5,
         display: 'flex',
         flexDirection: 'column',
@@ -102,7 +138,7 @@ const TestCard = ({ title, description, date, submissions, format, level }) => {
     >
       {/* Header: Format Badge and Level Badge */}
       <Box sx={{ display: 'flex', mb: 2, alignItems: 'center' }}>
-        {formatInfo && (
+        {formatText && (
           <Box
             sx={{
               bgcolor: currentFormatStyle.bg,
@@ -112,10 +148,9 @@ const TestCard = ({ title, description, date, submissions, format, level }) => {
               borderRadius: '6px',
               fontSize: '0.7rem',
               fontWeight: 700,
-              //textTransform: 'uppercase'
             }}
           >
-            {formatInfo.label}
+            {formatText}
           </Box>
         )}
         <Box
@@ -173,7 +208,7 @@ const TestCard = ({ title, description, date, submissions, format, level }) => {
       {/* Stats Section */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
         <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary', fontWeight: 500 }}>
-          {date}
+          {displayDate}
         </Typography>
         <Box
           sx={{
@@ -204,6 +239,9 @@ const TestCard = ({ title, description, date, submissions, format, level }) => {
           fullWidth
           variant="outlined"
           startIcon={<EyeIcon />}
+          onClick={() => {
+            handleViewTest();
+          }}
           sx={{
             bgcolor: 'white',
             color: 'primary.dark',
@@ -220,9 +258,24 @@ const TestCard = ({ title, description, date, submissions, format, level }) => {
           View
         </Button>
 
-        <IconButtonAction icon={<PencilIcon />} color={currentLevelTheme.badge} />
+        {status !== 'P' && (
+          <IconButtonAction
+            icon={<PencilIcon />}
+            color={currentLevelTheme.badge}
+            onClick={() => {
+              handleEdit();
+            }}
+          />
+        )}
 
-        <IconButtonAction icon={<TrashIcon />} color="error.main" isDelete={true} />
+        <IconButtonAction
+          icon={<TrashIcon />}
+          color="error.main"
+          isDelete={true}
+          onClick={() => {
+            handleDelete();
+          }}
+        />
       </Box>
     </Box>
   );
