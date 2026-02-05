@@ -76,6 +76,33 @@ export default function TeacherHome() {
     [],
   );
 
+  const getPaginationRange = (current, total) => {
+    const delta = 1;
+    const range = [];
+    const rangeWithDots = [];
+    let l;
+
+    for (let i = 1; i <= total; i++) {
+      if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) {
+        range.push(i);
+      }
+    }
+
+    for (let i of range) {
+      if (l) {
+        if (i - l === 2) {
+          rangeWithDots.push(l + 1);
+        } else if (i - l !== 1) {
+          rangeWithDots.push('...');
+        }
+      }
+      rangeWithDots.push(i);
+      l = i;
+    }
+
+    return rangeWithDots;
+  };
+
   // 3. Fetch data from Server
   const fetchTests = useCallback(async () => {
     setLoading(true);
@@ -253,19 +280,40 @@ export default function TeacherHome() {
       {/* Dynamic Pagination Section */}
       {totalPages > 1 && (
         <Box sx={styles.paginationContainer}>
+          {/* Nút Back */}
           <IconButton disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
             <ChevronLeft />
           </IconButton>
-          {[...Array(totalPages)].map((_, i) => (
-            <Button
-              key={i}
-              variant={currentPage === i + 1 ? 'contained' : 'text'}
-              onClick={() => setCurrentPage(i + 1)}
-              sx={{ minWidth: 40, mx: 0.5 }}
-            >
-              {i + 1}
-            </Button>
-          ))}
+
+          {/* Danh sách trang */}
+          {getPaginationRange(currentPage, totalPages).map((page, i) => {
+            if (page === '...') {
+              return (
+                <Typography key={`dots-${i}`} sx={{ mx: 1, color: 'text.secondary' }}>
+                  ...
+                </Typography>
+              );
+            }
+
+            return (
+              <Button
+                key={page}
+                variant={currentPage === page ? 'contained' : 'text'}
+                onClick={() => setCurrentPage(page)}
+                sx={{
+                  minWidth: 40,
+                  height: 40,
+                  mx: 0.5,
+                  borderRadius: '8px',
+                  fontWeight: currentPage === page ? 700 : 400,
+                }}
+              >
+                {page}
+              </Button>
+            );
+          })}
+
+          {/* Nút Next */}
           <IconButton
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage((p) => p + 1)}

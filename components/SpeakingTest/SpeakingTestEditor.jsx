@@ -83,7 +83,7 @@ export default function SpeakingTestEditor() {
       await submitProductiveTest({ testId: res.id, data: detailedData, token });
       setSnackbar({ open: true, message: 'Test submitted successfully', severity: 'success' });
       setIsSaving(false);
-      setTestData({ testName: '', level: '', topics: '', format: '' });
+      setTestData({ skill: 'S', testName: '', level: '', topics: '', format: '' });
       setSettings({ timeLimit: 30, minWords: 200, score: 10 });
       setQuestion({ description: '', suggestion: '', audio: null });
       setErrors(null);

@@ -33,12 +33,12 @@ const FormatTheme = {
   B: { bg: 'info.light', text: 'info.main' },
   C: { bg: 'success.highlight', text: 'success.main_dark' },
   D: { bg: 'white', text: 'error.main' },
-  E: { bg: 'darkGrey.light', text: 'white' },
+  E: { bg: 'text.gray', text: 'white' },
   F: { bg: 'success.greenLight', text: 'success.main_dark' },
   G: { bg: 'success.highlight', text: 'success.main_dark' },
   H: { bg: 'error.main', text: 'white' },
   I: { bg: 'purple.pastel', text: 'purple.main' },
-  J: { bg: 'darkGrey.light', text: 'white' },
+  J: { bg: 'text.gray', text: 'warning.main' },
 };
 
 const Formatlabels = {

@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { getListTest } from '../../api/test';
 import { ReviewTestPageStyles as styles } from '../../styles/Teacher/ReviewTest/ReviewTestPageStyles';
 import {
@@ -36,10 +37,7 @@ import {
 // --- Constants ---
 const PAGE_SIZE = 10;
 const STATUS_MAP = {
-  P: { label: 'Published', color: 'success.main' },
-  D: { label: 'Draft', color: 'text.secondary' },
   I: { label: 'In Review', color: 'warning.main' },
-  R: { label: 'Removed', color: 'error.main' },
 };
 
 const StatCard = ({ icon, count, value, variant }) => (
@@ -53,6 +51,7 @@ const StatCard = ({ icon, count, value, variant }) => (
 );
 
 export default function ReviewTestPage() {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [tests, setTests] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -63,7 +62,6 @@ export default function ReviewTestPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [skillFilter, setSkillFilter] = useState('All Skills');
   const [levelFilter, setLevelFilter] = useState('All Levels');
-  const [statusFilter, setStatusFilter] = useState('All Status');
   const [sortBy, setSortBy] = useState('Newest List');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -78,18 +76,6 @@ export default function ReviewTestPage() {
     [],
   );
 
-  const statusMap = useMemo(
-    () => ({
-      Published: 'P',
-      Draft: 'D',
-      'In Review': 'I',
-      Removed: 'R',
-      'Wait Review': 'I',
-      Reviewed: 'P',
-    }),
-    [],
-  );
-
   const orderingMap = useMemo(
     () => ({
       'Newest List': '-created_at',
@@ -97,6 +83,33 @@ export default function ReviewTestPage() {
     }),
     [],
   );
+
+  const getPaginationRange = (current, total) => {
+    const delta = 1;
+    const range = [];
+    const rangeWithDots = [];
+    let l;
+
+    for (let i = 1; i <= total; i++) {
+      if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) {
+        range.push(i);
+      }
+    }
+
+    for (let i of range) {
+      if (l) {
+        if (i - l === 2) {
+          rangeWithDots.push(l + 1);
+        } else if (i - l !== 1) {
+          rangeWithDots.push('...');
+        }
+      }
+      rangeWithDots.push(i);
+      l = i;
+    }
+
+    return rangeWithDots;
+  };
 
   // --- Fetch Logic ---
   const fetchTests = useCallback(async () => {
@@ -107,6 +120,7 @@ export default function ReviewTestPage() {
         page: currentPage,
         page_size: PAGE_SIZE,
         mine: isMine,
+        status: 'I',
         ordering: orderingMap[sortBy] || '-created_at',
       };
 
@@ -114,12 +128,8 @@ export default function ReviewTestPage() {
       if (levelFilter !== 'All Levels') params.level = levelFilter;
       if (skillFilter !== 'All Skills') params.skill = skillMap[skillFilter];
 
-      // Xử lý logic Status
-      if (statusFilter !== 'All Status') {
-        params.status = statusMap[statusFilter];
-      } else if (!isMine) {
-        params.status = 'I';
-      }
+      // Xử lý logic sortby
+      params.ordering = orderingMap[sortBy] || '-created_at';
 
       const result = await getListTest(token, params);
       setTests(result?.results || []);
@@ -130,35 +140,20 @@ export default function ReviewTestPage() {
     } finally {
       setLoading(false);
     }
-  }, [
-    isMine,
-    currentPage,
-    searchQuery,
-    levelFilter,
-    skillFilter,
-    statusFilter,
-    sortBy,
-    skillMap,
-    statusMap,
-    orderingMap,
-  ]);
+  }, [isMine, currentPage, searchQuery, levelFilter, skillFilter, sortBy, skillMap, orderingMap]);
 
-  // Khởi chạy khi mount và khi filters thay đổi
+  // start mounting and initial fetch
   useEffect(() => {
     setMounted(true);
     fetchTests();
   }, [fetchTests]);
 
-  // Reset page khi đổi Tab hoặc đổi Filter
+  // Reset page when switching Tab or changing Filter
   useEffect(() => {
     setCurrentPage(1);
-  }, [isMine, searchQuery, skillFilter, levelFilter, statusFilter]);
+  }, [isMine, searchQuery, skillFilter, levelFilter, sortBy]);
 
   if (!mounted) return null;
-
-  const statusOptions = isMine
-    ? ['All Status', 'Published', 'In Review', 'Draft', 'Removed']
-    : ['All Status', 'Wait Review', 'Reviewed'];
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
   return (
@@ -216,11 +211,11 @@ export default function ReviewTestPage() {
         <Stack direction="row" spacing={2}>
           <Select
             size="small"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
             sx={styles.selectFilter}
           >
-            {statusOptions.map((opt) => (
+            {['Newest List', 'Oldest List'].map((opt) => (
               <MenuItem key={opt} value={opt}>
                 {opt}
               </MenuItem>
@@ -265,7 +260,7 @@ export default function ReviewTestPage() {
               sx={{ ...styles.switchButton, ...(!isMine && styles.switchActive) }}
               onClick={() => {
                 setIsMine(false);
-                setStatusFilter('All Status');
+                setSortBy('Newest List');
               }}
             >
               Waiting for Review
@@ -275,7 +270,7 @@ export default function ReviewTestPage() {
               sx={{ ...styles.switchButton, ...(isMine && styles.switchActive) }}
               onClick={() => {
                 setIsMine(true);
-                setStatusFilter('All Status');
+                setSortBy('Newest List');
               }}
             >
               My List Tests
@@ -332,13 +327,31 @@ export default function ReviewTestPage() {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Button
-                        size="small"
-                        variant="contained"
-                        color={item.status === 'I' ? 'primary' : 'inherit'}
-                      >
-                        {item.status === 'I' ? 'Review' : 'Detail'}
-                      </Button>
+                      {isMine ? (
+                        // case 1: (My List Tests)
+                        <Stack direction="row" spacing={1}>
+                          <Button
+                            size="small"
+                            variant="contained"
+                            color="warning"
+                            onClick={() => router.push(`/teacher/ViewFeedback/${item.id}`)}
+                          >
+                            View Feedback
+                          </Button>
+                        </Stack>
+                      ) : (
+                        // case 2: (Tests I Need to Review)
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color={item.status === 'I' ? 'primary' : 'inherit'}
+                          onClick={() => {
+                            router.push(`/teacher/ReviewTest/${item.id}`); // Review Page
+                          }}
+                        >
+                          {item.status === 'I' ? 'Review Now' : 'Detail'}
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
@@ -359,19 +372,40 @@ export default function ReviewTestPage() {
       {/* Pagination Info */}
       {totalPages > 1 && (
         <Box sx={styles.paginationContainer}>
+          {/* Back button */}
           <IconButton disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
             <ChevronLeft />
           </IconButton>
-          {[...Array(totalPages)].map((_, i) => (
-            <Button
-              key={i}
-              variant={currentPage === i + 1 ? 'contained' : 'text'}
-              onClick={() => setCurrentPage(i + 1)}
-              sx={{ minWidth: 40, mx: 0.5 }}
-            >
-              {i + 1}
-            </Button>
-          ))}
+
+          {/* Pagination */}
+          {getPaginationRange(currentPage, totalPages).map((page, i) => {
+            if (page === '...') {
+              return (
+                <Typography key={`dots-${i}`} sx={{ mx: 1, color: 'text.secondary' }}>
+                  ...
+                </Typography>
+              );
+            }
+
+            return (
+              <Button
+                key={page}
+                variant={currentPage === page ? 'contained' : 'text'}
+                onClick={() => setCurrentPage(page)}
+                sx={{
+                  minWidth: 40,
+                  height: 40,
+                  mx: 0.5,
+                  borderRadius: '8px',
+                  fontWeight: currentPage === page ? 700 : 400,
+                }}
+              >
+                {page}
+              </Button>
+            );
+          })}
+
+          {/* Next button */}
           <IconButton
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage((p) => p + 1)}
