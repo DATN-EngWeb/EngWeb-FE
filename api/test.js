@@ -152,22 +152,12 @@ export const submitProductiveTest = async ({ testId, data, token }) => {
   return handleResponse(response);
 };
 
-export const getListTest = async (token, isTeacher = false, status = null) => {
-  const params = new URLSearchParams();
-
-  if (isTeacher) params.append('mine', 'true');
-  if (status) params.append('status', status);
-
-  const queryString = params.toString() ? `?${params.toString()}` : '';
-  const url = `${TESTS_BASE_URL}/overview${queryString}`;
-
-  const response = await fetch(url, {
-    method: 'GET',
+export const getListTest = async (token, params = {}) => {
+  const query = new URLSearchParams(params).toString();
+  const response = await fetch(`${TESTS_BASE_URL}/overview?${query}`, {
     headers: {
-      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
   });
-
   return handleResponse(response);
 };

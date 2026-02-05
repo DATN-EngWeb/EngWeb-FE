@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { getListTest } from '../../api/test';
 import Link from 'next/link';
 import TestCard from '../TestCard.jsx';
 import {
@@ -12,6 +13,7 @@ import {
   Select,
   Button,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import {
   MenuBook as LibraryIcon,
@@ -23,6 +25,8 @@ import {
   ChevronRight,
 } from '@mui/icons-material';
 import { TeacherHomepageStyles as styles } from '../../styles/Teacher/TeacherHomepageStyles.js';
+
+const PAGE_SIZE = 8;
 
 const StatCard = ({ icon, value, variant }) => (
   <Box sx={styles.statBadge(variant)}>
@@ -47,101 +51,79 @@ export default function TeacherHome() {
   const [sortBy, setSortBy] = useState('Newest List');
   const [currentPage, setCurrentPage] = useState(1);
 
-  const mockTests = [
-    {
-      id: 1,
-      title: 'Writing Test Name',
-      description: 'Short quiz to evaluate your understanding of basic concepts',
-      skill: 'Writing',
-      date: '2024-01-15',
-      submissions: 24,
-      format: 'Essay',
-      level: 'A1',
-    },
-    {
-      id: 2,
-      title: 'Speaking Test Name',
-      description: 'Short quiz to evaluate your understanding of basic concepts',
-      skill: 'Speaking',
-      date: '2024-01-15',
-      submissions: 24,
-      format: 'Individual speaking',
-      level: 'A2',
-    },
-    {
-      id: 3,
-      title: 'Listening Test Name',
-      description: 'Short quiz to evaluate your understanding of basic concepts',
-      skill: 'Listening',
-      date: '2024-01-15',
-      submissions: 24,
-      level: 'B2',
-    },
-    {
-      id: 4,
-      title: 'Reading Test Name',
-      description: 'Short quiz to evaluate your understanding of basic concepts',
-      skill: 'Reading',
-      date: '2024-01-15',
-      submissions: 24,
-      level: 'B1',
-    },
-    {
-      id: 5,
-      title: 'Listening Test Name',
-      description: 'Short quiz to evaluate your understanding of basic concepts',
-      skill: 'Listening',
-      date: '2024-01-15',
-      submissions: 24,
-      level: 'B2',
-    },
-    {
-      id: 6,
-      title: 'Writing Test Name',
-      description: 'Short quiz to evaluate your understanding of basic concepts',
-      skill: 'Writing',
-      date: '2024-01-15',
-      submissions: 24,
-      format: 'Translate',
-      level: 'A2',
-    },
-  ];
+  const [mounted, setMounted] = useState(false);
 
-  const filteredAndSortedTests = useMemo(() => {
-    let result = [...mockTests];
+  const [tests, setTests] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-    if (searchQuery) {
-      result = result.filter((test) =>
-        test.title.toLowerCase().includes(searchQuery.toLowerCase()),
-      );
+  const skillMap = useMemo(
+    () => ({
+      Reading: 'R',
+      Listening: 'L',
+      Speaking: 'S',
+      Writing: 'W',
+    }),
+    [],
+  );
+
+  const orderingMap = useMemo(
+    () => ({
+      'Newest List': '-created_at',
+      'Oldest List': 'created_at',
+      'Most Submissions': '-submissions',
+    }),
+    [],
+  );
+
+  // 3. Fetch data from Server
+  const fetchTests = useCallback(async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+
+      const params = {
+        page: currentPage,
+        page_size: PAGE_SIZE,
+        mine: true,
+      };
+
+      if (searchQuery) params.search = searchQuery;
+      if (levelFilter !== 'All Levels') params.level = levelFilter;
+      if (skillFilter !== 'All Skills') params.skill = skillMap[skillFilter];
+
+      // Get ordering value from map, use default if not found
+      params.ordering = orderingMap[sortBy] || '-created_at';
+
+      const result = await getListTest(token, params);
+
+      setTests(result?.results || []);
+      setTotalCount(result?.count || 0);
+    } catch (error) {
+      setTests([]);
+    } finally {
+      setLoading(false);
     }
+  }, [currentPage, searchQuery, levelFilter, skillFilter, sortBy, skillMap, orderingMap]);
 
-    if (skillFilter !== 'All Skills') {
-      result = result.filter((test) => {
-        return test.skill && test.skill.includes(skillFilter);
-      });
-    }
+  // Call fetch when any filter changes
+  useEffect(() => {
+    fetchTests();
+  }, [fetchTests]);
 
-    if (levelFilter !== 'All Levels') {
-      result = result.filter((test) => test.level === levelFilter);
-    }
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-    result.sort((a, b) => {
-      if (sortBy === 'Newest List') {
-        return new Date(b.date) - new Date(a.date);
-      }
-      if (sortBy === 'Oldest List') {
-        return new Date(a.date) - new Date(b.date);
-      }
-      if (sortBy === 'Most Submissions') {
-        return b.submissions - a.submissions;
-      }
-      return 0;
-    });
+  if (!mounted) return null;
 
-    return result;
-  }, [searchQuery, skillFilter, levelFilter, sortBy]);
+  // Reset page 1 when filter changes
+  const handleFilterChange = (setter) => (e) => {
+    setter(e.target.value);
+    setCurrentPage(1);
+  };
 
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
   return (
     <Box component="main" sx={styles.contentWrapper}>
       <Box sx={styles.welcomeHeader}>
@@ -170,7 +152,10 @@ export default function TeacherHome() {
         <TextField
           placeholder="Search by name or topic"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setCurrentPage(1);
+          }}
           sx={styles.searchInput}
           size="small"
           slotProps={{
@@ -187,7 +172,7 @@ export default function TeacherHome() {
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
           <Select
             value={skillFilter}
-            onChange={(e) => setSkillFilter(e.target.value)}
+            onChange={handleFilterChange(setSkillFilter)}
             size="small"
             sx={styles.selectFilter}
             displayEmpty
@@ -212,7 +197,7 @@ export default function TeacherHome() {
 
           <Select
             value={levelFilter}
-            onChange={(e) => setLevelFilter(e.target.value)}
+            onChange={handleFilterChange(setLevelFilter)}
             size="small"
             sx={styles.selectFilter}
             displayEmpty
@@ -227,7 +212,7 @@ export default function TeacherHome() {
 
           <Select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
+            onChange={handleFilterChange(setSortBy)}
             size="small"
             sx={styles.selectFilter}
             displayEmpty
@@ -252,61 +237,43 @@ export default function TeacherHome() {
       </Box>
 
       <Box sx={styles.testGrid}>
-        {filteredAndSortedTests.length > 0 ? (
-          filteredAndSortedTests.map((test) => <TestCard key={test.id} {...test} />)
+        {loading ? (
+          <Box sx={{ gridColumn: '1/-1', textAlign: 'center', py: 10 }}>
+            <CircularProgress color="warning" />
+          </Box>
+        ) : tests.length > 0 ? (
+          tests.map((test) => <TestCard key={test.id} {...test} />)
         ) : (
-          <Typography sx={{ gridColumn: '1/-1', textAlign: 'center', py: 12 }}>
-            No tests found matching your filters.
+          <Typography sx={{ gridColumn: '1/-1', textAlign: 'center', py: 10 }}>
+            No tests found.
           </Typography>
         )}
       </Box>
 
-      <Box sx={styles.paginationContainer}>
-        <IconButton onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}>
-          <ChevronLeft />
-        </IconButton>
-
-        {[1, 2, 3].map((page) => (
-          <Button
-            key={page}
-            variant={currentPage === page ? 'contained' : 'text'}
-            onClick={() => setCurrentPage(page)}
-            sx={{
-              minWidth: 40,
-              height: 40,
-              borderRadius: '8px',
-              bgcolor: currentPage === page ? 'warning.light' : 'transparent',
-              color: 'primary.dark',
-              '&:hover': {
-                bgcolor: currentPage === page ? 'yellow.main' : 'primary.contrastText',
-              },
-            }}
+      {/* Dynamic Pagination Section */}
+      {totalPages > 1 && (
+        <Box sx={styles.paginationContainer}>
+          <IconButton disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
+            <ChevronLeft />
+          </IconButton>
+          {[...Array(totalPages)].map((_, i) => (
+            <Button
+              key={i}
+              variant={currentPage === i + 1 ? 'contained' : 'text'}
+              onClick={() => setCurrentPage(i + 1)}
+              sx={{ minWidth: 40, mx: 0.5 }}
+            >
+              {i + 1}
+            </Button>
+          ))}
+          <IconButton
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage((p) => p + 1)}
           >
-            {page}
-          </Button>
-        ))}
-        <Typography sx={{ color: 'primary.dark', px: 1.5 }}>...</Typography>
-        <Button
-          variant={currentPage === 10 ? 'contained' : 'text'}
-          onClick={() => setCurrentPage(10)}
-          sx={{
-            minWidth: 40,
-            height: 40,
-            borderRadius: '8px',
-            bgcolor: currentPage === 10 ? 'warning.light' : 'transparent',
-            color: 'primary.dark',
-            '&:hover': {
-              bgcolor: currentPage === 10 ? 'yellow.main' : 'primary.contrastText',
-            },
-          }}
-        >
-          10
-        </Button>
-
-        <IconButton onClick={() => setCurrentPage((p) => Math.min(10, p + 1))}>
-          <ChevronRight />
-        </IconButton>
-      </Box>
+            <ChevronRight />
+          </IconButton>
+        </Box>
+      )}
     </Box>
   );
 }

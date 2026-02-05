@@ -139,4 +139,13 @@ export const ReviewTestPageStyles = {
     px: 1.5,
     ml: 0.5,
   },
+
+  paginationContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 1,
+    paddingBottom: '40px',
+    mt: 5,
+  },
 };
