@@ -63,6 +63,20 @@ const theme = createTheme({
     pink: {
       main: '#FF939A',
     },
+    reading: {
+      tabActiveBg: '#FF9F43',
+      tabActiveText: '#5B3110',
+      tabInactiveBg: '#F3F4F6',
+      tabInactiveText: '#6B7280',
+      borderLight: '#E2E8F0',
+      borderGrey: '#E5E7EB',
+      instructionBg: '#FFF5F5',
+      instructionBorder: '#FED7D7',
+      instructionIcon: '#FF6B35',
+      contentBg: '#F5F5F7',
+      questionNumberBg: '#1A202C',
+      questionNumberText: '#FFFFFF',
+    },
   },
   typography: {
     fontFamily:
