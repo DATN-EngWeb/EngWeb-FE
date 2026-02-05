@@ -69,19 +69,13 @@ export const getPresignedUrl = async (
   return handleResponse(response);
 };
 
-export const uploadToObjectStorage = async ({ url, fields, file }) => {
-  const formData = new FormData();
-  const parsedFields = typeof fields === 'string' ? JSON.parse(fields) : fields || {};
-
-  Object.entries(parsedFields).forEach(([key, value]) => {
-    formData.append(key, value);
-  });
-
-  formData.append('file', file);
-
+export const uploadToObjectStorage = async ({ url, mimeType, file }) => {
   const response = await fetch(url, {
-    method: 'POST',
-    body: formData,
+    method: 'PUT',
+    headers: {
+      'Content-Type': mimeType,
+    },
+    body: file,
   });
 
   if (!response.ok) {
@@ -126,6 +120,22 @@ export const submitTestParts = async ({ testId, parts, token }) => {
   return handleResponse(response);
 };
 
+export const updateTestParts = async ({ testId, basicInfo, receptiveTestData, token }) => {
+  const response = await fetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      ...(basicInfo && basicInfo),
+      receptive_test: receptiveTestData,
+    }),
+  });
+
+  return handleResponse(response);
+};
+
 export async function getRecepiveTestDetails(testId, token) {
   const response = await fetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
     method: 'GET',
@@ -147,8 +157,7 @@ export const fetchHtmlContent = async (url) => {
     const response = await fetch(url);
     if (!response.ok) throw new Error('Fetch failed');
     return await response.text();
-  } catch (error) {
-    console.error(`Error when loading content from: ${url}`, error);
+  } catch (_error) {
     return '';
   }
 };

@@ -25,6 +25,7 @@ import {
   collectFiles,
   transformPartsForSubmitWithUrls,
   transformApiResponseToParts,
+  generatePayloadWithActions,
 } from '../../utils/testTransformers';
 import {
   createTest,
@@ -32,6 +33,7 @@ import {
   uploadToObjectStorage,
   confirmUpload,
   submitTestParts,
+  updateTestParts,
   getRecepiveTestDetails,
   fetchHtmlContent,
 } from '../../api/test';
@@ -63,25 +65,37 @@ const PART_TYPES = [
   },
 ];
 
-export default function ListeningTestEditor() {
+export default function ListeningTestEditor({ testId: propTestId }) {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const testId = searchParams.get('testId');
+  const queryTestId = searchParams.get('testId');
+  const testId = propTestId || queryTestId;
+  const isEditMode = !!testId;
+
   const [basicInfo, setBasicInfo] = useState({
     testName: '',
     level: '',
     time: '',
     description: '',
   });
+  const [originalBasicInfo, setOriginalBasicInfo] = useState({
+    testName: '',
+    level: '',
+    time: '',
+    description: '',
+  });
   const [parts, setParts] = useState([]);
+  const [originalParts, setOriginalParts] = useState([]);
   const [errors, setErrors] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
   const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(!!testId);
+  const [isLoading, setIsLoading] = useState(isEditMode);
   const [editingTestId, setEditingTestId] = useState(testId || null);
 
   useEffect(() => {
-    if (!testId) return;
+    if (!isEditMode) {
+      return;
+    }
 
     const loadTestData = async () => {
       try {
@@ -93,26 +107,16 @@ export default function ListeningTestEditor() {
         }
 
         const data = await getRecepiveTestDetails(testId, token);
-
-        if (data.status !== 'D') {
-          setSnackbar({
-            open: true,
-            message: 'Only draft tests can be edited',
-            severity: 'error',
-          });
-          setTimeout(() => router.push('/teacher/upload-test/listening'), 1500);
-          setIsLoading(false);
-          return;
-        }
-
         setEditingTestId(data.id);
 
-        setBasicInfo({
+        const loadedBasicInfo = {
           testName: data.title || '',
           level: data.level || '',
           time: data.time?.toString() || '',
           description: data.description || '',
-        });
+        };
+        setBasicInfo(loadedBasicInfo);
+        setOriginalBasicInfo(JSON.parse(JSON.stringify(loadedBasicInfo)));
 
         let transformedParts = transformApiResponseToParts(data);
 
@@ -130,7 +134,10 @@ export default function ListeningTestEditor() {
           }),
         );
 
+        transformedParts.sort((a, b) => (a.order || 0) - (b.order || 0));
+
         setParts(transformedParts);
+        setOriginalParts(JSON.parse(JSON.stringify(transformedParts)));
 
         setSnackbar({
           open: true,
@@ -138,7 +145,6 @@ export default function ListeningTestEditor() {
           severity: 'success',
         });
       } catch (error) {
-        console.error('Error loading test:', error);
         setSnackbar({
           open: true,
           message: `Failed to load test: ${error.message}`,
@@ -157,13 +163,21 @@ export default function ListeningTestEditor() {
   };
 
   const handleAddPart = () => {
-    setParts((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        type: null,
-      },
-    ]);
+    setParts((prev) => {
+      const maxOrder = prev.length > 0 ? Math.max(...prev.map((p) => p.order || 0)) : 0;
+      const newOrder = maxOrder + 1;
+
+      return [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          type: null,
+          order: newOrder,
+          questions: [],
+          answers: [],
+        },
+      ];
+    });
   };
 
   const handleCancelPart = (partId) => {
@@ -171,15 +185,18 @@ export default function ListeningTestEditor() {
   };
 
   const handleSelectPartType = (partId, type) => {
-    setParts((prev) =>
-      prev.map((p) => {
+    setParts((prev) => {
+      const partIndex = prev.findIndex((p) => p.id === partId);
+      return prev.map((p, idx) => {
         if (p.id !== partId) return p;
+
+        const newPart = { ...p, type, order: partIndex + 1 };
         if (type === 'multichoice_texts') {
-          return { ...p, type, audioFormat: p.audioFormat || 'onetoone' };
+          newPart.audioFormat = p.audioFormat || 'onetoone';
         }
-        return { ...p, type };
-      }),
-    );
+        return newPart;
+      });
+    });
   };
 
   const handleSubmit = async (status) => {
@@ -216,7 +233,8 @@ export default function ListeningTestEditor() {
         };
 
         const response = await createTest(basicInfoData, token);
-        const testId = response.id;
+        finalTestId = response.id;
+        setEditingTestId(response.id);
       }
 
       const files = collectFiles(parts);
@@ -228,7 +246,7 @@ export default function ListeningTestEditor() {
             fileSize: f.fileSize ?? f.file?.size,
             mimeType: f.mimeType ?? f.file?.type,
             category: 'tests',
-            testId,
+            testId: finalTestId,
             part: f.partOrder,
           },
           token,
@@ -236,7 +254,7 @@ export default function ListeningTestEditor() {
 
         const uploadResult = await uploadToObjectStorage({
           url: presign.url,
-          fields: presign.fields,
+          mimeType: f.mimeType ?? f.file?.type,
           file: f.file,
         });
         const confirm = await confirmUpload(
@@ -252,16 +270,47 @@ export default function ListeningTestEditor() {
         filenameToUrl[f.filename] = confirm.file_url || presign.url;
       }
 
-      const preparedParts = transformPartsForSubmitWithUrls(parts, filenameToUrl);
-      await submitTestParts({ testId: finalTestId, parts: preparedParts, token });
+      const partsWithOrder = parts.map((p, idx) => ({
+        ...p,
+        order: p.order || idx + 1,
+      }));
+
+      if (isEditMode && originalParts.length > 0) {
+        const partsWithActions = generatePayloadWithActions(
+          originalParts,
+          partsWithOrder,
+          filenameToUrl,
+        );
+
+        const basicInfoData = {
+          title: basicInfo.testName,
+          level: basicInfo.level,
+          time: parseInt(basicInfo.time),
+          description: basicInfo.description,
+          status: status === 'Draft' ? 'D' : status === 'In review' ? 'I' : 'P',
+        };
+
+        await updateTestParts({
+          testId: finalTestId,
+          basicInfo: basicInfoData,
+          receptiveTestData: { receptive_parts: partsWithActions },
+          token,
+        });
+      } else {
+        const preparedParts = transformPartsForSubmitWithUrls(partsWithOrder, filenameToUrl);
+        await submitTestParts({ testId: finalTestId, parts: preparedParts, token });
+      }
 
       setSnackbar({ open: true, message: `Test ${status} successfully!`, severity: 'success' });
 
       setBasicInfo({ testName: '', level: '', time: '', description: '' });
+      setOriginalBasicInfo({ testName: '', level: '', time: '', description: '' });
       setParts([]);
+      setOriginalParts([]);
       setErrors(null);
-      setEditingTestId(null);
       setIsSaving(false);
+
+      router.push('/teacher/upload-test/listening');
     } catch (error) {
       setSnackbar({ open: true, message: `Submit failed: ${error.message}`, severity: 'error' });
       setIsSaving(false);
@@ -270,92 +319,120 @@ export default function ListeningTestEditor() {
 
   return (
     <Box sx={container}>
-      <Box sx={{ filter: isSaving ? 'blur' : 'none' }}>
-        <TestEditorHeader
-          title="Create New Listening Test"
-          description="Fill in the details below to create a new listening test for your students"
-        />
-        <TestEditorActions
-          onPreview={() => {}}
-          onSendReview={() => handleSubmit('In review')}
-          onSaveDraft={() => handleSubmit('Draft')}
-          onPublish={() => handleSubmit('Published')}
-        />
-        <Box sx={contentWrap}>
-          <Box sx={{ px: { xs: 0, lg: '200px' } }}>
-            <Typography sx={{ typography: 'h4', color: 'primary.main', marginBottom: '20px' }}>
-              Test editor
-            </Typography>
-            <BasicInformation
-              {...basicInfo}
-              onChange={handleBasicInfoChange}
-              errors={errors?.basicInfo}
-            />
+      <TestEditorHeader
+        title={isEditMode ? 'Edit Listening Test' : 'Create New Listening Test'}
+        description={
+          isEditMode
+            ? 'Update the test details below'
+            : 'Fill in the details below to create a new listening test for your students'
+        }
+      />
+      <TestEditorActions
+        onPreview={() => {}}
+        onSendReview={() => handleSubmit('In review')}
+        onSaveDraft={() => handleSubmit('Draft')}
+        onPublish={() => handleSubmit('Published')}
+      />
 
-            {parts.map((part, index) => (
-              <Paper key={part.id} sx={panelPaper}>
-                {!part.type ? (
-                  <SelectPartType
-                    partTypes={PART_TYPES}
-                    onSelectType={(typeId) => handleSelectPartType(part.id, typeId)}
-                    onCancel={() => handleCancelPart(part.id)}
-                  />
-                ) : (
-                  <>
-                    {part.type === 'multichoice_images' && (
-                      <MultiChoiceImagePart
-                        index={index}
-                        part={part}
-                        onChange={(updatedPart) =>
-                          setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
-                        }
-                        onDelete={() => handleCancelPart(part.id)}
+      {isLoading ? (
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '50vh',
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      ) : (
+        <Box sx={{ filter: isSaving ? 'blur' : 'none' }}>
+          <Box sx={contentWrap}>
+            <Box sx={{ px: { xs: 0, lg: '200px' } }}>
+              <Typography sx={{ typography: 'h4', color: 'primary.main', marginBottom: '20px' }}>
+                Test editor
+              </Typography>
+              <BasicInformation
+                {...basicInfo}
+                onChange={handleBasicInfoChange}
+                errors={errors?.basicInfo}
+              />
+
+              {parts
+                .sort((a, b) => (a.order || 0) - (b.order || 0))
+                .map((part, index) => (
+                  <Paper key={part.id} sx={panelPaper}>
+                    {!part.type ? (
+                      <SelectPartType
+                        partTypes={PART_TYPES}
+                        onSelectType={(typeId) => handleSelectPartType(part.id, typeId)}
+                        onCancel={() => handleCancelPart(part.id)}
                       />
-                    )}
+                    ) : (
+                      <>
+                        {part.type === 'multichoice_images' && (
+                          <MultiChoiceImagePart
+                            index={index}
+                            part={part}
+                            onChange={(updatedPart) =>
+                              setParts((prev) =>
+                                prev.map((p) => (p.id === part.id ? updatedPart : p)),
+                              )
+                            }
+                            onDelete={() => handleCancelPart(part.id)}
+                          />
+                        )}
 
-                    {part.type === 'multichoice_texts' && (
-                      <MultiChoiceTextPart
-                        index={index}
-                        part={part}
-                        onChange={(updatedPart) =>
-                          setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
-                        }
-                        onDelete={() => handleCancelPart(part.id)}
-                      />
-                    )}
+                        {part.type === 'multichoice_texts' && (
+                          <MultiChoiceTextPart
+                            index={index}
+                            part={part}
+                            onChange={(updatedPart) =>
+                              setParts((prev) =>
+                                prev.map((p) => (p.id === part.id ? updatedPart : p)),
+                              )
+                            }
+                            onDelete={() => handleCancelPart(part.id)}
+                          />
+                        )}
 
-                    {part.type === 'fill_in_the_blanks' && (
-                      <FillInTheBlankPart
-                        index={index}
-                        part={part}
-                        onChange={(updatedPart) =>
-                          setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
-                        }
-                        onDelete={() => handleCancelPart(part.id)}
-                      />
-                    )}
+                        {part.type === 'fill_in_the_blanks' && (
+                          <FillInTheBlankPart
+                            index={index}
+                            part={part}
+                            onChange={(updatedPart) =>
+                              setParts((prev) =>
+                                prev.map((p) => (p.id === part.id ? updatedPart : p)),
+                              )
+                            }
+                            onDelete={() => handleCancelPart(part.id)}
+                          />
+                        )}
 
-                    {part.type === 'matching' && (
-                      <MatchingPart
-                        index={index}
-                        part={part}
-                        onChange={(updatedPart) =>
-                          setParts((prev) => prev.map((p) => (p.id === part.id ? updatedPart : p)))
-                        }
-                        onDelete={() => handleCancelPart(part.id)}
-                      />
+                        {part.type === 'matching' && (
+                          <MatchingPart
+                            index={index}
+                            part={part}
+                            onChange={(updatedPart) =>
+                              setParts((prev) =>
+                                prev.map((p) => (p.id === part.id ? updatedPart : p)),
+                              )
+                            }
+                            onDelete={() => handleCancelPart(part.id)}
+                          />
+                        )}
+                      </>
                     )}
-                  </>
-                )}
-              </Paper>
-            ))}
+                  </Paper>
+                ))}
 
-            <Box sx={addPartBox} onClick={handleAddPart}>
-              + Add new part
+              <Box sx={addPartBox} onClick={handleAddPart}>
+                + Add new part
+              </Box>
             </Box>
           </Box>
         </Box>
-      </Box>
+      )}
 
       <Snackbar
         open={snackbar.open}
@@ -373,7 +450,7 @@ export default function ListeningTestEditor() {
 
       <Backdrop
         sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1000 }}
-        open={isSaving || isLoading}
+        open={isSaving}
       >
         <CircularProgress color="inherit" />
       </Backdrop>
