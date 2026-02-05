@@ -26,7 +26,7 @@ import {
 } from '@mui/icons-material';
 import { TeacherHomepageStyles as styles } from '../../styles/Teacher/TeacherHomepageStyles.js';
 
-const ITEMS_PER_PAGE = 8;
+const PAGE_SIZE = 8;
 
 const StatCard = ({ icon, value, variant }) => (
   <Box sx={styles.statBadge(variant)}>
@@ -52,71 +52,78 @@ export default function TeacherHome() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [mounted, setMounted] = useState(false);
-  const [tests, setTests] = useState([]);
-  const [loading, setLoading] = useState(false);
 
+  const [tests, setTests] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  const skillMap = useMemo(
+    () => ({
+      Reading: 'R',
+      Listening: 'L',
+      Speaking: 'S',
+      Writing: 'W',
+    }),
+    [],
+  );
+
+  const orderingMap = useMemo(
+    () => ({
+      'Newest List': '-created_at',
+      'Oldest List': 'created_at',
+      'Most Submissions': '-submissions',
+    }),
+    [],
+  );
+
+  // 3. Fetch data from Server
   const fetchTests = useCallback(async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const result = await getListTest(token, true, null);
+
+      const params = {
+        page: currentPage,
+        page_size: PAGE_SIZE,
+        mine: true,
+      };
+
+      if (searchQuery) params.search = searchQuery;
+      if (levelFilter !== 'All Levels') params.level = levelFilter;
+      if (skillFilter !== 'All Skills') params.skill = skillMap[skillFilter];
+
+      // Get ordering value from map, use default if not found
+      params.ordering = orderingMap[sortBy] || '-created_at';
+
+      const result = await getListTest(token, params);
+
       setTests(result?.results || []);
+      setTotalCount(result?.count || 0);
     } catch (error) {
-      console.error('Lỗi khi tải danh sách bài test:', error);
       setTests([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage, searchQuery, levelFilter, skillFilter, sortBy, skillMap, orderingMap]);
 
+  // Call fetch when any filter changes
   useEffect(() => {
     fetchTests();
   }, [fetchTests]);
 
-  const filteredAndSortedTests = useMemo(() => {
-    let result = [...tests];
-
-    // Filter theo tìm kiếm
-    if (searchQuery) {
-      result = result.filter((test) =>
-        test.title?.toLowerCase().includes(searchQuery.toLowerCase()),
-      );
-    }
-
-    // Filter theo kỹ năng
-    if (skillFilter !== 'All Skills') {
-      result = result.filter((test) => test.skill?.includes(skillFilter));
-    }
-
-    // Filter theo cấp độ
-    if (levelFilter !== 'All Levels') {
-      result = result.filter((test) => test.level === levelFilter);
-    }
-
-    // Sắp xếp
-    result.sort((a, b) => {
-      if (sortBy === 'Newest List') return new Date(b.date || 0) - new Date(a.date || 0);
-      if (sortBy === 'Oldest List') return new Date(a.date || 0) - new Date(b.date || 0);
-      if (sortBy === 'Most Submissions') return (b.submissions || 0) - (a.submissions || 0);
-      return 0;
-    });
-
-    return result;
-  }, [tests, searchQuery, skillFilter, levelFilter, sortBy]);
-
-  // 3. Logic Phân trang (Cắt mảng dữ liệu)
-  const totalPages = Math.ceil(filteredAndSortedTests.length / ITEMS_PER_PAGE);
-
-  const paginatedTests = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredAndSortedTests.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredAndSortedTests, currentPage]);
-
-  // Reset về trang 1 khi thay đổi bộ lọc
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, skillFilter, levelFilter, sortBy]);
+    setMounted(true);
+  }, []);
 
+  if (!mounted) return null;
+
+  // Reset page 1 when filter changes
+  const handleFilterChange = (setter) => (e) => {
+    setter(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
   return (
     <Box component="main" sx={styles.contentWrapper}>
       <Box sx={styles.welcomeHeader}>
@@ -145,7 +152,10 @@ export default function TeacherHome() {
         <TextField
           placeholder="Search by name or topic"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setCurrentPage(1);
+          }}
           sx={styles.searchInput}
           size="small"
           slotProps={{
@@ -162,7 +172,7 @@ export default function TeacherHome() {
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
           <Select
             value={skillFilter}
-            onChange={(e) => setSkillFilter(e.target.value)}
+            onChange={handleFilterChange(setSkillFilter)}
             size="small"
             sx={styles.selectFilter}
             displayEmpty
@@ -187,7 +197,7 @@ export default function TeacherHome() {
 
           <Select
             value={levelFilter}
-            onChange={(e) => setLevelFilter(e.target.value)}
+            onChange={handleFilterChange(setLevelFilter)}
             size="small"
             sx={styles.selectFilter}
             displayEmpty
@@ -202,7 +212,7 @@ export default function TeacherHome() {
 
           <Select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
+            onChange={handleFilterChange(setSortBy)}
             size="small"
             sx={styles.selectFilter}
             displayEmpty
@@ -230,13 +240,12 @@ export default function TeacherHome() {
         {loading ? (
           <Box sx={{ gridColumn: '1/-1', textAlign: 'center', py: 10 }}>
             <CircularProgress color="warning" />
-            <Typography sx={{ mt: 2 }}>Loading tests...</Typography>
           </Box>
-        ) : filteredAndSortedTests.length > 0 ? (
-          filteredAndSortedTests.map((test) => <TestCard key={test.id} {...test} />)
+        ) : tests.length > 0 ? (
+          tests.map((test) => <TestCard key={test.id} {...test} />)
         ) : (
-          <Typography sx={{ gridColumn: '1/-1', textAlign: 'center', py: 12 }}>
-            No tests found matching your filters.
+          <Typography sx={{ gridColumn: '1/-1', textAlign: 'center', py: 10 }}>
+            No tests found.
           </Typography>
         )}
       </Box>
@@ -247,31 +256,16 @@ export default function TeacherHome() {
           <IconButton disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
             <ChevronLeft />
           </IconButton>
-
-          {[...Array(totalPages)].map((_, index) => {
-            const pageNum = index + 1;
-            return (
-              <Button
-                key={pageNum}
-                variant={currentPage === pageNum ? 'contained' : 'text'}
-                onClick={() => setCurrentPage(pageNum)}
-                sx={{
-                  minWidth: 40,
-                  height: 40,
-                  borderRadius: '8px',
-                  bgcolor: currentPage === pageNum ? 'warning.light' : 'transparent',
-                  color: 'primary.dark',
-                  mx: 0.5,
-                  '&:hover': {
-                    bgcolor: currentPage === pageNum ? 'yellow.main' : 'rgba(0,0,0,0.04)',
-                  },
-                }}
-              >
-                {pageNum}
-              </Button>
-            );
-          })}
-
+          {[...Array(totalPages)].map((_, i) => (
+            <Button
+              key={i}
+              variant={currentPage === i + 1 ? 'contained' : 'text'}
+              onClick={() => setCurrentPage(i + 1)}
+              sx={{ minWidth: 40, mx: 0.5 }}
+            >
+              {i + 1}
+            </Button>
+          ))}
           <IconButton
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage((p) => p + 1)}
