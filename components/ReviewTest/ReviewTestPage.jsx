@@ -263,7 +263,7 @@ export default function ReviewTestPage() {
                 setSortBy('Newest List');
               }}
             >
-              Waiting for Review
+              Needs My Review
             </Button>
             <Button
               startIcon={<AssignmentIndIcon />}
@@ -273,7 +273,7 @@ export default function ReviewTestPage() {
                 setSortBy('Newest List');
               }}
             >
-              My List Tests
+              My Pending Reviews
             </Button>
           </Stack>
         </Box>

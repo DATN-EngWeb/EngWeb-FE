@@ -135,7 +135,6 @@ export default function TeacherHome() {
       const result = await getListTest(token, params);
 
       setTests(result?.results || []);
-      console.log(result);
       setTotalCount(result?.count || 0);
     } catch (error) {
       setTests([]);

@@ -45,30 +45,28 @@ export default function ProductiveTestEditor({
     <Box sx={{ ...styles.container, display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ filter: isSaving ? 'blur(2px)' : 'none' }}>
         <TestEditorHeader title={title} description="Fill in the details below" />
-        <Box sx={{ px: 3, pb: 2, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-          {isReadOnly ? (
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={onEditClick}
-              sx={{ borderRadius: '12px', textTransform: 'none', px: 4 }}
-            >
-              Edit Test Content
-            </Button>
-          ) : (
-            <>
-              {/* If editing, show the old Actions bar or Save/Cancel buttons */}
-              <TestEditorActions
-                onCancelClick={onCancelClick}
-                onPreview={() => setShowPreview(!showPreview)}
-                isPreviewActive={showPreview}
-                onSaveDraft={() => handleSubmit('Draft')}
-                onSendReview={() => handleSubmit('In review')}
-                onPublish={() => handleSubmit('Published')}
-              />
-            </>
-          )}
-        </Box>
+        {isReadOnly ? (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={onEditClick}
+            sx={{ borderRadius: '12px', textTransform: 'none', px: 4 }}
+          >
+            Edit Test Content
+          </Button>
+        ) : (
+          <>
+            {/* If editing, show the old Actions bar or Save/Cancel buttons */}
+            <TestEditorActions
+              onCancelClick={onCancelClick}
+              onPreview={() => setShowPreview(!showPreview)}
+              isPreviewActive={showPreview}
+              onSaveDraft={() => handleSubmit('Draft')}
+              onSendReview={() => handleSubmit('In review')}
+              onPublish={() => handleSubmit('Published')}
+            />
+          </>
+        )}
       </Box>
       <Box
         sx={{

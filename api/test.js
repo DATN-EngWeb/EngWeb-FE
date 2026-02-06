@@ -155,9 +155,11 @@ export const submitProductiveTest = async ({ testId, data, token }) => {
 export const getListTest = async (token, params = {}) => {
   const query = new URLSearchParams(params).toString();
   const response = await fetch(`${TESTS_BASE_URL}/overview?${query}`, {
+    //method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
     },
+    //cache: 'no-store',
   });
   return handleResponse(response);
 };

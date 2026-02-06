@@ -27,6 +27,7 @@ export default function TestEditorActions({
           {isPreviewActive ? 'Hide Preview' : 'Show Preview'}
         </Button>
       )}
+
       <Box sx={{ display: 'flex', gap: 2 }}>
         {onCancelClick && (
           <Button variant="outlined" startIcon={<CancelIcon />} onClick={onCancelClick}>

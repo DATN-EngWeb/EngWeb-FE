@@ -148,6 +148,8 @@ export default function UpdateWritingTestEditor() {
       if (testData.topics !== origin.topic) productivePayload.topic = testData.topics;
       if (question.suggestion !== origin.suggestion)
         productivePayload.glue_text = question.suggestion;
+      if (parseInt(settings.minWords) !== origin.min_word)
+        productivePayload.min_word = parseInt(settings.minWords);
 
       if (Object.keys(productivePayload).length > 0) {
         updatePayload.productive_test = productivePayload;
