@@ -15,18 +15,31 @@ export const validateBasicInfo = (basicInfo) => {
   return errors;
 };
 
+const getPartScoreMeta = (part) => {
+  const rawScore = part?.score ?? part?.totalScore;
+  const scoreValue = parseFloat(rawScore);
+  return { rawScore, scoreValue };
+};
+
 // Validate MultiChoiceImagePart
 export const validateMultiChoiceImagePart = (part) => {
   const errors = { questions: {} };
 
-  const scoreValue = parseFloat(part.totalScore);
-  if (!part.totalScore || isNaN(scoreValue) || scoreValue === 0) {
+  const { rawScore, scoreValue } = getPartScoreMeta(part);
+  if (
+    rawScore === undefined ||
+    rawScore === null ||
+    rawScore === '' ||
+    isNaN(scoreValue) ||
+    scoreValue === 0
+  ) {
     errors.totalScore = true;
   } else if (scoreValue < 0) {
     errors.totalScoreNegative = true;
   }
   if (!part.description?.trim()) errors.description = true;
-  if (!part.audio?.file) errors.audio = true;
+  const hasAudio = part.audio?.file || part.audio?.url || part.audio?.name;
+  if (!hasAudio) errors.audio = true;
 
   if (!part.questions || part.questions.length === 0) {
     errors.noQuestions = true;
@@ -44,7 +57,8 @@ export const validateMultiChoiceImagePart = (part) => {
     } else {
       qErrors.answerImages = [];
       q.answers.forEach((ans) => {
-        qErrors.answerImages.push(!ans.image?.file);
+        const hasImage = ans.image?.file || ans.image?.url || ans.image?.name;
+        qErrors.answerImages.push(!hasImage);
       });
       if (!qErrors.answerImages.some(Boolean)) delete qErrors.answerImages;
     }
@@ -66,8 +80,14 @@ export const validateMultiChoiceImagePart = (part) => {
 export const validateMultiChoiceTextPart = (part) => {
   const errors = { questions: {} };
 
-  const scoreValue = parseFloat(part.totalScore);
-  if (!part.totalScore || isNaN(scoreValue) || scoreValue === 0) {
+  const { rawScore, scoreValue } = getPartScoreMeta(part);
+  if (
+    rawScore === undefined ||
+    rawScore === null ||
+    rawScore === '' ||
+    isNaN(scoreValue) ||
+    scoreValue === 0
+  ) {
     errors.totalScore = true;
   } else if (scoreValue < 0) {
     errors.totalScoreNegative = true;
@@ -79,8 +99,9 @@ export const validateMultiChoiceTextPart = (part) => {
   }
 
   // Format C: check part-level audio
-  if (part.audioFormat === 'onetomany' && !part.audio?.file) {
-    errors.partAudio = true;
+  if (part.audioFormat === 'onetomany') {
+    const hasAudio = part.audio?.file || part.audio?.url || part.audio?.name;
+    if (!hasAudio) errors.partAudio = true;
   }
 
   part.questions?.forEach((q, qIdx) => {
@@ -90,7 +111,10 @@ export const validateMultiChoiceTextPart = (part) => {
     if (!q.explanation?.trim()) qErrors.explanation = true;
 
     // Format B: check question-level audio
-    if (part.audioFormat === 'onetoone' && !q.audio?.file) qErrors.audio = true;
+    if (part.audioFormat === 'onetoone') {
+      const hasAudio = q.audio?.file || q.audio?.url || q.audio?.name;
+      if (!hasAudio) qErrors.audio = true;
+    }
 
     if (q.correctIndex === null || q.correctIndex === undefined) qErrors.correctIndex = true;
 
@@ -121,13 +145,20 @@ export const validateMultiChoiceTextPart = (part) => {
 export const validateFillInTheBlankPart = (part) => {
   const errors = {};
 
-  const scoreValue = parseFloat(part.totalScore);
-  if (!part.totalScore || isNaN(scoreValue) || scoreValue === 0) {
+  const { rawScore, scoreValue } = getPartScoreMeta(part);
+  if (
+    rawScore === undefined ||
+    rawScore === null ||
+    rawScore === '' ||
+    isNaN(scoreValue) ||
+    scoreValue === 0
+  ) {
     errors.totalScore = true;
   } else if (scoreValue < 0) {
     errors.totalScoreNegative = true;
   }
-  if (!part.audio?.file) errors.audio = true;
+  const hasAudio = part.audio?.file || part.audio?.url || part.audio?.name;
+  if (!hasAudio) errors.audio = true;
   if (!part.description?.trim()) errors.description = true;
 
   if (!part.answers || part.answers.length === 0) {
@@ -150,13 +181,20 @@ export const validateFillInTheBlankPart = (part) => {
 export const validateMatchingPart = (part) => {
   const errors = {};
 
-  const scoreValue = parseFloat(part.totalScore);
-  if (!part.totalScore || isNaN(scoreValue) || scoreValue === 0) {
+  const { rawScore, scoreValue } = getPartScoreMeta(part);
+  if (
+    rawScore === undefined ||
+    rawScore === null ||
+    rawScore === '' ||
+    isNaN(scoreValue) ||
+    scoreValue === 0
+  ) {
     errors.totalScore = true;
   } else if (scoreValue < 0) {
     errors.totalScoreNegative = true;
   }
-  if (!part.audio?.file) errors.audio = true;
+  const hasAudio = part.audio?.file || part.audio?.url || part.audio?.name;
+  if (!hasAudio) errors.audio = true;
   if (!part.description?.trim()) errors.description = true;
 
   if (!part.questions || part.questions.length === 0) {

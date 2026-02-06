@@ -8,7 +8,7 @@ export default function TeacherLayout({ children }) {
   return (
     <>
       <Header />
-      {children}
+      <main style={{ minHeight: '60vh' }}>{children}</main>
       <Footer />
     </>
   );

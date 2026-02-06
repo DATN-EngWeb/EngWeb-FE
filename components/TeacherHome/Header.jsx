@@ -72,12 +72,12 @@ export default function TeacherHeader() {
             <Link href="/teacher" style={logoLinkStyles}>
               <Image src={Logo} alt="NENS" width={32} height={24} />
             </Link>
-            <Link href="/teacher/my-tests" style={navLinkStyles}>
+            <Link href="/teacher" style={navLinkStyles}>
               <Button color="inherit" sx={navButtonStyles}>
                 My List Test
               </Button>
             </Link>
-            <Link href="/teacher/review-tests" style={navLinkStyles}>
+            <Link href="/teacher/review-test" style={navLinkStyles}>
               <Button color="inherit" sx={navButtonStyles}>
                 List Review Test
               </Button>
