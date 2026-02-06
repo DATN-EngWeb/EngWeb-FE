@@ -15,6 +15,19 @@ export default function AudioUploader({ value, onChange, accept, isReadOnly = fa
     });
   };
 
+  const getDisplayName = () => {
+    if (value?.file?.name) {
+      return value.file.name;
+    }
+    if (value?.url && typeof value.url === 'string') {
+      const parts = value.url.split('/');
+      return parts[parts.length - 1] || 'Drag and drop audio file here';
+    }
+    return 'Drag and drop audio file here';
+  };
+
+  const shouldShowCaption = !value?.file?.name && !value?.url;
+
   return (
     <>
       <input
@@ -54,8 +67,8 @@ export default function AudioUploader({ value, onChange, accept, isReadOnly = fa
         }}
       >
         <UploadFileIcon sx={{ fontSize: 40, mb: 1 }} />
-        <Typography>{value?.file?.name ?? 'Drag and drop audio file here'}</Typography>
-        {!value?.file?.name && <Typography variant="caption">Supports MP3, M4A</Typography>}
+        <Typography>{getDisplayName()}</Typography>
+        {shouldShowCaption && <Typography variant="caption">Supports MP3, M4A</Typography>}
 
         {value?.url && (
           <Box mt={2}>
