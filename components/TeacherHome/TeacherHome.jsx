@@ -26,7 +26,7 @@ import {
 } from '@mui/icons-material';
 import { TeacherHomepageStyles as styles } from '../../styles/Teacher/TeacherHomepageStyles.js';
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 9;
 
 const StatCard = ({ icon, value, variant }) => (
   <Box sx={styles.statBadge(variant)}>
@@ -47,6 +47,7 @@ const StatCard = ({ icon, value, variant }) => (
 export default function TeacherHome() {
   const [searchQuery, setSearchQuery] = useState('');
   const [skillFilter, setSkillFilter] = useState('All Skills');
+  const [statusFilter, setStatusFilter] = useState('All Status');
   const [levelFilter, setLevelFilter] = useState('All Levels');
   const [sortBy, setSortBy] = useState('Newest List');
   const [currentPage, setCurrentPage] = useState(1);
@@ -67,6 +68,15 @@ export default function TeacherHome() {
     [],
   );
 
+  const StatusMap = useMemo(
+    () => ({
+      Publish: 'P',
+      'In Review': 'I',
+      Draft: 'D',
+    }),
+    [],
+  );
+
   const orderingMap = useMemo(
     () => ({
       'Newest List': '-created_at',
@@ -75,6 +85,33 @@ export default function TeacherHome() {
     }),
     [],
   );
+
+  const getPaginationRange = (current, total) => {
+    const delta = 1;
+    const range = [];
+    const rangeWithDots = [];
+    let l;
+
+    for (let i = 1; i <= total; i++) {
+      if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) {
+        range.push(i);
+      }
+    }
+
+    for (let i of range) {
+      if (l) {
+        if (i - l === 2) {
+          rangeWithDots.push(l + 1);
+        } else if (i - l !== 1) {
+          rangeWithDots.push('...');
+        }
+      }
+      rangeWithDots.push(i);
+      l = i;
+    }
+
+    return rangeWithDots;
+  };
 
   // 3. Fetch data from Server
   const fetchTests = useCallback(async () => {
@@ -91,7 +128,7 @@ export default function TeacherHome() {
       if (searchQuery) params.search = searchQuery;
       if (levelFilter !== 'All Levels') params.level = levelFilter;
       if (skillFilter !== 'All Skills') params.skill = skillMap[skillFilter];
-
+      if (statusFilter !== 'All Status') params.status = StatusMap[statusFilter];
       // Get ordering value from map, use default if not found
       params.ordering = orderingMap[sortBy] || '-created_at';
 
@@ -104,7 +141,17 @@ export default function TeacherHome() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, searchQuery, levelFilter, skillFilter, sortBy, skillMap, orderingMap]);
+  }, [
+    currentPage,
+    searchQuery,
+    levelFilter,
+    skillFilter,
+    statusFilter,
+    sortBy,
+    skillMap,
+    StatusMap,
+    orderingMap,
+  ]);
 
   // Call fetch when any filter changes
   useEffect(() => {
@@ -148,6 +195,14 @@ export default function TeacherHome() {
         </Box>
       </Box>
 
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Link href="/teacher/upload-test" passHref>
+          <Button variant="contained" startIcon={<PlusIcon />} sx={styles.createBtn}>
+            Create Test
+          </Button>
+        </Link>
+      </Box>
+
       <Box sx={styles.filterSection}>
         <TextField
           placeholder="Search by name or topic"
@@ -170,6 +225,30 @@ export default function TeacherHome() {
         />
 
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
+          <Select
+            value={statusFilter}
+            onChange={handleFilterChange(setStatusFilter)}
+            size="small"
+            sx={styles.selectFilter}
+            displayEmpty
+            renderValue={(value) =>
+              value === 'All Status' ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <FilterIcon fontSize="small" /> All Status
+                </Box>
+              ) : (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <FilterIcon fontSize="small" /> {value}
+                </Box>
+              )
+            }
+          >
+            <MenuItem value="All Status">All Status</MenuItem>
+            <MenuItem value="Publish">Publish</MenuItem>
+            <MenuItem value="In Review">In Review</MenuItem>
+            <MenuItem value="Draft">Draft</MenuItem>
+          </Select>
+
           <Select
             value={skillFilter}
             onChange={handleFilterChange(setSkillFilter)}
@@ -228,11 +307,6 @@ export default function TeacherHome() {
             <MenuItem value="Oldest List">Oldest List</MenuItem>
             <MenuItem value="Most Submissions">Most Submissions</MenuItem>
           </Select>
-          <Link href="/teacher/upload-test" passHref>
-            <Button variant="contained" startIcon={<PlusIcon />} sx={styles.createBtn}>
-              Create Test
-            </Button>
-          </Link>
         </Box>
       </Box>
 
@@ -253,19 +327,40 @@ export default function TeacherHome() {
       {/* Dynamic Pagination Section */}
       {totalPages > 1 && (
         <Box sx={styles.paginationContainer}>
+          {/* Back */}
           <IconButton disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
             <ChevronLeft />
           </IconButton>
-          {[...Array(totalPages)].map((_, i) => (
-            <Button
-              key={i}
-              variant={currentPage === i + 1 ? 'contained' : 'text'}
-              onClick={() => setCurrentPage(i + 1)}
-              sx={{ minWidth: 40, mx: 0.5 }}
-            >
-              {i + 1}
-            </Button>
-          ))}
+
+          {/* pagination */}
+          {getPaginationRange(currentPage, totalPages).map((page, i) => {
+            if (page === '...') {
+              return (
+                <Typography key={`dots-${i}`} sx={{ mx: 1, color: 'text.secondary' }}>
+                  ...
+                </Typography>
+              );
+            }
+
+            return (
+              <Button
+                key={page}
+                variant={currentPage === page ? 'contained' : 'text'}
+                onClick={() => setCurrentPage(page)}
+                sx={{
+                  minWidth: 40,
+                  height: 40,
+                  mx: 0.5,
+                  borderRadius: '8px',
+                  fontWeight: currentPage === page ? 700 : 400,
+                }}
+              >
+                {page}
+              </Button>
+            );
+          })}
+
+          {/* Next */}
           <IconButton
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage((p) => p + 1)}

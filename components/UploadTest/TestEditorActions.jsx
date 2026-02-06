@@ -6,6 +6,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import SendIcon from '@mui/icons-material/Send';
 import SaveIcon from '@mui/icons-material/Save';
 import PublishIcon from '@mui/icons-material/Publish';
+import CancelIcon from '@mui/icons-material/Cancel';
 
 export default function TestEditorActions({
   onPreview,
@@ -13,6 +14,7 @@ export default function TestEditorActions({
   onSendReview,
   onSaveDraft,
   onPublish,
+  onCancelClick,
 }) {
   return (
     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
@@ -25,7 +27,13 @@ export default function TestEditorActions({
           {isPreviewActive ? 'Hide Preview' : 'Show Preview'}
         </Button>
       )}
+
       <Box sx={{ display: 'flex', gap: 2 }}>
+        {onCancelClick && (
+          <Button variant="outlined" startIcon={<CancelIcon />} onClick={onCancelClick}>
+            Cancel
+          </Button>
+        )}
         {onSendReview && (
           <Button variant="outlined" startIcon={<SendIcon />} onClick={onSendReview}>
             Send for Review

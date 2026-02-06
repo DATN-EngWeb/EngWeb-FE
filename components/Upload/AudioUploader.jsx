@@ -4,11 +4,11 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 
-export default function AudioUploader({ value, onChange, accept }) {
+export default function AudioUploader({ value, onChange, accept, isReadOnly = false }) {
   const inputRef = React.useRef(null);
 
   const handleFile = (file) => {
-    if (!file) return;
+    if (isReadOnly || !file) return;
     onChange({
       file,
       url: URL.createObjectURL(file),
@@ -36,9 +36,10 @@ export default function AudioUploader({ value, onChange, accept }) {
         accept={accept}
         hidden
         onChange={(e) => handleFile(e.target.files?.[0])}
+        disabled={isReadOnly}
       />
       <Box
-        onClick={() => inputRef.current?.click()}
+        onClick={() => !isReadOnly && inputRef.current?.click()}
         sx={{
           border: '2px dashed #ddd',
           borderRadius: 2,
@@ -46,17 +47,22 @@ export default function AudioUploader({ value, onChange, accept }) {
           mb: 2,
           textAlign: 'center',
           color: 'text.secondary',
-          cursor: 'pointer',
-          '&:hover': { bgcolor: '#fafafa' },
+          cursor: isReadOnly ? 'default' : 'pointer',
+          '&:hover': { bgcolor: isReadOnly ? 'inherit' : '#fafafa' },
+          pointerEvents: isReadOnly ? 'none' : 'auto',
 
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
         }}
-        onDragOver={(e) => e.preventDefault()}
+        onDragOver={(e) => {
+          e.preventDefault();
+          if (isReadOnly) e.stopPropagation();
+        }}
         onDrop={(e) => {
           e.preventDefault();
+          if (isReadOnly) return;
           handleFile(e.dataTransfer.files?.[0]);
         }}
       >

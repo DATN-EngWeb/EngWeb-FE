@@ -5,7 +5,6 @@ import ProductiveEditor from './../Writing-Speaking/ProductiveEditor';
 import ProductivePreview from './../Writing-Speaking/ProductivePreview';
 import { createTest, submitProductiveTest } from '../../api/test';
 import { uploadHtmlContent } from '../../utils/uploadHelpers';
-import { getValidationProductiveErrorMessage } from '../../utils/testValidation';
 
 export default function WritingTestEditor() {
   const [mounted, setMounted] = useState(false);
@@ -74,7 +73,7 @@ export default function WritingTestEditor() {
         format: formatMapper[testData.format] || 'E',
         topic: testData.topics,
         description: contentUrl,
-        min_word: 0,
+        min_word: parseInt(settings.minWords),
         glue_text: question.suggestion,
         glue_resources: {
           image: null,
@@ -85,8 +84,8 @@ export default function WritingTestEditor() {
       await submitProductiveTest({ testId: res.id, data: detailedData, token });
       setSnackbar({ open: true, message: 'Test submitted successfully', severity: 'success' });
       setIsSaving(false);
-      setTestData({ testName: '', level: '', topics: '', format: '' });
-      setSettings({ timeLimit: 30, minWords: 200, score: 10 });
+      setTestData({ skill: 'W', testName: '', level: '', topics: '', format: '' });
+      setSettings({ skill: 'W', timeLimit: 30, minWords: 100, score: 10 });
       setQuestion({ description: '', suggestion: '', audio: null });
       setErrors(null);
       setIsSaving(false);
