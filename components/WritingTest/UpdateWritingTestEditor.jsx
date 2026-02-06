@@ -162,7 +162,6 @@ export default function UpdateWritingTestEditor() {
         await loadTestData();
       } else {
         setSnackbar({ open: true, message: 'No changes detected', severity: 'info' });
-        console.log('ccc', status);
       }
 
       setIsReadOnly(true);
