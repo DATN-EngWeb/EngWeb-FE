@@ -7,7 +7,7 @@ import ListeningTestEditor from '../../../../../components/ListeningTest/Listeni
 import { getRecepiveTestDetails } from '../../../../../api/test';
 
 export default function EditListeningTestPage({ params }) {
-  const { id } = use(params);
+  const { test_id } = use(params);
   const router = useRouter();
   const [isValidating, setIsValidating] = useState(true);
   const [error, setError] = useState(null);
@@ -22,7 +22,7 @@ export default function EditListeningTestPage({ params }) {
           return;
         }
 
-        const data = await getRecepiveTestDetails(id, token);
+        const data = await getRecepiveTestDetails(test_id, token);
 
         if (data.status !== 'D') {
           setError('Only draft tests can be edited');
@@ -38,7 +38,7 @@ export default function EditListeningTestPage({ params }) {
     };
 
     validateTest();
-  }, [id, router]);
+  }, [test_id, router]);
 
   if (isValidating) {
     return (
@@ -58,7 +58,7 @@ export default function EditListeningTestPage({ params }) {
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <ListeningTestEditor testId={id} />
+      <ListeningTestEditor testId={test_id} />
     </Suspense>
   );
 }
