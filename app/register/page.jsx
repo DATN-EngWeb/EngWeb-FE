@@ -20,6 +20,8 @@ import registerImage from '../../assets/img/register.png';
 import { loginStyles } from '../../styles/Login/LoginStyles';
 import { registerUser } from '../../api/accounts.jsx';
 
+import Header from '../../components/Home/Header';
+
 function RegisterContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -121,196 +123,192 @@ function RegisterContent() {
   };
 
   return (
-    <Box component="main" sx={loginStyles.page}>
-      <Box component="section" sx={loginStyles.storyPanel}>
-        <Button
-          onClick={() => router.push('/')}
-          sx={loginStyles.backButton}
-          aria-label="Back to home"
-        >
-          <Image src={Logo} alt="NENS" width={32} height={24} />
-        </Button>
-        <Image src={registerImage} alt="Register" style={loginStyles.storyImage} />
-      </Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <Header />
+      <Box component="main" sx={{ ...loginStyles.page, height: 'auto', flex: 1 }}>
+        <Box component="section" sx={loginStyles.storyPanel}>
+          <Image src={registerImage} alt="Register" style={loginStyles.storyImage} />
+        </Box>
 
-      <Box component="section" sx={loginStyles.formPanel}>
-        <Box sx={loginStyles.formCard}>
-          <Typography sx={loginStyles.cardEyebrow}>Welcome to NENS</Typography>
+        <Box component="section" sx={loginStyles.formPanel}>
+          <Box sx={loginStyles.formCard}>
+            <Typography sx={loginStyles.cardEyebrow}>Welcome to NENS</Typography>
 
-          {currentRole && (
-            <Box sx={loginStyles.roleBadge}>
-              Register as a{' '}
-              {currentRole === 'student'
-                ? 'student'
-                : currentRole === 'teacher'
-                  ? 'teacher'
-                  : currentRole}
-            </Box>
-          )}
+            {currentRole && (
+              <Box sx={loginStyles.roleBadge}>
+                Register as a{' '}
+                {currentRole === 'student'
+                  ? 'student'
+                  : currentRole === 'teacher'
+                    ? 'teacher'
+                    : currentRole}
+              </Box>
+            )}
 
-          <Box sx={loginStyles.switcherWrapper}>
-            <Stack direction="row" sx={loginStyles.switcher}>
-              <Link
-                href={role ? `/login?role=${role}` : '/login'}
-                style={loginStyles.linkNoDecoration}
-              >
-                <Button disableElevation sx={loginStyles.switchButton}>
-                  Login
+            <Box sx={loginStyles.switcherWrapper}>
+              <Stack direction="row" sx={loginStyles.switcher}>
+                <Link
+                  href={role ? `/login?role=${role}` : '/login'}
+                  style={loginStyles.linkNoDecoration}
+                >
+                  <Button disableElevation sx={loginStyles.switchButton}>
+                    Login
+                  </Button>
+                </Link>
+                <Button
+                  disableElevation
+                  sx={{ ...loginStyles.switchButton, ...loginStyles.switchActive }}
+                >
+                  Register
                 </Button>
-              </Link>
+              </Stack>
+            </Box>
+
+            <Box component="form" sx={loginStyles.form} onSubmit={handleSubmit}>
+              <Box sx={loginStyles.fieldContainer}>
+                <Typography sx={loginStyles.fieldLabel}>Email Address</Typography>
+                <TextField
+                  name="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (errors.email) {
+                      setErrors({ ...errors, email: '' });
+                    }
+                  }}
+                  placeholder="Enter your Email Address"
+                  type="email"
+                  fullWidth
+                  error={!!errors.email}
+                  helperText={errors.email}
+                  InputProps={{
+                    sx: {
+                      ...loginStyles.textFieldInputProps,
+                      ...(errors.email && {
+                        borderColor: 'error.main',
+                        border: '2px solid',
+                      }),
+                    },
+                  }}
+                  inputProps={{
+                    sx: loginStyles.textFieldInputPropsPlaceholder,
+                  }}
+                  FormHelperTextProps={{
+                    sx: {
+                      color: 'error.main',
+                      margin: '4px 0 0 0',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+              </Box>
+
+              <Box sx={loginStyles.fieldContainer}>
+                <Typography sx={loginStyles.fieldLabel}>User name</Typography>
+                <TextField
+                  name="username"
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    if (errors.username) {
+                      setErrors({ ...errors, username: '' });
+                    }
+                  }}
+                  placeholder="Enter your User name"
+                  fullWidth
+                  error={!!errors.username}
+                  helperText={errors.username}
+                  InputProps={{
+                    sx: {
+                      ...loginStyles.textFieldInputProps,
+                      ...(errors.username && {
+                        borderColor: 'error.main',
+                        border: '2px solid',
+                      }),
+                    },
+                  }}
+                  inputProps={{
+                    sx: loginStyles.textFieldInputPropsPlaceholder,
+                  }}
+                  FormHelperTextProps={{
+                    sx: {
+                      color: 'error.main',
+                      margin: '4px 0 0 0',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+              </Box>
+
+              <Box sx={loginStyles.fieldContainer}>
+                <Typography sx={loginStyles.fieldLabel}>Password</Typography>
+                <TextField
+                  name="password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errors.password) {
+                      setErrors({ ...errors, password: '' });
+                    }
+                  }}
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your Password"
+                  fullWidth
+                  error={!!errors.password}
+                  helperText={errors.password}
+                  InputProps={{
+                    sx: {
+                      ...loginStyles.textFieldInputProps,
+                      ...(errors.password && {
+                        borderColor: 'error.main',
+                        border: '2px solid',
+                      }),
+                    },
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={handleClickShowPassword}
+                          edge="end"
+                          sx={loginStyles.passwordIconButton}
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  inputProps={{
+                    sx: loginStyles.textFieldInputPropsPlaceholder,
+                  }}
+                  FormHelperTextProps={{
+                    sx: {
+                      color: 'error.main',
+                      margin: '4px 0 0 0',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+              </Box>
+
+              {errors.role && (
+                <Typography color="error" fontSize="0.9rem">
+                  {errors.role}
+                </Typography>
+              )}
+              {serverError && (
+                <Typography color="error" fontSize="0.9rem">
+                  {serverError}
+                </Typography>
+              )}
+
               <Button
-                disableElevation
-                sx={{ ...loginStyles.switchButton, ...loginStyles.switchActive }}
+                type="submit"
+                variant="contained"
+                sx={loginStyles.primaryButton}
+                disabled={isSubmitting}
               >
-                Register
+                {isSubmitting ? 'Creating account...' : 'Create account'}
               </Button>
-            </Stack>
-          </Box>
-
-          <Box component="form" sx={loginStyles.form} onSubmit={handleSubmit}>
-            <Box sx={loginStyles.fieldContainer}>
-              <Typography sx={loginStyles.fieldLabel}>Email Address</Typography>
-              <TextField
-                name="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (errors.email) {
-                    setErrors({ ...errors, email: '' });
-                  }
-                }}
-                placeholder="Enter your Email Address"
-                type="email"
-                fullWidth
-                error={!!errors.email}
-                helperText={errors.email}
-                InputProps={{
-                  sx: {
-                    ...loginStyles.textFieldInputProps,
-                    ...(errors.email && {
-                      borderColor: 'error.main',
-                      border: '2px solid',
-                    }),
-                  },
-                }}
-                inputProps={{
-                  sx: loginStyles.textFieldInputPropsPlaceholder,
-                }}
-                FormHelperTextProps={{
-                  sx: {
-                    color: 'error.main',
-                    margin: '4px 0 0 0',
-                    fontSize: '0.875rem',
-                  },
-                }}
-              />
             </Box>
-
-            <Box sx={loginStyles.fieldContainer}>
-              <Typography sx={loginStyles.fieldLabel}>User name</Typography>
-              <TextField
-                name="username"
-                value={username}
-                onChange={(e) => {
-                  setUsername(e.target.value);
-                  if (errors.username) {
-                    setErrors({ ...errors, username: '' });
-                  }
-                }}
-                placeholder="Enter your User name"
-                fullWidth
-                error={!!errors.username}
-                helperText={errors.username}
-                InputProps={{
-                  sx: {
-                    ...loginStyles.textFieldInputProps,
-                    ...(errors.username && {
-                      borderColor: 'error.main',
-                      border: '2px solid',
-                    }),
-                  },
-                }}
-                inputProps={{
-                  sx: loginStyles.textFieldInputPropsPlaceholder,
-                }}
-                FormHelperTextProps={{
-                  sx: {
-                    color: 'error.main',
-                    margin: '4px 0 0 0',
-                    fontSize: '0.875rem',
-                  },
-                }}
-              />
-            </Box>
-
-            <Box sx={loginStyles.fieldContainer}>
-              <Typography sx={loginStyles.fieldLabel}>Password</Typography>
-              <TextField
-                name="password"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (errors.password) {
-                    setErrors({ ...errors, password: '' });
-                  }
-                }}
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your Password"
-                fullWidth
-                error={!!errors.password}
-                helperText={errors.password}
-                InputProps={{
-                  sx: {
-                    ...loginStyles.textFieldInputProps,
-                    ...(errors.password && {
-                      borderColor: 'error.main',
-                      border: '2px solid',
-                    }),
-                  },
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={handleClickShowPassword}
-                        edge="end"
-                        sx={loginStyles.passwordIconButton}
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                inputProps={{
-                  sx: loginStyles.textFieldInputPropsPlaceholder,
-                }}
-                FormHelperTextProps={{
-                  sx: {
-                    color: 'error.main',
-                    margin: '4px 0 0 0',
-                    fontSize: '0.875rem',
-                  },
-                }}
-              />
-            </Box>
-
-            {errors.role && (
-              <Typography color="error" fontSize="0.9rem">
-                {errors.role}
-              </Typography>
-            )}
-            {serverError && (
-              <Typography color="error" fontSize="0.9rem">
-                {serverError}
-              </Typography>
-            )}
-
-            <Button
-              type="submit"
-              variant="contained"
-              sx={loginStyles.primaryButton}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Creating account...' : 'Create account'}
-            </Button>
           </Box>
         </Box>
       </Box>
