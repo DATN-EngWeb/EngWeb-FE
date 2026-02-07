@@ -153,11 +153,11 @@ export default function BasicInformation({
             </Typography>
             <FormControl fullWidth size="small" error={errors?.format}>
               <Select
-                value={format}
+                value={format || ''}
                 onChange={(e) => onChange('format', e.target.value)}
                 displayEmpty
                 renderValue={(selected) => {
-                  if (!selected) {
+                  if (selected === '' || !selected) {
                     return <span style={{ color: '#a0a0a0' }}>Choose format</span>;
                   }
                   return selected;
@@ -183,7 +183,7 @@ export default function BasicInformation({
             </Typography>
             <FormControl fullWidth size="small" error={errors?.level}>
               <Select
-                value={level}
+                value={level || ''}
                 onChange={(e) => onChange('level', e.target.value)}
                 displayEmpty
                 renderValue={(selected) => {
@@ -213,7 +213,7 @@ export default function BasicInformation({
             fullWidth
             size="small"
             placeholder="e.g., Films"
-            value={topics}
+            value={topics || ''}
             onChange={(e) => onChange('topics', e.target.value)}
             error={errors?.topics}
             sx={{ mb: 2 }}

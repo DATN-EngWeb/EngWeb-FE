@@ -46,6 +46,7 @@ export const addPartBox = {
   bgcolor: 'primary.contrastText',
   borderRadius: 2,
   p: { xs: 3, sm: 4 },
+  mb: 3,
   textAlign: 'center',
   color: 'text.secondary',
   cursor: 'pointer',

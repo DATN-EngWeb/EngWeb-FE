@@ -22,7 +22,7 @@ import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import AudioUploader from '../Upload/AudioUploader';
 import ClientSideCustomEditor from '../Editor/ClientSideCustomEditor';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   sectionHeader,
   accentBar,
@@ -55,6 +55,11 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
   const [snackbar, setSnackbar] = useState({ open: false, message: '' });
   const [content, setContent] = useState(part.content || '');
 
+  useEffect(() => {
+    setAudioFormat(part.audioFormat || 'onetoone');
+    setContent(part.content || '');
+  }, [part.audioFormat, part.content]);
+
   const updatePart = (newPart) => {
     if (onChange) onChange(newPart);
   };
@@ -76,6 +81,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
     let newQ = {
       id: Date.now().toString(),
       text: '',
+      score: part.score || 0,
       answers: [
         { id: 'a-' + Date.now() + '-0', label: 'A' },
         { id: 'b-' + Date.now() + '-1', label: 'B' },
@@ -150,7 +156,16 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
   };
 
   const setCorrect = (qIdx, aIdx) => {
-    const newQs = questions.map((q, i) => (i === qIdx ? { ...q, correctIndex: aIdx } : q));
+    const newQs = questions.map((q, i) => {
+      if (i !== qIdx) return q;
+
+      const newAnswers = q.answers.map((ans, ai) => ({
+        ...ans,
+        is_correct: ai === aIdx,
+      }));
+
+      return { ...q, correctIndex: aIdx, answers: newAnswers };
+    });
     updatePart({ ...part, questions: newQs });
   };
 
@@ -213,8 +228,15 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
               fullWidth
               size="small"
               type="number"
-              value={part.totalScore ?? ''}
-              onChange={(e) => updatePart({ ...part, totalScore: e.target.value })}
+              value={part.score ?? ''}
+              onChange={(e) => {
+                const scoreValue = parseFloat(e.target.value) || 0;
+                const newQuestions = questions.map((q) => ({
+                  ...q,
+                  score: scoreValue,
+                }));
+                updatePart({ ...part, score: scoreValue, questions: newQuestions });
+              }}
             />
           </Box>
 

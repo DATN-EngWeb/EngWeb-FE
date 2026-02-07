@@ -41,6 +41,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
     const newQuestion = {
       id: Date.now().toString(),
       text: '',
+      score: part.score || 0,
       selectedAnswerId: null,
     };
     let newAnswers = answers;
@@ -153,8 +154,15 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
               fullWidth
               size="small"
               type="number"
-              value={part.totalScore ?? ''}
-              onChange={(e) => updatePart({ ...part, totalScore: e.target.value })}
+              value={part.score ?? ''}
+              onChange={(e) => {
+                const scoreValue = parseFloat(e.target.value) || 0;
+                const newQuestions = questions.map((q) => ({
+                  ...q,
+                  score: scoreValue,
+                }));
+                updatePart({ ...part, score: scoreValue, questions: newQuestions });
+              }}
             />
           </Box>
 

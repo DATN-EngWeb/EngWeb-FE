@@ -193,7 +193,6 @@ function UploadProfileContent({ userId }) {
         throw new Error('User ID is missing. Please register again.');
       }
 
-      /* global FormData */
       const submitFormData = new FormData();
 
       // Add user_id

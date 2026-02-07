@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { getListTest } from '../../api/test';
 import { ReviewTestPageStyles as styles } from '../../styles/Teacher/ReviewTest/ReviewTestPageStyles';
 import {
@@ -20,26 +21,25 @@ import {
   Select,
   MenuItem,
   Avatar,
+  IconButton,
 } from '@mui/material';
 import {
   RateReview as RateReviewIcon,
-  FilterList as FilterIcon,
   Search as SearchIcon,
   HourglassBottom as WaitingIcon,
   AssignmentInd as AssignmentIndIcon,
   CheckCircle as CheckCircleIcon,
   Send as SendIcon,
+  ChevronLeft,
+  ChevronRight,
 } from '@mui/icons-material';
 
 // --- Constants ---
+const PAGE_SIZE = 10;
 const STATUS_MAP = {
-  P: { label: 'Published', color: 'success.main' },
-  D: { label: 'Draft', color: 'text.secondary' },
   I: { label: 'In Review', color: 'warning.main' },
-  R: { label: 'Removed', color: 'error.main' },
 };
 
-// --- Sub-components ---
 const StatCard = ({ icon, count, value, variant }) => (
   <Box sx={styles.statBadge(variant)}>
     <Box sx={styles.iconWrapper(variant)}>{icon}</Box>
@@ -51,66 +51,122 @@ const StatCard = ({ icon, count, value, variant }) => (
 );
 
 export default function ReviewTestPage() {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [tests, setTests] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [isMine, setIsMine] = useState(false);
 
   // Filters state
   const [searchQuery, setSearchQuery] = useState('');
   const [skillFilter, setSkillFilter] = useState('All Skills');
   const [levelFilter, setLevelFilter] = useState('All Levels');
-  const [statusFilter, setStatusFilter] = useState('All Status');
+  const [sortBy, setSortBy] = useState('Newest List');
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // 1. Fetch Data
+  // --- Mappings ---
+  const skillMap = useMemo(
+    () => ({
+      Reading: 'R',
+      Listening: 'L',
+      Speaking: 'S',
+      Writing: 'W',
+    }),
+    [],
+  );
+
+  const orderingMap = useMemo(
+    () => ({
+      'Newest List': '-created_at',
+      'Oldest List': 'created_at',
+    }),
+    [],
+  );
+
+  const getPaginationRange = (current, total) => {
+    const delta = 1;
+    const range = [];
+    const rangeWithDots = [];
+    let l;
+
+    for (let i = 1; i <= total; i++) {
+      if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) {
+        range.push(i);
+      }
+    }
+
+    for (let i of range) {
+      if (l) {
+        if (i - l === 2) {
+          rangeWithDots.push(l + 1);
+        } else if (i - l !== 1) {
+          rangeWithDots.push('...');
+        }
+      }
+      rangeWithDots.push(i);
+      l = i;
+    }
+
+    return rangeWithDots;
+  };
+
+  // --- Fetch Logic ---
   const fetchTests = useCallback(async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
-      // Fix logic: isMine ? true (lấy của mình) : false (lấy của người khác để review)
-      const result = await getListTest(token, isMine, isMine ? undefined : 'I');
+      const params = {
+        page: currentPage,
+        page_size: PAGE_SIZE,
+        mine: isMine,
+        status: 'I',
+        ordering: orderingMap[sortBy] || '-created_at',
+      };
+
+      if (searchQuery) params.search = searchQuery;
+      if (levelFilter !== 'All Levels') params.level = levelFilter;
+      if (skillFilter !== 'All Skills') params.skill = skillMap[skillFilter];
+
+      // Xử lý logic sortby
+      params.ordering = orderingMap[sortBy] || '-created_at';
+
+      const result = await getListTest(token, params);
       setTests(result?.results || []);
+      setTotalCount(result?.count || 0);
     } catch (error) {
-      console.error(error);
+      console.error('Fetch Error:', error);
       setTests([]);
     } finally {
       setLoading(false);
     }
-  }, [isMine]);
+  }, [isMine, currentPage, searchQuery, levelFilter, skillFilter, sortBy, skillMap, orderingMap]);
 
+  // start mounting and initial fetch
   useEffect(() => {
     setMounted(true);
     fetchTests();
   }, [fetchTests]);
 
-  // 2. Logic lọc dữ liệu (Client-side filtering)
-  const filteredTests = useMemo(() => {
-    return tests.filter((test) => {
-      const matchesSearch =
-        test.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        test.created_by?.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesSkill = skillFilter === 'All Skills' || test.skill === skillFilter;
-      const matchesLevel = levelFilter === 'All Levels' || test.level === levelFilter;
-      // Thêm logic lọc theo status nếu cần
-      return matchesSearch && matchesSkill && matchesLevel;
-    });
-  }, [tests, searchQuery, skillFilter, levelFilter]);
+  // Reset page when switching Tab or changing Filter
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [isMine, searchQuery, skillFilter, levelFilter, sortBy]);
 
   if (!mounted) return null;
 
-  const statusOptions = isMine
-    ? ['All Status', 'Published', 'In Review', 'Draft', 'Removed']
-    : ['All Status', 'Reviewed', 'Wait Review'];
-
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
   return (
     <Box component="main" sx={styles.contentWrapper}>
       {/* Header Section */}
       <Box sx={styles.welcomeHeader}>
         <Typography variant="h1" sx={styles.welcomeTitle}>
-          List Review Test
+          {isMine ? 'My Test Collection' : 'Review Test Center'}
         </Typography>
         <Typography variant="body1" sx={styles.welcomeSub} mb={3}>
-          Review exam questions from colleagues or follow up on review requests from others.
+          {isMine
+            ? 'Manage and track the status of your created exam questions.'
+            : 'Review exam questions from colleagues to ensure quality.'}
         </Typography>
 
         <Stack direction="row" spacing={4}>
@@ -138,12 +194,11 @@ export default function ReviewTestPage() {
       {/* Filter Section */}
       <Box sx={styles.filterSection}>
         <TextField
-          placeholder="Search by test name or teacher"
+          placeholder="Search by title..."
           size="small"
-          fullWidth
+          sx={styles.searchInput}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          sx={styles.searchInput}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -156,11 +211,11 @@ export default function ReviewTestPage() {
         <Stack direction="row" spacing={2}>
           <Select
             size="small"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
             sx={styles.selectFilter}
           >
-            {statusOptions.map((opt) => (
+            {['Newest List', 'Oldest List'].map((opt) => (
               <MenuItem key={opt} value={opt}>
                 {opt}
               </MenuItem>
@@ -203,16 +258,22 @@ export default function ReviewTestPage() {
             <Button
               startIcon={<RateReviewIcon />}
               sx={{ ...styles.switchButton, ...(!isMine && styles.switchActive) }}
-              onClick={() => setIsMine(false)}
+              onClick={() => {
+                setIsMine(false);
+                setSortBy('Newest List');
+              }}
             >
-              Waiting for Review
+              Needs My Review
             </Button>
             <Button
               startIcon={<AssignmentIndIcon />}
               sx={{ ...styles.switchButton, ...(isMine && styles.switchActive) }}
-              onClick={() => setIsMine(true)}
+              onClick={() => {
+                setIsMine(true);
+                setSortBy('Newest List');
+              }}
             >
-              My List Tests
+              My Pending Reviews
             </Button>
           </Stack>
         </Box>
@@ -238,8 +299,8 @@ export default function ReviewTestPage() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredTests.length > 0 ? (
-                filteredTests.map((item) => (
+              {tests.length > 0 ? (
+                tests.map((item) => (
                   <TableRow key={item.id} hover>
                     {!isMine && (
                       <TableCell>
@@ -258,21 +319,48 @@ export default function ReviewTestPage() {
                         : 'N/A'}
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2" sx={{ color: STATUS_MAP[item.status]?.color }}>
-                        {STATUS_MAP[item.status]?.label || 'Unknown'}
+                      <Typography
+                        variant="body2"
+                        sx={{ color: STATUS_MAP[item.status]?.color, fontWeight: 'bold' }}
+                      >
+                        {STATUS_MAP[item.status]?.label || item.status}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Button size="small" variant="outlined">
-                        {item.status === 'I' ? 'Review Now' : 'View Feedback'}
-                      </Button>
+                      {isMine ? (
+                        // case 1: (My List Tests)
+                        <Stack direction="row" spacing={1}>
+                          <Button
+                            size="small"
+                            variant="contained"
+                            color="warning"
+                            onClick={() => router.push(`/teacher/ViewFeedback/${item.id}`)}
+                          >
+                            View Feedback
+                          </Button>
+                        </Stack>
+                      ) : (
+                        // case 2: (Tests I Need to Review)
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color={item.status === 'I' ? 'primary' : 'inherit'}
+                          onClick={() => {
+                            router.push(`/teacher/ReviewTest/${item.id}`); // Review Page
+                          }}
+                        >
+                          {item.status === 'I' ? 'Review Now' : 'Detail'}
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
-                    No tests found.
+                  <TableCell colSpan={7} align="center" sx={{ py: 5 }}>
+                    <Typography color="text.secondary">
+                      No data found matching your filters.
+                    </Typography>
                   </TableCell>
                 </TableRow>
               )}
@@ -280,6 +368,52 @@ export default function ReviewTestPage() {
           </Table>
         )}
       </TableContainer>
+
+      {/* Pagination Info */}
+      {totalPages > 1 && (
+        <Box sx={styles.paginationContainer}>
+          {/* Back button */}
+          <IconButton disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
+            <ChevronLeft />
+          </IconButton>
+
+          {/* Pagination */}
+          {getPaginationRange(currentPage, totalPages).map((page, i) => {
+            if (page === '...') {
+              return (
+                <Typography key={`dots-${i}`} sx={{ mx: 1, color: 'text.secondary' }}>
+                  ...
+                </Typography>
+              );
+            }
+
+            return (
+              <Button
+                key={page}
+                variant={currentPage === page ? 'contained' : 'text'}
+                onClick={() => setCurrentPage(page)}
+                sx={{
+                  minWidth: 40,
+                  height: 40,
+                  mx: 0.5,
+                  borderRadius: '8px',
+                  fontWeight: currentPage === page ? 700 : 400,
+                }}
+              >
+                {page}
+              </Button>
+            );
+          })}
+
+          {/* Next button */}
+          <IconButton
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage((p) => p + 1)}
+          >
+            <ChevronRight />
+          </IconButton>
+        </Box>
+      )}
     </Box>
   );
 }
