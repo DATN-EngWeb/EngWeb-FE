@@ -103,22 +103,22 @@ export default function Header() {
               <Link href="/" style={logoLinkStyles}>
                 <Image src={Logo} alt="NENS" width={32} height={24} />
               </Link>
-              <Link href="/reading" style={navLinkStyles}>
+              <Link href="/student/reading" style={navLinkStyles}>
                 <Button color="inherit" sx={navButtonStyles}>
                   Reading
                 </Button>
               </Link>
-              <Link href="/listening" style={navLinkStyles}>
+              <Link href="/student/listening" style={navLinkStyles}>
                 <Button color="inherit" sx={navButtonStyles}>
                   Listening
                 </Button>
               </Link>
-              <Link href="/writing" style={navLinkStyles}>
+              <Link href="/student/writing" style={navLinkStyles}>
                 <Button color="inherit" sx={navButtonStyles}>
                   Writing
                 </Button>
               </Link>
-              <Link href="/speaking" style={navLinkStyles}>
+              <Link href="/student/speaking" style={navLinkStyles}>
                 <Button color="inherit" sx={navButtonStyles}>
                   Speaking
                 </Button>

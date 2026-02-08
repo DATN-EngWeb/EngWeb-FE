@@ -8,6 +8,7 @@ if (!API_BASE_URL) {
 }
 const STORAGE_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/storage`;
 const TESTS_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/tests`;
+const TEST_HISTORIES_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/test-histories`;
 
 async function handleResponse(response) {
   const contentType = response.headers.get('content-type') || '';
@@ -217,4 +218,30 @@ export const fetchHtmlContent = async (url) => {
   } catch (_error) {
     return '';
   }
+};
+
+export const createProductiveTest = async (data, token) => {
+  const response = await fetch(`${TEST_HISTORIES_BASE_URL}/productive/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(response);
+};
+
+export const getProductiveTest = async (test_id, token) => {
+  const response = await fetch(
+    `${TEST_HISTORIES_BASE_URL}/productive/?productive_test=${test_id}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+  return handleResponse(response);
 };

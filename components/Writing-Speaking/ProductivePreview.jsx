@@ -4,25 +4,37 @@ import { useState } from 'react';
 import DisplayAudio from '../Upload/DisplayAudio';
 import * as styles from '../../styles/Teacher/productive/ProductiveStyles';
 
-export default function ProductivePreview({ title, description, suggestion, audio }) {
+export default function ProductivePreview({
+  title,
+  description,
+  suggestion,
+  audio,
+  preview = true,
+}) {
   const [showSuggestion, setShowSuggestion] = useState(false);
 
   return (
     <Box sx={styles.STICKY_PREVIEW_WRAPPER}>
-      <Typography variant="h5" sx={styles.SECTION_TITLE_STYLE}>
-        Preview
-      </Typography>
-      <Paper sx={styles.PREVIEW_PAPER_STYLE}>
-        <Typography
-          variant="h5"
-          align="center"
-          fontWeight={700}
-          sx={{ mb: 2, color: 'primary.main' }}
-        >
-          {title || 'Test Title'}
+      {preview && (
+        <Typography variant="h6" sx={{ mb: 2, color: 'primary.main', fontWeight: 700 }}>
+          Preview
         </Typography>
+      )}
+      <Paper sx={styles.PREVIEW_PAPER_STYLE}>
+        {preview && (
+          <>
+            <Typography
+              variant="h5"
+              align="center"
+              fontWeight={700}
+              sx={{ mb: 2, color: 'primary.main' }}
+            >
+              {title || 'Test Title'}
+            </Typography>
 
-        <Divider sx={{ my: 2 }} />
+            <Divider sx={{ my: 2 }} />
+          </>
+        )}
 
         <Box
           className="ck-content"
@@ -69,12 +81,9 @@ export default function ProductivePreview({ title, description, suggestion, audi
             </Box>
             <Collapse in={showSuggestion}>
               <Box sx={{ p: 2, bgcolor: 'warning.pastel', borderRadius: '8px', mt: 1 }}>
-                <Typography
-                  variant="body2"
-                  sx={{ mb: 1, fontWeight: 700, color: 'secondary.main' }}
-                >
+                <Box variant="body2" sx={{ mb: 1, fontWeight: 700, color: 'secondary.main' }}>
                   💡 Suggestion
-                </Typography>
+                </Box>
                 <Box
                   className="ck-content"
                   dangerouslySetInnerHTML={{ __html: suggestion }}
