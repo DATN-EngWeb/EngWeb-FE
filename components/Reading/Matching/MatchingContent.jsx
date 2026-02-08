@@ -88,7 +88,7 @@ const MatchingContent = ({
     if (!passage) return null;
 
     const processedPassage = passage.replace(/\[(\d+)\]/g, (match, number) => {
-      return `<span style="font-weight: 700; color: #1976d2; background-color: transparent; padding: 2px 8px; border-radius: 4px; border: 2px solid #9c27b0; cursor: pointer; display: inline-block;">[${number}]</span>`;
+      return `<span style="display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; margin: 0 4px; vertical-align: middle; background-color: #E3F2FD; color: #1565C0; border: 1px solid #90CAF9; border-radius: 6px; font-weight: 700; font-size: 0.9rem; cursor: default; user-select: none;">${number}</span>`;
     });
 
     return <div dangerouslySetInnerHTML={{ __html: processedPassage }} />;

@@ -22,7 +22,6 @@ export default function ReadingTestPage() {
   const [error, setError] = useState(null);
   const [answers, setAnswers] = useState({});
   const [currentPartIndex, setCurrentPartIndex] = useState(0);
-  const [isTeacherMode, setIsTeacherMode] = useState(false);
 
   useEffect(() => {
     async function fetchTestData() {
@@ -214,7 +213,7 @@ export default function ReadingTestPage() {
       answers,
       onAnswerChange: handleAnswerChange,
       onPartChange: handlePartChange,
-      isTeacher: isTeacherMode,
+      isTeacher: false,
       onSubmit: handleSubmit,
       onBack: handleBack,
       onNext: handleNext,
@@ -263,65 +262,5 @@ export default function ReadingTestPage() {
     }
   };
 
-  return (
-    <>
-      <Box
-        sx={{
-          position: 'fixed',
-          top: '90px',
-          right: '20px',
-          zIndex: 1000,
-          backgroundColor: 'background.paper',
-          padding: '12px 20px',
-          borderRadius: '12px',
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
-          display: 'flex',
-          gap: '12px',
-          alignItems: 'center',
-        }}
-      >
-        <Box component="span" sx={{ fontSize: '14px', color: 'text.secondary', fontWeight: '600' }}>
-          Mode:
-        </Box>
-        <Box
-          component="button"
-          onClick={() => setIsTeacherMode(false)}
-          sx={{
-            padding: '8px 16px',
-            border: '2px solid',
-            borderColor: !isTeacherMode ? 'primary.main' : 'reading.borderGrey',
-            backgroundColor: !isTeacherMode ? 'primary.main' : 'background.paper',
-            color: !isTeacherMode ? 'primary.contrastText' : 'text.secondary',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}
-        >
-          Student
-        </Box>
-        <Box
-          component="button"
-          onClick={() => setIsTeacherMode(true)}
-          sx={{
-            padding: '8px 16px',
-            border: '2px solid',
-            borderColor: isTeacherMode ? 'primary.main' : 'reading.borderGrey',
-            backgroundColor: isTeacherMode ? 'primary.main' : 'background.paper',
-            color: isTeacherMode ? 'primary.contrastText' : 'text.secondary',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}
-        >
-          Teacher
-        </Box>
-      </Box>
-
-      {renderPartComponent()}
-    </>
-  );
+  return <>{renderPartComponent()}</>;
 }

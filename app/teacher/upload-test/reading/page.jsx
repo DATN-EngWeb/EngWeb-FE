@@ -509,7 +509,7 @@ export default function Page() {
           <Button
             startIcon={<FileUploadIcon sx={{ fontSize: 20, transform: 'translateY(0px)' }} />}
             sx={{ ...uploadReadingStyles.publicButton, gridArea: 'item4' }}
-            onClick={() => setShowPreview(true)}
+            onClick={() => handleUploadParts('P')}
             disabled={isLoading}
           >
             {isLoading ? 'Uploading...' : 'Public'}
@@ -737,10 +737,7 @@ export default function Page() {
         open={showPreview}
         onClose={() => setShowPreview(false)}
         testData={{ ...test, parts }}
-        onPublish={() => {
-          setShowPreview(false);
-          handleUploadParts('P');
-        }}
+        testData={{ ...test, parts }}
       />
     </Box>
   );

@@ -129,21 +129,6 @@ const ReadingPreview = ({ open, onClose, testData, onPublish }) => {
             Test Preview
           </Typography>
           <Box sx={{ display: 'flex', gap: 2 }}>
-            {onPublish && (
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={onPublish}
-                sx={{
-                  textTransform: 'none',
-                  backgroundColor: '#FBBC04',
-                  color: '#000',
-                  '&:hover': { backgroundColor: '#F9AB00' },
-                }}
-              >
-                Confirm & Publish
-              </Button>
-            )}
             <Button onClick={onClose} startIcon={<CloseIcon />} color="inherit">
               Close Preview
             </Button>
