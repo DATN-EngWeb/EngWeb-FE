@@ -55,7 +55,7 @@ export const questionContainerStyles = {
 export const questionNumberStyles = {
   width: 32,
   height: 32,
-  backgroundColor: 'text.primary',
+  backgroundColor: 'primary.main',
   color: 'background.paper',
   borderRadius: '50%',
   display: 'flex',
