@@ -1,8 +1,38 @@
 import { Paper, Box, Typography, Grid, TextField, Button } from '@mui/material';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { profileSettingsSectionStyles } from '../../styles/Profile/ProfileStyles';
 
-export default function ProfileSettingSection({ profile, setProfile }) {
+export default function ProfileSettingSection({ profile, setProfile, onSave, isSaving, onError }) {
   const [edit, setEdit] = useState(false);
+  const originalProfile = useRef(null);
+
+  const handleEdit = () => {
+    if (!edit) {
+      originalProfile.current = { ...profile };
+    }
+    setEdit(!edit);
+  };
+
+  const handleCancel = () => {
+    if (originalProfile.current) {
+      setProfile(originalProfile.current);
+    }
+    setEdit(false);
+  };
+
+  const handleSave = async () => {
+    try {
+      if (onSave) {
+        await onSave(profile);
+      }
+      originalProfile.current = { ...profile };
+      setEdit(false);
+    } catch (err) {
+      if (onError) {
+        onError(err.message || 'Failed to save profile', 'error');
+      }
+    }
+  };
 
   return (
     <Paper sx={{ mb: 3, p: 3 }}>
@@ -10,19 +40,17 @@ export default function ProfileSettingSection({ profile, setProfile }) {
         <Typography variant="h6">Profile Setting</Typography>
         <Box gap={1} display="flex">
           {edit && (
-            <Button variant="outlined" onClick={() => setEdit(false)}>
+            <Button variant="outlined" onClick={handleCancel} disabled={isSaving}>
               Cancel
             </Button>
           )}
-          <Button onClick={() => setEdit(!edit)}>{edit ? 'Save' : 'Edit'}</Button>
+          <Button onClick={edit ? handleSave : handleEdit} disabled={isSaving}>
+            {edit ? 'Save' : 'Edit'}
+          </Button>
         </Box>
       </Box>
 
-      <Grid
-        container
-        spacing={2}
-        sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}
-      >
+      <Grid container spacing={2} sx={profileSettingsSectionStyles.gridContainer}>
         <Grid item>
           <Typography variant="caption">FULL NAME</Typography>
           {edit ? (
@@ -31,6 +59,7 @@ export default function ProfileSettingSection({ profile, setProfile }) {
               size="small"
               value={profile.fullName}
               onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
+              disabled={isSaving}
             />
           ) : (
             <Typography>{profile.fullName}</Typography>
@@ -39,16 +68,7 @@ export default function ProfileSettingSection({ profile, setProfile }) {
 
         <Grid item>
           <Typography variant="caption">EMAIL</Typography>
-          {edit ? (
-            <TextField
-              fullWidth
-              size="small"
-              value={profile.email}
-              onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-            />
-          ) : (
-            <Typography>{profile.email}</Typography>
-          )}
+          <Typography>{profile.email}</Typography>
         </Grid>
 
         <Grid item>
@@ -60,6 +80,7 @@ export default function ProfileSettingSection({ profile, setProfile }) {
               size="small"
               value={profile.dateOfBirth}
               onChange={(e) => setProfile({ ...profile, dateOfBirth: e.target.value })}
+              disabled={isSaving}
             />
           ) : (
             <Typography>{profile.dateOfBirth}</Typography>
@@ -68,7 +89,7 @@ export default function ProfileSettingSection({ profile, setProfile }) {
 
         <Grid item>
           <Typography variant="caption">ROLE</Typography>
-          <Typography>{profile.role}</Typography>
+          <Typography>{profile.role === 'S' ? 'Student' : 'Teacher'}</Typography>
         </Grid>
       </Grid>
     </Paper>

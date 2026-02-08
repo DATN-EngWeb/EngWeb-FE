@@ -1,8 +1,43 @@
-import { Paper, Box, Typography, Grid, TextField, Button } from '@mui/material';
-import { useState } from 'react';
+import { Paper, Box, Typography, Grid, TextField, Button, Select, MenuItem } from '@mui/material';
+import { useState, useRef } from 'react';
+import { informationSectionStyles } from '../../styles/Profile/ProfileStyles';
 
-export default function InformationSection({ profile, setProfile }) {
+const getEmploymentTypeLabel = (type) => {
+  const labels = {
+    F: 'Freelance Teacher',
+    S: 'School Teacher',
+    C: 'Center Teacher',
+  };
+  return labels[type] || type;
+};
+
+export default function InformationSection({ profile, setProfile, onSave, isSaving, onError }) {
   const [edit, setEdit] = useState(false);
+  const originalProfileRef = useRef(null);
+
+  const handleEditToggle = async () => {
+    if (!edit) {
+      originalProfileRef.current = { ...profile };
+      setEdit(true);
+      return;
+    }
+
+    try {
+      if (onSave) {
+        await onSave();
+      }
+      setEdit(false);
+    } catch (err) {
+      if (onError) onError(err.message || 'Failed to update information', 'error');
+    }
+  };
+
+  const handleCancel = () => {
+    if (originalProfileRef.current) {
+      setProfile(originalProfileRef.current);
+    }
+    setEdit(false);
+  };
 
   return (
     <Paper sx={{ mb: 3, p: 3 }}>
@@ -10,30 +45,32 @@ export default function InformationSection({ profile, setProfile }) {
         <Typography variant="h6">Information</Typography>
         <Box gap={1} display="flex">
           {edit && (
-            <Button variant="outlined" onClick={() => setEdit(false)}>
+            <Button variant="outlined" onClick={handleCancel} disabled={isSaving}>
               Cancel
             </Button>
           )}
-          <Button onClick={() => setEdit(!edit)}>{edit ? 'Save' : 'Edit'}</Button>
+          <Button onClick={handleEditToggle} disabled={isSaving}>
+            {edit ? 'Save' : 'Edit'}
+          </Button>
         </Box>
       </Box>
 
-      <Grid
-        container
-        spacing={2}
-        sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}
-      >
+      <Grid container spacing={2} sx={informationSectionStyles.gridContainer}>
         <Grid item>
           <Typography variant="caption">EMPLOYMENT TYPE</Typography>
           {edit ? (
-            <TextField
+            <Select
               fullWidth
               size="small"
-              value={profile.employmentType}
+              value={profile.employmentType || ''}
               onChange={(e) => setProfile({ ...profile, employmentType: e.target.value })}
-            />
+            >
+              <MenuItem value="F">Freelance Teacher</MenuItem>
+              <MenuItem value="S">School Teacher</MenuItem>
+              <MenuItem value="C">Center Teacher</MenuItem>
+            </Select>
           ) : (
-            <Typography>{profile.employmentType}</Typography>
+            <Typography>{getEmploymentTypeLabel(profile.employmentType)}</Typography>
           )}
         </Grid>
 
