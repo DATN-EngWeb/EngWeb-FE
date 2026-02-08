@@ -88,7 +88,7 @@ const MatchingContent = ({
     if (!passage) return null;
 
     const processedPassage = passage.replace(/\[(\d+)\]/g, (match, number) => {
-      return `<span style="display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; margin: 0 4px; vertical-align: middle; background-color: #E3F2FD; color: #1565C0; border: 1px solid #90CAF9; border-radius: 6px; font-weight: 700; font-size: 0.9rem; cursor: default; user-select: none;">${number}</span>`;
+      return `<span style="display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; margin: 0 4px; vertical-align: middle; background-color: #FFF3E0; color: #E65100; border: 1px solid #FFB74D; border-radius: 6px; font-weight: 700; font-size: 0.9rem; cursor: default; user-select: none;">${number}</span>`;
     });
 
     return <div dangerouslySetInnerHTML={{ __html: processedPassage }} />;
@@ -194,7 +194,7 @@ const MatchingContent = ({
                   >
                     You are going to read an article about a ballet dancer. Six sentences have been
                     removed from the article. Choose from the sentences A-F the one which fits each
-                    gap (37-42).
+                    gap.
                   </Typography>
                 </Box>
               </Paper>
@@ -275,7 +275,7 @@ const MatchingContent = ({
                         sx={{
                           width: 32,
                           height: 32,
-                          backgroundColor: 'darkGrey.main',
+                          backgroundColor: 'primary.main',
                           color: 'background.paper',
                           borderRadius: '4px',
                           display: 'flex',
@@ -331,7 +331,17 @@ const MatchingContent = ({
                 </Typography>
                 <Button
                   variant="contained"
-                  sx={nextButtonStyles}
+                  sx={{
+                    ...nextButtonStyles,
+                    backgroundColor: 'primary.main',
+                    border: '1px solid',
+                    borderColor: 'primary.main', // explicit border to maintain size if needed
+                    visibility: currentSection < totalSections ? 'visible' : 'hidden',
+                    pointerEvents: currentSection < totalSections ? 'auto' : 'none',
+                    '&:hover': {
+                      backgroundColor: 'primary.dark',
+                    },
+                  }}
                   onClick={onNext}
                   disabled={isTeacher}
                 >

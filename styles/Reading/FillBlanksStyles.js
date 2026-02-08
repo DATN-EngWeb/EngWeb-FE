@@ -72,7 +72,7 @@ export const answerNumberStyles = {
   width: 32,
   height: 32,
   borderRadius: '4px',
-  backgroundColor: 'darkGrey.main',
+  backgroundColor: 'primary.main',
   color: 'background.paper',
   display: 'flex',
   alignItems: 'center',
@@ -84,7 +84,7 @@ export const answerNumberStyles = {
 
 export const answerInputStyles = {
   '& .MuiOutlinedInput-root': {
-    backgroundColor: 'background.default',
+    backgroundColor: '#ffffff',
     '& fieldset': {
       borderColor: 'divider',
       borderWidth: 1,

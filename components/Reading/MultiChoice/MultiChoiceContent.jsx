@@ -238,7 +238,15 @@ const MultiChoiceContent = ({
                 </Typography>
                 <Button
                   variant="contained"
-                  sx={nextButtonStyles}
+                  sx={{
+                    ...nextButtonStyles,
+                    backgroundColor: 'primary.main',
+                    visibility: currentSection < totalSections ? 'visible' : 'hidden',
+                    pointerEvents: currentSection < totalSections ? 'auto' : 'none',
+                    '&:hover': {
+                      backgroundColor: 'primary.dark',
+                    },
+                  }}
                   onClick={onNext}
                   disabled={isTeacher}
                 >

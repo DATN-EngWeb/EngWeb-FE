@@ -1,7 +1,20 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Typography, Button, TextField, Paper, Tabs, Tab } from '@mui/material';
+import {
+  Box,
+  Container,
+  Typography,
+  Button,
+  TextField,
+  Paper,
+  Tabs,
+  Tab,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  FormControl,
+} from '@mui/material';
 import {
   containerStyles,
   headerWrapperStyles,
@@ -28,6 +41,14 @@ import {
   nextButtonStyles,
 } from '@/styles/Reading/FillBlanksStyles';
 
+import {
+  questionContainerStyles,
+  questionNumberStyles,
+  questionTextStyles,
+  optionContainerStyles,
+  optionLabelStyles,
+} from '@/styles/Reading/MultiChoiceReadingStyles';
+
 const FillBlanksContent = ({
   testName = 'Practice Test Name',
   parts = ['Part 1', 'Part 2', 'Part 3', 'Part 4', 'Part 5'],
@@ -35,6 +56,7 @@ const FillBlanksContent = ({
   passage = '',
   passageTitle = '',
   blanks = [],
+  questions = [],
   answers,
   onAnswerChange = () => {},
   onPartChange = () => {},
@@ -80,9 +102,13 @@ const FillBlanksContent = ({
   const renderPassageWithBlanks = () => {
     if (!passage) return null;
 
-    const processPassage = passage.replace(/\((\d+)\)/g, (match, number) => {
-      return `<span style="font-weight: 700; color: #1976d2; text-decoration: underline; text-decoration-style: dotted; cursor: pointer;">(${number})</span>`;
-    });
+    const processPassage = passage
+      .replace(/\((\d+)\)/g, (match, number) => {
+        return `<span style="display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; margin: 0 4px; vertical-align: middle; background-color: #FFF3E0; color: #E65100; border: 1px solid #FFB74D; border-radius: 6px; font-weight: 700; font-size: 0.9rem; cursor: default; user-select: none;">${number}</span>`;
+      })
+      .replace(/_+/g, () => {
+        return `<span style="display: inline-flex; width: 120px; height: 28px; margin: 0 4px; vertical-align: middle; border: 1px solid #B0BEC5; border-radius: 14px; background-color: transparent;"></span>`;
+      });
 
     return <div dangerouslySetInnerHTML={{ __html: processPassage }} />;
   };
@@ -190,21 +216,89 @@ const FillBlanksContent = ({
                 </Box>
               </Paper>
 
-              <Box sx={answerInputContainerStyles}>
-                {blanks.map((blankNumber) => (
-                  <Box key={blankNumber} sx={answerInputBoxStyles}>
-                    <Box sx={answerNumberStyles}>{blankNumber}</Box>
-                    <TextField
-                      fullWidth
-                      placeholder="Type answer ..."
-                      value={selectedAnswers[blankNumber] || ''}
-                      onChange={(e) => handleAnswerChange(blankNumber, e.target.value)}
-                      disabled={isTeacher}
-                      sx={answerInputStyles}
-                      variant="outlined"
-                    />
-                  </Box>
-                ))}
+              <Box
+                sx={{
+                  ...answerInputContainerStyles,
+                  gridTemplateColumns:
+                    questions &&
+                    questions.length > 0 &&
+                    questions.some((q) => q.options && q.options.length > 0)
+                      ? '1fr'
+                      : 'repeat(2, 1fr)',
+                }}
+              >
+                {questions &&
+                questions.length > 0 &&
+                questions.some((q) => q.options && q.options.length > 0)
+                  ? questions.map((question) => {
+                      const options = question.options || [];
+
+                      return (
+                        <Box key={question.id} sx={questionContainerStyles}>
+                          <Box sx={questionNumberStyles}>{question.id}</Box>
+                          <Box sx={{ flex: 1 }}>
+                            {/* Render question text if available, though Part 5 might not have specific text per question other than the gap */}
+                            <Typography
+                              sx={{ ...questionTextStyles, display: 'none' }}
+                              dangerouslySetInnerHTML={{ __html: `Question ${question.id}` }}
+                            />
+                            <FormControl component="fieldset" fullWidth>
+                              <RadioGroup
+                                value={selectedAnswers[question.id] || ''}
+                                onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                                sx={{
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: 1,
+                                  width: '100%',
+                                }}
+                              >
+                                {options.map((option, index) => (
+                                  <FormControlLabel
+                                    key={index}
+                                    value={option.value}
+                                    control={
+                                      <Radio
+                                        sx={{
+                                          color: 'text.primary',
+                                          '&.Mui-checked': {
+                                            color: 'secondary.main',
+                                          },
+                                        }}
+                                      />
+                                    }
+                                    label={
+                                      <Typography sx={optionLabelStyles}>{option.label}</Typography>
+                                    }
+                                    sx={{
+                                      ...optionContainerStyles,
+                                      width: '100%',
+                                      margin: 0,
+                                      mb: 1,
+                                    }}
+                                  />
+                                ))}
+                              </RadioGroup>
+                            </FormControl>
+                          </Box>
+                        </Box>
+                      );
+                    })
+                  : blanks.map((blankNumber) => (
+                      <Box key={blankNumber} sx={answerInputBoxStyles}>
+                        <Box sx={answerNumberStyles}>{blankNumber}</Box>
+                        <TextField
+                          fullWidth
+                          placeholder="Type answer ..."
+                          value={selectedAnswers[blankNumber] || ''}
+                          onChange={(e) => handleAnswerChange(blankNumber, e.target.value)}
+                          disabled={isTeacher}
+                          sx={answerInputStyles}
+                          variant="outlined"
+                          autoComplete="off"
+                        />
+                      </Box>
+                    ))}
               </Box>
 
               <Box sx={navigationFooterStyles}>
@@ -216,7 +310,15 @@ const FillBlanksContent = ({
                 </Typography>
                 <Button
                   variant="contained"
-                  sx={nextButtonStyles}
+                  sx={{
+                    ...nextButtonStyles,
+                    backgroundColor: 'primary.main',
+                    visibility: currentSection < totalSections ? 'visible' : 'hidden',
+                    pointerEvents: currentSection < totalSections ? 'auto' : 'none',
+                    '&:hover': {
+                      backgroundColor: 'primary.dark',
+                    },
+                  }}
                   onClick={onNext}
                   disabled={isTeacher}
                 >

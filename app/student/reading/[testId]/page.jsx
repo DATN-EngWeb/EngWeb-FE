@@ -124,12 +124,14 @@ export default function ReadingTestPage() {
   const handleBack = () => {
     if (currentPartIndex > 0) {
       setCurrentPartIndex(currentPartIndex - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handleNext = () => {
     if (testData && currentPartIndex < testData.parts.length - 1) {
       setCurrentPartIndex(currentPartIndex + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -239,6 +241,7 @@ export default function ReadingTestPage() {
             passage={currentPart.data.passage}
             passageTitle={currentPart.data.passageTitle}
             blanks={currentPart.data.blanks}
+            questions={currentPart.data.questions}
           />
         );
 
