@@ -737,7 +737,6 @@ export default function Page() {
         open={showPreview}
         onClose={() => setShowPreview(false)}
         testData={{ ...test, parts }}
-        testData={{ ...test, parts }}
       />
     </Box>
   );
