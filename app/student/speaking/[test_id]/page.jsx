@@ -1,5 +1,5 @@
 import ProductiveTestHistory from '../../../../components/Writing-Speaking/ProductiveTestHistory';
 
-export default function WritingTestPage() {
+export default function SpeakingTestPage() {
   return <ProductiveTestHistory />;
 }

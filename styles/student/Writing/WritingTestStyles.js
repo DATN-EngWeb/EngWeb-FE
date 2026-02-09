@@ -184,3 +184,14 @@ export const aiButton = {
     bgcolor: '#ffb300',
   },
 };
+
+export const speakingTestBox = {
+  height: '75%',
+  overflowY: 'auto',
+  pl: 1,
+  backgroundColor: 'white',
+  borderRadius: '16px',
+  boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+  display: 'flex',
+  flexDirection: 'column',
+};

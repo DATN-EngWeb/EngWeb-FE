@@ -43,9 +43,8 @@ const StatCard = ({ icon, value, variant }) => (
   </Box>
 );
 
-export default function WritingHub() {
+export default function ProductiveHub({ skill }) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [skillFilter, setSkillFilter] = useState('All Skills');
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [levelFilter, setLevelFilter] = useState('All Levels');
   const [sortBy, setSortBy] = useState('Newest List');
@@ -107,7 +106,7 @@ export default function WritingHub() {
 
       if (searchQuery) params.search = searchQuery;
       if (levelFilter !== 'All Levels') params.level = levelFilter;
-      params.skill = 'W';
+      params.skill = skill;
       params.status = 'P';
       params.progress_status = true;
       params.ordering = orderingMap[sortBy] || '-created_at';
@@ -145,10 +144,12 @@ export default function WritingHub() {
     <Box component="main" sx={styles.contentWrapper}>
       <Box sx={styles.welcomeHeader}>
         <Typography variant="h1" sx={styles.welcomeTitle}>
-          Writing Hub
+          {skill === 'W' ? 'Writing Hub' : 'Speaking Hub'}
         </Typography>
         <Typography variant="body1" sx={styles.welcomeSub}>
-          Improve your English writing skills with carefully prepared tests.
+          {skill === 'W'
+            ? 'Improve your English writing skills with carefully prepared tests.'
+            : 'Improve your English speaking skills with carefully prepared tests.'}
         </Typography>
 
         <Box sx={{ display: 'flex', gap: 2 }}>

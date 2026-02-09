@@ -14,14 +14,11 @@ import {
   Stack,
   LinearProgress,
   TextField,
-  FormControlLabel,
-  Checkbox,
   Collapse,
   Paper,
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogContentText,
   DialogActions,
 } from '@mui/material';
 import { useParams, useRouter } from 'next/navigation';
@@ -104,7 +101,7 @@ export default function WritingTest() {
           suggestion: response.productive_test.glue_text,
           audio: response.productive_test.glue_resources?.audio,
         });
-        const saved = sessionStorage.getItem('current_writing_attempt');
+        const saved = sessionStorage.getItem('current_productive_attempt');
         if (saved) {
           const parsed = JSON.parse(saved);
           setText(parsed.answer || '');
@@ -153,7 +150,6 @@ export default function WritingTest() {
       const response = await createProductiveTest(
         {
           productive_test: testId,
-          answer: text,
           total_time: secondsElapsed,
           type: 'S',
           start_time: startTime,
@@ -165,17 +161,17 @@ export default function WritingTest() {
       );
       console.log('Submission response:', response);
       setIsDraftSaved(true);
-      setTimeout(() => {
-        setIsSaving(false);
-        setSnackbar({ open: true, message: 'Test submitted successfully!', severity: 'success' });
-      }, 1500);
+      setIsSaving(false);
       setText('');
       setNote('');
       setSecondsElapsed(0);
       setIsFinished(false);
       setStartTime(new Date().toISOString());
-      sessionStorage.removeItem('current_writing_attempt');
-      router.push(`/student/writing/${testId}`);
+      setSnackbar({ open: true, message: 'Test submitted successfully!', severity: 'success' });
+      setTimeout(() => {
+        sessionStorage.removeItem('current_productive_attempt');
+        router.push(`/student/writing/${testId}`);
+      }, 1000);
     } catch (error) {
       console.error('Submission error:', error);
       setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
@@ -189,7 +185,6 @@ export default function WritingTest() {
       const response = await createProductiveTest(
         {
           productive_test: testId,
-          answer: text,
           total_time: secondsElapsed,
           type: 'D',
           start_time: startTime,
@@ -199,20 +194,18 @@ export default function WritingTest() {
         },
         token,
       );
-      console.log('startTime:', startTime);
-      console.log('endTime:', new Date().toISOString());
       setIsDraftSaved(true);
-      setTimeout(() => {
-        setIsSaving(false);
-        setSnackbar({ open: true, message: 'Draft saved successfully!', severity: 'success' });
-      }, 1500);
+      setIsSaving(false);
+      setSnackbar({ open: true, message: 'Draft saved successfully!', severity: 'success' });
       setText('');
       setNote('');
       setSecondsElapsed(0);
       setStartTime(new Date().toISOString());
       setIsFinished(false);
-      sessionStorage.removeItem('current_writing_attempt');
-      router.push(`/student/writing/${testId}`);
+      setTimeout(() => {
+        sessionStorage.removeItem('current_productive_attempt');
+        router.push(`/student/writing/${testId}`);
+      }, 1000);
     } catch (error) {
       console.error('Draft save error:', error);
       setSnackbar({ open: true, message: 'Failed to save draft', severity: 'error' });
@@ -423,7 +416,7 @@ export default function WritingTest() {
           </PanelGroup>
         </Box>
 
-        {/* Thông báo */}
+        {/* snackbar */}
         <Snackbar
           open={snackbar.open}
           autoHideDuration={4000}

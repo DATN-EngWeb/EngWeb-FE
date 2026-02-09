@@ -211,7 +211,11 @@ const TestCard = ({
   const submitStyle = getSubmitStyles(progress_status);
 
   const handleStudentViewTest = () => {
-    router.push(`/student/writing/${id}`);
+    {
+      skill === 'S'
+        ? router.push(`/student/speaking/${id}`)
+        : router.push(`/student/writing/${id}`);
+    }
   };
 
   return (

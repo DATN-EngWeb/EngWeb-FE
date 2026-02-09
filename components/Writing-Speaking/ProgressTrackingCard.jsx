@@ -16,7 +16,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import * as styles from './../../styles/student/HistoryTestStyles';
 
 export default function ProgressTrackingCard({ historyData }) {
-  const submissions = historyData?.filter((h) => h.status === 'S') || [];
+  const submissions = historyData?.filter((h) => h.type === 'S') || [];
 
   if (submissions.length === 0) {
     return (
@@ -54,7 +54,7 @@ export default function ProgressTrackingCard({ historyData }) {
       score: h.earned_bonus_point || 0,
     }));
 
-  // 2. Lấy điểm cao nhất
+  // 2. find best score
   const bestScore = Math.max(...chartData.map((d) => d.score), 0);
 
   return (
@@ -69,11 +69,11 @@ export default function ProgressTrackingCard({ historyData }) {
           Progress Tracking
         </Typography>
         <Typography variant="caption" fontWeight={700} color="text.secondary">
-          LAST 5 ATTEMPTS
+          LAST {submissions.length} ATTEMPTS
         </Typography>
       </Stack>
 
-      {/* Vùng biểu đồ */}
+      {/* chart area */}
       <Box sx={{ width: '100%', height: 180, mt: 2, mb: 2 }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData}>
@@ -105,7 +105,7 @@ export default function ProgressTrackingCard({ historyData }) {
         </ResponsiveContainer>
       </Box>
 
-      {/* Thông tin Personal Best */}
+      {/* Personal Best Information */}
       <Box
         sx={{
           mt: 2,

@@ -15,9 +15,19 @@ export default function HistoryItem({ data }) {
       isReadOnly: item.type === 'S',
       startTime: item.start_time,
       totalTime: item.total_time,
+      audio: item.audio_path,
     };
-    sessionStorage.setItem('current_writing_attempt', JSON.stringify(dataToSave));
-    router.push(`/student/writing/${item.productive_test}/${item.attempt}`);
+    sessionStorage.setItem('current_productive_attempt', JSON.stringify(dataToSave));
+    {
+      item.skill === 'S'
+        ? router.push(`/student/speaking/${item.productive_test}/${item.attempt}`)
+        : router.push(`/student/writing/${item.productive_test}/${item.attempt}`);
+    }
+  };
+  const formatTime = (totalSeconds) => {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
   return (
     <Paper sx={styles.historyItemPaper}>
@@ -25,7 +35,12 @@ export default function HistoryItem({ data }) {
         <Box>
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
             <Typography variant="subtitle2" fontWeight={800} color="text.secondary">
-              {new Date(data.end_time).toLocaleDateString('vi-VN')}
+              {data.end_time &&
+                new Date(data.end_time).toLocaleDateString('vi-VN', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                })}
             </Typography>
             {data.is_shared && (
               <Chip
@@ -56,11 +71,14 @@ export default function HistoryItem({ data }) {
             <Typography variant="caption" fontWeight={700} color="#ffb300">
               ⭐ 100 XP
             </Typography>
+            {data.skill === 'W' && (
+              <Typography variant="caption" fontWeight={700} color="text.secondary">
+                📄 {data.min_words} words
+              </Typography>
+            )}
+
             <Typography variant="caption" fontWeight={700} color="text.secondary">
-              📄 {data.word_count || 0} words
-            </Typography>
-            <Typography variant="caption" fontWeight={700} color="text.secondary">
-              ⏱️ {data.total_time || 0} mins
+              ⏱️ {formatTime(data.total_time)} mins
             </Typography>
           </Stack>
         </Box>

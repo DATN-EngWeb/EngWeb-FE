@@ -5,15 +5,15 @@ import EditNoteIcon from '@mui/icons-material/EditNote';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import InfoIcon from '@mui/icons-material/Info';
 import * as styles from '../../styles/student/HistoryTestStyles';
-import HistoryItem from '../Writing-Speaking/HistoryItem';
+import HistoryItem from './HistoryItem';
 import { levelTheme } from '../TestCard';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { getProductiveTest, getProductiveTestDetails } from '../../api/test';
-import { SidebarForum } from '../Writing-Speaking/SidebarForum';
-import { StudyTip } from '../Writing-Speaking/StudyTip';
+import { SidebarForum } from './SidebarForum';
+import { StudyTip } from './StudyTip';
 import Edit from '@mui/icons-material/Edit';
-import ProgressTrackingCard from '../Writing-Speaking/ProgressTrackingCard';
+import ProgressTrackingCard from './ProgressTrackingCard';
 import {
   Box,
   Alert,
@@ -26,7 +26,7 @@ import {
 } from '@mui/material';
 import HistoryEduIcon from '@mui/icons-material/HistoryEdu';
 
-export default function WritingTestHistory() {
+export default function ProductiveTestHistory() {
   const params = useParams();
   const test_id = params?.test_id;
   const router = useRouter();
@@ -73,13 +73,24 @@ export default function WritingTestHistory() {
       startTime: draft.start_time,
       totalTime: draft.total_time,
     };
-    sessionStorage.setItem('current_writing_attempt', JSON.stringify(dataToSave));
-    router.push(`/student/writing/${test_id}/${draft.id}`);
+    sessionStorage.setItem('current_productive_attempt', JSON.stringify(dataToSave));
+    {
+      testData.skill === 'S'
+        ? router.push(`/student/speaking/${test_id}/${draft.id}`)
+        : router.push(`/student/writing/${test_id}/${draft.id}`);
+    }
+  };
+  const handlePracticeNow = () => {
+    {
+      testData.skill === 'S'
+        ? router.push(`/student/speaking/${test_id}/${submissions.length + 1}`)
+        : router.push(`/student/writing/${test_id}/${submissions.length + 1}`);
+    }
   };
   return (
     <Box sx={styles.mainWrapper}>
       <Grid container spacing={4}>
-        {/* CỘT TRÁI */}
+        {/* column left */}
         <Grid item sx={{ width: '65%' }}>
           <Paper sx={styles.paperCard}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
@@ -105,7 +116,19 @@ export default function WritingTestHistory() {
               <SectionTitle title="Current Session" color="#ffb300" />
               <Paper sx={styles.draftPaper}>
                 <DraftActive
-                  lastSaved={draft ? new Date(draft.end_time).toLocaleString() : ''}
+                  lastSaved={
+                    draft
+                      ? new Date(draft.end_time).toLocaleString('vi-VN', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour12: false,
+                        })
+                      : ''
+                  }
                   onContinue={() => handleContinue()}
                 />
               </Paper>
@@ -120,7 +143,7 @@ export default function WritingTestHistory() {
                   backgroundColor: 'warning.main',
                   color: 'primary.main',
                 }}
-                onClick={() => router.push(`/student/writing/${test_id}/${submissions.length + 1}`)}
+                onClick={() => handlePracticeNow()}
               >
                 <>
                   <Edit sx={{ mr: 1 }} /> Practice Now
@@ -145,7 +168,16 @@ export default function WritingTestHistory() {
 
           <Stack spacing={2}>
             {submissions.length > 0 ? (
-              submissions.map((sub, index) => <HistoryItem key={index} data={sub} />)
+              submissions.map((sub, index) => (
+                <HistoryItem
+                  key={index}
+                  data={{
+                    ...sub,
+                    skill: testData.skill,
+                    min_words: testData.productive_test.min_word,
+                  }}
+                />
+              ))
             ) : (
               <Paper
                 sx={{
@@ -171,7 +203,7 @@ export default function WritingTestHistory() {
           </Stack>
         </Grid>
 
-        {/* CỘT PHẢI (Sidebar) */}
+        {/* column right (Sidebar) */}
 
         <Grid item sx={{ width: '30%' }}>
           <Stack spacing={3}>

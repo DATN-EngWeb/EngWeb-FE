@@ -1,5 +1,5 @@
-import WritingHub from '../../../components/Student/WritingHub';
+import ProductiveHub from '../../../components/Student/ProductiveHub';
 
 export default function WritingHubPage() {
-  return <WritingHub />;
+  return <ProductiveHub skill="W" />;
 }
