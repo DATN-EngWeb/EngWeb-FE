@@ -10,10 +10,11 @@ import {
   CheckCircle as SuccessIcon,
   Autorenew as PendingIcon,
   Description as DraftIcon,
+  Edit as Edit,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 
-const levelTheme = {
+export const levelTheme = {
   A1: {
     border: 'success.light',
     text: 'success.main',
@@ -33,7 +34,7 @@ const levelTheme = {
 
 const FormatTheme = {
   A: { bg: 'success.greenLight', text: 'success.green_dark' },
-  B: { bg: 'info.light', text: 'info.main' },
+  B: { bg: 'info.light', text: 'info.dark' },
   C: { bg: 'success.highlight', text: 'success.main_dark' },
   D: { bg: 'white', text: 'error.main' },
   E: { bg: 'text.gray', text: 'white' },
@@ -89,6 +90,7 @@ const TestCard = ({
   submissions,
   level,
   test_details,
+  progress_status,
 }) => {
   const [randomDelay, setRandomDelay] = useState('0s');
 
@@ -96,6 +98,7 @@ const TestCard = ({
   const formatCode = test_details?.format;
 
   const formatText = Formatlabels[formatCode];
+  const userRole = localStorage.getItem('userRole');
 
   const currentFormatStyle = FormatTheme[formatCode] || {
     bg: currentLevelTheme.badge,
@@ -173,7 +176,47 @@ const TestCard = ({
     }
   };
 
+  const getSubmitStyles = (status) => {
+    switch (status) {
+      case 'completed':
+        return {
+          icon: <SuccessIcon sx={{ fontSize: 'large', color: 'success.main' }} />,
+        };
+      case 'draft': // In Review
+        return {
+          color: 'secondary.dark',
+          icon: (
+            <PendingIcon
+              sx={{
+                fontSize: 'large',
+                color: 'secondary.dark',
+                animation: 'spin 2s linear infinite',
+                '@keyframes spin': {
+                  '0%': { transform: 'rotate(0deg)' },
+                  '100%': { transform: 'rotate(360deg)' },
+                },
+              }}
+            />
+          ),
+        };
+      case 'none': // Draft
+      default:
+        return {
+          icon: '',
+        };
+    }
+  };
+
   const statusStyle = getStatusStyles(status);
+  const submitStyle = getSubmitStyles(progress_status);
+
+  const handleStudentViewTest = () => {
+    {
+      skill === 'S'
+        ? router.push(`/student/speaking/${id}`)
+        : router.push(`/student/writing/${id}`);
+    }
+  };
 
   return (
     <Box
@@ -245,6 +288,7 @@ const TestCard = ({
           lineHeight: 1.3,
         }}
       >
+        {submitStyle.icon}
         {title}
       </Typography>
 
@@ -294,64 +338,100 @@ const TestCard = ({
             {submissions} submissions
           </Typography>
         </Box>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          {statusStyle.icon}
-          <Typography
+        {userRole === 'T' && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            {statusStyle.icon}
+            <Typography
+              sx={{
+                fontSize: '0.8rem',
+                color: statusStyle.color,
+              }}
+            >
+              {statusStyle.label}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+      {userRole === 'T' && (
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            fullWidth
+            variant="outlined"
+            startIcon={<EyeIcon />}
+            onClick={() => {
+              handleViewTest();
+            }}
             sx={{
-              fontSize: '0.8rem',
-              color: statusStyle.color,
+              bgcolor: 'white',
+              color: 'primary.dark',
+              borderColor: 'background.paper',
+              textTransform: 'none',
+              borderRadius: '8px',
+              fontWeight: 600,
+              '&:hover': {
+                borderColor: currentLevelTheme.badge,
+                bgcolor: currentLevelTheme.badge,
+              },
             }}
           >
-            {statusStyle.label}
-          </Typography>
-        </Box>
-      </Box>
+            View
+          </Button>
 
-      {/* Actions Section */}
-      <Box sx={{ display: 'flex', gap: 1 }}>
-        <Button
-          fullWidth
-          variant="outlined"
-          startIcon={<EyeIcon />}
-          onClick={() => {
-            handleViewTest();
-          }}
-          sx={{
-            bgcolor: 'white',
-            color: 'primary.dark',
-            borderColor: 'background.paper',
-            textTransform: 'none',
-            borderRadius: '8px',
-            fontWeight: 600,
-            '&:hover': {
-              borderColor: currentLevelTheme.badge,
-              bgcolor: currentLevelTheme.badge,
-            },
-          }}
-        >
-          View
-        </Button>
+          {status !== 'P' && (
+            <IconButtonAction
+              icon={<PencilIcon />}
+              color={currentLevelTheme.badge}
+              onClick={() => {
+                handleEdit();
+              }}
+            />
+          )}
 
-        {status !== 'P' && (
           <IconButtonAction
-            icon={<PencilIcon />}
-            color={currentLevelTheme.badge}
+            icon={<TrashIcon />}
+            color="error.main"
+            isDelete={true}
             onClick={() => {
-              handleEdit();
+              handleDelete();
             }}
           />
-        )}
-
-        <IconButtonAction
-          icon={<TrashIcon />}
-          color="error.main"
-          isDelete={true}
-          onClick={() => {
-            handleDelete();
-          }}
-        />
-      </Box>
+        </Box>
+      )}
+      {userRole === 'S' && (
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={() => {
+              handleStudentViewTest();
+            }}
+            sx={{
+              bgcolor: 'white',
+              color: 'primary.dark',
+              borderColor: 'background.paper',
+              textTransform: 'none',
+              borderRadius: '8px',
+              fontWeight: 600,
+              '&:hover': {
+                borderColor: currentLevelTheme.badge,
+                bgcolor: currentLevelTheme.badge,
+              },
+            }}
+          >
+            {progress_status === 'completed' ? (
+              <>
+                <EyeIcon sx={{ mr: 1 }} />
+                View
+              </>
+            ) : (
+              <>
+                <Edit sx={{ mr: 1 }} />
+                Practice
+              </>
+            )}
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 };
