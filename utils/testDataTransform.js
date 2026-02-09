@@ -57,6 +57,15 @@ export function transformFillBlanksTest(backendTest) {
       passage: part.content || '',
       passageTitle: part.description || '',
       blanks: extractBlanks(part.receptive_questions || []),
+      questions:
+        part.receptive_questions?.map((q) => ({
+          id: q.question_number,
+          options:
+            q.receptive_answers?.map((a) => ({
+              value: a.option_label,
+              label: `${a.option_label}. ${a.answer_text}`,
+            })) || [],
+        })) || [],
     }));
 
   return { parts };

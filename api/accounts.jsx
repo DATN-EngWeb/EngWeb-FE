@@ -236,3 +236,53 @@ export async function facebookLogin(code, role = 'S') {
 
   return handleResponse(response);
 }
+
+export async function getTeacherProfile(teacherId, accessToken) {
+  const response = await fetch(`${ACCOUNTS_BASE_URL}/teachers/${teacherId}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    cache: 'no-store',
+  });
+
+  return handleResponse(response);
+}
+
+export async function updateTeacherProfile(teacherId, formData, accessToken) {
+  const response = await fetch(`${ACCOUNTS_BASE_URL}/teachers/${teacherId}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: formData,
+    cache: 'no-store',
+  });
+
+  return handleResponse(response);
+}
+
+export async function getStudentProfile(studentId, accessToken) {
+  const response = await fetch(`${ACCOUNTS_BASE_URL}/students/${studentId}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    cache: 'no-store',
+  });
+
+  return handleResponse(response);
+}
+
+export async function updateStudentProfile(studentId, formData, accessToken) {
+  const response = await fetch(`${ACCOUNTS_BASE_URL}/students/${studentId}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: formData,
+    cache: 'no-store',
+  });
+
+  return handleResponse(response);
+}

@@ -27,7 +27,10 @@ import { loginStyles } from '../../styles/Login/LoginStyles';
 import { login as loginAPI } from '../../api/accounts';
 import { decodeJwt } from '../../utils/jwt';
 
+import Header from '../../components/Home/Header';
+
 function LoginContent() {
+  // ... existing hooks ...
   const router = useRouter();
   const searchParams = useSearchParams();
   const role = searchParams.get('role') || '';
@@ -60,6 +63,7 @@ function LoginContent() {
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
   const handleGoogleLogin = () => {
+    // ... existing logic ...
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
     const scope = 'email profile';
@@ -86,6 +90,7 @@ function LoginContent() {
   };
 
   const handleFacebookLogin = () => {
+    // ... existing logic ...
     const clientId = process.env.NEXT_PUBLIC_FACEBOOK_CLIENT_ID;
     const redirectUri = process.env.NEXT_PUBLIC_FACEBOOK_REDIRECT_URI;
     const scope = process.env.NEXT_PUBLIC_FACEBOOK_SCOPE;
@@ -116,6 +121,7 @@ function LoginContent() {
   };
 
   const handleSubmit = async (e) => {
+    // ... existing logic ...
     e.preventDefault();
     setServerError('');
     const newErrors = {};
@@ -231,184 +237,184 @@ function LoginContent() {
   };
 
   return (
-    <Box component="main" sx={loginStyles.page}>
-      <Box component="section" sx={loginStyles.storyPanel}>
-        <Button
-          onClick={() => router.push('/')}
-          sx={loginStyles.backButton}
-          aria-label="Back to home"
-        >
-          <Image src={Logo} alt="NENS" width={32} height={24} />
-        </Button>
-        <Image src={loginImage} alt="Login" style={loginStyles.storyImage} />
-      </Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <Header />
+      <Box component="main" sx={{ ...loginStyles.page, height: 'auto', flex: 1 }}>
+        <Box component="section" sx={loginStyles.storyPanel}>
+          <Image src={loginImage} alt="Login" style={loginStyles.storyImage} />
+        </Box>
 
-      <Box component="section" sx={loginStyles.formPanel}>
-        <Box sx={loginStyles.formCard}>
-          <Typography sx={loginStyles.cardEyebrow}>Welcome to NENS</Typography>
+        <Box component="section" sx={loginStyles.formPanel}>
+          <Box sx={loginStyles.formCard}>
+            <Typography sx={loginStyles.cardEyebrow}>Welcome to NENS</Typography>
 
-          {currentRole && (
-            <Box sx={loginStyles.roleBadge}>
-              Login as a{' '}
-              {currentRole === 'student'
-                ? 'student'
-                : currentRole === 'teacher'
-                  ? 'teacher'
-                  : currentRole}
-            </Box>
-          )}
-
-          <Box sx={loginStyles.switcherWrapper}>
-            <Stack direction="row" sx={loginStyles.switcher}>
-              <Button
-                disableElevation
-                sx={{ ...loginStyles.switchButton, ...loginStyles.switchActive }}
-              >
-                Login
-              </Button>
-
-              <Link
-                href={role ? `/register?role=${role}` : '/register'}
-                style={loginStyles.linkNoDecoration}
-              >
-                <Button disableElevation sx={loginStyles.switchButton}>
-                  Register
-                </Button>
-              </Link>
-            </Stack>
-          </Box>
-
-          <Box component="form" sx={loginStyles.form} onSubmit={handleSubmit}>
-            {serverError && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {serverError}
-              </Alert>
+            {currentRole && (
+              <Box sx={loginStyles.roleBadge}>
+                Login as a{' '}
+                {currentRole === 'student'
+                  ? 'student'
+                  : currentRole === 'teacher'
+                    ? 'teacher'
+                    : currentRole}
+              </Box>
             )}
 
-            <Box sx={loginStyles.fieldContainer}>
-              <Typography sx={loginStyles.fieldLabel}>Username or Email</Typography>
-              <TextField
-                name="username"
-                value={username}
-                onChange={(e) => {
-                  setUsername(e.target.value);
-                  if (errors.username) {
-                    setErrors({ ...errors, username: '' });
-                  }
-                }}
-                placeholder="Enter your username or email"
-                fullWidth
-                error={!!errors.username}
-                helperText={errors.username}
-                InputProps={{
-                  sx: {
-                    ...loginStyles.textFieldInputProps,
-                    ...(errors.username && {
-                      borderColor: 'error.main',
-                      border: '2px solid',
-                    }),
-                  },
-                }}
-                inputProps={{
-                  sx: loginStyles.textFieldInputPropsPlaceholder,
-                }}
-                FormHelperTextProps={{
-                  sx: {
-                    color: 'error.main',
-                    margin: '4px 0 0 0',
-                    fontSize: '0.875rem',
-                  },
-                }}
-              />
-            </Box>
-
-            <Box sx={loginStyles.fieldContainerSmall}>
-              <Typography sx={loginStyles.fieldLabel}>Password</Typography>
-              <TextField
-                name="password"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (errors.password) {
-                    setErrors({ ...errors, password: '' });
-                  }
-                }}
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your Password"
-                fullWidth
-                error={!!errors.password}
-                helperText={errors.password}
-                InputProps={{
-                  sx: {
-                    ...loginStyles.textFieldInputProps,
-                    ...(errors.password && {
-                      borderColor: 'error.main',
-                      border: '2px solid',
-                    }),
-                  },
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={handleClickShowPassword}
-                        edge="end"
-                        sx={loginStyles.passwordIconButton}
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                inputProps={{
-                  sx: loginStyles.textFieldInputPropsPlaceholder,
-                }}
-                FormHelperTextProps={{
-                  sx: {
-                    color: 'error.main',
-                    margin: '4px 0 0 0',
-                    fontSize: '0.875rem',
-                  },
-                }}
-              />
-            </Box>
-
-            <Box sx={loginStyles.formMeta}>
-              <FormControlLabel
-                control={<Checkbox color="warning" size="small" />}
-                label="Remember me"
-                sx={loginStyles.rememberMeLabel}
-              />
-              <Link href="/forgot-password" style={{ textDecoration: 'none' }}>
-                <Button variant="text" sx={loginStyles.forgotPasswordButton}>
-                  Forgot Password ?
+            <Box sx={loginStyles.switcherWrapper}>
+              <Stack direction="row" sx={loginStyles.switcher}>
+                <Button
+                  disableElevation
+                  sx={{ ...loginStyles.switchButton, ...loginStyles.switchActive }}
+                >
+                  Login
                 </Button>
-              </Link>
+
+                <Link
+                  href={role ? `/register?role=${role}` : '/register'}
+                  style={loginStyles.linkNoDecoration}
+                >
+                  <Button disableElevation sx={loginStyles.switchButton}>
+                    Register
+                  </Button>
+                </Link>
+              </Stack>
             </Box>
 
-            <Button
-              type="submit"
-              variant="contained"
-              sx={loginStyles.primaryButton}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Logging in...' : 'Login'}
-            </Button>
-          </Box>
+            <Box component="form" sx={loginStyles.form} onSubmit={handleSubmit}>
+              {serverError && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {serverError}
+                </Alert>
+              )}
 
-          <Divider sx={loginStyles.divider}>Continue with</Divider>
+              <Box sx={loginStyles.fieldContainer}>
+                <Typography sx={loginStyles.fieldLabel}>Username or Email</Typography>
+                <TextField
+                  name="username"
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    if (errors.username) {
+                      setErrors({ ...errors, username: '' });
+                    }
+                  }}
+                  placeholder="Enter your username or email"
+                  fullWidth
+                  error={!!errors.username}
+                  helperText={errors.username}
+                  InputProps={{
+                    sx: {
+                      ...loginStyles.textFieldInputProps,
+                      ...(errors.username && {
+                        borderColor: 'error.main',
+                        border: '2px solid',
+                      }),
+                    },
+                  }}
+                  inputProps={{
+                    sx: loginStyles.textFieldInputPropsPlaceholder,
+                  }}
+                  FormHelperTextProps={{
+                    sx: {
+                      color: 'error.main',
+                      margin: '4px 0 0 0',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+              </Box>
 
-          <Box sx={loginStyles.socialRow}>
-            <Button variant="outlined" sx={loginStyles.socialButton} onClick={handleGoogleLogin}>
-              <Box sx={loginStyles.socialButtonContent}>
-                <Image src={googleImage} alt="Google" width={15} height={15} />
-                Google
+              <Box sx={loginStyles.fieldContainerSmall}>
+                <Typography sx={loginStyles.fieldLabel}>Password</Typography>
+                <TextField
+                  name="password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errors.password) {
+                      setErrors({ ...errors, password: '' });
+                    }
+                  }}
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your Password"
+                  fullWidth
+                  error={!!errors.password}
+                  helperText={errors.password}
+                  InputProps={{
+                    sx: {
+                      ...loginStyles.textFieldInputProps,
+                      ...(errors.password && {
+                        borderColor: 'error.main',
+                        border: '2px solid',
+                      }),
+                    },
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={handleClickShowPassword}
+                          edge="end"
+                          sx={loginStyles.passwordIconButton}
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  inputProps={{
+                    sx: loginStyles.textFieldInputPropsPlaceholder,
+                  }}
+                  FormHelperTextProps={{
+                    sx: {
+                      color: 'error.main',
+                      margin: '4px 0 0 0',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
               </Box>
-            </Button>
-            <Button variant="outlined" sx={loginStyles.socialButton} onClick={handleFacebookLogin}>
-              <Box sx={loginStyles.socialButtonContent}>
-                <Image src={facebookImage} alt="Facebook" width={20} height={20} />
-                Facebook
+
+              <Box sx={loginStyles.formMeta}>
+                <FormControlLabel
+                  control={<Checkbox color="warning" size="small" />}
+                  label="Remember me"
+                  sx={loginStyles.rememberMeLabel}
+                />
+                <Link href="/forgot-password" style={{ textDecoration: 'none' }}>
+                  <Button variant="text" sx={loginStyles.forgotPasswordButton}>
+                    Forgot Password ?
+                  </Button>
+                </Link>
               </Box>
-            </Button>
+
+              <Button
+                type="submit"
+                variant="contained"
+                sx={loginStyles.primaryButton}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Logging in...' : 'Login'}
+              </Button>
+            </Box>
+
+            <Divider sx={loginStyles.divider}>Continue with</Divider>
+
+            <Box sx={loginStyles.socialRow}>
+              <Button variant="outlined" sx={loginStyles.socialButton} onClick={handleGoogleLogin}>
+                <Box sx={loginStyles.socialButtonContent}>
+                  <Image src={googleImage} alt="Google" width={15} height={15} />
+                  Google
+                </Box>
+              </Button>
+              <Button
+                variant="outlined"
+                sx={loginStyles.socialButton}
+                onClick={handleFacebookLogin}
+              >
+                <Box sx={loginStyles.socialButtonContent}>
+                  <Image src={facebookImage} alt="Facebook" width={20} height={20} />
+                  Facebook
+                </Box>
+              </Button>
+            </Box>
           </Box>
         </Box>
       </Box>

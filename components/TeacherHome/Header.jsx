@@ -142,7 +142,12 @@ export default function TeacherHeader() {
                 horizontal: 'right',
               }}
             >
-              <MenuItem onClick={handleMenuClose}>
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose();
+                  router.push('/teacher/profile');
+                }}
+              >
                 <Typography>Profile</Typography>
               </MenuItem>
               <MenuItem onClick={handleLogout}>

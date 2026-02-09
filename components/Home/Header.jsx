@@ -183,7 +183,12 @@ export default function Header() {
                       'aria-labelledby': 'user-menu-button',
                     }}
                   >
-                    <MenuItem onClick={handleMenuClose}>
+                    <MenuItem
+                      onClick={() => {
+                        handleMenuClose();
+                        router.push(user?.role === 'T' ? '/teacher/profile' : '/profile');
+                      }}
+                    >
                       <Typography>Profile</Typography>
                     </MenuItem>
                     <MenuItem onClick={handleLogout}>
