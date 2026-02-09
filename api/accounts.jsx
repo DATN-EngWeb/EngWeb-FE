@@ -205,7 +205,7 @@ export async function resetPassword({ resetToken, newPassword }) {
   return handleResponse(response);
 }
 
-export async function googleLogin(code, role = 'S') {
+export async function googleLogin(code, role) {
   const response = await fetch(`${ACCOUNTS_BASE_URL}/auth/google/login`, {
     method: 'POST',
     headers: {
@@ -221,7 +221,7 @@ export async function googleLogin(code, role = 'S') {
   return handleResponse(response);
 }
 
-export async function facebookLogin(code, role = 'S') {
+export async function facebookLogin(code, role) {
   const response = await fetch(`${ACCOUNTS_BASE_URL}/auth/facebook/login`, {
     method: 'POST',
     headers: {

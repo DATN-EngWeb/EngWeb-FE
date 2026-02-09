@@ -31,33 +31,17 @@ function RegisterContent() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
-  const [currentRole, setCurrentRole] = useState('');
+  const [currentRole, setCurrentRole] = useState('student');
   const [serverError, setServerError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    // Prefer role from URL; fall back to stored role
-    if (typeof window === 'undefined') return;
-
-    if (role) {
-      setCurrentRole(role);
-      localStorage.setItem('userRole', role);
-      document.cookie = `userRole=${role}; path=/; max-age=2592000; SameSite=Lax`;
-      return;
+    const r = searchParams.get('role');
+    if (r) {
+      setCurrentRole(r);
+      document.cookie = `userRole=${r}; path=/; max-age=2592000; SameSite=Lax`;
     }
-
-    const getCookie = (name) => {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop().split(';').shift();
-      return null;
-    };
-
-    const storedRole = getCookie('userRole') || localStorage.getItem('userRole');
-    if (storedRole) {
-      setCurrentRole(storedRole);
-    }
-  }, [role]);
+  }, [searchParams]);
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -134,33 +118,72 @@ function RegisterContent() {
           <Box sx={loginStyles.formCard}>
             <Typography sx={loginStyles.cardEyebrow}>Welcome to NENS</Typography>
 
-            {currentRole && (
-              <Box sx={loginStyles.roleBadge}>
-                Register as a{' '}
-                {currentRole === 'student'
-                  ? 'student'
-                  : currentRole === 'teacher'
-                    ? 'teacher'
-                    : currentRole}
-              </Box>
-            )}
-
-            <Box sx={loginStyles.switcherWrapper}>
-              <Stack direction="row" sx={loginStyles.switcher}>
-                <Link
-                  href={role ? `/login?role=${role}` : '/login'}
-                  style={loginStyles.linkNoDecoration}
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+              <Stack direction="row" spacing={15} justifyContent="center">
+                <Box
+                  onClick={() => {
+                    setCurrentRole('student');
+                    document.cookie = `userRole=student; path=/; max-age=2592000; SameSite=Lax`;
+                    router.push('/register?role=student');
+                  }}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    cursor: 'pointer',
+                    pb: 1.5,
+                    borderBottom: '3px solid',
+                    borderColor: currentRole === 'student' ? 'primary.main' : 'transparent',
+                    color: currentRole === 'student' ? 'primary.main' : 'text.gray',
+                    transition: 'all 0.3s',
+                  }}
                 >
-                  <Button disableElevation sx={loginStyles.switchButton}>
-                    Login
-                  </Button>
-                </Link>
-                <Button
-                  disableElevation
-                  sx={{ ...loginStyles.switchButton, ...loginStyles.switchActive }}
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 3L1 9L12 15L21 10.09V17H23V9L12 3ZM12 5.18L18.99 9L12 12.82L5.01 9L12 5.18ZM12 15.82L5 12.06V15.06L12 18.82L19 15.06V12.06L12 15.82Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  <Typography sx={{ fontWeight: 600, fontSize: '1rem' }}>Student</Typography>
+                </Box>
+                <Box
+                  onClick={() => {
+                    setCurrentRole('teacher');
+                    document.cookie = `userRole=teacher; path=/; max-age=2592000; SameSite=Lax`;
+                    router.push('/register?role=teacher');
+                  }}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    cursor: 'pointer',
+                    pb: 1.5,
+                    borderBottom: '3px solid',
+                    borderColor: currentRole === 'teacher' ? 'primary.main' : 'transparent',
+                    color: currentRole === 'teacher' ? 'primary.main' : 'text.gray',
+                    transition: 'all 0.3s',
+                  }}
                 >
-                  Register
-                </Button>
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.33 4 18V20H20V18C20 15.33 14.67 14 12 14Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  <Typography sx={{ fontWeight: 600, fontSize: '1rem' }}>Teacher</Typography>
+                </Box>
               </Stack>
             </Box>
 

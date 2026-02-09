@@ -30,35 +30,14 @@ import { decodeJwt } from '../../utils/jwt';
 import Header from '../../components/Home/Header';
 
 function LoginContent() {
-  // ... existing hooks ...
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const role = searchParams.get('role') || '';
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
-  const [currentRole, setCurrentRole] = useState('');
   const [serverError, setServerError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const getCookie = (name) => {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
-        return null;
-      };
-
-      const storedRole = getCookie('userRole') || localStorage.getItem('userRole');
-      if (storedRole) {
-        setCurrentRole(storedRole);
-      } else if (role) {
-        setCurrentRole(role);
-      }
-    }
-  }, [role]);
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -78,11 +57,8 @@ function LoginContent() {
       return;
     }
 
-    // Get role from currentRole or default to 'S' (Student)
-    const role = currentRole === 'teacher' ? 'T' : 'S';
-
-    // Encode role in state parameter
-    const state = encodeURIComponent(JSON.stringify({ role }));
+    // For social login, we'll let the backend determine the role from the account
+    const state = encodeURIComponent(JSON.stringify({}));
 
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent&state=${state}`;
 
@@ -110,8 +86,7 @@ function LoginContent() {
       return;
     }
 
-    const role = currentRole === 'teacher' ? 'T' : 'S';
-    const state = encodeURIComponent(JSON.stringify({ role }));
+    const state = encodeURIComponent(JSON.stringify({}));
 
     const authUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(
       redirectUri,
@@ -178,7 +153,7 @@ function LoginContent() {
 
       // Case 2: Pending Verification - status P
       if (response.require_verification && response.user_id) {
-        const userRole = response.role || currentRole || 'student';
+        const userRole = response.role || 'student';
         router.push(`/verify-otp?user_id=${response.user_id}&role=${userRole}`);
         return;
       }
@@ -209,7 +184,7 @@ function LoginContent() {
 
       // Check if it's a status-based error (P, I, W, D)
       if (errorData.require_verification && errorData.user_id) {
-        const userRole = errorData.role || currentRole || 'student';
+        const userRole = errorData.role || 'student';
         router.push(`/verify-otp?user_id=${errorData.user_id}&role=${userRole}`);
         return;
       }
@@ -247,37 +222,6 @@ function LoginContent() {
         <Box component="section" sx={loginStyles.formPanel}>
           <Box sx={loginStyles.formCard}>
             <Typography sx={loginStyles.cardEyebrow}>Welcome to NENS</Typography>
-
-            {currentRole && (
-              <Box sx={loginStyles.roleBadge}>
-                Login as a{' '}
-                {currentRole === 'student'
-                  ? 'student'
-                  : currentRole === 'teacher'
-                    ? 'teacher'
-                    : currentRole}
-              </Box>
-            )}
-
-            <Box sx={loginStyles.switcherWrapper}>
-              <Stack direction="row" sx={loginStyles.switcher}>
-                <Button
-                  disableElevation
-                  sx={{ ...loginStyles.switchButton, ...loginStyles.switchActive }}
-                >
-                  Login
-                </Button>
-
-                <Link
-                  href={role ? `/register?role=${role}` : '/register'}
-                  style={loginStyles.linkNoDecoration}
-                >
-                  <Button disableElevation sx={loginStyles.switchButton}>
-                    Register
-                  </Button>
-                </Link>
-              </Stack>
-            </Box>
 
             <Box component="form" sx={loginStyles.form} onSubmit={handleSubmit}>
               {serverError && (
