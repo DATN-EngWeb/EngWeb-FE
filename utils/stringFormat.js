@@ -13,3 +13,10 @@ export const getListeningTestTypeLabel = (type) => {
       return 'Unknown Test Type';
   }
 };
+
+export const formatTimeFromMinutes = (minutes) => {
+  if (!minutes || isNaN(minutes)) return '00:00';
+  const mins = Math.floor(minutes);
+  const secs = Math.round((minutes - mins) * 60);
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+};

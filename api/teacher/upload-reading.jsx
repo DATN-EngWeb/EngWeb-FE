@@ -128,3 +128,42 @@ export async function updateReadingTestContent(testId, updatePayload, accessToke
 
   return handleResponse(response);
 }
+
+export const loadAudioSource = async (url) => {
+  if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+    return url;
+  }
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Không thể tải file âm thanh');
+
+    const audioBlob = await response.blob();
+
+    return URL.createObjectURL(audioBlob);
+  } catch (error) {
+    console.error(`Lỗi xử lý audio từ: ${url}`, error);
+    return null;
+  }
+};
+
+export const loadImageSource = async (url) => {
+  if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+    return url;
+  }
+
+  try {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Lỗi HTTP: ${response.status}`);
+    }
+
+    const imageBlob = await response.blob();
+
+    return URL.createObjectURL(imageBlob);
+  } catch (error) {
+    console.error(`Lỗi xử lý hình ảnh từ: ${url}`, error);
+    return null;
+  }
+};
