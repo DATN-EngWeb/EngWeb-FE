@@ -208,9 +208,11 @@ export default function ReadingHub() {
                         </InputAdornment>
                       ),
                       sx: {
-                        bgcolor: '#FFFFFF',
+                        bgcolor: 'background.paper',
                         borderRadius: 2,
-                        '& fieldset': { borderColor: '#E0E0E0' },
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        '& fieldset': { border: 'none' },
                       },
                     }}
                   />
@@ -233,9 +235,11 @@ export default function ReadingHub() {
                         </InputAdornment>
                       ),
                       sx: {
-                        bgcolor: '#FFFFFF',
+                        bgcolor: 'background.paper',
                         borderRadius: 2,
-                        '& fieldset': { borderColor: '#E0E0E0' },
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        '& fieldset': { border: 'none' },
                       },
                     }}
                   />
@@ -251,9 +255,11 @@ export default function ReadingHub() {
                     value={filters.year}
                     onChange={(e) => handleFilterChange('year', e.target.value)}
                     sx={{
-                      bgcolor: '#FFFFFF',
+                      bgcolor: 'background.paper',
                       borderRadius: 2,
-                      '& fieldset': { borderColor: '#E0E0E0' },
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      '& fieldset': { border: 'none' },
                     }}
                   >
                     {YEARS.map((year) => (
@@ -331,9 +337,11 @@ export default function ReadingHub() {
                       value={filters.status}
                       onChange={(e) => handleFilterChange('status', e.target.value)}
                       sx={{
-                        bgcolor: '#FFFFFF',
+                        bgcolor: 'background.paper',
                         borderRadius: 2,
-                        '& fieldset': { borderColor: '#E0E0E0' },
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        '& fieldset': { border: 'none' },
                       }}
                     >
                       <MenuItem value="">All Statuses</MenuItem>
@@ -384,7 +392,9 @@ export default function ReadingHub() {
                 size="small"
                 sx={{
                   minWidth: 160,
-                  bgcolor: 'background.default',
+                  bgcolor: 'background.paper',
+                  border: '1px solid',
+                  borderColor: 'divider',
                   '& fieldset': { border: 'none' },
                 }}
               >
@@ -403,7 +413,7 @@ export default function ReadingHub() {
             ) : error ? (
               <Alert severity="error">{error}</Alert>
             ) : (
-              <Grid container columnSpacing={6} rowSpacing={4}>
+              <Grid container columnSpacing={3} rowSpacing={3}>
                 {tests.map((test) => (
                   <Grid item xs={12} sm={6} md={6} lg={4} xl={3} key={test.id}>
                     <TestCard role="student" {...test} />
