@@ -101,7 +101,7 @@ export default function WritingTest() {
         const htmlText = await desResponse.text();
 
         const audioUrlFromServer = response.productive_test.glue_resources?.audio;
-
+        console.log('Fetched test data:', audioUrlFromServer);
         setQuestion({
           description: htmlText,
           suggestion: response.productive_test.glue_text,
@@ -327,7 +327,7 @@ export default function WritingTest() {
                   title={testData.title}
                   description={question.description}
                   suggestion={question.suggestion}
-                  audio={question.audio}
+                  audio={question.audio?.url}
                 />
               </Box>
             </Panel>

@@ -1,7 +1,7 @@
 /* global fetch */
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import ProductiveTestEditor from './../Writing-Speaking/ProductiveTestEditor';
 import ProductiveEditor from './../Writing-Speaking/ProductiveEditor';
 import ProductivePreview from './../Writing-Speaking/ProductivePreview';
@@ -10,22 +10,18 @@ import { uploadHtmlContent, uploadMediaFile } from '../../utils/uploadHelpers';
 
 export default function UpdateSpeakingTestEditor() {
   const [mounted, setMounted] = useState(false);
-
+  const router = useRouter();
   const reverseFormatMapper = {
-    A: 'Email',
-    B: 'Article',
-    C: 'Story',
-    D: 'Essay',
-    E: 'Letter',
-    F: 'Reviews',
+    G: 'Narrative',
+    H: 'Description',
+    I: 'Social Argument',
+    J: 'Reading Aloud',
   };
   const formatMapper = {
-    Email: 'A',
-    Article: 'B',
-    Story: 'C',
-    Essay: 'D',
-    Letter: 'E',
-    Reviews: 'F',
+    Narrative: 'G',
+    Description: 'H',
+    'Social Argument': 'I',
+    'Reading Aloud': 'J',
   };
 
   const { test_id: testId } = useParams();
@@ -79,6 +75,9 @@ export default function UpdateSpeakingTestEditor() {
         timeLimit: response.time,
         score: response.completed_bonus,
       });
+
+      console.log('cc', testData.format);
+      console.log('Fetched test data:', response.productive_test.format);
 
       // Fetch HTML content từ link Google Storage
       const desResponse = await fetch(response.productive_test.description);
@@ -175,7 +174,9 @@ export default function UpdateSpeakingTestEditor() {
         await updateProductiveTest(testId, updatePayload, token);
 
         setSnackbar({ open: true, message: 'Updated successfully!', severity: 'success' });
-        await loadTestData();
+        setTimeout(() => {
+          router.push(`/teacher`);
+        }, 1000);
       } else {
         setSnackbar({ open: true, message: 'No changes detected', severity: 'info' });
       }

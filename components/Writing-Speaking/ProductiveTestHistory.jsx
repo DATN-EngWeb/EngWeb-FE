@@ -82,6 +82,7 @@ export default function ProductiveTestHistory() {
   };
   const handlePracticeNow = () => {
     {
+      sessionStorage.removeItem('current_productive_attempt');
       testData.skill === 'S'
         ? router.push(`/student/speaking/${test_id}/${submissions.length + 1}`)
         : router.push(`/student/writing/${test_id}/${submissions.length + 1}`);

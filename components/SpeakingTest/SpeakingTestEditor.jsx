@@ -5,8 +5,10 @@ import ProductiveEditor from './../Writing-Speaking/ProductiveEditor';
 import ProductivePreview from './../Writing-Speaking/ProductivePreview';
 import { createTest, submitProductiveTest } from '../../api/test';
 import { uploadHtmlContent, uploadMediaFile } from '../../utils/uploadHelpers';
+import { useRouter } from 'next/navigation';
 
 export default function SpeakingTestEditor() {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [testData, setTestData] = useState({
     skill: 'S',
@@ -88,6 +90,9 @@ export default function SpeakingTestEditor() {
       setQuestion({ description: '', suggestion: '', audio: null });
       setErrors(null);
       setIsSaving(false);
+      setTimeout(() => {
+        router.push(`/teacher/upload`);
+      }, 1000);
     } catch (error) {
       setSnackbar({ open: true, message: `Submit failed: ${error.message}`, severity: 'error' });
       setIsSaving(false);
