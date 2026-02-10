@@ -2,38 +2,25 @@
 
 import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Box, CircularProgress, Typography, Alert } from '@mui/material';
+import { Box, CircularProgress, Typography, Alert, Card, CardContent } from '@mui/material';
+import Image from 'next/image';
 import { facebookLogin } from '../../../api/accounts';
 import { decodeJwt } from '../../../utils/jwt';
+import StudentIcon from '../../../assets/img/student.png';
+import TeacherIcon from '../../../assets/img/teacher.png';
+import { roleModalStyles } from '../../../styles/Login/RoleModalStyles';
 
 function FacebookCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState(null);
   const [isProcessing, setIsProcessing] = useState(true);
+  const [needsRoleSelection, setNeedsRoleSelection] = useState(false);
+  const [authCode, setAuthCode] = useState(null);
 
-  const handleCallback = useCallback(async () => {
+  const processLogin = async (code, role) => {
     try {
-      const code = searchParams.get('code');
-      const state = searchParams.get('state');
-
-      if (!code) {
-        setError('No authorization code received from Facebook');
-        setIsProcessing(false);
-        setTimeout(() => router.push('/login'), 3000);
-        return;
-      }
-
-      let role = 'S';
-      if (state) {
-        try {
-          const stateData = JSON.parse(decodeURIComponent(state));
-          role = stateData.role || 'S';
-        } catch {
-          role = 'S';
-        }
-      }
-
+      setIsProcessing(true);
       const response = await facebookLogin(code, role);
 
       if (typeof window !== 'undefined') {
@@ -58,7 +45,11 @@ function FacebookCallbackContent() {
       }
 
       if (response.status === 'V') {
-        router.push('/');
+        if (response.role === 'T') {
+          router.push('/teacher');
+        } else {
+          router.push('/');
+        }
         return;
       }
 
@@ -97,9 +88,46 @@ function FacebookCallbackContent() {
 
       router.push('/');
     } catch (err) {
+      if (!role) {
+        setNeedsRoleSelection(true);
+        setIsProcessing(false);
+        return;
+      }
       setError(
         err.message || err.data?.error || 'Failed to authenticate with Facebook. Please try again.',
       );
+      setIsProcessing(false);
+      setTimeout(() => router.push('/login'), 3000);
+    }
+  };
+
+  const handleCallback = useCallback(async () => {
+    try {
+      const code = searchParams.get('code');
+      const state = searchParams.get('state');
+
+      if (!code) {
+        setError('No authorization code received from Facebook');
+        setIsProcessing(false);
+        setTimeout(() => router.push('/login'), 3000);
+        return;
+      }
+
+      setAuthCode(code);
+
+      let role = null;
+      if (state) {
+        try {
+          const stateData = JSON.parse(decodeURIComponent(state));
+          role = stateData.role;
+        } catch {
+          // If state parsing fails, we treat role as missing
+        }
+      }
+
+      processLogin(code, role);
+    } catch (err) {
+      setError(err.message || err.data?.error || 'Failed to process callback. Please try again.');
       setIsProcessing(false);
       setTimeout(() => router.push('/login'), 3000);
     }
@@ -108,6 +136,88 @@ function FacebookCallbackContent() {
   useEffect(() => {
     handleCallback();
   }, [handleCallback]);
+
+  if (needsRoleSelection) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          bgcolor: 'background.default',
+          p: 3,
+        }}
+      >
+        <Box
+          sx={{
+            ...roleModalStyles.dialogPaper,
+            border: 'none',
+            p: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            width: '100%',
+            maxWidth: '600px',
+          }}
+        >
+          <Typography sx={roleModalStyles.title}>Welcome to EngApp</Typography>
+          <Typography sx={{ mb: 4, color: 'text.secondary', textAlign: 'center' }}>
+            Please select your role to continue
+          </Typography>
+
+          <Box sx={roleModalStyles.cardsContainer}>
+            {/* Student Card */}
+            <Card
+              sx={roleModalStyles.card}
+              onClick={() => processLogin(authCode, 'S')}
+              role="button"
+              tabIndex={0}
+            >
+              <CardContent sx={roleModalStyles.cardContent}>
+                <Box sx={roleModalStyles.iconContainer}>
+                  <Image
+                    src={StudentIcon}
+                    alt="Student"
+                    width={180}
+                    height={180}
+                    style={roleModalStyles.icon}
+                  />
+                </Box>
+                <Box component="span" sx={roleModalStyles.roleButton}>
+                  I am a student
+                </Box>
+              </CardContent>
+            </Card>
+
+            {/* Teacher Card */}
+            <Card
+              sx={roleModalStyles.card}
+              onClick={() => processLogin(authCode, 'T')}
+              role="button"
+              tabIndex={0}
+            >
+              <CardContent sx={roleModalStyles.cardContent}>
+                <Box sx={roleModalStyles.iconContainer}>
+                  <Image
+                    src={TeacherIcon}
+                    alt="Teacher"
+                    width={180}
+                    height={180}
+                    style={roleModalStyles.icon}
+                  />
+                </Box>
+                <Box component="span" sx={roleModalStyles.roleButton}>
+                  I am a teacher
+                </Box>
+              </CardContent>
+            </Card>
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
 
   if (error) {
     return (

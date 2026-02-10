@@ -2,41 +2,25 @@
 
 import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Box, CircularProgress, Typography, Alert } from '@mui/material';
+import { Box, CircularProgress, Typography, Alert, Card, CardContent } from '@mui/material';
+import Image from 'next/image';
 import { googleLogin } from '../../../api/accounts';
 import { decodeJwt } from '../../../utils/jwt';
+import StudentIcon from '../../../assets/img/student.png';
+import TeacherIcon from '../../../assets/img/teacher.png';
+import { roleModalStyles } from '../../../styles/Login/RoleModalStyles';
 
 function GoogleCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState(null);
   const [isProcessing, setIsProcessing] = useState(true);
+  const [needsRoleSelection, setNeedsRoleSelection] = useState(false);
+  const [authCode, setAuthCode] = useState(null);
 
-  const handleCallback = useCallback(async () => {
+  const processLogin = async (code, role) => {
     try {
-      // Get code and state from URL query parameters
-      const code = searchParams.get('code');
-      const state = searchParams.get('state');
-
-      if (!code) {
-        setError('No authorization code received from Google');
-        setIsProcessing(false);
-        setTimeout(() => router.push('/login'), 3000);
-        return;
-      }
-
-      // Parse role from state parameter (default to 'S' if not provided)
-      let role = 'S';
-      if (state) {
-        try {
-          const stateData = JSON.parse(decodeURIComponent(state));
-          role = stateData.role || 'S';
-        } catch (e) {
-          // If state parsing fails, default to Student
-          role = 'S';
-        }
-      }
-
+      setIsProcessing(true);
       // Call backend API to exchange code for tokens
       const response = await googleLogin(code, role);
 
@@ -64,8 +48,12 @@ function GoogleCallbackContent() {
 
       // Handle redirect based on status
       if (response.status === 'V') {
-        // Verified - redirect to home
-        router.push('/');
+        // Verified - redirect based on role
+        if (response.role === 'T') {
+          router.push('/teacher');
+        } else {
+          router.push('/');
+        }
       } else if (response.status === 'I' || response.require_profile) {
         // Incomplete profile - redirect to upload profile
         router.push(`/upload-profile?user_id=${response.user_id}`);
@@ -84,9 +72,52 @@ function GoogleCallbackContent() {
         router.push('/');
       }
     } catch (err) {
+      // If error occurs and we haven't selected a role yet, prompt for role
+      // This assumes the backend failed because role was missing for a new user
+      if (!role) {
+        setNeedsRoleSelection(true);
+        setIsProcessing(false);
+        return;
+      }
+
       setError(
         err.message || err.data?.error || 'Failed to authenticate with Google. Please try again.',
       );
+      setIsProcessing(false);
+      setTimeout(() => router.push('/login'), 3000);
+    }
+  };
+
+  const handleCallback = useCallback(async () => {
+    try {
+      // Get code and state from URL query parameters
+      const code = searchParams.get('code');
+      const state = searchParams.get('state');
+
+      if (!code) {
+        setError('No authorization code received from Google');
+        setIsProcessing(false);
+        setTimeout(() => router.push('/login'), 3000);
+        return;
+      }
+
+      setAuthCode(code);
+
+      // Parse role from state parameter (default to null if not provided)
+      let role = null;
+      if (state) {
+        try {
+          const stateData = JSON.parse(decodeURIComponent(state));
+          role = stateData.role;
+        } catch (e) {
+          // If state parsing fails, we treat role as missing
+        }
+      }
+
+      // Attempt login with whatever role we have (null or from state)
+      processLogin(code, role);
+    } catch (err) {
+      setError(err.message || err.data?.error || 'Failed to process callback. Please try again.');
       setIsProcessing(false);
       setTimeout(() => router.push('/login'), 3000);
     }
@@ -95,6 +126,88 @@ function GoogleCallbackContent() {
   useEffect(() => {
     handleCallback();
   }, [handleCallback]);
+
+  if (needsRoleSelection) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          bgcolor: 'background.default',
+          p: 3,
+        }}
+      >
+        <Box
+          sx={{
+            ...roleModalStyles.dialogPaper,
+            border: 'none',
+            p: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            width: '100%',
+            maxWidth: '600px',
+          }}
+        >
+          <Typography sx={roleModalStyles.title}>Welcome to EngApp</Typography>
+          <Typography sx={{ mb: 4, color: 'text.secondary', textAlign: 'center' }}>
+            Please select your role to continue
+          </Typography>
+
+          <Box sx={roleModalStyles.cardsContainer}>
+            {/* Student Card */}
+            <Card
+              sx={roleModalStyles.card}
+              onClick={() => processLogin(authCode, 'S')}
+              role="button"
+              tabIndex={0}
+            >
+              <CardContent sx={roleModalStyles.cardContent}>
+                <Box sx={roleModalStyles.iconContainer}>
+                  <Image
+                    src={StudentIcon}
+                    alt="Student"
+                    width={180}
+                    height={180}
+                    style={roleModalStyles.icon}
+                  />
+                </Box>
+                <Box component="span" sx={roleModalStyles.roleButton}>
+                  I am a student
+                </Box>
+              </CardContent>
+            </Card>
+
+            {/* Teacher Card */}
+            <Card
+              sx={roleModalStyles.card}
+              onClick={() => processLogin(authCode, 'T')}
+              role="button"
+              tabIndex={0}
+            >
+              <CardContent sx={roleModalStyles.cardContent}>
+                <Box sx={roleModalStyles.iconContainer}>
+                  <Image
+                    src={TeacherIcon}
+                    alt="Teacher"
+                    width={180}
+                    height={180}
+                    style={roleModalStyles.icon}
+                  />
+                </Box>
+                <Box component="span" sx={roleModalStyles.roleButton}>
+                  I am a teacher
+                </Box>
+              </CardContent>
+            </Card>
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
 
   if (error) {
     return (

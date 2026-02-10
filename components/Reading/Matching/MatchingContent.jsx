@@ -34,6 +34,7 @@ import {
   sectionInfoStyles,
   nextButtonStyles,
 } from '@/styles/Reading/MatchingStyles';
+import TestTimer from '../Common/TestTimer';
 
 const MatchingContent = ({
   testName = 'Practice Test Name',
@@ -113,11 +114,12 @@ const MatchingContent = ({
               )}
             </Box>
 
-            <Box sx={tabsContainerStyles}>
+            <Box sx={{ ...tabsContainerStyles, position: 'relative', alignItems: 'center' }}>
               <Tabs
                 value={selectedPart}
                 onChange={handlePartChange}
                 sx={{
+                  flex: 1,
                   '& .MuiTabs-flexContainer': {
                     justifyContent: 'center',
                     gap: 3,
@@ -146,6 +148,17 @@ const MatchingContent = ({
                   />
                 ))}
               </Tabs>
+              {!isTeacher && (
+                <Box
+                  sx={{
+                    position: { xs: 'static', md: 'absolute' },
+                    right: 0,
+                    mt: { xs: 2, md: 0 },
+                  }}
+                >
+                  <TestTimer />
+                </Box>
+              )}
             </Box>
           </Box>
         </Container>

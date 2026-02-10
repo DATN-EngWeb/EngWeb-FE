@@ -40,6 +40,7 @@ import {
   sectionInfoStyles,
   nextButtonStyles,
 } from '@/styles/Reading/MultiChoiceReadingStyles';
+import TestTimer from '../Common/TestTimer';
 
 const MultiChoiceContent = ({
   testName = 'Practice Test Name',
@@ -108,11 +109,12 @@ const MultiChoiceContent = ({
               )}
             </Box>
 
-            <Box sx={tabsContainerStyles}>
+            <Box sx={{ ...tabsContainerStyles, position: 'relative', alignItems: 'center' }}>
               <Tabs
                 value={selectedPart}
                 onChange={handlePartChange}
                 sx={{
+                  flex: 1,
                   '& .MuiTabs-flexContainer': {
                     justifyContent: 'center',
                     gap: 3,
@@ -141,6 +143,17 @@ const MultiChoiceContent = ({
                   />
                 ))}
               </Tabs>
+              {!isTeacher && (
+                <Box
+                  sx={{
+                    position: { xs: 'static', md: 'absolute' },
+                    right: 0,
+                    mt: { xs: 2, md: 0 },
+                  }}
+                >
+                  <TestTimer />
+                </Box>
+              )}
             </Box>
           </Box>
         </Container>

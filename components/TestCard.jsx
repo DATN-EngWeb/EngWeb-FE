@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Button, Box, Typography, Divider } from '@mui/material';
+import { Button, Box, Typography, Divider, Avatar, Stack } from '@mui/material';
 import {
   VisibilityOutlined as EyeIcon,
   DeleteOutline as TrashIcon,
@@ -36,11 +36,11 @@ const FormatTheme = {
   A: { bg: 'success.greenLight', text: 'success.green_dark' },
   B: { bg: 'info.light', text: 'info.dark' },
   C: { bg: 'success.highlight', text: 'success.main_dark' },
-  D: { bg: 'white', text: 'error.main' },
-  E: { bg: 'text.gray', text: 'white' },
+  D: { bg: 'background.paper', text: 'error.main' },
+  E: { bg: 'text.gray', text: 'background.paper' },
   F: { bg: 'success.greenLight', text: 'success.main_dark' },
   G: { bg: 'success.highlight', text: 'success.main_dark' },
-  H: { bg: 'error.main', text: 'white' },
+  H: { bg: 'error.main', text: 'background.paper' },
   I: { bg: 'purple.pastel', text: 'purple.main' },
   J: { bg: 'text.gray', text: 'warning.main' },
 };
@@ -71,7 +71,7 @@ const IconButtonAction = ({ icon, color, isDelete = false, onClick }) => (
       color: color,
       '&:hover': {
         bgcolor: isDelete ? 'error.main' : color,
-        color: 'white',
+        color: 'background.paper',
         borderColor: isDelete ? 'error.main' : color,
       },
     }}
@@ -90,6 +90,8 @@ const TestCard = ({
   submissions,
   level,
   test_details,
+  role = 'teacher',
+  created_by,
   progress_status,
 }) => {
   const [randomDelay, setRandomDelay] = useState('0s');
@@ -102,7 +104,7 @@ const TestCard = ({
 
   const currentFormatStyle = FormatTheme[formatCode] || {
     bg: currentLevelTheme.badge,
-    text: 'white',
+    text: 'background.paper',
   };
 
   useEffect(() => {
@@ -136,8 +138,12 @@ const TestCard = ({
     // if (!confirmDelete) return;
   };
   const handleViewTest = () => {
-    skill = skillMap[skill];
-    router.push(`/teacher/update-test/${skill}/${id}`);
+    const skillName = skillMap[skill];
+    if (role === 'student') {
+      router.push(`/student/${skillName}/${id}`);
+    } else {
+      router.push(`/teacher/update-test/${skillName}/${id}`);
+    }
   };
 
   const getStatusStyles = (status) => {
@@ -225,9 +231,13 @@ const TestCard = ({
         borderRadius: '16px',
         border: '1px solid',
         borderColor: currentLevelTheme.border,
-        p: 2.5,
+        p: 3,
         display: 'flex',
         flexDirection: 'column',
+        height: '100%',
+        width: '440px',
+        maxWidth: '100%',
+        mx: 'auto',
         transition: 'transform 0.2s, box-shadow 0.2s',
         animation: 'fadeIn 0.5s ease forwards',
         animationDelay: randomDelay,
@@ -270,7 +280,7 @@ const TestCard = ({
             borderRadius: '6px',
             fontSize: '0.7rem',
             fontWeight: 700,
-            bgcolor: 'white',
+            bgcolor: 'background.paper',
           }}
         >
           Level {level}
@@ -283,9 +293,13 @@ const TestCard = ({
         sx={{
           fontWeight: 700,
           color: 'primary.main',
-          mb: 1,
-          fontSize: '1.1rem',
+          mb: 0.5,
+          fontSize: '1rem',
           lineHeight: 1.3,
+          display: '-webkit-box',
+          overflow: 'hidden',
+          WebkitBoxOrient: 'vertical',
+          WebkitLineClamp: 1,
         }}
       >
         {submitStyle.icon}
@@ -296,9 +310,10 @@ const TestCard = ({
         variant="body2"
         sx={{
           color: 'text.secondary',
-          mb: 3,
+          mb: 1.5,
           flexGrow: 1,
-          lineHeight: 1.5,
+          lineHeight: 1.4,
+          fontSize: '0.8rem',
           display: '-webkit-box',
           WebkitLineClamp: 2,
           WebkitBoxOrient: 'vertical',
@@ -309,84 +324,105 @@ const TestCard = ({
       </Typography>
 
       <Divider
-        sx={{ borderStyle: 'dashed', mb: 2, borderColor: currentLevelTheme.border, opacity: 0.3 }}
+        sx={{ borderStyle: 'dashed', mb: 1, borderColor: currentLevelTheme.border, opacity: 0.3 }}
       />
 
       {/* Stats Section */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-        <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary', fontWeight: 500 }}>
-          {displayDate}
-        </Typography>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 0.5,
-            color: currentLevelTheme.text,
-            backgroundColor: 'background.paper',
-            borderRadius: '10px',
-            py: 0.2,
-            px: 1,
-          }}
-        >
-          <UserIcon sx={{ fontSize: 16 }} />
-          <Typography
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+        {role === 'student' && created_by ? (
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Avatar
+              src={created_by.avatar}
+              alt={created_by.full_name}
+              sx={{ width: 24, height: 24, fontSize: 12, bgcolor: 'primary.main' }}
+            >
+              {created_by.full_name?.[0] || 'T'}
+            </Avatar>
+            <Typography variant="body2" fontWeight={500} noWrap sx={{ maxWidth: 120 }}>
+              {created_by.full_name}
+            </Typography>
+          </Stack>
+        ) : (
+          <Typography sx={{ fontSize: '0.8rem', color: 'text.secondary', fontWeight: 500 }}>
+            {displayDate}
+          </Typography>
+        )}
+
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box
             sx={{
-              fontSize: '0.8rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+              color: currentLevelTheme.text,
+              backgroundColor: 'background.paper',
+              borderRadius: '10px',
+              py: 0.2,
+              px: 1,
             }}
           >
-            {submissions} submissions
-          </Typography>
-        </Box>
-        {userRole === 'T' && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            {statusStyle.icon}
+            <UserIcon sx={{ fontSize: 16 }} />
             <Typography
               sx={{
                 fontSize: '0.8rem',
-                color: statusStyle.color,
               }}
             >
-              {statusStyle.label}
+              {submissions}
             </Typography>
           </Box>
-        )}
-      </Box>
-      {userRole === 'T' && (
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            fullWidth
-            variant="outlined"
-            startIcon={<EyeIcon />}
-            onClick={() => {
-              handleViewTest();
-            }}
-            sx={{
-              bgcolor: 'white',
-              color: 'primary.dark',
-              borderColor: 'background.paper',
-              textTransform: 'none',
-              borderRadius: '8px',
-              fontWeight: 600,
-              '&:hover': {
-                borderColor: currentLevelTheme.badge,
-                bgcolor: currentLevelTheme.badge,
-              },
-            }}
-          >
-            View
-          </Button>
-
-          {status !== 'P' && (
-            <IconButtonAction
-              icon={<PencilIcon />}
-              color={currentLevelTheme.badge}
-              onClick={() => {
-                handleEdit();
-              }}
-            />
+          {userRole === 'T' && role === 'teacher' && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              {statusStyle.icon}
+              <Typography
+                sx={{
+                  fontSize: '0.8rem',
+                  color: statusStyle.color,
+                }}
+              >
+                {statusStyle.label}
+              </Typography>
+            </Box>
           )}
+        </Box>
+      </Box>
 
+      {/* Actions Section */}
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        <Button
+          fullWidth
+          size="small"
+          variant="outlined"
+          startIcon={<EyeIcon fontSize="small" />}
+          onClick={() => {
+            handleViewTest();
+          }}
+          sx={{
+            bgcolor: role === 'student' ? 'primary.main' : 'background.paper',
+            color: role === 'student' ? 'background.paper' : 'primary.dark',
+            borderColor: role === 'student' ? 'primary.main' : 'background.paper',
+            textTransform: 'none',
+            borderRadius: '8px',
+            fontWeight: 600,
+            '&:hover': {
+              borderColor: currentLevelTheme.badge,
+              bgcolor: role === 'student' ? 'primary.dark' : currentLevelTheme.badge,
+            },
+          }}
+        >
+          {role === 'student' ? 'Practice' : 'View'}
+        </Button>
+
+        {role !== 'student' && status !== 'P' && (
+          <IconButtonAction
+            icon={<PencilIcon />}
+            color={currentLevelTheme.badge}
+            onClick={() => {
+              handleEdit();
+            }}
+          />
+        )}
+
+        {role !== 'student' && (
           <IconButtonAction
             icon={<TrashIcon />}
             color="error.main"
@@ -395,43 +431,8 @@ const TestCard = ({
               handleDelete();
             }}
           />
-        </Box>
-      )}
-      {userRole === 'S' && (
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            fullWidth
-            variant="outlined"
-            onClick={() => {
-              handleStudentViewTest();
-            }}
-            sx={{
-              bgcolor: 'white',
-              color: 'primary.dark',
-              borderColor: 'background.paper',
-              textTransform: 'none',
-              borderRadius: '8px',
-              fontWeight: 600,
-              '&:hover': {
-                borderColor: currentLevelTheme.badge,
-                bgcolor: currentLevelTheme.badge,
-              },
-            }}
-          >
-            {progress_status === 'completed' ? (
-              <>
-                <EyeIcon sx={{ mr: 1 }} />
-                View
-              </>
-            ) : (
-              <>
-                <Edit sx={{ mr: 1 }} />
-                Practice
-              </>
-            )}
-          </Button>
-        </Box>
-      )}
+        )}
+      </Box>
     </Box>
   );
 };

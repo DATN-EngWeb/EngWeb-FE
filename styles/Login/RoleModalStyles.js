@@ -2,7 +2,7 @@ export const roleModalStyles = {
   dialogPaper: {
     borderRadius: '16px',
     border: '2px solid',
-    borderColor: 'yellow.main',
+    borderColor: 'primary.main',
     backgroundColor: 'background.default',
     maxWidth: '600px',
   },
@@ -61,8 +61,8 @@ export const roleModalStyles = {
     objectFit: 'contain',
   },
   roleButton: {
-    backgroundColor: 'yellow.main',
-    color: 'text.primary',
+    backgroundColor: 'primary.main',
+    color: 'primary.contrastText',
     fontWeight: 600,
     borderRadius: '8px',
     py: 1.5,
