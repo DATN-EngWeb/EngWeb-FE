@@ -65,7 +65,6 @@ export default function Header() {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
-    // Return focus to the button when menu closes
     if (typeof window !== 'undefined') {
       setTimeout(() => {
         const button = document.getElementById('user-menu-button');
@@ -85,8 +84,6 @@ export default function Header() {
         await logoutAPI(refreshToken, accessToken);
       }
     } catch (err) {
-      // Continue logout even if API call fails
-      // eslint-disable-next-line no-console
       console.error('Logout API error:', err);
     } finally {
       logoutHook();
