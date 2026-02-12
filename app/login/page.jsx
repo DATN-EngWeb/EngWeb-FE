@@ -38,6 +38,14 @@ function LoginContent() {
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentRole, setCurrentRole] = useState('student');
+
+  useEffect(() => {
+    const roleParam = searchParams.get('role');
+    if (roleParam) {
+      setCurrentRole(roleParam);
+    }
+  }, [searchParams]);
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -57,8 +65,9 @@ function LoginContent() {
       return;
     }
 
-    // For social login, we'll let the backend determine the role from the account
-    const state = encodeURIComponent(JSON.stringify({}));
+    // Pass selected role via state parameter
+    const backendRole = currentRole === 'teacher' ? 'T' : 'S';
+    const state = encodeURIComponent(JSON.stringify({ role: backendRole }));
 
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent&state=${state}`;
 
@@ -86,7 +95,9 @@ function LoginContent() {
       return;
     }
 
-    const state = encodeURIComponent(JSON.stringify({}));
+    // Pass selected role via state parameter
+    const backendRole = currentRole === 'teacher' ? 'T' : 'S';
+    const state = encodeURIComponent(JSON.stringify({ role: backendRole }));
 
     const authUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(
       redirectUri,
@@ -222,6 +233,74 @@ function LoginContent() {
         <Box component="section" sx={loginStyles.formPanel}>
           <Box sx={loginStyles.formCard}>
             <Typography sx={loginStyles.cardEyebrow}>Welcome to NENS</Typography>
+
+            {/* Role Toggle - Student/Teacher */}
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+              <Stack direction="row" spacing={15} justifyContent="center">
+                <Box
+                  onClick={() => {
+                    setCurrentRole('student');
+                    router.push('/login?role=student');
+                  }}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    cursor: 'pointer',
+                    pb: 1.5,
+                    borderBottom: '3px solid',
+                    borderColor: currentRole === 'student' ? 'primary.main' : 'transparent',
+                    color: currentRole === 'student' ? 'primary.main' : 'text.gray',
+                    transition: 'all 0.3s',
+                  }}
+                >
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 3L1 9L12 15L21 10.09V17H23V9L12 3ZM12 5.18L18.99 9L12 12.82L5.01 9L12 5.18ZM12 15.82L5 12.06V15.06L12 18.82L19 15.06V12.06L12 15.82Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  <Typography sx={{ fontWeight: 600, fontSize: '1rem' }}>Student</Typography>
+                </Box>
+                <Box
+                  onClick={() => {
+                    setCurrentRole('teacher');
+                    router.push('/login?role=teacher');
+                  }}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    cursor: 'pointer',
+                    pb: 1.5,
+                    borderBottom: '3px solid',
+                    borderColor: currentRole === 'teacher' ? 'primary.main' : 'transparent',
+                    color: currentRole === 'teacher' ? 'primary.main' : 'text.gray',
+                    transition: 'all 0.3s',
+                  }}
+                >
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.33 4 18V20H20V18C20 15.33 14.67 14 12 14Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  <Typography sx={{ fontWeight: 600, fontSize: '1rem' }}>Teacher</Typography>
+                </Box>
+              </Stack>
+            </Box>
 
             <Box component="form" sx={loginStyles.form} onSubmit={handleSubmit}>
               {serverError && (
