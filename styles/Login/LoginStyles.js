@@ -10,20 +10,25 @@ export const loginStyles = {
   storyPanel: {
     width: { xs: '100%', lg: '50%' },
     flex: { xs: 'none', lg: '0 0 50%' },
-    height: '100vh',
+    height: '100%',
     borderRadius: { xs: 0, md: 0 },
     position: 'relative',
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'flex-start', // Sát trái
+    justifyContent: 'center', // Căn giữa theo chiều dọc
     flexShrink: 0,
+    pl: 0,
+    pt: 0,
+    pb: 0,
   },
   storyImage: {
-    width: 'auto',
-    height: '100vh',
+    width: '100%',
+    height: '90%', // Ưu tiên tỉ lệ chiều cao để thấy rõ padding trên dưới
     objectFit: 'contain',
+    objectPosition: 'left', // Cố định sát lề trái
+    margin: 0,
   },
   linkNoDecoration: {
     textDecoration: 'none',
@@ -146,7 +151,7 @@ export const loginStyles = {
     width: '100%',
     maxWidth: 650,
     borderRadius: { xs: 3, md: 4 },
-    pr: '50px',
+    pr: '80px',
     ml: { lg: 0 },
   },
   cardEyebrow: {

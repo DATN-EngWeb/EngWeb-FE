@@ -34,16 +34,20 @@ import { logout as logoutAPI } from '../../api/accounts';
 export default function Header() {
   const router = useRouter();
   const { isAuthenticated, user, logout: logoutHook } = useAuth(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [actionType, setActionType] = useState('login');
   const [anchorEl, setAnchorEl] = useState(null);
   const [userAvatar, setUserAvatar] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [actionType, setActionType] = useState('register');
 
   useEffect(() => {
     if (user?.avatar && typeof window !== 'undefined') {
       setUserAvatar(user.avatar);
     }
   }, [user]);
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
 
   const handleOpenModal = (type) => {
     setActionType(type);
@@ -55,12 +59,11 @@ export default function Header() {
   };
 
   const handleSelectRole = (role) => {
-    const path = actionType === 'login' ? '/login' : '/register';
-    router.push(`${path}?role=${role}`);
-  };
-
-  const handleMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
+    if (actionType === 'login') {
+      router.push(`/login?role=${role}`);
+    } else {
+      router.push(`/register?role=${role}`);
+    }
   };
 
   const handleMenuClose = () => {
@@ -158,6 +161,10 @@ export default function Header() {
                         color: 'primary.dark',
                         fontWeight: 600,
                         display: { xs: 'none', sm: 'block' },
+                        maxWidth: '150px',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
                       }}
                     >
                       {user.username || 'User'}
