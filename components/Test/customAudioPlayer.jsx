@@ -5,7 +5,13 @@ import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import PauseIcon from '@mui/icons-material/Pause';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 
-const CustomAudioPlayer = ({ src, isActive }) => {
+const CustomAudioPlayer = ({
+  src,
+  isActive,
+  isCurrentPlaying = null,
+  onPlay = () => {},
+  onPause = () => {},
+}) => {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -22,8 +28,13 @@ const CustomAudioPlayer = ({ src, isActive }) => {
   };
 
   const togglePlay = () => {
-    if (isPlaying) audioRef.current.pause();
-    else audioRef.current.play();
+    if (isPlaying) {
+      audioRef.current.pause();
+      onPause();
+    } else {
+      audioRef.current.play();
+      onPlay();
+    }
     setIsPlaying(!isPlaying);
   };
 
@@ -48,6 +59,7 @@ const CustomAudioPlayer = ({ src, isActive }) => {
     if (audioRef.current) {
       audioRef.current.currentTime = newValue;
       audioRef.current.play();
+      onPlay();
       setIsPlaying(true);
     }
     setCurrentTime(newValue);
@@ -67,6 +79,13 @@ const CustomAudioPlayer = ({ src, isActive }) => {
       setIsPlaying(false);
     }
   }, [isActive]);
+
+  useEffect(() => {
+    if (!isCurrentPlaying && audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+  }, [isCurrentPlaying]);
 
   return (
     <Box

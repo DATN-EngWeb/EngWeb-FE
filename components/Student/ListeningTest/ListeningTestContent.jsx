@@ -12,6 +12,8 @@ import { listeningtestStyles } from '../../../styles/Student/Listening/listening
 import { getListeningTestTypeLabel, formatTimeFromMinutes } from '../../../utils/stringFormat';
 import MultipleChoiceImagePart from './part/multipleChoiceImage';
 import FillBlankPart from './part/fillBlanks';
+import MultipleChoiceSingleAudio from './part/multipleChoiceSingleAudio';
+import MultipleChoiceQuestionAudio from './part/multipleChoiceMultiQuestionAudio';
 import Skeleton from './skeleton';
 
 export default function ListeningTestContent({ test_id, initialData }) {
@@ -80,7 +82,9 @@ export default function ListeningTestContent({ test_id, initialData }) {
       case 'A':
         return <MultipleChoiceImagePart key={part.id} dataPart={part} isActive={isActive} />;
       case 'B':
+        return <MultipleChoiceSingleAudio key={part.id} dataPart={part} isActive={isActive} />;
       case 'C':
+        return <MultipleChoiceQuestionAudio key={part.id} dataPart={part} isActive={isActive} />;
       case 'D':
         return <FillBlankPart key={part.id} dataPart={part} isActive={isActive} />;
       case 'E':

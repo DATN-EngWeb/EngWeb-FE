@@ -3,8 +3,9 @@ export const getListeningTestTypeLabel = (type) => {
     case 'A':
       return 'Multiple choice images';
     case 'B':
+      return 'Multiple Choices Text (1 audio/1 question)';
     case 'C':
-      return 'Listening - Multiple choice text';
+      return 'Multiple Choices Text (1 audio/many questions)';
     case 'D':
       return 'Fill in the blank';
     case 'E':

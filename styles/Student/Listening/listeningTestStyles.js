@@ -231,6 +231,14 @@ export const listeningPartStyles = {
     gap: 2,
     p: 2,
   },
+  containerCol: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 2,
+    p: 2,
+  },
   basicFlexColCenStart: {
     userSelect: 'none',
     width: '100%',
@@ -287,6 +295,7 @@ export const listeningPartStyles = {
     height: 'auto',
     display: 'grid',
     gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+    alignItems: 'start',
     gap: 1,
   },
   innerDecorQuestionSection: {
@@ -390,6 +399,13 @@ export const listeningPartStyles = {
     gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' },
     gap: 2,
   },
+  optionsGridRow: {
+    width: '100%',
+    height: 'auto',
+    display: 'grid',
+    gridTemplateRow: { xs: '1fr', md: '1fr 1fr 1fr' },
+    gap: 1,
+  },
   optionContainer: {
     width: '100%',
     height: 'auto',
@@ -451,5 +467,16 @@ export const listeningPartStyles = {
       fontSize: { xs: '0.7rem', md: '0.9rem' },
       padding: '4px 0',
     },
+  },
+  // -------- Other Section ---------
+  audioAndOptionsContainer: {
+    width: '100%',
+    height: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    gap: 3,
+    px: 4,
   },
 };
