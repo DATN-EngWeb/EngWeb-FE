@@ -11,6 +11,11 @@ import { loadAudioSource, fetchHtmlContent } from '../../../../api/teacher/uploa
 export default function FillBlankPart({ dataPart, isActive }) {
   const [audioSrc, setAudioSrc] = useState(null);
   const [passageSrc, setPassageSrc] = useState(null);
+  const [userAnswers, setUserAnswers] = useState({});
+
+  useEffect(() => {
+    console.log(userAnswers);
+  }, [userAnswers]);
 
   useEffect(() => {
     const getAudio = async () => {
@@ -47,6 +52,13 @@ export default function FillBlankPart({ dataPart, isActive }) {
 
     loadData();
   }, [dataPart?.content]);
+
+  const handleUpdateUserAnswers = (questionId, answerText) => {
+    setUserAnswers((prev) => ({
+      ...prev,
+      [questionId]: answerText,
+    }));
+  };
 
   return (
     <Container
@@ -100,7 +112,9 @@ export default function FillBlankPart({ dataPart, isActive }) {
                   variant="standard"
                   multiline
                   placeholder="Type answer ..."
+                  defaultValue={userAnswers[question.id] || ''}
                   sx={listeningPartStyles.inputQuestion}
+                  onBlur={(e) => handleUpdateUserAnswers(question.id, e.target.value)}
                 />
               </Box>
             ))}

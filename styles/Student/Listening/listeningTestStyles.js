@@ -479,4 +479,12 @@ export const listeningPartStyles = {
     gap: 3,
     px: 4,
   },
+  matchingQuestionAnswerContainerGrid: {
+    width: '100%',
+    height: 'auto',
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    alignItems: 'start',
+    gap: 1,
+  },
 };

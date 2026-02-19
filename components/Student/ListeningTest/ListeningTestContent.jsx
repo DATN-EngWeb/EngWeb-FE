@@ -14,6 +14,7 @@ import MultipleChoiceImagePart from './part/multipleChoiceImage';
 import FillBlankPart from './part/fillBlanks';
 import MultipleChoiceSingleAudio from './part/multipleChoiceSingleAudio';
 import MultipleChoiceQuestionAudio from './part/multipleChoiceMultiQuestionAudio';
+import Matching from './part/matching';
 import Skeleton from './skeleton';
 
 export default function ListeningTestContent({ test_id, initialData }) {
@@ -88,6 +89,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
       case 'D':
         return <FillBlankPart key={part.id} dataPart={part} isActive={isActive} />;
       case 'E':
+        return <Matching key={part.id} dataPart={part} isActive={isActive} />;
       default:
         return null;
     }

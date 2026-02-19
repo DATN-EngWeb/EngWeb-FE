@@ -10,6 +10,7 @@ import { loadAudioSource, loadImageSource } from '../../../../api/teacher/upload
 export default function MultipleChoiceImagePart({ dataPart, isActive }) {
   const [audioSrc, setAudioSrc] = useState(null);
   const [imageSrcs, setImageSrcs] = useState({});
+  const [userAnswers, setUserAnswers] = useState({});
 
   useEffect(() => {
     const getAudio = async () => {
@@ -64,6 +65,13 @@ export default function MultipleChoiceImagePart({ dataPart, isActive }) {
     }
   }, [isActive]);
 
+  const handleSetCorrectOption = (questionId, optionLabel) => {
+    setUserAnswers((prev) => ({
+      ...prev,
+      [questionId]: optionLabel,
+    }));
+  };
+
   return (
     <Container
       maxWidth="lg"
@@ -109,7 +117,19 @@ export default function MultipleChoiceImagePart({ dataPart, isActive }) {
                   <Box sx={listeningPartStyles.imgContainer}>
                     <img src={imageSrcs[option.id]} alt={`Option ${option.id}`} />
                   </Box>
-                  <Button key={option.id} sx={listeningPartStyles.labelButton}>
+                  <Button
+                    key={option.id}
+                    sx={{
+                      ...listeningPartStyles.labelButton,
+                      ...(userAnswers[question.id] === option.option_label && {
+                        backgroundColor: 'primary.main',
+                        boxShadow: 'none',
+                        color: 'yellow.main',
+                        '&:hover': {},
+                      }),
+                    }}
+                    onClick={() => handleSetCorrectOption(question.id, option.option_label)}
+                  >
                     {option.option_label}
                   </Button>
                 </Box>

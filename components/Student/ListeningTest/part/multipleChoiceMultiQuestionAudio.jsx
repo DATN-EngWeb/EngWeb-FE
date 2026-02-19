@@ -13,6 +13,7 @@ import { loadAudioSource, fetchHtmlContent } from '../../../../api/teacher/uploa
 
 export default function MultipleChoiceQuestionAudio({ dataPart, isActive }) {
   const [audioSrc, setAudioSrc] = useState(null);
+  const [passageSrc, setPassageSrc] = useState(null);
   const [userAnswers, setUserAnswers] = useState({});
 
   const handleSetCorrectOption = (questionId, optionLabel) => {
@@ -47,6 +48,17 @@ export default function MultipleChoiceQuestionAudio({ dataPart, isActive }) {
     }
   }, [isActive]);
 
+  useEffect(() => {
+    const loadData = async () => {
+      if (dataPart?.content) {
+        const result = await fetchHtmlContent(dataPart.content);
+        setPassageSrc(result);
+      }
+    };
+
+    loadData();
+  }, [dataPart?.content]);
+
   return (
     <Container
       maxWidth="lg"
@@ -69,7 +81,7 @@ export default function MultipleChoiceQuestionAudio({ dataPart, isActive }) {
               Instruction
             </Typography>
             <Typography sx={{ color: 'dark.main', fontSize: '0.8rem' }}>
-              Listen to the audio and choose the best answer for each question.
+              {dataPart.description}
             </Typography>
           </Box>
         </Box>
@@ -80,7 +92,7 @@ export default function MultipleChoiceQuestionAudio({ dataPart, isActive }) {
         <Box sx={listeningPartStyles.innerInstruction}>
           <LightbulbOutlinedIcon />
           <Typography sx={{ color: 'inherit', fontSize: 'inherit', fontWeight: 'inherit' }}>
-            {dataPart.description}
+            {passageSrc}
           </Typography>
         </Box>
         {dataPart?.receptive_questions?.map((question, index) => (
