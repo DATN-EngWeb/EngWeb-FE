@@ -26,6 +26,13 @@ import {
   numberIndicator,
   partHeader,
   rowContent,
+  labelText,
+  textInput,
+  answerTextInput,
+  actionTextButton,
+  outlinedCard,
+  matchingAnswerLabel,
+  trashIconButton,
 } from '../../styles/Teacher/Listening/ListeningStyles';
 
 export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
@@ -133,7 +140,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
         </Box>
 
         <Box>
-          <IconButton onClick={onDelete}>
+          <IconButton onClick={onDelete} sx={trashIconButton}>
             <DeleteOutlineIcon />
           </IconButton>
           <IconButton onClick={() => setIsCollapsed(!isCollapsed)}>
@@ -146,7 +153,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
         <>
           <Box sx={{ mb: 3 }}>
             <Box sx={rowContent}>
-              <Typography variant="body2">
+              <Typography sx={labelText}>
                 The score for each question <span style={{ color: 'red' }}>*</span>
               </Typography>
             </Box>
@@ -163,10 +170,11 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                 }));
                 updatePart({ ...part, score: scoreValue, questions: newQuestions });
               }}
+              sx={textInput}
             />
           </Box>
 
-          <Typography variant="body2">
+          <Typography sx={labelText}>
             Audio File <span style={{ color: 'red' }}>*</span>
           </Typography>
           <AudioUploader
@@ -177,7 +185,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
 
           <Box sx={{ mb: 3 }}>
             <Box sx={rowContent}>
-              <Typography variant="body2">
+              <Typography sx={labelText}>
                 Description <span style={{ color: 'red' }}>*</span>
               </Typography>
             </Box>
@@ -188,14 +196,20 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
               placeholder="e.g., Match the items on the left with the correct answers on the right..."
               value={part.description ?? ''}
               onChange={(e) => updatePart({ ...part, description: e.target.value })}
+              sx={textInput}
             />
           </Box>
 
           <Box sx={rowContent}>
-            <Typography variant="body2">
+            <Typography sx={labelText}>
               Questions <span style={{ color: 'red' }}>*</span>
             </Typography>
-            <Button startIcon={<AddIcon />} size="small" onClick={addQuestion}>
+            <Button
+              startIcon={<AddIcon />}
+              size="small"
+              onClick={addQuestion}
+              sx={{ ...actionTextButton, textTransform: 'none' }}
+            >
               Add question
             </Button>
           </Box>
@@ -204,14 +218,18 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
             <Box sx={{ ...emptyStateBox, mb: 3 }}>
               No questions yet
               <br />
-              <Button startIcon={<AddIcon />} sx={{ mt: 1 }} onClick={addQuestion}>
+              <Button
+                startIcon={<AddIcon />}
+                sx={{ mt: 1, ...actionTextButton, textTransform: 'none' }}
+                onClick={addQuestion}
+              >
                 Add your first question
               </Button>
             </Box>
           ) : (
             <Stack spacing={2} sx={{ mb: 3 }}>
               {questions.map((question, qIdx) => (
-                <Paper key={question.id} variant="outlined" sx={{ p: 2 }}>
+                <Paper key={question.id} variant="outlined" sx={outlinedCard}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Box sx={numberIndicator}>{qIdx + 1}</Box>
 
@@ -220,15 +238,26 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                       placeholder="Question text..."
                       value={question.text}
                       onChange={(e) => setQuestionText(qIdx, e.target.value)}
-                      sx={{ flex: 1 }}
+                      sx={{ ...textInput, flex: 1 }}
                     />
 
-                    <FormControl size="small" sx={{ width: 70 }}>
+                    <FormControl
+                      size="small"
+                      sx={{
+                        width: 110,
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '1rem',
+                        },
+                      }}
+                    >
                       <Select
                         value={question.selectedAnswerId || ''}
                         onChange={(e) => setQuestionAnswer(qIdx, e.target.value)}
                         displayEmpty
                       >
+                        <MenuItem value="" disabled>
+                          <em>Select...</em>
+                        </MenuItem>
                         {answers.map((answer, aIdx) => (
                           <MenuItem key={answer.id} value={answer.id}>
                             {String.fromCharCode(65 + aIdx)}
@@ -237,7 +266,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                       </Select>
                     </FormControl>
 
-                    <IconButton color="error" onClick={() => removeQuestion(qIdx)}>
+                    <IconButton onClick={() => removeQuestion(qIdx)} sx={trashIconButton}>
                       <DeleteOutlineIcon />
                     </IconButton>
                   </Box>
@@ -253,6 +282,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                         );
                         updatePart({ ...part, questions: newQs });
                       }}
+                      sx={textInput}
                     />
                   </Box>
                 </Paper>
@@ -261,10 +291,15 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
           )}
 
           <Box sx={rowContent}>
-            <Typography variant="body2">
+            <Typography sx={labelText}>
               Answers <span style={{ color: 'red' }}>*</span>
             </Typography>
-            <Button startIcon={<AddIcon />} size="small" onClick={addAnswer}>
+            <Button
+              startIcon={<AddIcon />}
+              size="small"
+              onClick={addAnswer}
+              sx={{ ...actionTextButton, textTransform: 'none' }}
+            >
               Add answer
             </Button>
           </Box>
@@ -273,32 +308,57 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
             <Box sx={emptyStateBox}>
               No answers yet
               <br />
-              <Button startIcon={<AddIcon />} sx={{ mt: 1 }} onClick={addAnswer}>
+              <Button
+                startIcon={<AddIcon />}
+                sx={{ mt: 1, ...actionTextButton, textTransform: 'none' }}
+                onClick={addAnswer}
+              >
                 Add your first answer
               </Button>
             </Box>
           ) : (
-            <Stack spacing={2}>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                gap: 2,
+              }}
+            >
               {answers.map((answer, aIdx) => (
-                <Paper key={answer.id} variant="outlined" sx={{ p: 2 }}>
+                <Paper
+                  key={answer.id}
+                  variant="outlined"
+                  sx={{
+                    ...outlinedCard,
+                    p: 1,
+                    py: 0.75,
+                  }}
+                >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box sx={numberIndicator}>{String.fromCharCode(65 + aIdx)}</Box>
+                    <Box sx={matchingAnswerLabel}>{String.fromCharCode(65 + aIdx)}</Box>
 
                     <TextField
                       size="small"
                       placeholder="Answer text"
                       value={answer.text}
                       onChange={(e) => setAnswerText(aIdx, e.target.value)}
-                      sx={{ flex: 1 }}
+                      sx={{
+                        ...answerTextInput,
+                        flex: 1,
+                        '& .MuiOutlinedInput-input': {
+                          py: 0.25,
+                          lineHeight: 1.2,
+                        },
+                      }}
                     />
 
-                    <IconButton color="error" onClick={() => removeAnswer(aIdx)}>
+                    <IconButton onClick={() => removeAnswer(aIdx)} sx={trashIconButton}>
                       <DeleteOutlineIcon />
                     </IconButton>
                   </Box>
                 </Paper>
               ))}
-            </Stack>
+            </Box>
           )}
         </>
       )}

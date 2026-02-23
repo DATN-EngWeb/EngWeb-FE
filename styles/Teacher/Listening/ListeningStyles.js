@@ -1,22 +1,23 @@
 export const container = {
   backgroundColor: 'background.default',
-  minHeight: '100vh',
+  minHeight: 'calc(100vh - 200px)',
   px: { xs: 3, sm: 5, md: 10, lg: 20 },
-  py: 2,
+  py: { xs: 1, md: 2 },
 };
 
 export const contentWrap = {
-  maxWidth: 1200,
+  maxWidth: 1280,
   width: '100%',
   mx: 'auto',
 };
 
 export const panelPaper = {
-  p: 3,
+  p: { xs: 2, md: 3 },
   mb: 3,
   border: '2px solid',
   borderColor: 'yellow.main',
-  borderRadius: 2,
+  borderRadius: '1rem',
+  boxShadow: 'none',
 };
 
 export const sectionHeader = {
@@ -28,58 +29,65 @@ export const sectionHeader = {
 
 export const accentBar = {
   width: '4px',
-  height: { xs: '24px', sm: '36px' },
+  height: { xs: '32px', sm: '36px' },
   backgroundColor: 'yellow.main',
   borderRadius: '1rem',
 };
 
 export const twoColRow = {
   display: 'flex',
-  gap: 3,
+  gap: 2,
   mb: 3,
   flexDirection: { xs: 'column', md: 'row' },
 };
 
 export const addPartBox = {
   border: '2px dashed',
-  borderColor: 'divider',
+  borderColor: 'gray.main',
   bgcolor: 'primary.contrastText',
-  borderRadius: 2,
-  p: { xs: 3, sm: 4 },
+  borderRadius: '1rem',
+  p: { xs: 2, sm: 3 },
   mb: 3,
   textAlign: 'center',
-  color: 'text.secondary',
+  color: 'text.primary',
+  fontWeight: 500,
   cursor: 'pointer',
 };
 
 export const emptyStateBox = {
-  border: '1px solid #ddd',
-  borderRadius: 2,
-  p: 3,
+  border: '1px solid',
+  borderColor: 'gray.main',
+  borderRadius: '1rem',
+  p: { xs: 2, md: 3 },
   textAlign: 'center',
-  color: 'text.secondary',
+  color: 'text.primary',
+  fontSize: { xs: '0.8rem', md: '1rem' },
+  lineHeight: 1.7,
+  fontWeight: 500,
 };
 
 export const scrollEditorBox = {
   height: 300,
   overflowY: 'auto',
-  border: '1px solid #d0d0d0',
-  borderRadius: '8px',
+  border: 'none',
+  borderRadius: '1rem',
   position: 'relative',
   zIndex: 1,
   overflow: 'visible',
 };
 
 export const numberIndicator = {
-  width: 28,
-  height: 28,
-  borderRadius: '50%',
-  bgcolor: 'black',
-  color: 'white',
+  width: 'auto',
+  mt: { xs: 0.8, md: 0.6 },
+  px: 1.2,
+  py: 0.5,
+  borderRadius: 2,
+  bgcolor: 'dark.main',
+  color: 'primary.contrastText',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  fontSize: 14,
+  fontSize: { xs: '0.8rem', md: '1rem' },
   fontWeight: 600,
 };
 
@@ -88,26 +96,31 @@ export const partHeader = {
   justifyContent: 'space-between',
   alignItems: 'center',
   mb: 2,
+  gap: 2,
 };
 
 export const rowContent = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
+  mb: 0.5,
 };
 
 export const partTypeCard = {
-  p: 2,
+  p: { xs: 1.5, md: 2 },
   cursor: 'pointer',
   transition: 'all 0.2s',
   display: 'flex',
   alignItems: 'center',
   gap: 2,
+  borderRadius: '1rem',
+  boxShadow: 'none',
 };
 
 export const answerImageBox = {
-  border: '2px solid #ddd',
-  borderRadius: 1,
+  border: '1px solid',
+  borderColor: 'gray.main',
+  borderRadius: '1rem',
   p: 2,
   minHeight: 200,
   display: 'flex',
@@ -131,4 +144,92 @@ export const answerLabelButton = {
   minWidth: 40,
   alignSelf: 'center',
   border: '1px solid',
+  borderRadius: '999px',
+  textTransform: 'none',
+  fontWeight: 600,
+};
+
+export const labelText = {
+  color: 'text.primary',
+  fontSize: { xs: '0.8rem', md: '1rem' },
+  lineHeight: 1.7,
+  fontWeight: 500,
+};
+
+export const textInput = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '1rem',
+    fontSize: { xs: '0.7rem', md: '0.9rem' },
+  },
+};
+
+export const answerTextInput = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '1rem',
+    fontSize: { xs: '0.7rem', md: '0.9rem' },
+    '& fieldset': {
+      border: 'none',
+    },
+    '&:hover fieldset': {
+      border: 'none',
+    },
+    '&.Mui-focused fieldset': {
+      border: 'none',
+    },
+  },
+};
+
+export const actionTextButton = {
+  width: 'fit-content',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 0.5,
+  fontSize: { xs: '0.75rem', md: '0.9rem' },
+  cursor: 'pointer',
+  userSelect: 'none',
+  color: 'text.primary',
+  '&:hover': {
+    color: 'primary.main',
+  },
+};
+
+export const trashIconButton = {
+  color: 'text.gray',
+  '&:hover': {
+    color: 'text.primary',
+  },
+};
+
+export const outlinedCard = {
+  p: 2,
+  borderRadius: '1rem',
+  border: '1px solid',
+  borderColor: 'gray.main',
+  boxShadow: 'none',
+};
+
+export const answerOptionRow = {
+  display: 'flex',
+  alignItems: 'center',
+  p: '8px 16px',
+  border: '1px solid',
+  borderColor: 'gray.main',
+  borderRadius: '1rem',
+  width: '100%',
+  mb: 1,
+};
+
+export const matchingAnswerLabel = {
+  width: { xs: '24px', md: '28px' },
+  height: { xs: '24px', md: '28px' },
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderRadius: '50%',
+  backgroundColor: 'transparent',
+  color: 'text.primary',
+  fontSize: { xs: '0.7rem', md: '0.9rem' },
+  fontWeight: 600,
+  mt: { xs: 0.8, md: 0.6 },
+  flexShrink: 0,
 };

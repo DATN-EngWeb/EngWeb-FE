@@ -31,6 +31,11 @@ import {
   answerImageBox,
   imageContainer,
   answerLabelButton,
+  labelText,
+  textInput,
+  actionTextButton,
+  outlinedCard,
+  trashIconButton,
 } from '../../styles/Teacher/Listening/ListeningStyles';
 
 export default function MultiChoiceImagePart({ index, part = {}, onChange, onDelete }) {
@@ -160,7 +165,7 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
         </Box>
 
         <Box>
-          <IconButton onClick={onDelete}>
+          <IconButton onClick={onDelete} sx={trashIconButton}>
             <DeleteOutlineIcon />
           </IconButton>
           <IconButton onClick={() => setIsCollapsed(!isCollapsed)}>
@@ -173,7 +178,7 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
         <>
           <Box sx={{ mb: 3 }}>
             <Box sx={rowContent}>
-              <Typography variant="body2">
+              <Typography sx={labelText}>
                 The score for each question <span style={{ color: 'red' }}>*</span>
               </Typography>
             </Box>
@@ -190,10 +195,11 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
                 }));
                 updatePart({ ...part, score: scoreValue, questions: newQuestions });
               }}
+              sx={textInput}
             />
           </Box>
 
-          <Typography variant="body2">
+          <Typography sx={labelText}>
             Audio File <span style={{ color: 'red' }}>*</span>
           </Typography>
           <AudioUploader
@@ -204,7 +210,7 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
 
           <Box sx={{ mb: 3 }}>
             <Box sx={rowContent}>
-              <Typography variant="body2">
+              <Typography sx={labelText}>
                 Description <span style={{ color: 'red' }}>*</span>
               </Typography>
             </Box>
@@ -215,14 +221,20 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
               placeholder="e.g., Listen to the audio between Alice and Sam and choose the correct picture..."
               value={part.description ?? ''}
               onChange={(e) => updatePart({ ...part, description: e.target.value })}
+              sx={textInput}
             />
           </Box>
 
           <Box sx={rowContent}>
-            <Typography variant="body2">
+            <Typography sx={labelText}>
               Questions <span style={{ color: 'red' }}>*</span>
             </Typography>
-            <Button startIcon={<AddIcon />} size="small" onClick={addQuestion}>
+            <Button
+              startIcon={<AddIcon />}
+              size="small"
+              onClick={addQuestion}
+              sx={{ ...actionTextButton, textTransform: 'none' }}
+            >
               Add question
             </Button>
           </Box>
@@ -231,14 +243,18 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
             <Box sx={emptyStateBox}>
               No questions yet
               <br />
-              <Button startIcon={<AddIcon />} sx={{ mt: 1 }} onClick={addQuestion}>
+              <Button
+                startIcon={<AddIcon />}
+                sx={{ mt: 1, ...actionTextButton, textTransform: 'none' }}
+                onClick={addQuestion}
+              >
                 Add your first question
               </Button>
             </Box>
           ) : (
             <Stack spacing={2}>
               {questions.map((q, qIdx) => (
-                <Paper key={q.id} variant="outlined" sx={{ p: 2 }}>
+                <Paper key={q.id} variant="outlined" sx={outlinedCard}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
                     <Box sx={numberIndicator}>{qIdx + 1}</Box>
 
@@ -248,9 +264,10 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
                       placeholder="Enter question text"
                       value={q.text}
                       onChange={(e) => setQuestionText(qIdx, e.target.value)}
+                      sx={textInput}
                     />
 
-                    <IconButton color="error" onClick={() => removeQuestion(qIdx)}>
+                    <IconButton onClick={() => removeQuestion(qIdx)} sx={trashIconButton}>
                       <DeleteOutlineIcon />
                     </IconButton>
                   </Box>
@@ -268,6 +285,7 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
                         );
                         updatePart({ ...part, questions: newQs });
                       }}
+                      sx={textInput}
                     />
                   </Box>
                   <Typography variant="body2" color="text.secondary">
@@ -305,8 +323,11 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
 
                             <IconButton
                               size="small"
-                              color="error"
-                              sx={{ mt: 0.5, alignSelf: 'center' }}
+                              sx={{
+                                ...trashIconButton,
+                                mt: 0.5,
+                                alignSelf: 'center',
+                              }}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 removeAnswer(qIdx, aIdx);
@@ -325,6 +346,7 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
                       startIcon={<AddCircleOutlineIcon />}
                       size="small"
                       onClick={() => addAnswer(qIdx)}
+                      sx={{ ...actionTextButton, textTransform: 'none' }}
                     >
                       Add Answer
                     </Button>
