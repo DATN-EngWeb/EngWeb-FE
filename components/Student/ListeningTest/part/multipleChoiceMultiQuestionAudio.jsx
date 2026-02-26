@@ -81,10 +81,15 @@ export default function MultipleChoiceQuestionAudio({ dataPart, isActive }) {
               Instruction
             </Typography>
             <Typography sx={{ color: 'dark.main', fontSize: '0.8rem' }}>
-              {dataPart.description}
+              Listen to the audio and choose the best answer for each question.
             </Typography>
           </Box>
         </Box>
+        {/* -------- Passage (Optional) --------- */}
+        <Box
+          sx={listeningPartStyles.passageContainer}
+          dangerouslySetInnerHTML={{ __html: passageSrc }}
+        />
       </Box>
       {/* -------- Question and Inner Instruction Section --------- */}
       <Box sx={listeningPartStyles.questionSection}>
@@ -92,7 +97,7 @@ export default function MultipleChoiceQuestionAudio({ dataPart, isActive }) {
         <Box sx={listeningPartStyles.innerInstruction}>
           <LightbulbOutlinedIcon />
           <Typography sx={{ color: 'inherit', fontSize: 'inherit', fontWeight: 'inherit' }}>
-            {passageSrc}
+            {dataPart.description}
           </Typography>
         </Box>
         {dataPart?.receptive_questions?.map((question, index) => (
@@ -106,10 +111,13 @@ export default function MultipleChoiceQuestionAudio({ dataPart, isActive }) {
               {/* -------- Options Section --------- */}
               <Box sx={listeningPartStyles.optionsGridRow}>
                 {question.receptive_answers.map((option) => (
-                  <Box key={`${option.id}`} sx={multipleChoiceStyles.optionContainer}>
+                  <Box
+                    key={`${option.id}`}
+                    sx={{ ...multipleChoiceStyles.optionContainer, cursor: 'pointer' }}
+                    onClick={() => handleSetCorrectOption(question.id, option.option_label)}
+                  >
                     <Checkbox
                       checked={userAnswers[question.id] === option.option_label}
-                      onChange={() => handleSetCorrectOption(question.id, option.option_label)}
                       icon={<RadioButtonUncheckedIcon sx={multipleChoiceStyles.uncheckIcon} />}
                       checkedIcon={
                         <Box sx={multipleChoiceStyles.checkedIconWrapper}>

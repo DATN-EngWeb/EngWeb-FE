@@ -96,7 +96,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
   };
 
   return (
-    <Box sx={{ ...listeningtestStyles.mainContainer, overflow: 'hidden' }}>
+    <Box sx={listeningtestStyles.mainContainer}>
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
@@ -153,6 +153,13 @@ export default function ListeningTestContent({ test_id, initialData }) {
                   backgroundColor: 'background.default',
                   borderColor: 'orange.light',
                   color: 'orange.dark',
+                }),
+                ...((index < indexPart - 1 || index > indexPart + 1) && {
+                  display: { xs: 'none', sm: 'flex' },
+                }),
+                ...(((index === indexPart - 2 && indexPart === receptiveParts.length - 1) ||
+                  (index === indexPart + 2 && indexPart === 0)) && {
+                  display: 'flex',
                 }),
               }}
               key={part.id}

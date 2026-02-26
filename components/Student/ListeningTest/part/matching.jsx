@@ -76,7 +76,13 @@ export default function Matching({ dataPart, isActive }) {
       sx={{ ...listeningPartStyles.container46, display: isActive ? 'grid' : 'none' }}
     >
       {/* -------- Audio and Instruction Section --------- */}
-      <Box sx={listeningPartStyles.basicFlexColCenStart}>
+      <Box
+        sx={{
+          ...listeningPartStyles.basicFlexColCenStart,
+          position: { sm: 'sticky' },
+          top: '18px',
+        }}
+      >
         <Box sx={{ width: '100%', height: 'auto' }}>
           {audioSrc ? (
             <CustomAudioPlayer src={audioSrc} isActive={isActive} />

@@ -77,8 +77,14 @@ export default function MultipleChoiceImagePart({ dataPart, isActive }) {
       maxWidth="lg"
       sx={{ ...listeningPartStyles.container46, display: isActive ? 'grid' : 'none' }}
     >
-      {/* -------- Audio Section --------- */}
-      <Box sx={listeningPartStyles.basicFlexColCenStart}>
+      {/* -------- Audio And Instruction Section --------- */}
+      <Box
+        sx={{
+          ...listeningPartStyles.basicFlexColCenStart,
+          position: { sm: 'sticky' },
+          top: '18px',
+        }}
+      >
         {/* -------- Audio --------- */}
         <Box sx={{ width: '100%', height: 'auto' }}>
           {audioSrc ? (

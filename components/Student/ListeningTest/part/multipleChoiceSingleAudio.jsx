@@ -97,10 +97,13 @@ export default function MultipleChoiceSingleAudio({ dataPart, isActive }) {
               {/* -------- Options Section --------- */}
               <Box sx={listeningPartStyles.optionsGridRow}>
                 {question.receptive_answers.map((option) => (
-                  <Box key={`${option.id}`} sx={multipleChoiceStyles.optionContainer}>
+                  <Box
+                    key={`${option.id}`}
+                    sx={{ ...multipleChoiceStyles.optionContainer, cursor: 'pointer' }}
+                    onClick={() => handleSetCorrectOption(question.id, option.option_label)}
+                  >
                     <Checkbox
                       checked={userAnswers[question.id] === option.option_label}
-                      onChange={() => handleSetCorrectOption(question.id, option.option_label)}
                       icon={<RadioButtonUncheckedIcon sx={multipleChoiceStyles.uncheckIcon} />}
                       checkedIcon={
                         <Box sx={multipleChoiceStyles.checkedIconWrapper}>
