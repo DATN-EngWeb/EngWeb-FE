@@ -45,11 +45,10 @@ export {
 export const questionContainerStyles = {
   backgroundColor: 'background.paper',
   borderRadius: '8px',
-  p: 2.5,
+  p: 2,
   display: 'flex',
-  gap: 2,
+  gap: 1.5,
   boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
-  mb: 2,
 };
 
 export const questionNumberStyles = {
@@ -67,16 +66,18 @@ export const questionNumberStyles = {
 };
 
 export const questionTextStyles = {
-  fontSize: '1rem',
+  fontSize: '0.9rem',
   fontWeight: 500,
   color: 'text.primary',
   mb: 1,
+  wordBreak: 'break-word',
+  overflowWrap: 'break-word',
 };
 
 export const optionContainerStyles = {
   backgroundColor: 'background.paper',
   borderRadius: '8px',
-  p: 1.5,
+  p: 1.25,
   mb: 1,
   border: '1px solid',
   borderColor: 'divider',
@@ -89,7 +90,9 @@ export const optionContainerStyles = {
 };
 
 export const optionLabelStyles = {
-  fontSize: '0.95rem',
+  fontSize: '0.875rem',
   color: 'text.primary',
   ml: 1,
+  wordBreak: 'break-word',
+  overflowWrap: 'break-word',
 };
