@@ -1,6 +1,6 @@
 export const uploadReadingStyles = {
   mainContainer: {
-    py: { xs: 1, md: 2 },
+    pb: { xs: 1, md: 2 },
     backgroundColor: 'background.default',
   },
   // -------- Card Title Section ---------

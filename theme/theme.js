@@ -51,6 +51,7 @@ const theme = createTheme({
     background: {
       default: '#FFF4E9',
       paper: '#FFFFFF',
+      gray: '#F7F8F9',
     },
     text: {
       primary: '#383838',
@@ -75,6 +76,8 @@ const theme = createTheme({
     },
     orange: {
       main: '#FF854B',
+      light: '#FED7AA',
+      dark: '#C2410C',
     },
     yellow: {
       main: '#FFD25A',
@@ -87,6 +90,9 @@ const theme = createTheme({
     },
     pink: {
       main: '#FF939A',
+    },
+    red: {
+      text: '#EA580C',
     },
     reading: {
       tabActiveBg: '#FF9F43',
