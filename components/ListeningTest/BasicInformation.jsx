@@ -6,6 +6,8 @@ import {
   sectionHeader,
   accentBar,
   twoColRow,
+  labelText,
+  textInput,
 } from '../../styles/Teacher/Listening/ListeningStyles';
 
 export default function BasicInformation({ testName, level, time, description, onChange, errors }) {
@@ -20,7 +22,7 @@ export default function BasicInformation({ testName, level, time, description, o
 
       <Box sx={twoColRow}>
         <Box sx={{ flex: 1 }}>
-          <Typography variant="body2" mb={1}>
+          <Typography sx={{ ...labelText, mb: 0.5 }}>
             Title <span style={{ color: 'red' }}>*</span>
           </Typography>
           <TextField
@@ -31,10 +33,11 @@ export default function BasicInformation({ testName, level, time, description, o
             onChange={(e) => onChange('testName', e.target.value)}
             size="small"
             error={errors?.testName}
+            sx={textInput}
           />
         </Box>
         <Box sx={{ flex: 1 }}>
-          <Typography variant="body2" mb={1}>
+          <Typography sx={{ ...labelText, mb: 0.5 }}>
             Time (minutes) <span style={{ color: 'red' }}>*</span>
           </Typography>
           <TextField
@@ -45,15 +48,32 @@ export default function BasicInformation({ testName, level, time, description, o
             value={time ?? ''}
             onChange={(e) => onChange('time', e.target.value)}
             error={errors?.time}
+            sx={textInput}
           />
         </Box>
       </Box>
 
       <Box>
-        <Typography variant="body2" mb={1}>
+        <Typography sx={{ ...labelText, mb: 0.5 }}>
           Level <span style={{ color: 'red' }}>*</span>
         </Typography>
-        <FormControl fullWidth size="small" sx={{ borderRadius: '5px' }} error={errors?.level}>
+        <FormControl
+          fullWidth
+          size="small"
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: '1rem',
+              height: 44,
+              fontSize: { xs: '0.7rem', md: '0.9rem' },
+            },
+            '& .MuiSelect-select': {
+              py: 1,
+              display: 'flex',
+              alignItems: 'center',
+            },
+          }}
+          error={errors?.level}
+        >
           <Select value={level} onChange={(e) => onChange('level', e.target.value)} displayEmpty>
             <MenuItem value="" disabled>
               Choose level
@@ -67,7 +87,7 @@ export default function BasicInformation({ testName, level, time, description, o
       </Box>
 
       <Box sx={{ mt: 3, mb: 3 }}>
-        <Typography variant="body2" mb={1}>
+        <Typography sx={{ ...labelText, mb: 0.5 }}>
           Description <span style={{ color: 'red' }}>*</span>
         </Typography>
         <TextField
@@ -78,6 +98,7 @@ export default function BasicInformation({ testName, level, time, description, o
           value={description ?? ''}
           onChange={(e) => onChange('description', e.target.value)}
           error={errors?.description}
+          sx={textInput}
         />
       </Box>
     </Paper>

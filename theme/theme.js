@@ -65,6 +65,7 @@ const theme = createTheme({
     },
     gray: {
       main: '#B5B5B5',
+      light: '#F7F8F9',
     },
     darkGrey: {
       main: '#383838',
@@ -92,6 +93,20 @@ const theme = createTheme({
     },
     red: {
       text: '#EA580C',
+    },
+    reading: {
+      tabActiveBg: '#FF9F43',
+      tabActiveText: '#5B3110',
+      tabInactiveBg: '#F3F4F6',
+      tabInactiveText: '#6B7280',
+      borderLight: '#E2E8F0',
+      borderGrey: '#E5E7EB',
+      instructionBg: '#FFF5F5',
+      instructionBorder: '#FED7D7',
+      instructionIcon: '#FF6B35',
+      contentBg: '#F5F5F7',
+      questionNumberBg: '#1A202C',
+      questionNumberText: '#FFFFFF',
     },
   },
   typography: {

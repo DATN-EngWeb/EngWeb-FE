@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   AppBar,
   Toolbar,
@@ -33,17 +33,22 @@ import { logout as logoutAPI } from '../../api/accounts';
 
 export default function Header() {
   const router = useRouter();
+  const pathname = usePathname();
   const { isAuthenticated, user, logout: logoutHook } = useAuth(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [actionType, setActionType] = useState('login');
   const [anchorEl, setAnchorEl] = useState(null);
   const [userAvatar, setUserAvatar] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [actionType, setActionType] = useState('register');
 
   useEffect(() => {
     if (user?.avatar && typeof window !== 'undefined') {
       setUserAvatar(user.avatar);
     }
   }, [user]);
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
 
   const handleOpenModal = (type) => {
     setActionType(type);
@@ -55,17 +60,15 @@ export default function Header() {
   };
 
   const handleSelectRole = (role) => {
-    const path = actionType === 'login' ? '/login' : '/register';
-    router.push(`${path}?role=${role}`);
-  };
-
-  const handleMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
+    if (actionType === 'login') {
+      router.push(`/login?role=${role}`);
+    } else {
+      router.push(`/register?role=${role}`);
+    }
   };
 
   const handleMenuClose = () => {
     setAnchorEl(null);
-    // Return focus to the button when menu closes
     if (typeof window !== 'undefined') {
       setTimeout(() => {
         const button = document.getElementById('user-menu-button');
@@ -85,8 +88,6 @@ export default function Header() {
         await logoutAPI(refreshToken, accessToken);
       }
     } catch (err) {
-      // Continue logout even if API call fails
-      // eslint-disable-next-line no-console
       console.error('Logout API error:', err);
     } finally {
       logoutHook();
@@ -103,23 +104,91 @@ export default function Header() {
               <Link href="/" style={logoLinkStyles}>
                 <Image src={Logo} alt="NENS" width={32} height={24} />
               </Link>
-              <Link href="/reading" style={navLinkStyles}>
-                <Button color="inherit" sx={navButtonStyles}>
+              <Link href="/student/reading" style={navLinkStyles}>
+                <Button
+                  color="inherit"
+                  sx={{
+                    ...navButtonStyles,
+                    backgroundColor: pathname?.includes('/reading')
+                      ? 'secondary.main'
+                      : 'transparent',
+                    color: pathname?.includes('/reading') ? '#FFFFFF' : 'primary.main',
+                    borderRadius: '20px',
+                    px: pathname?.includes('/reading') ? 3 : 2,
+                    py: 0.5,
+                    '&:hover': {
+                      backgroundColor: pathname?.includes('/reading')
+                        ? 'secondary.dark'
+                        : 'action.hover',
+                    },
+                  }}
+                >
                   Reading
                 </Button>
               </Link>
-              <Link href="/listening" style={navLinkStyles}>
-                <Button color="inherit" sx={navButtonStyles}>
+              <Link href="/student/listening" style={navLinkStyles}>
+                <Button
+                  color="inherit"
+                  sx={{
+                    ...navButtonStyles,
+                    backgroundColor: pathname?.includes('/listening')
+                      ? 'secondary.main'
+                      : 'transparent',
+                    color: pathname?.includes('/listening') ? '#FFFFFF' : 'primary.main',
+                    borderRadius: '20px',
+                    px: pathname?.includes('/listening') ? 3 : 2,
+                    py: 0.5,
+                    '&:hover': {
+                      backgroundColor: pathname?.includes('/listening')
+                        ? 'secondary.dark'
+                        : 'action.hover',
+                    },
+                  }}
+                >
                   Listening
                 </Button>
               </Link>
-              <Link href="/writing" style={navLinkStyles}>
-                <Button color="inherit" sx={navButtonStyles}>
+              <Link href="/student/writing" style={navLinkStyles}>
+                <Button
+                  color="inherit"
+                  sx={{
+                    ...navButtonStyles,
+                    backgroundColor: pathname?.includes('/writing')
+                      ? 'secondary.main'
+                      : 'transparent',
+                    color: pathname?.includes('/writing') ? '#FFFFFF' : 'primary.main',
+                    borderRadius: '20px',
+                    px: pathname?.includes('/writing') ? 3 : 2,
+                    py: 0.5,
+                    '&:hover': {
+                      backgroundColor: pathname?.includes('/writing')
+                        ? 'secondary.dark'
+                        : 'action.hover',
+                    },
+                  }}
+                >
                   Writing
                 </Button>
               </Link>
-              <Link href="/speaking" style={navLinkStyles}>
-                <Button color="inherit" sx={navButtonStyles}>
+              <Link href="/student/speaking" style={navLinkStyles}>
+                <Button
+                  color="inherit"
+                  sx={{
+                    ...navButtonStyles,
+                    backgroundColor: pathname?.includes('/speaking')
+                      ? 'secondary.main'
+                      : 'transparent',
+                    color: pathname?.includes('/speaking') ? '#FFFFFF' : 'primary.main',
+                    borderRadius: '20px',
+                    px: pathname?.includes('/speaking') ? 3 : 2,
+                    py: 0.5,
+                    '&:hover': {
+                      backgroundColor: pathname?.includes('/speaking')
+                        ? 'secondary.dark'
+                        : 'action.hover',
+                    },
+                  }}
+                >
                   Speaking
                 </Button>
               </Link>
@@ -161,6 +230,10 @@ export default function Header() {
                         color: 'primary.dark',
                         fontWeight: 600,
                         display: { xs: 'none', sm: 'block' },
+                        maxWidth: '150px',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
                       }}
                     >
                       {user.username || 'User'}
@@ -183,7 +256,12 @@ export default function Header() {
                       'aria-labelledby': 'user-menu-button',
                     }}
                   >
-                    <MenuItem onClick={handleMenuClose}>
+                    <MenuItem
+                      onClick={() => {
+                        handleMenuClose();
+                        router.push(user?.role === 'T' ? '/teacher/profile' : '/student/profile');
+                      }}
+                    >
                       <Typography>Profile</Typography>
                     </MenuItem>
                     <MenuItem onClick={handleLogout}>

@@ -1,6 +1,8 @@
 export const appBarStyles = {
   backgroundColor: 'background.default',
   color: 'text.primary',
+  boxShadow: 'none',
+  borderBottom: 'none',
 };
 
 export const toolbarStyles = {

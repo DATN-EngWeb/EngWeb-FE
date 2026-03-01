@@ -11,32 +11,11 @@ function GoogleCallbackContent() {
   const searchParams = useSearchParams();
   const [error, setError] = useState(null);
   const [isProcessing, setIsProcessing] = useState(true);
+  const [authCode, setAuthCode] = useState(null);
 
-  const handleCallback = useCallback(async () => {
+  const processLogin = async (code, role) => {
     try {
-      // Get code and state from URL query parameters
-      const code = searchParams.get('code');
-      const state = searchParams.get('state');
-
-      if (!code) {
-        setError('No authorization code received from Google');
-        setIsProcessing(false);
-        setTimeout(() => router.push('/login'), 3000);
-        return;
-      }
-
-      // Parse role from state parameter (default to 'S' if not provided)
-      let role = 'S';
-      if (state) {
-        try {
-          const stateData = JSON.parse(decodeURIComponent(state));
-          role = stateData.role || 'S';
-        } catch (e) {
-          // If state parsing fails, default to Student
-          role = 'S';
-        }
-      }
-
+      setIsProcessing(true);
       // Call backend API to exchange code for tokens
       const response = await googleLogin(code, role);
 
@@ -64,8 +43,12 @@ function GoogleCallbackContent() {
 
       // Handle redirect based on status
       if (response.status === 'V') {
-        // Verified - redirect to home
-        router.push('/');
+        // Verified - redirect based on role
+        if (response.role === 'T') {
+          router.push('/teacher');
+        } else {
+          router.push('/');
+        }
       } else if (response.status === 'I' || response.require_profile) {
         // Incomplete profile - redirect to upload profile
         router.push(`/upload-profile?user_id=${response.user_id}`);
@@ -84,9 +67,58 @@ function GoogleCallbackContent() {
         router.push('/');
       }
     } catch (err) {
+      // If role is missing, redirect back to login
+      if (!role) {
+        setError('Please select your role before logging in');
+        setIsProcessing(false);
+        setTimeout(() => router.push('/login'), 2000);
+        return;
+      }
+
       setError(
         err.message || err.data?.error || 'Failed to authenticate with Google. Please try again.',
       );
+      setIsProcessing(false);
+      setTimeout(() => router.push('/login'), 3000);
+    }
+  };
+
+  const handleCallback = useCallback(async () => {
+    try {
+      // Get code and state from URL query parameters
+      const code = searchParams.get('code');
+      const state = searchParams.get('state');
+
+      console.log('OAuth Callback Debug:', { code: !!code, state });
+
+      if (!code) {
+        setError('No authorization code received from Google');
+        setIsProcessing(false);
+        setTimeout(() => router.push('/login'), 3000);
+        return;
+      }
+
+      setAuthCode(code);
+
+      // Parse role from state parameter (default to null if not provided)
+      let role = null;
+      if (state) {
+        try {
+          const stateData = JSON.parse(decodeURIComponent(state));
+          role = stateData.role;
+          console.log('Parsed Role from State:', role);
+        } catch (e) {
+          console.error('State parsing error:', e);
+          // If state parsing fails, we treat role as missing
+        }
+      }
+
+      console.log('Final Role for Login:', role);
+
+      // Attempt login with whatever role we have (null or from state)
+      processLogin(code, role);
+    } catch (err) {
+      setError(err.message || err.data?.error || 'Failed to process callback. Please try again.');
       setIsProcessing(false);
       setTimeout(() => router.push('/login'), 3000);
     }

@@ -196,7 +196,7 @@ function UploadProfileContent({ userId }) {
       const submitFormData = new FormData();
 
       // Add user_id
-      submitFormData.append('user_id', userId);
+      submitFormData.append('user.id', userId);
 
       // Add user fields
       submitFormData.append('user.full_name', formData.full_name.trim());

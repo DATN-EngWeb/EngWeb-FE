@@ -27,39 +27,30 @@ import { loginStyles } from '../../styles/Login/LoginStyles';
 import { login as loginAPI } from '../../api/accounts';
 import { decodeJwt } from '../../utils/jwt';
 
+import Header from '../../components/Home/Header';
+
 function LoginContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const role = searchParams.get('role') || '';
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
-  const [currentRole, setCurrentRole] = useState('');
   const [serverError, setServerError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentRole, setCurrentRole] = useState('student');
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const getCookie = (name) => {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
-        return null;
-      };
-
-      const storedRole = getCookie('userRole') || localStorage.getItem('userRole');
-      if (storedRole) {
-        setCurrentRole(storedRole);
-      } else if (role) {
-        setCurrentRole(role);
-      }
+    const roleParam = searchParams.get('role');
+    if (roleParam) {
+      setCurrentRole(roleParam);
     }
-  }, [role]);
+  }, [searchParams]);
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
   const handleGoogleLogin = () => {
+    // ... existing logic ...
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
     const scope = 'email profile';
@@ -74,11 +65,9 @@ function LoginContent() {
       return;
     }
 
-    // Get role from currentRole or default to 'S' (Student)
-    const role = currentRole === 'teacher' ? 'T' : 'S';
-
-    // Encode role in state parameter
-    const state = encodeURIComponent(JSON.stringify({ role }));
+    // Pass selected role via state parameter
+    const backendRole = currentRole === 'teacher' ? 'T' : 'S';
+    const state = encodeURIComponent(JSON.stringify({ role: backendRole }));
 
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent&state=${state}`;
 
@@ -86,6 +75,7 @@ function LoginContent() {
   };
 
   const handleFacebookLogin = () => {
+    // ... existing logic ...
     const clientId = process.env.NEXT_PUBLIC_FACEBOOK_CLIENT_ID;
     const redirectUri = process.env.NEXT_PUBLIC_FACEBOOK_REDIRECT_URI;
     const scope = process.env.NEXT_PUBLIC_FACEBOOK_SCOPE;
@@ -105,8 +95,9 @@ function LoginContent() {
       return;
     }
 
-    const role = currentRole === 'teacher' ? 'T' : 'S';
-    const state = encodeURIComponent(JSON.stringify({ role }));
+    // Pass selected role via state parameter
+    const backendRole = currentRole === 'teacher' ? 'T' : 'S';
+    const state = encodeURIComponent(JSON.stringify({ role: backendRole }));
 
     const authUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(
       redirectUri,
@@ -116,6 +107,7 @@ function LoginContent() {
   };
 
   const handleSubmit = async (e) => {
+    // ... existing logic ...
     e.preventDefault();
     setServerError('');
     const newErrors = {};
@@ -172,7 +164,7 @@ function LoginContent() {
 
       // Case 2: Pending Verification - status P
       if (response.require_verification && response.user_id) {
-        const userRole = response.role || currentRole || 'student';
+        const userRole = response.role || 'student';
         router.push(`/verify-otp?user_id=${response.user_id}&role=${userRole}`);
         return;
       }
@@ -203,7 +195,7 @@ function LoginContent() {
 
       // Check if it's a status-based error (P, I, W, D)
       if (errorData.require_verification && errorData.user_id) {
-        const userRole = errorData.role || currentRole || 'student';
+        const userRole = errorData.role || 'student';
         router.push(`/verify-otp?user_id=${errorData.user_id}&role=${userRole}`);
         return;
       }
@@ -231,184 +223,221 @@ function LoginContent() {
   };
 
   return (
-    <Box component="main" sx={loginStyles.page}>
-      <Box component="section" sx={loginStyles.storyPanel}>
-        <Button
-          onClick={() => router.push('/')}
-          sx={loginStyles.backButton}
-          aria-label="Back to home"
-        >
-          <Image src={Logo} alt="NENS" width={32} height={24} />
-        </Button>
-        <Image src={loginImage} alt="Login" style={loginStyles.storyImage} />
-      </Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <Header />
+      <Box component="main" sx={{ ...loginStyles.page, height: 'auto', flex: 1 }}>
+        <Box component="section" sx={loginStyles.storyPanel}>
+          <Image src={loginImage} alt="Login" style={loginStyles.storyImage} />
+        </Box>
 
-      <Box component="section" sx={loginStyles.formPanel}>
-        <Box sx={loginStyles.formCard}>
-          <Typography sx={loginStyles.cardEyebrow}>Welcome to NENS</Typography>
+        <Box component="section" sx={loginStyles.formPanel}>
+          <Box sx={loginStyles.formCard}>
+            <Typography sx={loginStyles.cardEyebrow}>Welcome to NENS</Typography>
 
-          {currentRole && (
-            <Box sx={loginStyles.roleBadge}>
-              Login as a{' '}
-              {currentRole === 'student'
-                ? 'student'
-                : currentRole === 'teacher'
-                  ? 'teacher'
-                  : currentRole}
+            {/* Role Toggle - Student/Teacher */}
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+              <Stack direction="row" spacing={15} justifyContent="center">
+                <Box
+                  onClick={() => {
+                    setCurrentRole('student');
+                    router.push('/login?role=student');
+                  }}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    cursor: 'pointer',
+                    pb: 1.5,
+                    borderBottom: '3px solid',
+                    borderColor: currentRole === 'student' ? 'primary.main' : 'transparent',
+                    color: currentRole === 'student' ? 'primary.main' : 'text.gray',
+                    transition: 'all 0.3s',
+                  }}
+                >
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 3L1 9L12 15L21 10.09V17H23V9L12 3ZM12 5.18L18.99 9L12 12.82L5.01 9L12 5.18ZM12 15.82L5 12.06V15.06L12 18.82L19 15.06V12.06L12 15.82Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  <Typography sx={{ fontWeight: 600, fontSize: '1rem' }}>Student</Typography>
+                </Box>
+                <Box
+                  onClick={() => {
+                    setCurrentRole('teacher');
+                    router.push('/login?role=teacher');
+                  }}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    cursor: 'pointer',
+                    pb: 1.5,
+                    borderBottom: '3px solid',
+                    borderColor: currentRole === 'teacher' ? 'primary.main' : 'transparent',
+                    color: currentRole === 'teacher' ? 'primary.main' : 'text.gray',
+                    transition: 'all 0.3s',
+                  }}
+                >
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.33 4 18V20H20V18C20 15.33 14.67 14 12 14Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  <Typography sx={{ fontWeight: 600, fontSize: '1rem' }}>Teacher</Typography>
+                </Box>
+              </Stack>
             </Box>
-          )}
 
-          <Box sx={loginStyles.switcherWrapper}>
-            <Stack direction="row" sx={loginStyles.switcher}>
+            <Box component="form" sx={loginStyles.form} onSubmit={handleSubmit}>
+              {serverError && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {serverError}
+                </Alert>
+              )}
+
+              <Box sx={loginStyles.fieldContainer}>
+                <Typography sx={loginStyles.fieldLabel}>Username or Email</Typography>
+                <TextField
+                  name="username"
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    if (errors.username) {
+                      setErrors({ ...errors, username: '' });
+                    }
+                  }}
+                  placeholder="Enter your username or email"
+                  fullWidth
+                  error={!!errors.username}
+                  helperText={errors.username}
+                  InputProps={{
+                    sx: {
+                      ...loginStyles.textFieldInputProps,
+                      ...(errors.username && {
+                        borderColor: 'error.main',
+                        border: '2px solid',
+                      }),
+                    },
+                  }}
+                  inputProps={{
+                    sx: loginStyles.textFieldInputPropsPlaceholder,
+                  }}
+                  FormHelperTextProps={{
+                    sx: {
+                      color: 'error.main',
+                      margin: '4px 0 0 0',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+              </Box>
+
+              <Box sx={loginStyles.fieldContainerSmall}>
+                <Typography sx={loginStyles.fieldLabel}>Password</Typography>
+                <TextField
+                  name="password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errors.password) {
+                      setErrors({ ...errors, password: '' });
+                    }
+                  }}
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your Password"
+                  fullWidth
+                  error={!!errors.password}
+                  helperText={errors.password}
+                  InputProps={{
+                    sx: {
+                      ...loginStyles.textFieldInputProps,
+                      ...(errors.password && {
+                        borderColor: 'error.main',
+                        border: '2px solid',
+                      }),
+                    },
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={handleClickShowPassword}
+                          edge="end"
+                          sx={loginStyles.passwordIconButton}
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  inputProps={{
+                    sx: loginStyles.textFieldInputPropsPlaceholder,
+                  }}
+                  FormHelperTextProps={{
+                    sx: {
+                      color: 'error.main',
+                      margin: '4px 0 0 0',
+                      fontSize: '0.875rem',
+                    },
+                  }}
+                />
+              </Box>
+
+              <Box sx={loginStyles.formMeta}>
+                <FormControlLabel
+                  control={<Checkbox color="warning" size="small" />}
+                  label="Remember me"
+                  sx={loginStyles.rememberMeLabel}
+                />
+                <Link href="/forgot-password" style={{ textDecoration: 'none' }}>
+                  <Button variant="text" sx={loginStyles.forgotPasswordButton}>
+                    Forgot Password ?
+                  </Button>
+                </Link>
+              </Box>
+
               <Button
-                disableElevation
-                sx={{ ...loginStyles.switchButton, ...loginStyles.switchActive }}
+                type="submit"
+                variant="contained"
+                sx={loginStyles.primaryButton}
+                disabled={isSubmitting}
               >
-                Login
+                {isSubmitting ? 'Logging in...' : 'Login'}
               </Button>
+            </Box>
 
-              <Link
-                href={role ? `/register?role=${role}` : '/register'}
-                style={loginStyles.linkNoDecoration}
+            <Divider sx={loginStyles.divider}>Continue with</Divider>
+
+            <Box sx={loginStyles.socialRow}>
+              <Button variant="outlined" sx={loginStyles.socialButton} onClick={handleGoogleLogin}>
+                <Box sx={loginStyles.socialButtonContent}>
+                  <Image src={googleImage} alt="Google" width={15} height={15} />
+                  Google
+                </Box>
+              </Button>
+              <Button
+                variant="outlined"
+                sx={loginStyles.socialButton}
+                onClick={handleFacebookLogin}
               >
-                <Button disableElevation sx={loginStyles.switchButton}>
-                  Register
-                </Button>
-              </Link>
-            </Stack>
-          </Box>
-
-          <Box component="form" sx={loginStyles.form} onSubmit={handleSubmit}>
-            {serverError && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {serverError}
-              </Alert>
-            )}
-
-            <Box sx={loginStyles.fieldContainer}>
-              <Typography sx={loginStyles.fieldLabel}>Username or Email</Typography>
-              <TextField
-                name="username"
-                value={username}
-                onChange={(e) => {
-                  setUsername(e.target.value);
-                  if (errors.username) {
-                    setErrors({ ...errors, username: '' });
-                  }
-                }}
-                placeholder="Enter your username or email"
-                fullWidth
-                error={!!errors.username}
-                helperText={errors.username}
-                InputProps={{
-                  sx: {
-                    ...loginStyles.textFieldInputProps,
-                    ...(errors.username && {
-                      borderColor: 'error.main',
-                      border: '2px solid',
-                    }),
-                  },
-                }}
-                inputProps={{
-                  sx: loginStyles.textFieldInputPropsPlaceholder,
-                }}
-                FormHelperTextProps={{
-                  sx: {
-                    color: 'error.main',
-                    margin: '4px 0 0 0',
-                    fontSize: '0.875rem',
-                  },
-                }}
-              />
+                <Box sx={loginStyles.socialButtonContent}>
+                  <Image src={facebookImage} alt="Facebook" width={20} height={20} />
+                  Facebook
+                </Box>
+              </Button>
             </Box>
-
-            <Box sx={loginStyles.fieldContainerSmall}>
-              <Typography sx={loginStyles.fieldLabel}>Password</Typography>
-              <TextField
-                name="password"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (errors.password) {
-                    setErrors({ ...errors, password: '' });
-                  }
-                }}
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your Password"
-                fullWidth
-                error={!!errors.password}
-                helperText={errors.password}
-                InputProps={{
-                  sx: {
-                    ...loginStyles.textFieldInputProps,
-                    ...(errors.password && {
-                      borderColor: 'error.main',
-                      border: '2px solid',
-                    }),
-                  },
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={handleClickShowPassword}
-                        edge="end"
-                        sx={loginStyles.passwordIconButton}
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                inputProps={{
-                  sx: loginStyles.textFieldInputPropsPlaceholder,
-                }}
-                FormHelperTextProps={{
-                  sx: {
-                    color: 'error.main',
-                    margin: '4px 0 0 0',
-                    fontSize: '0.875rem',
-                  },
-                }}
-              />
-            </Box>
-
-            <Box sx={loginStyles.formMeta}>
-              <FormControlLabel
-                control={<Checkbox color="warning" size="small" />}
-                label="Remember me"
-                sx={loginStyles.rememberMeLabel}
-              />
-              <Link href="/forgot-password" style={{ textDecoration: 'none' }}>
-                <Button variant="text" sx={loginStyles.forgotPasswordButton}>
-                  Forgot Password ?
-                </Button>
-              </Link>
-            </Box>
-
-            <Button
-              type="submit"
-              variant="contained"
-              sx={loginStyles.primaryButton}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Logging in...' : 'Login'}
-            </Button>
-          </Box>
-
-          <Divider sx={loginStyles.divider}>Continue with</Divider>
-
-          <Box sx={loginStyles.socialRow}>
-            <Button variant="outlined" sx={loginStyles.socialButton} onClick={handleGoogleLogin}>
-              <Box sx={loginStyles.socialButtonContent}>
-                <Image src={googleImage} alt="Google" width={15} height={15} />
-                Google
-              </Box>
-            </Button>
-            <Button variant="outlined" sx={loginStyles.socialButton} onClick={handleFacebookLogin}>
-              <Box sx={loginStyles.socialButtonContent}>
-                <Image src={facebookImage} alt="Facebook" width={20} height={20} />
-                Facebook
-              </Box>
-            </Button>
           </Box>
         </Box>
       </Box>
