@@ -31,6 +31,13 @@ import {
   numberIndicator,
   partHeader,
   rowContent,
+  labelText,
+  textInput,
+  answerTextInput,
+  actionTextButton,
+  outlinedCard,
+  answerOptionRow,
+  trashIconButton,
 } from '../../styles/Teacher/Listening/ListeningStyles';
 
 const options = [
@@ -207,7 +214,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
           </Box>
         </Box>
         <Box>
-          <IconButton onClick={onDelete}>
+          <IconButton onClick={onDelete} sx={trashIconButton}>
             <DeleteOutlineIcon />
           </IconButton>
           <IconButton onClick={() => setIsCollapsed(!isCollapsed)}>
@@ -220,7 +227,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
         <>
           <Box sx={{ mb: 3 }}>
             <Box sx={rowContent}>
-              <Typography variant="body2">
+              <Typography sx={labelText}>
                 The score for each question <span style={{ color: 'red' }}>*</span>
               </Typography>
             </Box>
@@ -237,10 +244,11 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
                 }));
                 updatePart({ ...part, score: scoreValue, questions: newQuestions });
               }}
+              sx={textInput}
             />
           </Box>
 
-          <Typography variant="body2">
+          <Typography sx={labelText}>
             Audio Format <span style={{ color: 'red' }}>*</span>
           </Typography>
           <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
@@ -277,7 +285,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
                       </Typography>
                       <Typography
                         variant="body2"
-                        sx={{ color: '#9E9E9E', fontSize: '14px', mt: 0.5 }}
+                        sx={{ color: 'text.gray', fontSize: '14px', mt: 0.5 }}
                       >
                         {option.description}
                       </Typography>
@@ -290,7 +298,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
 
           <Box sx={{ mb: 3 }}>
             <Box sx={rowContent}>
-              <Typography variant="body2">
+              <Typography sx={labelText}>
                 Description <span style={{ color: 'red' }}>*</span>
               </Typography>
             </Box>
@@ -301,12 +309,13 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
               placeholder="e.g., Listen to the audio between Alice and Sam and choose the correct picture..."
               value={part.description ?? ''}
               onChange={(e) => updatePart({ ...part, description: e.target.value })}
+              sx={textInput}
             />
           </Box>
 
           {audioFormat === 'onetomany' && (
             <>
-              <Typography variant="body2">
+              <Typography sx={labelText}>
                 Audio File <span style={{ color: 'red' }}>*</span>
               </Typography>
               <AudioUploader
@@ -317,7 +326,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
 
               <Box sx={{ mb: 3 }}>
                 <Box sx={rowContent}>
-                  <Typography variant="body2">Content</Typography>
+                  <Typography sx={labelText}>Content</Typography>
                 </Box>
                 <Box sx={scrollEditorBox}>
                   <ClientSideCustomEditor
@@ -335,10 +344,15 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
           )}
 
           <Box sx={rowContent}>
-            <Typography variant="body2">
+            <Typography sx={labelText}>
               Questions <span style={{ color: 'red' }}>*</span>
             </Typography>
-            <Button startIcon={<AddIcon />} size="small" onClick={addQuestion}>
+            <Button
+              startIcon={<AddIcon />}
+              size="small"
+              onClick={addQuestion}
+              sx={{ ...actionTextButton, textTransform: 'none' }}
+            >
               Add question
             </Button>
           </Box>
@@ -347,14 +361,18 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
             <Box sx={emptyStateBox}>
               No questions yet
               <br />
-              <Button startIcon={<AddIcon />} sx={{ mt: 1 }} onClick={addQuestion}>
+              <Button
+                startIcon={<AddIcon />}
+                sx={{ mt: 1, ...actionTextButton, textTransform: 'none' }}
+                onClick={addQuestion}
+              >
                 Add your first question
               </Button>
             </Box>
           ) : (
             <Stack spacing={2}>
               {questions.map((q, qIdx) => (
-                <Paper key={q.id} variant="outlined" sx={{ p: 2 }}>
+                <Paper key={q.id} variant="outlined" sx={outlinedCard}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
                     <Box sx={numberIndicator}>{qIdx + 1}</Box>
 
@@ -364,9 +382,10 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
                       placeholder="Enter question text"
                       value={q.text}
                       onChange={(e) => setQuestionText(qIdx, e.target.value)}
+                      sx={textInput}
                     />
 
-                    <IconButton color="error" onClick={() => removeQuestion(qIdx)}>
+                    <IconButton onClick={() => removeQuestion(qIdx)} sx={trashIconButton}>
                       <DeleteOutlineIcon />
                     </IconButton>
                   </Box>
@@ -384,12 +403,13 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
                         );
                         updatePart({ ...part, questions: newQs });
                       }}
+                      sx={textInput}
                     />
                   </Box>
 
                   {audioFormat === 'onetoone' && (
                     <>
-                      <Typography variant="body2">
+                      <Typography sx={labelText}>
                         Audio File <span style={{ color: 'red' }}>*</span>
                       </Typography>
                       <AudioUploader
@@ -400,7 +420,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
                     </>
                   )}
 
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography sx={{ ...labelText, color: 'text.gray' }}>
                     Text answers (click to set correct):
                   </Typography>
 
@@ -409,24 +429,13 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
                       const isCorrect = q.correctIndex === aIdx;
 
                       return (
-                        <Box
-                          key={ans.id || aIdx}
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            p: '8px 16px',
-                            border: '1.5px solid #E0E0E0',
-                            borderRadius: '12px',
-                            width: '100%',
-                            mb: 2,
-                          }}
-                        >
+                        <Box key={ans.id || aIdx} sx={answerOptionRow}>
                           <Radio
                             checked={isCorrect}
                             onChange={() => setCorrect(qIdx, aIdx)}
                             sx={{
-                              color: '#757575',
-                              '&.Mui-checked': { color: '#4A2B20' },
+                              color: 'text.gray',
+                              '&.Mui-checked': { color: 'primary.main' },
                               p: 1,
                               mr: 1,
                             }}
@@ -437,7 +446,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
                               fontWeight: 'bold',
                               mr: 2,
                               minWidth: '20px',
-                              color: '#000',
+                              color: 'text.primary',
                             }}
                           >
                             {String.fromCharCode(65 + aIdx)}.
@@ -448,16 +457,15 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
                             placeholder={`Answer ${String.fromCharCode(65 + aIdx)}...`}
                             value={ans.text || ''}
                             onChange={(e) => setAnswerText(qIdx, aIdx, e.target.value)}
-                            sx={{ flex: 1, minWidth: 0 }}
+                            sx={{ ...answerTextInput, flex: 1, minWidth: 0 }}
                           />
 
                           <IconButton
                             size="small"
                             onClick={() => removeAnswer(qIdx, aIdx)}
                             sx={{
+                              ...trashIconButton,
                               ml: 1,
-                              color: '#BDBDBD',
-                              '&:hover': { color: '#d32f2f' },
                             }}
                           >
                             <DeleteOutlineIcon />
@@ -471,7 +479,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
                     startIcon={<AddCircleOutlineIcon />}
                     size="small"
                     onClick={() => addAnswer(qIdx)}
-                    sx={{ mt: 1 }}
+                    sx={{ mt: 1, ...actionTextButton, textTransform: 'none' }}
                   >
                     Add Answer
                   </Button>

@@ -190,7 +190,7 @@ export default function Header() {
                     <MenuItem
                       onClick={() => {
                         handleMenuClose();
-                        router.push(user?.role === 'T' ? '/teacher/profile' : '/profile');
+                        router.push(user?.role === 'T' ? '/teacher/profile' : '/student/profile');
                       }}
                     >
                       <Typography>Profile</Typography>

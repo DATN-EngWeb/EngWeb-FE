@@ -6,7 +6,7 @@ import PartTypeCard from './PartTypeCard';
 export default function SelectPartType({ partTypes, onSelectType, onCancel }) {
   return (
     <>
-      <Typography fontWeight={600} mb={2} sx={{ color: 'primary.main' }}>
+      <Typography fontWeight={600} mb={2} sx={{ color: 'primary.main', fontSize: '1.2rem' }}>
         Select Part Type
       </Typography>
 
@@ -29,7 +29,7 @@ export default function SelectPartType({ partTypes, onSelectType, onCancel }) {
         ))}
       </Box>
 
-      <Button variant="text" onClick={onCancel}>
+      <Button variant="text" onClick={onCancel} sx={{ textTransform: 'none', px: 0 }}>
         Cancel
       </Button>
     </>

@@ -26,6 +26,10 @@ import {
   numberIndicator,
   partHeader,
   rowContent,
+  labelText,
+  textInput,
+  outlinedCard,
+  trashIconButton,
 } from '../../styles/Teacher/Listening/ListeningStyles';
 
 export default function FillInTheBlankPart({ index, part = {}, onChange, onDelete }) {
@@ -98,7 +102,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
         </Box>
 
         <Box>
-          <IconButton onClick={onDelete}>
+          <IconButton onClick={onDelete} sx={trashIconButton}>
             <DeleteOutlineIcon />
           </IconButton>
           <IconButton onClick={() => setIsCollapsed(!isCollapsed)}>
@@ -111,7 +115,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
         <>
           <Box sx={{ mb: 3 }}>
             <Box sx={rowContent}>
-              <Typography variant="body2">
+              <Typography sx={labelText}>
                 The score for each question <span style={{ color: 'red' }}>*</span>
               </Typography>
             </Box>
@@ -128,10 +132,11 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
                 }));
                 updatePart({ ...part, score: scoreValue, answers: newAnswers });
               }}
+              sx={textInput}
             />
           </Box>
 
-          <Typography variant="body2">
+          <Typography sx={labelText}>
             Audio File <span style={{ color: 'red' }}>*</span>
           </Typography>
           <AudioUploader
@@ -142,7 +147,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
 
           <Box sx={{ mb: 3 }}>
             <Box sx={rowContent}>
-              <Typography variant="body2">
+              <Typography sx={labelText}>
                 Description <span style={{ color: 'red' }}>*</span>
               </Typography>
             </Box>
@@ -153,12 +158,13 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
               placeholder="e.g., Listen to the audio between Alice and Sam and choose the correct picture..."
               value={part.description ?? ''}
               onChange={(e) => updatePart({ ...part, description: e.target.value })}
+              sx={textInput}
             />
           </Box>
 
           <Box sx={{ mb: 3 }}>
             <Box sx={rowContent}>
-              <Typography variant="body2">
+              <Typography sx={labelText}>
                 Content <span style={{ color: 'red' }}>*</span>
               </Typography>
             </Box>
@@ -176,7 +182,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
           </Box>
 
           <Box sx={rowContent}>
-            <Typography variant="body2">
+            <Typography sx={labelText}>
               Answers <span style={{ color: 'red' }}>*</span>
             </Typography>
           </Box>
@@ -188,7 +194,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
           ) : (
             <Stack spacing={2}>
               {answers.map((answer, aIdx) => (
-                <Paper key={answer.id} variant="outlined" sx={{ p: 2 }}>
+                <Paper key={answer.id} variant="outlined" sx={outlinedCard}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
                     <Box sx={numberIndicator}>{aIdx + 1}</Box>
 
@@ -198,6 +204,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
                       placeholder="Enter answer text"
                       value={answer.text}
                       onChange={(e) => setAnswerText(aIdx, e.target.value)}
+                      sx={textInput}
                     />
                   </Box>
 
@@ -214,6 +221,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
                         );
                         updatePart({ ...part, answers: newAnswers });
                       }}
+                      sx={textInput}
                     />
                   </Box>
                 </Paper>

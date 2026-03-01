@@ -7,19 +7,21 @@ export default function PartTypeCard({ icon, title, description, onClick, select
       onClick={onClick}
       sx={{
         ...partTypeCard,
-        border: selected ? '2px solid #000000ff' : '1px solid #e0e0e0',
+        border: '1px solid',
+        borderColor: selected ? 'yellow.main' : 'gray.main',
+        backgroundColor: selected ? 'natural.main' : 'background.paper',
         '&:hover': {
-          borderColor: '#000000ff',
-          boxShadow: 2,
+          borderColor: 'yellow.main',
+          boxShadow: 'none',
         },
       }}
     >
-      <Box sx={{ color: '#000000ff', display: 'flex' }}>{icon}</Box>
+      <Box sx={{ color: 'primary.main', display: 'flex' }}>{icon}</Box>
       <Box>
-        <Typography variant="subtitle2" fontWeight="600">
+        <Typography variant="subtitle2" fontWeight={600} sx={{ color: 'primary.main' }}>
           {title}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{ color: 'text.gray' }}>
           {description}
         </Typography>
       </Box>

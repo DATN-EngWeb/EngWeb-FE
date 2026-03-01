@@ -135,8 +135,9 @@ export const transformApiResponseToParts = (apiData) => {
     .filter(Boolean);
 };
 
-export const collectFiles = (parts) => {
+export const collectFiles = (parts, originalParts = []) => {
   const files = [];
+  const originalPartMap = new Map(originalParts.map((part) => [part.id, part]));
 
   parts.forEach((part, partIdx) => {
     if (!part.type) return;
@@ -176,15 +177,21 @@ export const collectFiles = (parts) => {
     });
     const order = part.order || partIdx + 1;
     if (part?.content && typeof part.content === 'string' && part.content.trim().length > 0) {
-      const filename = `part${order}_content.html`;
-      const file = new File([part.content], filename, { type: 'text/html' });
-      files.push({
-        filename,
-        file,
-        fileSize: file.size,
-        mimeType: 'text/html',
-        partOrder: order,
-      });
+      const originalPart = originalPartMap.get(part.id);
+      const originalContent = originalPart?.content || '';
+      const contentChanged = originalContent !== part.content;
+
+      if (contentChanged || !originalPart) {
+        const filename = `part${order}_content.html`;
+        const file = new File([part.content], filename, { type: 'text/html' });
+        files.push({
+          filename,
+          file,
+          fileSize: file.size,
+          mimeType: 'text/html',
+          partOrder: order,
+        });
+      }
     }
   });
 

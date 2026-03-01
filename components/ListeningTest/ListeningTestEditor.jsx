@@ -19,6 +19,7 @@ import MultiChoiceImagePart from './MultiChoiceImagePart';
 import MultiChoiceTextPart from './MultiChoiceTextPart';
 import FillInTheBlankPart from './FillInTheBlankPart';
 import MatchingPart from './MatchingPart';
+import ScrollToTopButton from '../CreateTest/ScrollToTopButton';
 
 import { validateTest, getValidationErrorMessage } from '../../utils/testValidation';
 import {
@@ -237,7 +238,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
         setEditingTestId(response.id);
       }
 
-      const files = collectFiles(parts);
+      const files = collectFiles(parts, originalParts);
       const filenameToUrl = {};
       for (const f of files) {
         const presign = await getPresignedUrl(
@@ -310,7 +311,9 @@ export default function ListeningTestEditor({ testId: propTestId }) {
       setErrors(null);
       setIsSaving(false);
 
-      router.push('/teacher/upload-test/listening');
+      setTimeout(() => {
+        router.push('/teacher');
+      }, 2000);
     } catch (error) {
       setSnackbar({ open: true, message: `Submit failed: ${error.message}`, severity: 'error' });
       setIsSaving(false);
@@ -348,7 +351,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
       ) : (
         <Box sx={{ filter: isSaving ? 'blur' : 'none' }}>
           <Box sx={contentWrap}>
-            <Box sx={{ px: { xs: 0, lg: '200px' } }}>
+            <Box sx={{ px: { xs: 0, lg: '180px' } }}>
               <Typography sx={{ typography: 'h4', color: 'primary.main', marginBottom: '20px' }}>
                 Test editor
               </Typography>
@@ -454,6 +457,8 @@ export default function ListeningTestEditor({ testId: propTestId }) {
       >
         <CircularProgress color="inherit" />
       </Backdrop>
+
+      <ScrollToTopButton />
     </Box>
   );
 }
