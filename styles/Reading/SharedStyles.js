@@ -10,11 +10,11 @@ export const containerStyles = {
 export const headerWrapperStyles = {
   backgroundColor: 'background.paper',
   borderRadius: '0px',
-  padding: '20px 0 12px 0',
+  padding: '16px 0',
   boxShadow: 'none',
   display: 'flex',
   flexDirection: 'column',
-  gap: 2,
+  gap: 0,
 };
 
 export const headerSectionStyles = {
@@ -46,23 +46,22 @@ export const submitButtonStyles = {
   py: 1.5,
   borderRadius: '8px',
   textTransform: 'none',
-  fontSize: '1rem',
+  fontSize: '0.875rem',
   '&:hover': {
-    backgroundColor: 'warning.dark',
+    backgroundColor: 'warning.light',
     boxShadow: 'none',
   },
   boxShadow: 'none',
 };
 
 export const tabsContainerStyles = {
-  mt: 1.5,
   display: 'flex',
   justifyContent: 'center',
 };
 
 export const tabStyles = {
   textTransform: 'none',
-  fontSize: '1rem',
+  fontSize: '0.875rem',
   fontWeight: 500,
   minHeight: 44,
   px: 3.5,
@@ -72,9 +71,7 @@ export const tabStyles = {
   borderColor: 'divider',
   backgroundColor: 'action.hover',
   mr: 1,
-  '&:hover': {
-    backgroundColor: 'action.selected',
-  },
+  transition: 'all 0.2s ease',
 };
 
 export const contentWrapperStyles = {

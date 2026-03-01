@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   AppBar,
   Toolbar,
@@ -33,6 +33,7 @@ import { logout as logoutAPI } from '../../api/accounts';
 
 export default function Header() {
   const router = useRouter();
+  const pathname = usePathname();
   const { isAuthenticated, user, logout: logoutHook } = useAuth(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [userAvatar, setUserAvatar] = useState(null);
@@ -104,22 +105,90 @@ export default function Header() {
                 <Image src={Logo} alt="NENS" width={32} height={24} />
               </Link>
               <Link href="/student/reading" style={navLinkStyles}>
-                <Button color="inherit" sx={navButtonStyles}>
+                <Button
+                  color="inherit"
+                  sx={{
+                    ...navButtonStyles,
+                    backgroundColor: pathname?.includes('/reading')
+                      ? 'secondary.main'
+                      : 'transparent',
+                    color: pathname?.includes('/reading') ? '#FFFFFF' : 'primary.main',
+                    borderRadius: '20px',
+                    px: pathname?.includes('/reading') ? 3 : 2,
+                    py: 0.5,
+                    '&:hover': {
+                      backgroundColor: pathname?.includes('/reading')
+                        ? 'secondary.dark'
+                        : 'action.hover',
+                    },
+                  }}
+                >
                   Reading
                 </Button>
               </Link>
               <Link href="/student/listening" style={navLinkStyles}>
-                <Button color="inherit" sx={navButtonStyles}>
+                <Button
+                  color="inherit"
+                  sx={{
+                    ...navButtonStyles,
+                    backgroundColor: pathname?.includes('/listening')
+                      ? 'secondary.main'
+                      : 'transparent',
+                    color: pathname?.includes('/listening') ? '#FFFFFF' : 'primary.main',
+                    borderRadius: '20px',
+                    px: pathname?.includes('/listening') ? 3 : 2,
+                    py: 0.5,
+                    '&:hover': {
+                      backgroundColor: pathname?.includes('/listening')
+                        ? 'secondary.dark'
+                        : 'action.hover',
+                    },
+                  }}
+                >
                   Listening
                 </Button>
               </Link>
               <Link href="/student/writing" style={navLinkStyles}>
-                <Button color="inherit" sx={navButtonStyles}>
+                <Button
+                  color="inherit"
+                  sx={{
+                    ...navButtonStyles,
+                    backgroundColor: pathname?.includes('/writing')
+                      ? 'secondary.main'
+                      : 'transparent',
+                    color: pathname?.includes('/writing') ? '#FFFFFF' : 'primary.main',
+                    borderRadius: '20px',
+                    px: pathname?.includes('/writing') ? 3 : 2,
+                    py: 0.5,
+                    '&:hover': {
+                      backgroundColor: pathname?.includes('/writing')
+                        ? 'secondary.dark'
+                        : 'action.hover',
+                    },
+                  }}
+                >
                   Writing
                 </Button>
               </Link>
               <Link href="/student/speaking" style={navLinkStyles}>
-                <Button color="inherit" sx={navButtonStyles}>
+                <Button
+                  color="inherit"
+                  sx={{
+                    ...navButtonStyles,
+                    backgroundColor: pathname?.includes('/speaking')
+                      ? 'secondary.main'
+                      : 'transparent',
+                    color: pathname?.includes('/speaking') ? '#FFFFFF' : 'primary.main',
+                    borderRadius: '20px',
+                    px: pathname?.includes('/speaking') ? 3 : 2,
+                    py: 0.5,
+                    '&:hover': {
+                      backgroundColor: pathname?.includes('/speaking')
+                        ? 'secondary.dark'
+                        : 'action.hover',
+                    },
+                  }}
+                >
                   Speaking
                 </Button>
               </Link>
