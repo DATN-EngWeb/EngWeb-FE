@@ -414,7 +414,7 @@ export default function ProductiveHub({ Skill }) {
                 gridTemplateColumns: {
                   xs: '1fr',
                   md: '1fr 1fr',
-                  lg: '1fr 1fr 1fr',
+                  lg: '1fr 1fr ',
                 },
                 gap: '24px',
                 marginBottom: '48px',
