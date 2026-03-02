@@ -406,21 +406,32 @@ export default function ReadingHub() {
               </Select>
             </Stack>
 
-            {loading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-                <CircularProgress />
-              </Box>
-            ) : error ? (
-              <Alert severity="error">{error}</Alert>
-            ) : (
-              <Grid container columnSpacing={3} rowSpacing={3}>
-                {tests.map((test) => (
-                  <Grid item xs={12} sm={6} md={6} lg={4} xl={3} key={test.id}>
-                    <TestCard role="student" {...test} />
-                  </Grid>
-                ))}
-              </Grid>
-            )}
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  md: '1fr 1fr',
+                  lg: '1fr 1fr',
+                },
+                gap: '24px',
+                marginBottom: '48px',
+                minHeight: '400px',
+                alignContent: 'start',
+              }}
+            >
+              {loading ? (
+                <Box sx={{ gridColumn: '1/-1', textAlign: 'center', py: 10 }}>
+                  <CircularProgress color="warning" />
+                </Box>
+              ) : tests.length > 0 ? (
+                tests.map((test) => <TestCard key={test.id} role="student" {...test} />)
+              ) : (
+                <Typography sx={{ gridColumn: '1/-1', textAlign: 'center', py: 10 }}>
+                  No tests found.
+                </Typography>
+              )}
+            </Box>
 
             <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center' }}>
               <Pagination

@@ -82,6 +82,7 @@ export default function ProductiveTestHistory() {
   };
   const handlePracticeNow = () => {
     {
+      sessionStorage.removeItem('current_productive_attempt');
       testData.skill === 'S'
         ? router.push(`/student/speaking/${test_id}/${submissions.length + 1}`)
         : router.push(`/student/writing/${test_id}/${submissions.length + 1}`);
@@ -95,7 +96,7 @@ export default function ProductiveTestHistory() {
           <Paper sx={styles.paperCard}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
               <Typography variant="h4" fontWeight={800} color="#4e342e">
-                {testData.title}
+                {testData.title || 'Productive Test'}
               </Typography>
               <Box sx={styles.levelTag(levelTheme[testData.level])} mt={1} width="fit-content">
                 Level {testData.level}

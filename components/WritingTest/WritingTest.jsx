@@ -137,7 +137,7 @@ export default function WritingTest() {
   if (!isMounted) {
     return <Box sx={styles.mainContainer} />;
   }
-  const handleSubmit = (status) => {
+  const handleSubmit = () => {
     if (wordCount >= settings.minWords) {
       setOpenShareModal(true);
     }

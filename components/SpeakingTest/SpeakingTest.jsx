@@ -28,6 +28,7 @@ import PauseIcon from '@mui/icons-material/Pause';
 import { useParams, useRouter } from 'next/navigation';
 import HistoryEduIcon from '@mui/icons-material/HistoryEdu';
 import TimerIcon from '@mui/icons-material/Timer';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 import { getProductiveTestDetails, createProductiveTest } from '@/api/test';
 import ProductivePreview from '../Writing-Speaking/ProductivePreview';
@@ -47,25 +48,38 @@ export default function WritingTest() {
   const [audioBlob, setAudioBlob] = useState(null);
   const [hasRecorded, setHasRecorded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [testData, setTestData] = useState({ title: '', level: '' });
   const [question, setQuestion] = useState({ description: '', suggestion: '', audio: null });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [isMounted, setIsMounted] = useState(false);
   const [openShareModal, setOpenShareModal] = useState(false);
-  const [isFinished, setIsFinished] = useState(false);
-  const [isDraftSaved, setIsDraftSaved] = useState(false);
   const [startTime, setStartTime] = useState(new Date().toISOString());
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
+  const [isDraftSaved, setIsDraftSaved] = useState(false);
   const audioRef = React.useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
-
+  const playIntervalRef = useRef(null);
   const formatTime = (totalSeconds) => {
     const mins = Math.floor(totalSeconds / 60);
     const secs = totalSeconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+  const getAudioDuration = (url) => {
+    return new Promise((resolve, reject) => {
+      const audio = new Audio(url);
+
+      audio.onloadedmetadata = () => {
+        resolve(Math.floor(audio.duration));
+      };
+
+      audio.onerror = (err) => {
+        reject("Can't load audio duration: " + err);
+      };
+    });
   };
 
   // Fetch Data
@@ -80,10 +94,14 @@ export default function WritingTest() {
             setIsPlaying(false);
             setAudioBlob(parsed.audio);
             setAudioUrl(parsed.audio);
+            if (parsed.audio) {
+              getAudioDuration(parsed.audio).then((duration) => {
+                setRecordingTime(duration);
+              });
+            }
             setHasRecorded(true);
-            setIsFinished(true);
             const savedTime = Number(parsed.totalTime) || 0;
-            setRecordingTime(savedTime);
+            setSecondsElapsed(savedTime);
             setIsReadOnly(true);
           }
         }
@@ -101,7 +119,6 @@ export default function WritingTest() {
         const htmlText = await desResponse.text();
 
         const audioUrlFromServer = response.productive_test.glue_resources?.audio;
-
         setQuestion({
           description: htmlText,
           suggestion: response.productive_test.glue_text,
@@ -116,6 +133,15 @@ export default function WritingTest() {
     };
     if (testId) fetchData();
   }, [testId]);
+  useEffect(() => {
+    let timer;
+    if (isMounted && !isReadOnly) {
+      timer = setInterval(() => {
+        setSecondsElapsed((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [isMounted, isReadOnly]);
   useEffect(() => {
     let interval;
     if (isRecording) {
@@ -149,7 +175,7 @@ export default function WritingTest() {
       const response = await createProductiveTest(
         {
           productive_test: testId,
-          total_time: recordingTime,
+          total_time: secondsElapsed,
           type: 'S',
           start_time: startTime,
           end_time: new Date().toISOString(),
@@ -163,7 +189,7 @@ export default function WritingTest() {
       setIsSaving(false);
       setAudioBlob(null);
       setRecordingTime(0);
-      setIsFinished(false);
+      setSecondsElapsed(0);
       setStartTime(new Date().toISOString());
       setSnackbar({ open: true, message: 'Test submitted successfully!', severity: 'success' });
       setTimeout(() => {
@@ -251,6 +277,15 @@ export default function WritingTest() {
         audioRef.current.onended = () => {
           setIsPlaying(false);
         };
+        playIntervalRef.current = setInterval(() => {
+          if (audioRef.current) {
+            setRecordingTime(Math.floor(audioRef.current.currentTime));
+            if (audioRef.current.ended) {
+              setIsPlaying(false);
+              clearInterval(playIntervalRef.current);
+            }
+          }
+        }, 500);
       }
     } else {
       setSnackbar({ open: true, message: 'No recording found to play', severity: 'warning' });
@@ -314,6 +349,12 @@ export default function WritingTest() {
             </Stack>
           </Box>
         </Stack>
+        <Box sx={styles.timerBox}>
+          <AccessTimeIcon sx={{ fontSize: 28 }} />
+          <Typography variant="inherit">
+            {isMounted ? formatTime(secondsElapsed) : '00:00'}
+          </Typography>
+        </Box>
       </Box>
 
       <Box sx={styles.mainContainer}>
@@ -327,7 +368,7 @@ export default function WritingTest() {
                   title={testData.title}
                   description={question.description}
                   suggestion={question.suggestion}
-                  audio={question.audio}
+                  audio={question.audio?.url}
                 />
               </Box>
             </Panel>

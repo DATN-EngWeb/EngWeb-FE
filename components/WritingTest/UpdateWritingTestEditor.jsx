@@ -1,7 +1,7 @@
 /* global fetch */
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import ProductiveTestEditor from './../Writing-Speaking/ProductiveTestEditor';
 import ProductiveEditor from './../Writing-Speaking/ProductiveEditor';
 import ProductivePreview from './../Writing-Speaking/ProductivePreview';
@@ -10,6 +10,7 @@ import { uploadHtmlContent } from '../../utils/uploadHelpers';
 
 export default function UpdateWritingTestEditor() {
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
 
   const reverseFormatMapper = {
     A: 'Email',
@@ -159,7 +160,9 @@ export default function UpdateWritingTestEditor() {
         await updateProductiveTest(testId, updatePayload, token);
 
         setSnackbar({ open: true, message: 'Updated successfully!', severity: 'success' });
-        await loadTestData();
+        setTimeout(() => {
+          router.push(`/teacher`);
+        }, 1000);
       } else {
         setSnackbar({ open: true, message: 'No changes detected', severity: 'info' });
       }

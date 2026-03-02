@@ -13,6 +13,7 @@ import {
   Edit as Edit,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
+import ReplayIcon from '@mui/icons-material/Replay';
 
 export const levelTheme = {
   A1: {
@@ -100,7 +101,6 @@ const TestCard = ({
   const formatCode = test_details?.format;
 
   const formatText = Formatlabels[formatCode];
-  const userRole = localStorage.getItem('userRole');
 
   const currentFormatStyle = FormatTheme[formatCode] || {
     bg: currentLevelTheme.badge,
@@ -234,10 +234,10 @@ const TestCard = ({
         p: 3,
         display: 'flex',
         flexDirection: 'column',
-        height: '100%',
-        width: '440px',
-        maxWidth: '100%',
-        mx: 'auto',
+        // height: '100%',
+        // width: '440px',
+        // maxWidth: '100%',
+        // mx: 'auto',
         transition: 'transform 0.2s, box-shadow 0.2s',
         animation: 'fadeIn 0.5s ease forwards',
         animationDelay: randomDelay,
@@ -338,7 +338,7 @@ const TestCard = ({
             >
               {created_by.full_name?.[0] || 'T'}
             </Avatar>
-            <Typography variant="body2" fontWeight={500} noWrap sx={{ maxWidth: 120 }}>
+            <Typography variant="caption" fontWeight={500} noWrap sx={{ maxWidth: 120 }}>
               {created_by.full_name}
             </Typography>
           </Stack>
@@ -370,7 +370,7 @@ const TestCard = ({
               {submissions}
             </Typography>
           </Box>
-          {userRole === 'T' && role === 'teacher' && (
+          {role === 'teacher' && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               {statusStyle.icon}
               <Typography
@@ -392,24 +392,47 @@ const TestCard = ({
           fullWidth
           size="small"
           variant="outlined"
-          startIcon={<EyeIcon fontSize="small" />}
           onClick={() => {
-            handleViewTest();
+            {
+              role === 'student' ? handleStudentViewTest() : handleViewTest();
+            }
           }}
           sx={{
-            bgcolor: role === 'student' ? 'primary.main' : 'background.paper',
-            color: role === 'student' ? 'background.paper' : 'primary.dark',
-            borderColor: role === 'student' ? 'primary.main' : 'background.paper',
+            bgcolor: 'background.paper',
+            color: currentLevelTheme.badge,
+            borderColor: currentLevelTheme.badge,
             textTransform: 'none',
             borderRadius: '8px',
             fontWeight: 600,
             '&:hover': {
               borderColor: currentLevelTheme.badge,
-              bgcolor: role === 'student' ? 'primary.dark' : currentLevelTheme.badge,
+              bgcolor: currentLevelTheme.badge,
+              color: 'background.paper',
             },
           }}
         >
-          {role === 'student' ? 'Practice' : 'View'}
+          {role === 'student' ? (
+            progress_status === 'completed' ? (
+              <>
+                <ReplayIcon /> Try Again
+              </>
+            ) : progress_status === 'draft' ? (
+              <>
+                <Edit fontSize="small" />
+                Continue
+              </>
+            ) : (
+              <>
+                <Edit fontSize="small" />
+                Practice
+              </>
+            )
+          ) : (
+            <>
+              <EyeIcon fontSize="small" />
+              View
+            </>
+          )}
         </Button>
 
         {role !== 'student' && status !== 'P' && (

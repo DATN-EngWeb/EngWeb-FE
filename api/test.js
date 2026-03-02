@@ -221,7 +221,7 @@ export const fetchHtmlContent = async (url) => {
 };
 
 export const createProductiveTest = async (data, token) => {
-  const response = await fetch(`${TEST_HISTORIES_BASE_URL}/productive/`, {
+  const response = await fetch(`${TEST_HISTORIES_BASE_URL}/productive`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -233,15 +233,12 @@ export const createProductiveTest = async (data, token) => {
 };
 
 export const getProductiveTest = async (test_id, token) => {
-  const response = await fetch(
-    `${TEST_HISTORIES_BASE_URL}/productive/?productive_test=${test_id}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+  const response = await fetch(`${TEST_HISTORIES_BASE_URL}/productive?productive_test=${test_id}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
     },
-  );
+  });
   return handleResponse(response);
 };
