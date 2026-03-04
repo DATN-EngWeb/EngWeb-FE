@@ -45,7 +45,12 @@ function UploadProfileContent({ userId }) {
   }, []);
 
   const handleInputChange = (field) => (e) => {
-    const value = e.target.value;
+    const value =
+      field === 'experience_year'
+        ? e.target.value === ''
+          ? ''
+          : String(Math.max(0, Number(e.target.value) || 0))
+        : e.target.value;
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: '' }));
@@ -290,7 +295,6 @@ function UploadProfileContent({ userId }) {
             maxWidth: 650,
           }}
         >
-          <Typography sx={loginStyles.cardEyebrow}>Complete Your Profile</Typography>
           <Typography
             sx={{
               ...loginStyles.panelTitle,
@@ -299,7 +303,7 @@ function UploadProfileContent({ userId }) {
               textAlign: 'center',
             }}
           >
-            Teacher Profile Information
+            Complete Your Profile
           </Typography>
           <Typography
             sx={{
@@ -334,7 +338,12 @@ function UploadProfileContent({ userId }) {
               )}
 
               <Box sx={loginStyles.fieldContainer}>
-                <Typography sx={loginStyles.fieldLabel}>Full Name</Typography>
+                <Typography sx={loginStyles.fieldLabel}>
+                  Full Name{' '}
+                  <Box component="span" sx={{ color: 'error.main' }}>
+                    *
+                  </Box>
+                </Typography>
                 <TextField
                   name="full_name"
                   value={formData.full_name}
@@ -366,7 +375,12 @@ function UploadProfileContent({ userId }) {
               </Box>
 
               <Box sx={loginStyles.fieldContainer}>
-                <Typography sx={loginStyles.fieldLabel}>Date of Birth</Typography>
+                <Typography sx={loginStyles.fieldLabel}>
+                  Date of Birth{' '}
+                  <Box component="span" sx={{ color: 'error.main' }}>
+                    *
+                  </Box>
+                </Typography>
                 <TextField
                   name="date_of_birth"
                   type="date"
@@ -398,7 +412,12 @@ function UploadProfileContent({ userId }) {
               </Box>
 
               <Box sx={loginStyles.fieldContainer}>
-                <Typography sx={loginStyles.fieldLabel}>Avatar</Typography>
+                <Typography sx={loginStyles.fieldLabel}>
+                  Avatar{' '}
+                  <Box component="span" sx={{ color: 'error.main' }}>
+                    *
+                  </Box>
+                </Typography>
                 <input
                   accept="image/*"
                   style={{ display: 'none' }}
@@ -470,7 +489,12 @@ function UploadProfileContent({ userId }) {
               </Box>
 
               <Box sx={loginStyles.fieldContainer}>
-                <Typography sx={loginStyles.fieldLabel}>Current Workplace</Typography>
+                <Typography sx={loginStyles.fieldLabel}>
+                  Current Workplace{' '}
+                  <Box component="span" sx={{ color: 'error.main' }}>
+                    *
+                  </Box>
+                </Typography>
                 <TextField
                   name="current_workplace"
                   value={formData.current_workplace}
@@ -502,7 +526,12 @@ function UploadProfileContent({ userId }) {
               </Box>
 
               <Box sx={loginStyles.fieldContainer}>
-                <Typography sx={loginStyles.fieldLabel}>Teacher Type</Typography>
+                <Typography sx={loginStyles.fieldLabel}>
+                  Teacher Type{' '}
+                  <Box component="span" sx={{ color: 'error.main' }}>
+                    *
+                  </Box>
+                </Typography>
                 <TextField
                   name="teacher_type"
                   select
@@ -535,12 +564,18 @@ function UploadProfileContent({ userId }) {
               </Box>
 
               <Box sx={loginStyles.fieldContainer}>
-                <Typography sx={loginStyles.fieldLabel}>Years of Experience</Typography>
+                <Typography sx={loginStyles.fieldLabel}>
+                  Years of Experience{' '}
+                  <Box component="span" sx={{ color: 'error.main' }}>
+                    *
+                  </Box>
+                </Typography>
                 <TextField
                   name="experience_year"
                   type="number"
                   value={formData.experience_year}
                   onChange={handleInputChange('experience_year')}
+                  onKeyDown={(e) => e.key === '-' && e.preventDefault()}
                   placeholder="Enter years of experience"
                   fullWidth
                   error={!!errors.experience_year}
@@ -569,7 +604,12 @@ function UploadProfileContent({ userId }) {
               </Box>
 
               <Box sx={loginStyles.fieldContainer}>
-                <Typography sx={loginStyles.fieldLabel}>Introduction</Typography>
+                <Typography sx={loginStyles.fieldLabel}>
+                  Introduction{' '}
+                  <Box component="span" sx={{ color: 'error.main' }}>
+                    *
+                  </Box>
+                </Typography>
                 <TextField
                   name="introduction"
                   value={formData.introduction}
@@ -612,7 +652,12 @@ function UploadProfileContent({ userId }) {
               </Box>
 
               <Box sx={loginStyles.fieldContainer}>
-                <Typography sx={loginStyles.fieldLabel}>Certificates (Max 3)</Typography>
+                <Typography sx={loginStyles.fieldLabel}>
+                  Certificates (Max 3){' '}
+                  <Box component="span" sx={{ color: 'error.main' }}>
+                    *
+                  </Box>
+                </Typography>
                 {credentials.map((cred, index) => (
                   <Box key={index} sx={{ mb: 2 }}>
                     <input

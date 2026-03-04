@@ -13,6 +13,7 @@ import {
   Stack,
   TextField,
   Typography,
+  Alert,
 } from '@mui/material';
 import { Visibility, VisibilityOff, ArrowBack } from '@mui/icons-material';
 import Logo from '../../assets/img/logo.png';
@@ -188,6 +189,12 @@ function RegisterContent() {
             </Box>
 
             <Box component="form" sx={loginStyles.form} onSubmit={handleSubmit}>
+              {serverError && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {serverError}
+                </Alert>
+              )}
+
               <Box sx={loginStyles.fieldContainer}>
                 <Typography sx={loginStyles.fieldLabel}>Email Address</Typography>
                 <TextField
@@ -315,11 +322,6 @@ function RegisterContent() {
               {errors.role && (
                 <Typography color="error" fontSize="0.9rem">
                   {errors.role}
-                </Typography>
-              )}
-              {serverError && (
-                <Typography color="error" fontSize="0.9rem">
-                  {serverError}
                 </Typography>
               )}
 
