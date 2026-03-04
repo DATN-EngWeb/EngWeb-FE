@@ -72,17 +72,11 @@ export default function Matching({ dataPart, isActive }) {
 
   return (
     <Container
-      maxWidth="lg"
-      sx={{ ...listeningPartStyles.container46, display: isActive ? 'grid' : 'none' }}
+      maxWidth="md"
+      sx={{ ...listeningPartStyles.containerCol, display: isActive ? 'grid' : 'none' }}
     >
       {/* -------- Audio and Instruction Section --------- */}
-      <Box
-        sx={{
-          ...listeningPartStyles.basicFlexColCenStart,
-          position: { sm: 'sticky' },
-          top: '18px',
-        }}
-      >
+      <Box sx={listeningPartStyles.basicFlexColCenStart}>
         <Box sx={{ width: '100%', height: 'auto' }}>
           {audioSrc ? (
             <CustomAudioPlayer src={audioSrc} isActive={isActive} />
@@ -165,11 +159,17 @@ export default function Matching({ dataPart, isActive }) {
               .map((answer, index) => (
                 <Box
                   key={answer.option_label}
-                  sx={{ ...listeningPartStyles.questionContainerRow, border: 'none' }}
+                  sx={{
+                    ...listeningPartStyles.questionContainerRow,
+                    border: 'none',
+                    alignItems: 'flex-start',
+                  }}
                 >
                   {/* -------- Question Name Section --------- */}
-                  <Typography sx={{ ...multipleChoiceStyles.optionLabel, fontWeight: 600 }}>
-                    {answer.option_label}
+                  <Typography
+                    sx={{ ...multipleChoiceStyles.optionLabel, fontWeight: 700, flexShrink: 0 }}
+                  >
+                    {answer.option_label}.
                   </Typography>
                   <Typography sx={{ ...multipleChoiceStyles.optionLabel, fontWeight: 400 }}>
                     {answer.answer_text}

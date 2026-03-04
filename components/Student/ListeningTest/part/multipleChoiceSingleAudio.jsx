@@ -113,7 +113,7 @@ export default function MultipleChoiceSingleAudio({ dataPart, isActive }) {
                       }
                       sx={multipleChoiceStyles.checkboxRoot}
                     />
-                    <Typography sx={multipleChoiceStyles.optionLabel}>
+                    <Typography sx={{ ...multipleChoiceStyles.optionLabel, flexShrink: 0 }}>
                       {option.option_label}.
                     </Typography>
                     <Typography sx={{ ...multipleChoiceStyles.optionLabel, fontWeight: 400 }}>

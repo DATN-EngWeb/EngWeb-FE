@@ -149,6 +149,7 @@ export const multipleChoiceStyles = {
     fontSize: { xs: '0.8rem', md: '1rem' },
     color: 'text.primary',
     fontWeight: 600,
+    wordBreak: 'break-word',
   },
   optionInput: {
     flexGrow: 1,

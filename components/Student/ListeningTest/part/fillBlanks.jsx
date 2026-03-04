@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Container, Box, Typography, TextField } from '@mui/material';
 import CustomAudioPlayer from '../../../Test/customAudioPlayer';
 import InstructionIcon from '../../../Test/instructionIcon';
@@ -12,6 +12,8 @@ export default function FillBlankPart({ dataPart, isActive }) {
   const [audioSrc, setAudioSrc] = useState(null);
   const [passageSrc, setPassageSrc] = useState(null);
   const [userAnswers, setUserAnswers] = useState({});
+  const [leftWidth, setLeftWidth] = useState(40); // percentage width
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     console.log(userAnswers);
@@ -60,13 +62,76 @@ export default function FillBlankPart({ dataPart, isActive }) {
     }));
   };
 
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (event) => {
+      event.preventDefault();
+
+      // 3. Sử dụng ref thay vì querySelector
+      const container = containerRef.current;
+      if (!container) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const containerLeft = containerRect.left;
+      const containerWidth = containerRect.width;
+
+      if (!containerWidth || containerWidth === 0) return;
+
+      // Tính toán vị trí chuột tương đối trong khung
+      const relativeX = event.clientX - containerLeft;
+      const newLeftWidth = (relativeX / containerWidth) * 100;
+
+      // Giới hạn vùng kéo (25% - 75%)
+      const clamped = Math.min(75, Math.max(25, newLeftWidth));
+      setLeftWidth(clamped);
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+  }, [isDragging]);
+
   return (
     <Container
+      ref={containerRef}
       maxWidth="lg"
-      sx={{ ...listeningPartStyles.container55, display: isActive ? 'grid' : 'none' }}
+      sx={{
+        ...listeningPartStyles.containerColRow,
+        display: isActive ? 'flex' : 'none',
+        height: { xs: 'auto', md: '100vh' },
+        maxHeight: { xs: 'none', md: '100vh' },
+        overflow: { xs: 'visible', md: 'hidden' },
+      }}
     >
       {/* -------- Audio and Passage Section --------- */}
-      <Box sx={listeningPartStyles.basicFlexColCenStart}>
+      <Box
+        sx={{
+          ...listeningPartStyles.basicFlexColCenStart,
+          width: { xs: '100%', md: `${leftWidth}%` },
+          mb: 2,
+          height: '100%',
+          overflowY: 'auto',
+          minHeight: 0,
+        }}
+      >
         <Box sx={{ width: '100%', height: 'auto' }}>
           {audioSrc ? (
             <CustomAudioPlayer src={audioSrc} isActive={isActive} />
@@ -79,8 +144,63 @@ export default function FillBlankPart({ dataPart, isActive }) {
           dangerouslySetInnerHTML={{ __html: passageSrc }}
         />
       </Box>
+      {/* -------- Drag Section --------- */}
+      <Box
+        onMouseDown={() => setIsDragging(true)}
+        sx={{
+          position: 'relative',
+          display: { xs: 'none', md: 'flex' },
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 32,
+          cursor: 'col-resize',
+          flexShrink: 0,
+        }}
+        role="separator"
+      >
+        {/* Vertical line */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            bottom: 0,
+            left: '50%',
+            width: 2,
+            transform: 'translateX(-50%)',
+            backgroundColor: isDragging ? 'warning.main' : 'divider',
+          }}
+        />
+        {/* Handle circle */}
+        <Box
+          sx={{
+            width: 28,
+            height: 28,
+            borderRadius: '50%',
+            border: '1px solid',
+            borderColor: isDragging ? 'warning.main' : 'divider',
+            backgroundColor: 'background.paper',
+            boxShadow: '0 0 4px rgba(0,0,0,0.15)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 14,
+            color: 'text.secondary',
+            userSelect: 'none',
+          }}
+        >
+          ⇔
+        </Box>
+      </Box>
       {/* -------- Question and Instruction Section --------- */}
-      <Box sx={listeningPartStyles.basicFlexColCenStart}>
+      <Box
+        sx={{
+          ...listeningPartStyles.basicFlexColCenStart,
+          width: { xs: '100%', md: `calc(${100 - leftWidth}% - 32px)` },
+          height: '100%',
+          overflowY: 'auto',
+          minHeight: 0,
+        }}
+      >
         {/* -------- Instruction --------- */}
         <Box sx={listeningPartStyles.instructionContainer}>
           <InstructionIcon />
@@ -88,7 +208,18 @@ export default function FillBlankPart({ dataPart, isActive }) {
             <Typography sx={{ color: 'red.text', fontSize: '1rem', fontWeight: 600 }}>
               Instruction
             </Typography>
-            <Typography sx={{ color: 'dark.main', fontSize: '0.8rem' }}>
+            <Typography
+              sx={{
+                color: 'dark.main',
+                fontSize: '0.8rem',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                wordBreak: 'break-word',
+              }}
+            >
               Listen to the audio. For each question, write the correct answer in the gap. Write one
               or two words or a number or a date or a time.
             </Typography>

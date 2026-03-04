@@ -25,6 +25,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
   const [timeLeft, setTimeLeft] = useState(testData?.time || 0);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
     const fetchTestData = async () => {
       if (!test_id) return;
       try {
@@ -48,7 +49,19 @@ export default function ListeningTestContent({ test_id, initialData }) {
     }, 1000);
     return () => clearInterval(timer);
   }, [timeLeft]);
-  if (!testData) return <Skeleton />;
+
+  const [isDelayed, setIsDelayed] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsDelayed(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!testData || isDelayed) {
+    return <Skeleton />;
+  }
 
   const goNextPart = () => {
     if (indexPart < receptiveParts.length - 1) {
@@ -107,7 +120,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
       <Container maxWidth="lg">
         {/* -------- Test Heading Section --------- */}
         <Box sx={listeningtestStyles.testHeadingContainer}>
-          <Typography
+          {/* <Typography
             sx={{ ...listeningtestStyles.backButton, fontSize: { xs: '0.8rem', md: '1rem' } }}
           >
             <ExpandLessIcon
@@ -124,7 +137,17 @@ export default function ListeningTestContent({ test_id, initialData }) {
             <Box component="span" sx={{ display: { xs: 'inline', md: 'none' } }}>
               Homepage
             </Box>
-          </Typography>
+          </Typography> */}
+          <Box sx={listeningtestStyles.timeLeft}>
+            <AccessTimeIcon
+              sx={{
+                color: 'secondary.main',
+                fontSize: { xs: '1rem', md: '1.5rem' },
+                mr: 0.5,
+              }}
+            />
+            {formatTimeFromMinutes(timeLeft / 60)}
+          </Box>
           <Box sx={listeningtestStyles.nameTestAndFormatPart}>
             <Typography sx={listeningtestStyles.nameTest}>{testData?.title}</Typography>
             <Typography sx={listeningtestStyles.formatName}>
@@ -162,15 +185,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
               Part {index + 1}
             </Box>
           ))}
-          <Box sx={listeningtestStyles.timeLeft}>
-            <AccessTimeIcon
-              sx={{
-                fontSize: { xs: '1rem', md: '1.2rem' },
-                mr: 0.5,
-              }}
-            />
-            {formatTimeFromMinutes(timeLeft / 60)}
-          </Box>{' '}
         </Box>
         <Box sx={{ ...listeningtestStyles.separatorLine, backgroundColor: 'gray.main' }}></Box>
       </Container>

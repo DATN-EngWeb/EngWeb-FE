@@ -220,7 +220,11 @@ const TestCard = ({
     {
       skill === 'S'
         ? router.push(`/student/speaking/${id}`)
-        : router.push(`/student/writing/${id}`);
+        : skill === 'W'
+          ? router.push(`/student/writing/${id}`)
+          : skill === 'R'
+            ? router.push(`/student/reading/${id}`)
+            : router.push(`/student/listening/${id}`);
     }
   };
 

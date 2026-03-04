@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 // import { cookies } from 'next/headers';
-import Skeleton from '../../../../../components/Student/ListeningTest/skeleton';
-import ListeningTestContent from '../../../../../components/Student/ListeningTest/ListeningTestContent';
+import Skeleton from '../../../../components/Student/ListeningTest/skeleton';
+import ListeningTestContent from '../../../../components/Student/ListeningTest/ListeningTestContent';
 // import { getRecepiveTestDetails } from '../../../../../api/teacher/upload-reading';
 
 export default async function Page({ params }) {
