@@ -154,12 +154,19 @@ export const listeningtestStyles = {
     alignItems: 'center',
     justifyContent: 'flex-start',
     color: 'text.primary',
-    px: 1.5,
+    px: 0,
     py: 0.5,
     fontWeight: 600,
     fontSize: { xs: '0.8rem', md: '1.2rem' },
     fontFamily: 'monospace',
     minWidth: '200px',
+  },
+  timeLeftSkeleton: {
+    ...skeletonBase,
+    width: '80px',
+    height: '24px',
+    borderRadius: '0.5rem',
+    display: 'inline-block',
   },
   // -------- Part Content Section ---------
   spinnerWrapper: {

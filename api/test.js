@@ -179,3 +179,24 @@ export const getProductiveTest = async (test_id) => {
     },
   });
 };
+
+export const getReceptivetTest = async (test_id, token) => {
+  const response = await fetch(`${TEST_HISTORIES_BASE_URL}/receptive?receptive_test=${test_id}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return handleResponse(response);
+};
+
+export const getReceptiveTestDetails = async (testId, token) => {
+  const response = await fetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return handleResponse(response);
+};

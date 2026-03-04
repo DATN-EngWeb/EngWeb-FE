@@ -1,6 +1,7 @@
 import { Box, Container, Typography, Button } from '@mui/material';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { listeningtestStyles } from '../../../styles/Student/Listening/listeningTestStyles';
+import { formatTimeFromMinutes } from '../../../utils/stringFormat';
 import Spinner from '../../../components/spinner';
 
 export default function Skeleton() {
@@ -9,17 +10,9 @@ export default function Skeleton() {
       <Container maxWidth="lg">
         {/* -------- Test Heading Section --------- */}
         <Box sx={listeningtestStyles.testHeadingContainer}>
-          <Typography sx={listeningtestStyles.backButton}>
-            <ExpandLessIcon
-              sx={{
-                cursor: 'pointer',
-                fontSize: { xs: '1.6rem', md: '1.8rem' },
-                color: 'gray.main',
-                transform: 'rotate(270deg)',
-              }}
-            />
-            Back to homepage
-          </Typography>
+          <Box sx={{ width: '200px' }}>
+            <Box sx={listeningtestStyles.timeLeftSkeleton}></Box>
+          </Box>
           <Box sx={listeningtestStyles.nameTestAndFormatPart}>
             <Typography sx={listeningtestStyles.nameTestSkeleton}></Typography>
             <Typography sx={listeningtestStyles.formatNameSkeleton}></Typography>
