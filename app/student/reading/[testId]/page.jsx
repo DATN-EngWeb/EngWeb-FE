@@ -35,10 +35,7 @@ export default function ReadingTestPage() {
         setLoading(true);
         setError(null);
 
-        const accessToken =
-          typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-
-        const backendTest = await getFullReceptiveTest(testId, accessToken);
+        const backendTest = await getFullReceptiveTest(testId);
 
         if (!backendTest?.receptive_test?.receptive_parts) {
           setError('This test does not contain any parts.');

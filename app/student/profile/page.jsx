@@ -46,7 +46,7 @@ export default function StudentProfile() {
     }
 
     setIsLoading(true);
-    getStudentProfile(user.id, token)
+    getStudentProfile(user.id)
       .then((data) => {
         const mapped = mapProfileData(data);
         setProfile(mapped);
@@ -83,12 +83,11 @@ export default function StudentProfile() {
 
     setIsSaving(true);
     try {
-      await updateStudentProfile(user.id, buildFormData(sectionData), token);
-      const updated = await getStudentProfile(user.id, token);
-      const mapped = mapProfileData(updated);
+      const response = await updateStudentProfile(user.id, buildFormData(sectionData));
+      const mapped = mapProfileData(response?.data);
       setProfile(mapped);
       originalProfile.current = mapped;
-      showSnackbar('Profile updated successfully');
+      showSnackbar(response?.message || 'Profile updated successfully');
     } catch (err) {
       showSnackbar(err.message || 'Failed to update profile', 'error');
       throw err;

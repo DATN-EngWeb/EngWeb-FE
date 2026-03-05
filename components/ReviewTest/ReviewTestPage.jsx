@@ -115,7 +115,6 @@ export default function ReviewTestPage() {
   const fetchTests = useCallback(async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('accessToken');
       const params = {
         page: currentPage,
         page_size: PAGE_SIZE,
@@ -131,7 +130,7 @@ export default function ReviewTestPage() {
       // Xử lý logic sortby
       params.ordering = orderingMap[sortBy] || '-created_at';
 
-      const result = await getListTest(token, params);
+      const result = await getListTest(params);
       setTests(result?.results || []);
       setTotalCount(result?.count || 0);
     } catch (error) {

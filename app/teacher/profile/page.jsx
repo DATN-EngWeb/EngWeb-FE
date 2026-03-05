@@ -95,13 +95,10 @@ export default function TeacherProfile() {
 
       setIsSaving(true);
       try {
-        await updateTeacherProfile(user.id, sectionData, token);
-        showSnackbar('Profile updated successfully', 'success');
-
-        // Reload profile
-        const updated = await getTeacherProfile(user.id, token);
-        setProfile(mapProfileData(updated));
+        const response = await updateTeacherProfile(user.id, sectionData);
+        setProfile(mapProfileData(response?.data));
         setCredentialsChanges({});
+        showSnackbar(response?.message || 'Profile updated successfully', 'success');
       } catch (err) {
         showSnackbar(err?.message || 'Failed to update profile', 'error');
       } finally {

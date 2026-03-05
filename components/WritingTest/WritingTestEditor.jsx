@@ -47,7 +47,6 @@ export default function WritingTestEditor() {
     setIsSaving(true);
 
     try {
-      const token = localStorage.getItem('accessToken');
       const basicInfo = {
         title: testData.testName,
         level: testData.level,
@@ -59,8 +58,8 @@ export default function WritingTestEditor() {
         description: 'Writing test',
       };
 
-      const res = await createTest(basicInfo, token);
-      const contentUrl = await uploadHtmlContent(question.description, res.id, token);
+      const res = await createTest(basicInfo);
+      const contentUrl = await uploadHtmlContent(question.description, res.id);
 
       const formatMapper = {
         Email: 'A',
@@ -83,7 +82,7 @@ export default function WritingTestEditor() {
         },
       };
 
-      await submitProductiveTest({ testId: res.id, data: detailedData, token });
+      await submitProductiveTest({ testId: res.id, data: detailedData });
       setSnackbar({ open: true, message: 'Test submitted successfully', severity: 'success' });
       setIsSaving(false);
       setTestData({ skill: 'W', testName: '', level: '', topics: '', format: '' });

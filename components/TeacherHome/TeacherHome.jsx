@@ -117,8 +117,6 @@ export default function TeacherHome() {
   const fetchTests = useCallback(async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('accessToken');
-
       const params = {
         page: currentPage,
         page_size: PAGE_SIZE,
@@ -132,7 +130,7 @@ export default function TeacherHome() {
       // Get ordering value from map, use default if not found
       params.ordering = orderingMap[sortBy] || '-created_at';
 
-      const result = await getListTest(token, params);
+      const result = await getListTest(params);
 
       setTests(result?.results || []);
       setTotalCount(result?.count || 0);

@@ -105,8 +105,7 @@ export default function WritingTest() {
             setIsReadOnly(true);
           }
         }
-        const token = localStorage.getItem('accessToken');
-        const response = await getProductiveTestDetails(testId, token);
+        const response = await getProductiveTestDetails(testId);
         setTestData({
           title: response.title,
           level: response.level,
@@ -161,29 +160,25 @@ export default function WritingTest() {
     setOpenShareModal(false);
     setIsSaving(true);
     try {
-      const token = localStorage.getItem('accessToken');
       if (!audioBlob) return null;
 
       const audioFile = new File([audioBlob], `recording_${testId}.webm`, {
         type: 'audio/mpeg',
         lastModified: Date.now(),
       });
-      const audioUrl = audioFile ? await uploadMediaFile(audioFile, testId, token) : null;
+      const audioUrl = audioFile ? await uploadMediaFile(audioFile, testId) : null;
 
       console.log('Uploading audio to URL:', audioUrl);
 
-      const response = await createProductiveTest(
-        {
-          productive_test: testId,
-          total_time: secondsElapsed,
-          type: 'S',
-          start_time: startTime,
-          end_time: new Date().toISOString(),
-          audio_path: audioUrl,
-          is_shared: true,
-        },
-        token,
-      );
+      const response = await createProductiveTest({
+        productive_test: testId,
+        total_time: secondsElapsed,
+        type: 'S',
+        start_time: startTime,
+        end_time: new Date().toISOString(),
+        audio_path: audioUrl,
+        is_shared: true,
+      });
       console.log('Submission response:', response);
       setIsDraftSaved(true);
       setIsSaving(false);

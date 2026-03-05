@@ -86,10 +86,6 @@ export default function ProductiveHub({ Skill }) {
     async function fetchTests() {
       setLoading(true);
       try {
-        // Get access token from local storage
-        const accessToken =
-          typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-
         // Build API params from filters
         const params = {
           skill: Skill,
@@ -109,7 +105,7 @@ export default function ProductiveHub({ Skill }) {
           params.status = 'P';
         }
 
-        const response = await getTestOverview(params, accessToken);
+        const response = await getTestOverview(params);
 
         if (response && response.results) {
           setTests(response.results);

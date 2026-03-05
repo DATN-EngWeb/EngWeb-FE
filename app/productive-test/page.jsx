@@ -34,10 +34,7 @@ function ProductiveTestContent() {
         setLoading(true);
         setError(null);
 
-        const accessToken =
-          typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-
-        const backendTest = await getFullProductiveTest(testId, accessToken);
+        const backendTest = await getFullProductiveTest(testId);
         setTestData(backendTest);
       } catch (err) {
         setError(err.message || 'Failed to load test data');

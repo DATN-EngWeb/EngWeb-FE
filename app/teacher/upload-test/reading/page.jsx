@@ -101,15 +101,7 @@ export default function Page() {
     };
 
     try {
-      // const token = localStorage.getItem('accessToken');
-      // if (!token) {
-      //   setSnackbar({ open: true, message: 'Authentication required', severity: 'error' });
-      //   setIsLoading(false);
-      //   return;
-      // }
-      const token = localStorage.getItem('accessToken') || 'dummy_token';
-
-      const response = await createNewTest(payload, token);
+      const response = await createNewTest(payload);
 
       if (response && response.id) {
         const newTestId = response.id;
@@ -156,14 +148,6 @@ export default function Page() {
         return;
       }
 
-      // const token = localStorage.getItem('accessToken');
-      // if (!token) {
-      //   setSnackbar({ open: true, message: 'Authentication required', severity: 'error' });
-      //   setIsLoading(false);
-      //   return;
-      // }
-      const token = localStorage.getItem('accessToken') || 'dummy_token';
-
       const transformedParts = transformFormatData(parts);
 
       const files = collectFilesReading(transformedParts);
@@ -172,17 +156,14 @@ export default function Page() {
         const currentMimeType = f.mimeType ?? f.file?.type ?? 'text/html';
         const currentSize = f.fileSize ?? f.file?.size;
 
-        const presign = await getPresignedUrl(
-          {
-            filename: f.filename,
-            fileSize: currentSize,
-            mimeType: currentMimeType,
-            category: 'tests',
-            testId: newTestId,
-            part: f.partOrder,
-          },
-          token,
-        );
+        const presign = await getPresignedUrl({
+          filename: f.filename,
+          fileSize: currentSize,
+          mimeType: currentMimeType,
+          category: 'tests',
+          testId: newTestId,
+          part: f.partOrder,
+        });
 
         const uploadResult = await uploadToObjectStorage({
           url: presign.url,
@@ -198,15 +179,12 @@ export default function Page() {
               : presign.fields.key
             : null);
 
-        const confirm = await confirmUpload(
-          {
-            key: storageKey,
-            fileSize: currentSize,
-            mimeType: currentMimeType,
-            etag: uploadResult.etag,
-          },
-          token,
-        );
+        const confirm = await confirmUpload({
+          key: storageKey,
+          fileSize: currentSize,
+          mimeType: currentMimeType,
+          etag: uploadResult.etag,
+        });
 
         filenameToUrl[f.filename] = confirm.file_url || presign.url;
       }
@@ -215,7 +193,7 @@ export default function Page() {
 
       // console.log('Prepared Parts for Upload:', preparedParts);
 
-      const response = await uploadReadingTestContent(newTestId, preparedParts, token);
+      await uploadReadingTestContent(newTestId, preparedParts);
       setSnackbar({ open: true, message: 'Upload test successfully!', severity: 'success' });
     } catch (error) {
       if (error.status === 400) {

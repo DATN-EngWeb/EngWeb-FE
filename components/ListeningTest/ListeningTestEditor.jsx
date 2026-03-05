@@ -100,14 +100,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
 
     const loadTestData = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        if (!token) {
-          setSnackbar({ open: true, message: 'Authentication required', severity: 'error' });
-          setIsLoading(false);
-          return;
-        }
-
-        const data = await getRecepiveTestDetails(testId, token);
+        const data = await getRecepiveTestDetails(testId);
         setEditingTestId(data.id);
 
         const loadedBasicInfo = {
@@ -213,13 +206,6 @@ export default function ListeningTestEditor({ testId: propTestId }) {
     setErrors(null);
 
     try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        setSnackbar({ open: true, message: 'Authentication required', severity: 'error' });
-        setIsSaving(false);
-        return;
-      }
-
       let finalTestId = editingTestId;
 
       if (!editingTestId) {
@@ -233,7 +219,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
           status: status === 'Draft' ? 'D' : status === 'In review' ? 'I' : 'P',
         };
 
-        const response = await createTest(basicInfoData, token);
+        const response = await createTest(basicInfoData);
         finalTestId = response.id;
         setEditingTestId(response.id);
       }
@@ -241,32 +227,26 @@ export default function ListeningTestEditor({ testId: propTestId }) {
       const files = collectFiles(parts, originalParts);
       const filenameToUrl = {};
       for (const f of files) {
-        const presign = await getPresignedUrl(
-          {
-            filename: f.filename,
-            fileSize: f.fileSize ?? f.file?.size,
-            mimeType: f.mimeType ?? f.file?.type,
-            category: 'tests',
-            testId: finalTestId,
-            part: f.partOrder,
-          },
-          token,
-        );
+        const presign = await getPresignedUrl({
+          filename: f.filename,
+          fileSize: f.fileSize ?? f.file?.size,
+          mimeType: f.mimeType ?? f.file?.type,
+          category: 'tests',
+          testId: finalTestId,
+          part: f.partOrder,
+        });
 
         const uploadResult = await uploadToObjectStorage({
           url: presign.url,
           mimeType: f.mimeType ?? f.file?.type,
           file: f.file,
         });
-        const confirm = await confirmUpload(
-          {
-            key: presign.key,
-            fileSize: f.fileSize ?? f.file?.size,
-            mimeType: f.mimeType ?? f.file?.type,
-            etag: uploadResult.etag,
-          },
-          token,
-        );
+        const confirm = await confirmUpload({
+          key: presign.key,
+          fileSize: f.fileSize ?? f.file?.size,
+          mimeType: f.mimeType ?? f.file?.type,
+          etag: uploadResult.etag,
+        });
 
         filenameToUrl[f.filename] = confirm.file_url || presign.url;
       }
@@ -295,11 +275,10 @@ export default function ListeningTestEditor({ testId: propTestId }) {
           testId: finalTestId,
           basicInfo: basicInfoData,
           receptiveTestData: { receptive_parts: partsWithActions },
-          token,
         });
       } else {
         const preparedParts = transformPartsForSubmitWithUrls(partsWithOrder, filenameToUrl);
-        await submitTestParts({ testId: finalTestId, parts: preparedParts, token });
+        await submitTestParts({ testId: finalTestId, parts: preparedParts });
       }
 
       setSnackbar({ open: true, message: `Test ${status} successfully!`, severity: 'success' });

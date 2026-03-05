@@ -39,10 +39,9 @@ export default function ProductiveTestHistory() {
       try {
         setLoading(true);
         //sessionStorage.removeItem('current_writing_attempt');
-        const token = localStorage.getItem('accessToken');
         const [listAttempt, details] = await Promise.all([
-          getProductiveTest(test_id, token),
-          getProductiveTestDetails(test_id, token),
+          getProductiveTest(test_id),
+          getProductiveTestDetails(test_id),
         ]);
         setTestData(details);
         setHistoryData(listAttempt);

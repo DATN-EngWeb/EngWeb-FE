@@ -67,8 +67,7 @@ export default function BasicInformation({
       if (!level) return;
       setLoading(true);
       try {
-        const token = localStorage.getItem('accessToken');
-        const data = await getCriteria(level, token);
+        const data = await getCriteria(level);
 
         setCriteriaData(Array.isArray(data) ? data : []);
       } catch (error) {

@@ -1,5 +1,6 @@
 /* eslint-env browser */
 /* global fetch */
+import { apiFetch } from './client';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 if (!API_BASE_URL) {
@@ -237,52 +238,32 @@ export async function facebookLogin(code, role) {
   return handleResponse(response);
 }
 
-export async function getTeacherProfile(teacherId, accessToken) {
-  const response = await fetch(`${ACCOUNTS_BASE_URL}/teachers/${teacherId}`, {
+export async function getTeacherProfile(teacherId) {
+  return apiFetch(`${ACCOUNTS_BASE_URL}/teachers/${teacherId}`, {
     method: 'GET',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
     cache: 'no-store',
   });
-
-  return handleResponse(response);
 }
 
-export async function updateTeacherProfile(teacherId, formData, accessToken) {
-  const response = await fetch(`${ACCOUNTS_BASE_URL}/teachers/${teacherId}`, {
+export async function updateTeacherProfile(teacherId, formData) {
+  return apiFetch(`${ACCOUNTS_BASE_URL}/teachers/${teacherId}`, {
     method: 'PATCH',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
     body: formData,
     cache: 'no-store',
   });
-
-  return handleResponse(response);
 }
 
-export async function getStudentProfile(studentId, accessToken) {
-  const response = await fetch(`${ACCOUNTS_BASE_URL}/students/${studentId}`, {
+export async function getStudentProfile(studentId) {
+  return apiFetch(`${ACCOUNTS_BASE_URL}/students/${studentId}`, {
     method: 'GET',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
     cache: 'no-store',
   });
-
-  return handleResponse(response);
 }
 
-export async function updateStudentProfile(studentId, formData, accessToken) {
-  const response = await fetch(`${ACCOUNTS_BASE_URL}/students/${studentId}`, {
+export async function updateStudentProfile(studentId, formData) {
+  return apiFetch(`${ACCOUNTS_BASE_URL}/students/${studentId}`, {
     method: 'PATCH',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
     body: formData,
     cache: 'no-store',
   });
-
-  return handleResponse(response);
 }
