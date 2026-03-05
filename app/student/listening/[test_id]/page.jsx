@@ -1,4 +1,4 @@
-import ReceptiveTestHistory from '../../../../components/Student/Reading_Speaking/ReceptiveTestHistory';
+import ReceptiveTestHistory from '../../../../components/Student/Reading_Listening/ReceptiveTestHistory';
 
 export default function WritingTestPage() {
   return <ReceptiveTestHistory />;

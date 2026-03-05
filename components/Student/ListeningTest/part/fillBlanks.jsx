@@ -8,16 +8,11 @@ import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import { listeningPartStyles } from '../../../../styles/Student/Listening/listeningTestStyles';
 import { loadAudioSource, fetchHtmlContent } from '../../../../api/teacher/upload-reading';
 
-export default function FillBlankPart({ dataPart, isActive }) {
+export default function FillBlankPart({ dataPart, isActive, userAnswers, onUpdateAnswers }) {
   const [audioSrc, setAudioSrc] = useState(null);
   const [passageSrc, setPassageSrc] = useState(null);
-  const [userAnswers, setUserAnswers] = useState({});
   const [leftWidth, setLeftWidth] = useState(40); // percentage width
   const [isDragging, setIsDragging] = useState(false);
-
-  useEffect(() => {
-    console.log(userAnswers);
-  }, [userAnswers]);
 
   useEffect(() => {
     const getAudio = async () => {
@@ -56,10 +51,12 @@ export default function FillBlankPart({ dataPart, isActive }) {
   }, [dataPart?.content]);
 
   const handleUpdateUserAnswers = (questionId, answerText) => {
-    setUserAnswers((prev) => ({
-      ...prev,
+    const newAnswers = {
+      ...userAnswers,
       [questionId]: answerText,
-    }));
+    };
+
+    onUpdateAnswers(newAnswers);
   };
 
   const containerRef = useRef(null);

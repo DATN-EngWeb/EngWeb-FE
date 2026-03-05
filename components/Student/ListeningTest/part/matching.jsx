@@ -21,13 +21,13 @@ import {
 import { uploadReadingStyles } from '../../../../styles/Teacher/Reading/UploadReadingStyles';
 import { loadAudioSource } from '../../../../api/teacher/upload-reading';
 
-export default function Matching({ dataPart, isActive }) {
+export default function Matching({ dataPart, isActive, userAnswers, onUpdateAnswers }) {
   const [audioSrc, setAudioSrc] = useState(null);
   const answers = dataPart.receptive_questions.map((question) => ({
+    id: question.receptive_answers[0]?.id || null,
     option_label: question.receptive_answers[0]?.option_label || '',
     answer_text: question.receptive_answers[0]?.answer_text || '',
   }));
-  const [userAnswers, setUserAnswers] = useState({});
 
   useEffect(() => {
     const getAudio = async () => {
@@ -54,20 +54,20 @@ export default function Matching({ dataPart, isActive }) {
     }
   }, [isActive]);
 
-  const handleUpdateCorrectAnswer = (questionId, selectedLabel) => {
-    setUserAnswers((prev) => {
-      const newAnswers = { ...prev };
+  const handleUpdateCorrectAnswer = (questionId, optionID) => {
+    const newAnswers = {
+      ...userAnswers,
+    };
 
-      Object.keys(newAnswers).forEach((key) => {
-        if (newAnswers[key] === selectedLabel) {
-          newAnswers[key] = '';
-        }
-      });
-
-      newAnswers[questionId] = selectedLabel;
-
-      return newAnswers;
+    Object.keys(newAnswers).forEach((key) => {
+      if (newAnswers[key] === optionID) {
+        newAnswers[key] = undefined;
+      }
     });
+
+    newAnswers[questionId] = optionID;
+
+    onUpdateAnswers(newAnswers);
   };
 
   return (
@@ -144,7 +144,7 @@ export default function Matching({ dataPart, isActive }) {
                     {answers
                       ?.sort((a, b) => a.option_label.localeCompare(b.option_label))
                       .map((answer) => (
-                        <MenuItem key={answer.option_label} value={answer.option_label}>
+                        <MenuItem key={answer.option_label} value={answer.id}>
                           {answer.option_label}
                         </MenuItem>
                       ))}

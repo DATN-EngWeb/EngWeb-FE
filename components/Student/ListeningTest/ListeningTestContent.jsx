@@ -4,10 +4,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Box, Container, Typography, Button, Snackbar, Alert } from '@mui/material';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { getRecepiveTestDetails } from '../../../api/teacher/upload-reading';
+import { createReceptiveTest } from '../../../api/test';
 import { listeningtestStyles } from '../../../styles/Student/Listening/listeningTestStyles';
 import { getListeningTestTypeLabel, formatTimeFromMinutes } from '../../../utils/stringFormat';
 import MultipleChoiceImagePart from './part/multipleChoiceImage';
@@ -18,11 +20,116 @@ import Matching from './part/matching';
 import Skeleton from './skeleton';
 
 export default function ListeningTestContent({ test_id, initialData }) {
+  const router = useRouter();
+
   const [testData, setTestData] = useState(initialData || null);
   const [receptiveParts, setReceptiveParts] = useState([]);
   const [indexPart, setIndexPart] = useState(0);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
   const [timeLeft, setTimeLeft] = useState(testData?.time || 0);
+  const [allAnswers, setAllAnswers] = useState({});
+
+  const [testHistory, setTestHistory] = useState({
+    receptive_test: null,
+    type: 'D',
+    start_time: '2026-02-25T10:00:00Z',
+    end_time: null,
+    answer_histories: [],
+  });
+
+  const transformAnswers = (answersObj) => {
+    const result = [];
+
+    // Duyệt qua từng Part
+    Object.values(answersObj).forEach((questions) => {
+      // Duyệt qua từng câu hỏi trong Part đó
+      Object.entries(questions).forEach(([questionId, value]) => {
+        const historyItem = {
+          receptive_question: questionId,
+        };
+
+        if (typeof value === 'number') {
+          historyItem.receptive_answer = value;
+        } else {
+          historyItem.user_answer_text = value;
+        }
+
+        result.push(historyItem);
+      });
+    });
+
+    return result;
+  };
+
+  const checkCompletionStatus = (testData, allAnswers) => {
+    let totalQuestions = 0;
+    testData.receptive_test.receptive_parts.forEach((part) => {
+      totalQuestions += part.receptive_questions.length;
+    });
+
+    let totalAnswered = 0;
+    Object.values(allAnswers).forEach((partAnswers) => {
+      // partAnswers là object { "125": 214, ... }
+      totalAnswered += Object.keys(partAnswers).length;
+    });
+
+    return totalQuestions === totalAnswered ? 'S' : 'D';
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const currentType = checkCompletionStatus(testData, allAnswers);
+      const formattedHistories = transformAnswers(allAnswers);
+
+      setTestHistory((prev) => ({
+        ...prev,
+        type: currentType,
+        answer_histories: formattedHistories,
+        end_time: new Date().toISOString(),
+      }));
+
+      const token = localStorage.getItem('accessToken');
+      const response = await createReceptiveTest(
+        {
+          receptive_test: testHistory.receptive_test,
+          type: currentType,
+          start_time: testHistory.start_time,
+          end_time: new Date().toISOString(),
+          answer_histories: formattedHistories,
+        },
+        token,
+      );
+      setSnackbar({ open: true, message: 'Draft saved successfully!', severity: 'success' });
+      setTimeout(() => {
+        if (typeof window !== 'undefined') {
+          window.sessionStorage.removeItem('current_productive_attempt');
+        }
+        // Chuyển hướng về trang danh sách hoặc kết quả
+        router.push(`/student/listening/${test_id}`);
+      }, 1000);
+    } catch (error) {
+      console.error('Draft save error:', error);
+      if (error.status === 400) {
+        setSnackbar({
+          open: true,
+          message: 'Invalid data. Please check your request.',
+          severity: 'error',
+        });
+      } else if (error.status === 403) {
+        setSnackbar({
+          open: true,
+          message: 'You do not have permission to perform this action.',
+          severity: 'error',
+        });
+      } else if (error.status === 401) {
+        setSnackbar({
+          open: true,
+          message: 'Authentication required. Please log in again.',
+          severity: 'error',
+        });
+      }
+    }
+  };
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -33,6 +140,11 @@ export default function ListeningTestContent({ test_id, initialData }) {
         setTestData(svData);
         setReceptiveParts(svData.receptive_test.receptive_parts || []);
         setTimeLeft(svData.time * 60);
+        setTestHistory((prev) => ({
+          ...prev,
+          receptive_test: svData.id,
+          start_time: new Date().toISOString(),
+        }));
         console.log('Dữ liệu bài thi nghe:', svData);
       } catch (error) {
         console.error('Lỗi tải dữ liệu bài thi:', error);
@@ -42,6 +154,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
     fetchTestData();
   }, [test_id]);
 
+  // Timer
   useEffect(() => {
     if (timeLeft <= 0) return;
     const timer = setInterval(() => {
@@ -50,6 +163,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
+  // Phần delay để hiển thị Sekeleton
   const [isDelayed, setIsDelayed] = useState(true);
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -77,6 +191,14 @@ export default function ListeningTestContent({ test_id, initialData }) {
     }
   };
 
+  // Hàm cập nhật câu trả lời người dùng
+  const handleUpdateAnswers = (partId, answers) => {
+    setAllAnswers((prev) => ({
+      ...prev,
+      [partId]: answers,
+    }));
+  };
+
   const renderPart = (part, index) => {
     // - 'A': Listening - Multiple choice images
     // - 'B': Listening - Multiple choice text (one audio per question)
@@ -86,17 +208,24 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
     const isActive = indexPart === index;
 
+    const commonProps = {
+      dataPart: part,
+      isActive: isActive,
+      userAnswers: allAnswers[part.id] || {},
+      onUpdateAnswers: (answers) => handleUpdateAnswers(part.id, answers),
+    };
+
     switch (part.format) {
       case 'A':
-        return <MultipleChoiceImagePart key={part.id} dataPart={part} isActive={isActive} />;
+        return <MultipleChoiceImagePart key={part.id} {...commonProps} />;
       case 'B':
-        return <MultipleChoiceSingleAudio key={part.id} dataPart={part} isActive={isActive} />;
+        return <MultipleChoiceSingleAudio key={part.id} {...commonProps} />;
       case 'C':
-        return <MultipleChoiceQuestionAudio key={part.id} dataPart={part} isActive={isActive} />;
+        return <MultipleChoiceQuestionAudio key={part.id} {...commonProps} />;
       case 'D':
-        return <FillBlankPart key={part.id} dataPart={part} isActive={isActive} />;
+        return <FillBlankPart key={part.id} {...commonProps} />;
       case 'E':
-        return <Matching key={part.id} dataPart={part} isActive={isActive} />;
+        return <Matching key={part.id} {...commonProps} />;
       default:
         return null;
     }
@@ -156,7 +285,9 @@ export default function ListeningTestContent({ test_id, initialData }) {
             </Typography>
           </Box>
           <Box sx={listeningtestStyles.summitButtonWrapper}>
-            <Button sx={listeningtestStyles.submitButton}>Submit Test</Button>
+            <Button sx={listeningtestStyles.submitButton} onClick={handleSubmit}>
+              Submit Test
+            </Button>
           </Box>
         </Box>
         <Box sx={listeningtestStyles.separatorLine}></Box>

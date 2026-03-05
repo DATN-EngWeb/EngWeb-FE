@@ -10,9 +10,13 @@ import { listeningPartStyles } from '../../../../styles/Student/Listening/listen
 import { multipleChoiceStyles } from '../../../../styles/Teacher/Reading/QuesitonTypeStyles';
 import { loadAudioSource } from '../../../../api/teacher/upload-reading';
 
-export default function MultipleChoiceSingleAudio({ dataPart, isActive }) {
+export default function MultipleChoiceSingleAudio({
+  dataPart,
+  isActive,
+  userAnswers,
+  onUpdateAnswers,
+}) {
   const [audioSrcs, setAudioSrcs] = useState({});
-  const [userAnswers, setUserAnswers] = useState({});
   const [currentPlayingId, setCurrentPlayingId] = useState(null);
 
   useEffect(() => {
@@ -45,11 +49,13 @@ export default function MultipleChoiceSingleAudio({ dataPart, isActive }) {
     };
   }, [dataPart?.receptive_questions]);
 
-  const handleSetCorrectOption = (questionId, optionLabel) => {
-    setUserAnswers((prev) => ({
-      ...prev,
-      [questionId]: optionLabel,
-    }));
+  const handleSetCorrectOption = (questionId, optionID) => {
+    const newAnswers = {
+      ...userAnswers,
+      [questionId]: optionID,
+    };
+
+    onUpdateAnswers(newAnswers);
   };
 
   return (
@@ -100,10 +106,10 @@ export default function MultipleChoiceSingleAudio({ dataPart, isActive }) {
                   <Box
                     key={`${option.id}`}
                     sx={{ ...multipleChoiceStyles.optionContainer, cursor: 'pointer' }}
-                    onClick={() => handleSetCorrectOption(question.id, option.option_label)}
+                    onClick={() => handleSetCorrectOption(question.id, option.id)}
                   >
                     <Checkbox
-                      checked={userAnswers[question.id] === option.option_label}
+                      checked={userAnswers[question.id] === option.id}
                       icon={<RadioButtonUncheckedIcon sx={multipleChoiceStyles.uncheckIcon} />}
                       checkedIcon={
                         <Box sx={multipleChoiceStyles.checkedIconWrapper}>

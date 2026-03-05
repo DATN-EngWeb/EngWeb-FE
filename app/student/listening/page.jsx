@@ -99,6 +99,7 @@ export default function ListeningHub() {
         if (filters.title) params.title = filters.title;
         if (filters.level) params.level = filters.level;
         if (filters.mine) params.mine = 'true';
+        params.progress_status = true;
 
         if (user?.role === 'A') {
           if (filters.status) params.status = filters.status;

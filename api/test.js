@@ -200,3 +200,15 @@ export const getReceptiveTestDetails = async (testId, token) => {
   });
   return handleResponse(response);
 };
+
+export const createReceptiveTest = async (data, token) => {
+  const response = await fetch(`${TEST_HISTORIES_BASE_URL}/receptive`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(response);
+};

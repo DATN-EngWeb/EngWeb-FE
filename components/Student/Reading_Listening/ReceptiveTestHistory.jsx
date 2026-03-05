@@ -9,7 +9,7 @@ import Edit from '@mui/icons-material/Edit';
 import InfoIcon from '@mui/icons-material/Info';
 import * as styles from '../../../styles/student/HistoryTestStyles';
 import HistoryItem from './HistoryItem';
-import { levelTheme } from '../../../components/TestCard';
+import { levelTheme } from '../../TestCard';
 import { SidebarForum } from '../../Writing-Speaking/SidebarForum';
 import { StudyTip } from '../../Writing-Speaking/StudyTip';
 import ProgressTrackingCard from '../../Writing-Speaking/ProgressTrackingCard';
@@ -210,7 +210,7 @@ export default function ReceptiveTestHistory() {
           <Stack spacing={3}>
             <ProgressTrackingCard historyData={historyData} />
 
-            <SidebarForum count={234} />
+            {/* <SidebarForum count={234} /> */}
 
             <StudyTip level={testData.level} />
           </Stack>

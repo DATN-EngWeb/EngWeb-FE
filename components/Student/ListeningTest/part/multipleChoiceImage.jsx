@@ -7,10 +7,14 @@ import InstructionIcon from '../../../Test/instructionIcon';
 import { listeningPartStyles } from '../../../../styles/Student/Listening/listeningTestStyles';
 import { loadAudioSource, loadImageSource } from '../../../../api/teacher/upload-reading';
 
-export default function MultipleChoiceImagePart({ dataPart, isActive }) {
+export default function MultipleChoiceImagePart({
+  dataPart,
+  isActive,
+  userAnswers,
+  onUpdateAnswers,
+}) {
   const [audioSrc, setAudioSrc] = useState(null);
   const [imageSrcs, setImageSrcs] = useState({});
-  const [userAnswers, setUserAnswers] = useState({});
 
   useEffect(() => {
     const getAudio = async () => {
@@ -65,11 +69,13 @@ export default function MultipleChoiceImagePart({ dataPart, isActive }) {
     }
   }, [isActive]);
 
-  const handleSetCorrectOption = (questionId, optionLabel) => {
-    setUserAnswers((prev) => ({
-      ...prev,
-      [questionId]: optionLabel,
-    }));
+  const handleSetCorrectOption = (questionId, optionID) => {
+    const newAnswers = {
+      ...userAnswers,
+      [questionId]: optionID,
+    };
+
+    onUpdateAnswers(newAnswers);
   };
 
   return (
@@ -121,14 +127,14 @@ export default function MultipleChoiceImagePart({ dataPart, isActive }) {
                     key={option.id}
                     sx={{
                       ...listeningPartStyles.labelButton,
-                      ...(userAnswers[question.id] === option.option_label && {
+                      ...(userAnswers[question.id] === option.id && {
                         backgroundColor: 'primary.main',
                         boxShadow: 'none',
                         color: 'yellow.main',
                         '&:hover': {},
                       }),
                     }}
-                    onClick={() => handleSetCorrectOption(question.id, option.option_label)}
+                    onClick={() => handleSetCorrectOption(question.id, option.id)}
                   >
                     {option.option_label}
                   </Button>

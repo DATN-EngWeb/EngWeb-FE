@@ -3,7 +3,7 @@
 import React from 'react';
 import { Paper, Stack, Box, Typography, Chip, Button, IconButton } from '@mui/material';
 import ShareIcon from '@mui/icons-material/Share';
-import * as styles from './../../../styles/student/HistoryTestStyles';
+import * as styles from '../../../styles/student/HistoryTestStyles';
 import { useRouter } from 'next/navigation';
 
 export default function HistoryItem({ data }) {
