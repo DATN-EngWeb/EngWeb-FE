@@ -21,7 +21,7 @@ import {
 import { uploadReadingStyles } from '../../../../styles/Teacher/Reading/UploadReadingStyles';
 import { loadAudioSource } from '../../../../api/teacher/upload-reading';
 
-export default function Matching({ dataPart, isActive, userAnswers, onUpdateAnswers }) {
+export default function Matching({ dataPart, isActive, userAnswers, onUpdateAnswers, disabled }) {
   const [audioSrc, setAudioSrc] = useState(null);
   const answers = dataPart.receptive_questions.map((question) => ({
     id: question.receptive_answers[0]?.id || null,
@@ -132,6 +132,7 @@ export default function Matching({ dataPart, isActive, userAnswers, onUpdateAnsw
                   }}
                 >
                   <Select
+                    disabled={disabled}
                     value={userAnswers[question.id] || ''}
                     onChange={(e) => handleUpdateCorrectAnswer(question.id, e.target.value)}
                     displayEmpty

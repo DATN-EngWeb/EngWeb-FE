@@ -8,7 +8,13 @@ import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import { listeningPartStyles } from '../../../../styles/Student/Listening/listeningTestStyles';
 import { loadAudioSource, fetchHtmlContent } from '../../../../api/teacher/upload-reading';
 
-export default function FillBlankPart({ dataPart, isActive, userAnswers, onUpdateAnswers }) {
+export default function FillBlankPart({
+  dataPart,
+  isActive,
+  userAnswers,
+  onUpdateAnswers,
+  disabled,
+}) {
   const [audioSrc, setAudioSrc] = useState(null);
   const [passageSrc, setPassageSrc] = useState(null);
   const [leftWidth, setLeftWidth] = useState(40); // percentage width
@@ -237,6 +243,7 @@ export default function FillBlankPart({ dataPart, isActive, userAnswers, onUpdat
                 {/* -------- Question Name Section --------- */}
                 <Typography sx={listeningPartStyles.questionLabelCircle}>{index + 1}</Typography>
                 <TextField
+                  disabled={disabled}
                   variant="standard"
                   multiline
                   placeholder="Type answer ..."

@@ -15,6 +15,7 @@ export default function MultipleChoiceSingleAudio({
   isActive,
   userAnswers,
   onUpdateAnswers,
+  disabled,
 }) {
   const [audioSrcs, setAudioSrcs] = useState({});
   const [currentPlayingId, setCurrentPlayingId] = useState(null);
@@ -106,9 +107,10 @@ export default function MultipleChoiceSingleAudio({
                   <Box
                     key={`${option.id}`}
                     sx={{ ...multipleChoiceStyles.optionContainer, cursor: 'pointer' }}
-                    onClick={() => handleSetCorrectOption(question.id, option.id)}
+                    onClick={() => !disabled && handleSetCorrectOption(question.id, option.id)}
                   >
                     <Checkbox
+                      disabled={disabled}
                       checked={userAnswers[question.id] === option.id}
                       icon={<RadioButtonUncheckedIcon sx={multipleChoiceStyles.uncheckIcon} />}
                       checkedIcon={

@@ -12,6 +12,7 @@ export default function MultipleChoiceImagePart({
   isActive,
   userAnswers,
   onUpdateAnswers,
+  disabled,
 }) {
   const [audioSrc, setAudioSrc] = useState(null);
   const [imageSrcs, setImageSrcs] = useState({});
@@ -132,9 +133,13 @@ export default function MultipleChoiceImagePart({
                         boxShadow: 'none',
                         color: 'yellow.main',
                         '&:hover': {},
+                        '&.Mui-disabled': {
+                          color: 'primary.contrastText',
+                        },
                       }),
                     }}
                     onClick={() => handleSetCorrectOption(question.id, option.id)}
+                    disabled={disabled}
                   >
                     {option.option_label}
                   </Button>

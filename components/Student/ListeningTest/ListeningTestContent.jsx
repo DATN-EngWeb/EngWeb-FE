@@ -5,7 +5,19 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Box, Container, Typography, Button, Snackbar, Alert } from '@mui/material';
+import {
+  Box,
+  Container,
+  Typography,
+  Button,
+  Snackbar,
+  Alert,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from '@mui/material';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { getRecepiveTestDetails } from '../../../api/teacher/upload-reading';
@@ -21,13 +33,17 @@ import Skeleton from './skeleton';
 
 export default function ListeningTestContent({ test_id, initialData }) {
   const router = useRouter();
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
 
   const [testData, setTestData] = useState(initialData || null);
   const [receptiveParts, setReceptiveParts] = useState([]);
   const [indexPart, setIndexPart] = useState(0);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
   const [timeLeft, setTimeLeft] = useState(testData?.time || 0);
   const [allAnswers, setAllAnswers] = useState({});
+  const [isReadOnly, setIsReadOnly] = useState(false);
+
+  const [openConfirm, setOpenConfirm] = useState(false);
+  const [submitType, setSubmitType] = useState('D');
 
   const [testHistory, setTestHistory] = useState({
     receptive_test: null,
@@ -36,6 +52,10 @@ export default function ListeningTestContent({ test_id, initialData }) {
     end_time: null,
     answer_histories: [],
   });
+
+  useEffect(() => {
+    console.log('All Answers: ', allAnswers);
+  }, [allAnswers]);
 
   const transformAnswers = (answersObj) => {
     const result = [];
@@ -76,35 +96,38 @@ export default function ListeningTestContent({ test_id, initialData }) {
     return totalQuestions === totalAnswered ? 'S' : 'D';
   };
 
+  const handlePreSubmit = () => {
+    const currentType = checkCompletionStatus(testData, allAnswers);
+    setSubmitType(currentType);
+    setOpenConfirm(true);
+  };
+
   const handleSubmit = async () => {
+    setOpenConfirm(false);
     try {
-      const currentType = checkCompletionStatus(testData, allAnswers);
       const formattedHistories = transformAnswers(allAnswers);
 
-      setTestHistory((prev) => ({
-        ...prev,
-        type: currentType,
-        answer_histories: formattedHistories,
-        end_time: new Date().toISOString(),
-      }));
-
       const token = localStorage.getItem('accessToken');
-      const response = await createReceptiveTest(
-        {
-          receptive_test: testHistory.receptive_test,
-          type: currentType,
-          start_time: testHistory.start_time,
-          end_time: new Date().toISOString(),
-          answer_histories: formattedHistories,
-        },
-        token,
-      );
-      setSnackbar({ open: true, message: 'Draft saved successfully!', severity: 'success' });
+      const payload = {
+        receptive_test: testHistory.receptive_test || test_id,
+        type: submitType,
+        start_time: testHistory.start_time,
+        end_time: new Date().toISOString(),
+        answer_histories: formattedHistories,
+      };
+
+      const response = await createReceptiveTest(payload, token);
+
+      setSnackbar({
+        open: true,
+        message: submitType === 'S' ? 'Test submitted successfully!' : 'Draft saved successfully!',
+        severity: 'success',
+      });
+
       setTimeout(() => {
         if (typeof window !== 'undefined') {
-          window.sessionStorage.removeItem('current_productive_attempt');
+          window.sessionStorage.removeItem('current_receptive_attempt');
         }
-        // Chuyển hướng về trang danh sách hoặc kết quả
         router.push(`/student/listening/${test_id}`);
       }, 1000);
     } catch (error) {
@@ -140,12 +163,47 @@ export default function ListeningTestContent({ test_id, initialData }) {
         setTestData(svData);
         setReceptiveParts(svData.receptive_test.receptive_parts || []);
         setTimeLeft(svData.time * 60);
-        setTestHistory((prev) => ({
-          ...prev,
-          receptive_test: svData.id,
-          start_time: new Date().toISOString(),
-        }));
-        console.log('Dữ liệu bài thi nghe:', svData);
+
+        if (typeof window !== 'undefined') {
+          const saved = window.sessionStorage.getItem('current_receptive_attempt');
+
+          if (saved) {
+            const savedData = JSON.parse(saved);
+
+            setIsReadOnly(!!savedData.isReadOnly);
+
+            const restoredAnswers = {};
+
+            savedData.answer_histories.forEach((hist) => {
+              const parentPart = svData.receptive_test.receptive_parts.find((part) =>
+                part.receptive_questions.some((q) => q.id === hist.question_id),
+              );
+
+              if (parentPart) {
+                const pId = parentPart.id;
+                if (!restoredAnswers[pId]) restoredAnswers[pId] = {};
+
+                restoredAnswers[pId][hist.question_id] =
+                  hist.selected_answer_id || hist.user_answer_text;
+              }
+            });
+
+            setAllAnswers(restoredAnswers);
+
+            setTestHistory({
+              receptive_test: svData.id,
+              start_time: savedData.startTime || new Date().toISOString(),
+              type: savedData.isReadOnly ? 'S' : 'D',
+              answer_histories: transformAnswers(restoredAnswers), // Optional
+            });
+          } else {
+            setTestHistory({
+              receptive_test: svData.id,
+              start_time: new Date().toISOString(),
+            });
+          }
+        }
+        // console.log('Dữ liệu bài thi nghe:', svData);
       } catch (error) {
         console.error('Lỗi tải dữ liệu bài thi:', error);
       }
@@ -212,6 +270,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
       dataPart: part,
       isActive: isActive,
       userAnswers: allAnswers[part.id] || {},
+      disabled: isReadOnly,
       onUpdateAnswers: (answers) => handleUpdateAnswers(part.id, answers),
     };
 
@@ -246,27 +305,66 @@ export default function ListeningTestContent({ test_id, initialData }) {
           {snackbar.message}
         </Alert>
       </Snackbar>
+      <Dialog
+        open={openConfirm}
+        onClose={() => setOpenConfirm(false)}
+        PaperProps={{
+          sx: {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            padding: '16px',
+            borderRadius: '12px',
+          },
+        }}
+      >
+        <DialogTitle sx={listeningtestStyles.nameTest}>
+          {submitType === 'S' ? 'Finish Test?' : 'Submit as Draft?'}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {submitType === 'S' ? (
+              <>
+                You have completed all questions. Do you want to{' '}
+                <strong>submit and finish the test</strong>?
+              </>
+            ) : (
+              <>
+                You haven't finished all questions. Do you want to{' '}
+                <strong>save your progress as a draft</strong> and continue later?
+              </>
+            )}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setOpenConfirm(false)}
+            color="inherit"
+            sx={{
+              fontSize: { xs: '0.7rem', md: '1rem' },
+              fontWeight: 500,
+              textTransform: 'none',
+              whiteSpace: 'nowrap',
+              px: 2.5,
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            variant="contained"
+            color="primary"
+            autoFocus
+            sx={listeningtestStyles.submitButton}
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Container maxWidth="lg">
         {/* -------- Test Heading Section --------- */}
         <Box sx={listeningtestStyles.testHeadingContainer}>
-          {/* <Typography
-            sx={{ ...listeningtestStyles.backButton, fontSize: { xs: '0.8rem', md: '1rem' } }}
-          >
-            <ExpandLessIcon
-              sx={{
-                cursor: 'pointer',
-                fontSize: { xs: '1.6rem', md: '1.8rem' },
-                color: 'gray.main',
-                transform: 'rotate(270deg)',
-              }}
-            />
-            <Box component="span" sx={{ display: { xs: 'none', md: 'inline' } }}>
-              Back to homepage
-            </Box>
-            <Box component="span" sx={{ display: { xs: 'inline', md: 'none' } }}>
-              Homepage
-            </Box>
-          </Typography> */}
           <Box sx={listeningtestStyles.timeLeft}>
             <AccessTimeIcon
               sx={{
@@ -285,7 +383,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
             </Typography>
           </Box>
           <Box sx={listeningtestStyles.summitButtonWrapper}>
-            <Button sx={listeningtestStyles.submitButton} onClick={handleSubmit}>
+            <Button sx={listeningtestStyles.submitButton} onClick={handlePreSubmit}>
               Submit Test
             </Button>
           </Box>

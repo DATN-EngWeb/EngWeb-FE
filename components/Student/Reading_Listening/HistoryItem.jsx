@@ -10,18 +10,16 @@ export default function HistoryItem({ data }) {
   const router = useRouter();
   const handleViewDetail = (item) => {
     const dataToSave = {
-      answer: item.user_answer_text,
-      note: item.user_note_text,
+      answer_histories: item.answer_histories,
       isReadOnly: item.type === 'S',
       startTime: item.start_time,
       totalTime: item.total_time,
-      audio: item.audio_path,
     };
-    sessionStorage.setItem('current_productive_attempt', JSON.stringify(dataToSave));
+    sessionStorage.setItem('current_receptive_attempt', JSON.stringify(dataToSave));
     {
       item.skill === 'L'
-        ? router.push(`/student/listening/${item.productive_test}/${item.attempt}`)
-        : router.push(`/student/writing/${item.productive_test}/${item.attempt}`);
+        ? router.push(`/student/listening/${item.receptive_test}/${item.attempt}`)
+        : router.push(`/student/writing/${item.receptive_test}/${item.attempt}`);
     }
   };
   const formatTime = (totalSeconds) => {

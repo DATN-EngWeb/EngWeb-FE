@@ -66,23 +66,41 @@ export default function ReceptiveTestHistory() {
     );
 
   const handleContinue = () => {
+    if (!draft) {
+      console.error('Biến draft đang bị null hoặc undefined!');
+      return;
+    }
+
     const dataToSave = {
-      answer: draft.user_answer_text,
-      note: draft.user_note_text,
+      answer_histories: draft.answer_histories || [],
+      attempt: draft.attempt || 1,
       isReadOnly: draft.type === 'S',
       startTime: draft.start_time,
       totalTime: draft.total_time,
     };
-    sessionStorage.setItem('current_receptive_attempt', JSON.stringify(dataToSave));
-    {
-      testData.skill === 'L'
-        ? router.push(`/student/listening/${test_id}/${draft.id}`)
-        : router.push(`/student/reading/${test_id}/${draft.id}`);
+
+    if (typeof window !== 'undefined') {
+      try {
+        const stringifiedData = JSON.stringify(dataToSave);
+        window.sessionStorage.setItem('current_receptive_attempt', stringifiedData);
+
+        // console.log('Đã lưu vào SS:', window.sessionStorage.getItem('current_receptive_attempt'));
+      } catch (e) {
+        console.error('Lỗi khi lưu vào sessionStorage:', e);
+      }
     }
+
+    const targetPath =
+      testData?.skill === 'L'
+        ? `/student/listening/${test_id}/${draft.id}`
+        : `/student/reading/${test_id}/${draft.id}`;
+
+    router.push(targetPath);
   };
+
   const handlePracticeNow = () => {
     {
-      sessionStorage.removeItem('current_receptive_attempt');
+      window.sessionStorage.removeItem('current_receptive_attempt');
       testData.skill === 'L'
         ? router.push(`/student/listening/${test_id}/${submissions.length + 1}`)
         : router.push(`/student/reading/${test_id}/${submissions.length + 1}`);
@@ -175,7 +193,6 @@ export default function ReceptiveTestHistory() {
                   data={{
                     ...sub,
                     skill: testData.skill,
-                    min_words: testData.productive_test.min_word,
                   }}
                 />
               ))

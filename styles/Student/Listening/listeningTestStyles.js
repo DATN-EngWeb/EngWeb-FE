@@ -158,7 +158,6 @@ export const listeningtestStyles = {
     py: 0.5,
     fontWeight: 600,
     fontSize: { xs: '0.8rem', md: '1.2rem' },
-    fontFamily: 'monospace',
     minWidth: '200px',
   },
   timeLeftSkeleton: {
