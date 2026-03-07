@@ -27,15 +27,22 @@ const CustomAudioPlayer = ({
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
-  const togglePlay = () => {
-    if (isPlaying) {
-      audioRef.current.pause();
-      onPause();
-    } else {
-      audioRef.current.play();
-      onPlay();
+  const togglePlay = async () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+        onPause();
+        setIsPlaying(false);
+      } else {
+        try {
+          await audioRef.current.play();
+          onPlay();
+          setIsPlaying(true);
+        } catch (error) {
+          console.log('Audio playback was interrupted:', error);
+        }
+      }
     }
-    setIsPlaying(!isPlaying);
   };
 
   const handleTimeUpdate = () => {
@@ -55,12 +62,16 @@ const CustomAudioPlayer = ({
     setDragValue(newValue);
   };
 
-  const handleSliderChangeCommitted = (e, newValue) => {
+  const handleSliderChangeCommitted = async (e, newValue) => {
     if (audioRef.current) {
       audioRef.current.currentTime = newValue;
-      audioRef.current.play();
-      onPlay();
-      setIsPlaying(true);
+      try {
+        await audioRef.current.play();
+        onPlay();
+        setIsPlaying(true);
+      } catch (error) {
+        console.log('Play after seek interrupted');
+      }
     }
     setCurrentTime(newValue);
     setIsDragging(false);
@@ -74,18 +85,17 @@ const CustomAudioPlayer = ({
   };
 
   useEffect(() => {
-    if (!isActive && audioRef.current) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    }
-  }, [isActive]);
+    const handleSystemPause = async () => {
+      if ((!isActive || !isCurrentPlaying) && audioRef.current) {
+        if (!audioRef.current.paused) {
+          audioRef.current.pause();
+          setIsPlaying(false);
+        }
+      }
+    };
 
-  useEffect(() => {
-    if (!isCurrentPlaying && audioRef.current) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    }
-  }, [isCurrentPlaying]);
+    handleSystemPause();
+  }, [isActive, isCurrentPlaying]);
 
   return (
     <Box

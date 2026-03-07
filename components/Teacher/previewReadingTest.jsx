@@ -47,7 +47,7 @@ export default function PreviewReadingTest({ basicInfo, parts, onPreview }) {
     });
 
     setReceptiveParts(newParts);
-    console.log('Mảng parts mới đã map:', newParts);
+    // console.log('Mảng parts mới đã map:', newParts);
   }, [parts]);
 
   const renderPart = (part, index) => {

@@ -85,9 +85,6 @@ export default function ListeningHub() {
     async function fetchTests() {
       setLoading(true);
       try {
-        const accessToken =
-          typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-
         // Build API params from filters
         const params = {
           skill: 'L',
@@ -107,7 +104,7 @@ export default function ListeningHub() {
           params.status = 'P';
         }
 
-        const response = await getTestOverview(params, accessToken);
+        const response = await getTestOverview(params);
 
         if (response && response.results) {
           setTests(response.results);

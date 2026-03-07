@@ -85,8 +85,20 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
     let totalAnswered = 0;
     Object.values(allAnswers).forEach((partAnswers) => {
-      // partAnswers là object { "125": 214, ... }
-      totalAnswered += Object.keys(partAnswers).length;
+      Object.values(partAnswers).forEach((answer) => {
+        // Kiểm tra giá trị có "thực" hay không:
+        // 1. Không null/undefined
+        // 2. Nếu là string thì không được chỉ có khoảng trắng
+        // 3. Nếu là array (trường hợp chọn nhiều) thì length > 0
+        if (
+          answer !== null &&
+          answer !== undefined &&
+          (typeof answer === 'string' ? answer.trim() !== '' : true) &&
+          (Array.isArray(answer) ? answer.length > 0 : true)
+        ) {
+          totalAnswered += 1;
+        }
+      });
     });
 
     return totalQuestions === totalAnswered ? 'S' : 'D';
@@ -103,7 +115,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
     try {
       const formattedHistories = transformAnswers(allAnswers);
 
-      const token = localStorage.getItem('accessToken');
       const payload = {
         receptive_test: testHistory.receptive_test || test_id,
         type: submitType,
@@ -112,7 +123,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
         answer_histories: formattedHistories,
       };
 
-      const response = await createReceptiveTest(payload, token);
+      await createReceptiveTest(payload);
 
       setSnackbar({
         open: true,
@@ -277,7 +288,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
   };
 
   return (
-    <Box sx={listeningtestStyles.mainContainer}>
+    <Box sx={{ ...listeningtestStyles.mainContainer, position: 'relative' }}>
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}

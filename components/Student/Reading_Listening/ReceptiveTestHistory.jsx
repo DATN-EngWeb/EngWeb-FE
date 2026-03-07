@@ -39,10 +39,9 @@ export default function ReceptiveTestHistory() {
       try {
         setLoading(true);
         //sessionStorage.removeItem('current_writing_attempt');
-        const token = localStorage.getItem('accessToken');
         const [listAttempt, details] = await Promise.all([
-          getReceptivetTest(test_id, token),
-          getReceptiveTestDetails(test_id, token),
+          getReceptivetTest(test_id),
+          getReceptiveTestDetails(test_id),
         ]);
         setTestData(details);
         setHistoryData(listAttempt);

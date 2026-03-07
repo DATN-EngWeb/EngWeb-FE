@@ -33,11 +33,10 @@ export const listeningtestStyles = {
   },
   separatorLine: {
     height: '2px',
-    width: '100vw',
-    position: 'relative',
+    width: '100%',
+    position: 'absolute',
     backgroundColor: 'orange.light',
-    left: '50%',
-    transform: 'translateX(-50%)',
+    left: 0,
     border: 'none',
   },
   backButton: {
