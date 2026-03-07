@@ -211,7 +211,7 @@ function ForgotPasswordContent() {
                   <Typography
                     component="span"
                     sx={{
-                      color: 'primary.main',
+                      color: 'primary.light',
                       '&:hover': {
                         textDecoration: 'underline',
                       },
