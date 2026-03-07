@@ -15,14 +15,7 @@ export default function EditListeningTestPage({ params }) {
   useEffect(() => {
     const validateTest = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        if (!token) {
-          setError('Authentication required');
-          setTimeout(() => router.push('/login'), 1500);
-          return;
-        }
-
-        const data = await getRecepiveTestDetails(test_id, token);
+        const data = await getRecepiveTestDetails(test_id);
 
         if (data.status !== 'D') {
           setError('Only draft tests can be edited');

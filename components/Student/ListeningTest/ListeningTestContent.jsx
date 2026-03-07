@@ -28,13 +28,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
     const fetchTestData = async () => {
       if (!test_id) return;
       try {
-        const accessToken = localStorage.getItem('accessToken');
-        if (!accessToken) {
-          setSnackbar({ open: true, message: 'Authentication required', severity: 'error' });
-          return;
-        }
-
-        const svData = await getRecepiveTestDetails(test_id, accessToken);
+        const svData = await getRecepiveTestDetails(test_id);
         setTestData(svData);
         setReceptiveParts(svData.receptive_test.receptive_parts || []);
         setTimeLeft(svData.time * 60);

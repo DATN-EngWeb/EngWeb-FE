@@ -60,8 +60,7 @@ export default function UpdateSpeakingTestEditor() {
 
   const loadTestData = useCallback(async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await getProductiveTestDetails(testId, token);
+      const response = await getProductiveTestDetails(testId);
 
       setTestData({
         skill: 'S',
@@ -118,7 +117,6 @@ export default function UpdateSpeakingTestEditor() {
   const handleSubmit = async (status) => {
     setIsSaving(true);
     try {
-      const token = localStorage.getItem('accessToken');
       const origin = originalData.current;
       if (!origin) return;
       const updatePayload = {};
@@ -138,7 +136,7 @@ export default function UpdateSpeakingTestEditor() {
 
       const isHtmlChanged = question.description !== origin.description;
       if (isHtmlChanged) {
-        const newUrl = await uploadHtmlContent(question.description, testId, token);
+        const newUrl = await uploadHtmlContent(question.description, testId);
         productivePayload.description = newUrl;
       }
 
@@ -152,7 +150,7 @@ export default function UpdateSpeakingTestEditor() {
       let audioChanged = false;
 
       if (question.audio && question.audio.file instanceof File) {
-        const uploadedUrl = await uploadMediaFile(question.audio.file, testId, token);
+        const uploadedUrl = await uploadMediaFile(question.audio.file, testId);
         finalAudioUrl = uploadedUrl;
         audioChanged = true;
       } else if (question.audio === null && origin.audioUrl !== null) {
@@ -171,7 +169,7 @@ export default function UpdateSpeakingTestEditor() {
       }
 
       if (Object.keys(updatePayload).length > 0) {
-        await updateProductiveTest(testId, updatePayload, token);
+        await updateProductiveTest(testId, updatePayload);
 
         setSnackbar({ open: true, message: 'Updated successfully!', severity: 'success' });
         setTimeout(() => {

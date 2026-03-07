@@ -1,6 +1,7 @@
 /* eslint-env browser */
 /* global fetch */
 /* global URLSearchParams */
+import { apiFetch } from './client';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 if (!API_BASE_URL) {
@@ -10,53 +11,21 @@ const STORAGE_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/storage`;
 const TESTS_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/tests`;
 const TEST_HISTORIES_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/test-histories`;
 
-async function handleResponse(response) {
-  const contentType = response.headers.get('content-type') || '';
-  const data = contentType.includes('application/json')
-    ? await response.json().catch(() => null)
-    : null;
-
-  if (response.ok) {
-    return data ?? {};
-  }
-
-  // Create error with full data for detailed error handling
-  const error = new Error();
-  error.message =
-    data?.message ||
-    data?.detail ||
-    data?.error ||
-    data?.errors ||
-    Object.values(data || {})?.[0]?.[0] ||
-    'Something went wrong';
-  error.data = data; // Include full error data
-  error.status = response.status;
-
-  throw error;
-}
-
-export const createTest = async (basicInfo, token) => {
-  const response = await fetch(`${TESTS_BASE_URL}/overview`, {
+export const createTest = async (basicInfo) => {
+  return apiFetch(`${TESTS_BASE_URL}/overview`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(basicInfo),
   });
-
-  return handleResponse(response);
 };
 
-export const getPresignedUrl = async (
-  { filename, fileSize, mimeType, category, testId, part },
-  token,
-) => {
-  const response = await fetch(`${STORAGE_BASE_URL}/presigned-urls`, {
+export const getPresignedUrl = async ({ filename, fileSize, mimeType, category, testId, part }) => {
+  return apiFetch(`${STORAGE_BASE_URL}/presigned-urls`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
       filename,
@@ -67,7 +36,6 @@ export const getPresignedUrl = async (
       part,
     }),
   });
-  return handleResponse(response);
 };
 
 export const uploadToObjectStorage = async ({ url, mimeType, file }) => {
@@ -90,12 +58,11 @@ export const uploadToObjectStorage = async ({ url, mimeType, file }) => {
   return { etag };
 };
 
-export const confirmUpload = async ({ key, fileSize, mimeType, etag }, token) => {
-  const response = await fetch(`${STORAGE_BASE_URL}/confirmation`, {
+export const confirmUpload = async ({ key, fileSize, mimeType, etag }) => {
+  return apiFetch(`${STORAGE_BASE_URL}/confirmation`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
       key,
@@ -104,107 +71,81 @@ export const confirmUpload = async ({ key, fileSize, mimeType, etag }, token) =>
       etag,
     }),
   });
-  return handleResponse(response);
 };
 
-export const submitTestParts = async ({ testId, parts, token }) => {
-  const response = await fetch(`${TESTS_BASE_URL}/receptive/${testId}`, {
+export const submitTestParts = async ({ testId, parts }) => {
+  return apiFetch(`${TESTS_BASE_URL}/receptive/${testId}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ data: { parts } }),
   });
-
-  return handleResponse(response);
 };
 
-export const getCriteria = async (level, token) => {
-  const response = await fetch(`${TESTS_BASE_URL}/writing-criteria?level=${level}`, {
+export const getCriteria = async (level) => {
+  return apiFetch(`${TESTS_BASE_URL}/writing-criteria?level=${level}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
     },
   });
-
-  return handleResponse(response);
 };
 
-export const submitProductiveTest = async ({ testId, data, token }) => {
-  const response = await fetch(`${TESTS_BASE_URL}/productive/${testId}`, {
+export const submitProductiveTest = async ({ testId, data }) => {
+  return apiFetch(`${TESTS_BASE_URL}/productive/${testId}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ data }),
   });
-  return handleResponse(response);
 };
 
-export const getListTest = async (token, params = {}) => {
+export const getListTest = async (params = {}) => {
   const query = new URLSearchParams(params).toString();
-  const response = await fetch(`${TESTS_BASE_URL}/overview?${query}`, {
-    //method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    //cache: 'no-store',
-  });
-  return handleResponse(response);
-};
-
-export const getProductiveTestDetails = async (testId, token) => {
-  const response = await fetch(`${TESTS_BASE_URL}/full-test/productive/${testId}`, {
+  return apiFetch(`${TESTS_BASE_URL}/overview?${query}`, {
     method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
   });
-  return handleResponse(response);
 };
 
-export const updateProductiveTest = async (testId, data, token) => {
-  const response = await fetch(`${TESTS_BASE_URL}/full-test/productive/${testId}`, {
+export const getProductiveTestDetails = async (testId) => {
+  return apiFetch(`${TESTS_BASE_URL}/full-test/productive/${testId}`, {
+    method: 'GET',
+  });
+};
+
+export const updateProductiveTest = async (testId, data) => {
+  return apiFetch(`${TESTS_BASE_URL}/full-test/productive/${testId}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(data),
   });
-  return handleResponse(response);
 };
 
-export const updateTestParts = async ({ testId, basicInfo, receptiveTestData, token }) => {
-  const response = await fetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
+export const updateTestParts = async ({ testId, basicInfo, receptiveTestData }) => {
+  return apiFetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
       ...(basicInfo && basicInfo),
       receptive_test: receptiveTestData,
     }),
   });
-
-  return handleResponse(response);
 };
 
-export async function getRecepiveTestDetails(testId, token) {
-  const response = await fetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
+export async function getRecepiveTestDetails(testId) {
+  return apiFetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
     },
     cache: 'no-store',
   });
-
-  return handleResponse(response);
 }
 
 export const fetchHtmlContent = async (url) => {
@@ -220,25 +161,21 @@ export const fetchHtmlContent = async (url) => {
   }
 };
 
-export const createProductiveTest = async (data, token) => {
-  const response = await fetch(`${TEST_HISTORIES_BASE_URL}/productive`, {
+export const createProductiveTest = async (data) => {
+  return apiFetch(`${TEST_HISTORIES_BASE_URL}/productive`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(data),
   });
-  return handleResponse(response);
 };
 
-export const getProductiveTest = async (test_id, token) => {
-  const response = await fetch(`${TEST_HISTORIES_BASE_URL}/productive?productive_test=${test_id}`, {
+export const getProductiveTest = async (test_id) => {
+  return apiFetch(`${TEST_HISTORIES_BASE_URL}/productive?productive_test=${test_id}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
     },
   });
-  return handleResponse(response);
 };

@@ -1,5 +1,6 @@
 /* eslint-env browser */
 /* global fetch, Blob */
+import { apiFetch } from '../client';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 if (!API_BASE_URL) {
@@ -8,92 +9,42 @@ if (!API_BASE_URL) {
 
 const TESTS_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/tests`;
 
-// Hàm xử lý response chung
-async function handleResponse(response) {
-  const contentType = response.headers.get('content-type') || '';
-  const data = contentType.includes('application/json')
-    ? await response.json().catch(() => null)
-    : null;
-
-  if (response.ok) {
-    return data ?? {};
-  }
-
-  // Tạo object lỗi chi tiết
-  const error = new Error();
-  error.message =
-    data?.message ||
-    data?.detail ||
-    data?.error ||
-    data?.errors ||
-    Object.values(data || {})?.[0]?.[0] ||
-    'Something went wrong';
-  error.data = data;
-  error.status = response.status;
-
-  throw error;
-}
-
-export async function createNewTest(testData, accessToken) {
-  const headers = {
-    'Content-Type': 'application/json',
-  };
-
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`;
-  }
-
-  const response = await fetch(`${TESTS_BASE_URL}/overview`, {
+export async function createNewTest(testData) {
+  return apiFetch(`${TESTS_BASE_URL}/overview`, {
     method: 'POST',
-    headers,
+    headers: {
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify(testData),
     cache: 'no-store',
   });
-
-  return handleResponse(response);
 }
 
-export async function uploadReadingTestContent(testId, partsData, accessToken) {
-  const headers = {
-    'Content-Type': 'application/json',
-  };
-
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`;
-  }
-
+export async function uploadReadingTestContent(testId, partsData) {
   const bodyPayload = {
     data: {
       parts: partsData,
     },
   };
 
-  const response = await fetch(`${TESTS_BASE_URL}/receptive/${testId}`, {
+  return apiFetch(`${TESTS_BASE_URL}/receptive/${testId}`, {
     method: 'POST',
-    headers: headers,
+    headers: {
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify(bodyPayload),
     cache: 'no-store',
   });
-
-  return handleResponse(response);
 }
 
-export async function getRecepiveTestDetails(testId, accessToken) {
-  const headers = {
-    'Content-Type': 'application/json',
-  };
-
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`;
-  }
-
-  const response = await fetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
+export async function getRecepiveTestDetails(testId) {
+  return apiFetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
     method: 'GET',
-    headers,
+    headers: {
+      'Content-Type': 'application/json',
+    },
     cache: 'no-store',
   });
-
-  return handleResponse(response);
 }
 
 export const fetchHtmlContent = async (url) => {
@@ -110,23 +61,15 @@ export const fetchHtmlContent = async (url) => {
   }
 };
 
-export async function updateReadingTestContent(testId, updatePayload, accessToken) {
-  const headers = {
-    'Content-Type': 'application/json',
-  };
-
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`;
-  }
-
-  const response = await fetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
+export async function updateReadingTestContent(testId, updatePayload) {
+  return apiFetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
     method: 'PATCH',
-    headers: headers,
+    headers: {
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify(updatePayload),
     cache: 'no-store',
   });
-
-  return handleResponse(response);
 }
 
 export const loadAudioSource = async (url) => {

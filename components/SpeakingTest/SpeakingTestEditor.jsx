@@ -45,7 +45,6 @@ export default function SpeakingTestEditor() {
   const handleSubmit = async (status) => {
     setIsSaving(true);
     try {
-      const token = localStorage.getItem('accessToken');
       const basicInfo = {
         title: testData.testName,
         level: testData.level,
@@ -57,10 +56,10 @@ export default function SpeakingTestEditor() {
         description: 'Speaking test',
       };
 
-      const res = await createTest(basicInfo, token);
-      const contentUrl = await uploadHtmlContent(question.description, res.id, token);
+      const res = await createTest(basicInfo);
+      const contentUrl = await uploadHtmlContent(question.description, res.id);
       const audioUrl = question.audio?.file
-        ? await uploadMediaFile(question.audio.file, res.id, token)
+        ? await uploadMediaFile(question.audio.file, res.id)
         : null;
 
       const formatMapper = {
@@ -82,7 +81,7 @@ export default function SpeakingTestEditor() {
         },
       };
 
-      await submitProductiveTest({ testId: res.id, data: detailedData, token });
+      await submitProductiveTest({ testId: res.id, data: detailedData });
       setSnackbar({ open: true, message: 'Test submitted successfully', severity: 'success' });
       setIsSaving(false);
       setTestData({ skill: 'S', testName: '', level: '', topics: '', format: '' });

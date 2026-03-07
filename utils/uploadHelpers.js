@@ -4,7 +4,7 @@ import { getPresignedUrl, uploadToObjectStorage, confirmUpload } from '../api/te
  * Transfer HTML from Editor to file and upload to Storage
  * Used for both Writing (description) and Speaking (description)
  */
-export const uploadHtmlContent = async (htmlString, testId, token) => {
+export const uploadHtmlContent = async (htmlString, testId) => {
   if (!htmlString || htmlString === '<p></p>') return null;
 
   // 1. create File object từ HTML string
@@ -13,16 +13,13 @@ export const uploadHtmlContent = async (htmlString, testId, token) => {
 
   try {
     // 2. get Presigned URL
-    const presign = await getPresignedUrl(
-      {
-        filename: file.name,
-        fileSize: file.size,
-        mimeType: file.type,
-        category: 'tests',
-        testId,
-      },
-      token,
-    );
+    const presign = await getPresignedUrl({
+      filename: file.name,
+      fileSize: file.size,
+      mimeType: file.type,
+      category: 'tests',
+      testId,
+    });
 
     // 3. upload to S3/Object Storage
     const { etag } = await uploadToObjectStorage({
@@ -32,15 +29,12 @@ export const uploadHtmlContent = async (htmlString, testId, token) => {
     });
 
     // 4. Confirm with Backend to get public access URL
-    const confirm = await confirmUpload(
-      {
-        key: presign.key,
-        fileSize: file.size,
-        mimeType: file.type,
-        etag: etag,
-      },
-      token,
-    );
+    const confirm = await confirmUpload({
+      key: presign.key,
+      fileSize: file.size,
+      mimeType: file.type,
+      etag: etag,
+    });
 
     return confirm.file_url; // Return https://.../description.html
   } catch (error) {
@@ -53,19 +47,16 @@ export const uploadHtmlContent = async (htmlString, testId, token) => {
  * Upload physical files to Object Storage and return their URLs
  * Used for audio/image files in test
  */
-export const uploadMediaFile = async (file, testId, token) => {
+export const uploadMediaFile = async (file, testId) => {
   if (!file) return null;
 
-  const presign = await getPresignedUrl(
-    {
-      filename: file.name,
-      fileSize: file.size,
-      mimeType: file.type,
-      category: 'tests',
-      testId,
-    },
-    token,
-  );
+  const presign = await getPresignedUrl({
+    filename: file.name,
+    fileSize: file.size,
+    mimeType: file.type,
+    category: 'tests',
+    testId,
+  });
 
   const { etag } = await uploadToObjectStorage({
     url: presign.url,
@@ -73,15 +64,12 @@ export const uploadMediaFile = async (file, testId, token) => {
     file: file,
   });
 
-  const confirm = await confirmUpload(
-    {
-      key: presign.key,
-      fileSize: file.size,
-      mimeType: file.type,
-      etag: etag,
-    },
-    token,
-  );
+  const confirm = await confirmUpload({
+    key: presign.key,
+    fileSize: file.size,
+    mimeType: file.type,
+    etag: etag,
+  });
 
   return confirm.file_url;
 };

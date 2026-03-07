@@ -149,45 +149,8 @@ export default function SecuritySection({ username, email, onSave, isSaving, onE
 
       <Box mb={3}>
         <Typography fontWeight={500}>Username</Typography>
-
-        {!editUsername ? (
-          <Box display="flex" justifyContent="space-between" mt={1} alignItems="center">
-            <Typography color="text.secondary">{username}</Typography>
-            <Button size="small" onClick={() => setEditUsername(true)}>
-              Change
-            </Button>
-          </Box>
-        ) : (
-          <Box sx={securitySectionStyles.usernameEditContainer}>
-            <TextField
-              size="small"
-              value={newUsername}
-              onChange={(e) => setNewUsername(e.target.value)}
-              fullWidth
-              disabled={isSaving}
-            />
-            <Box display="flex" gap={2} sx={{ width: { xs: '100%', sm: 'auto' } }}>
-              <Button
-                variant="outlined"
-                onClick={handleCancelUsername}
-                fullWidth={window.innerWidth < 600}
-                disabled={isSaving}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="contained"
-                onClick={handleChangeUsername}
-                fullWidth={window.innerWidth < 600}
-                disabled={isSaving}
-              >
-                {isSaving ? <CircularProgress size={20} /> : 'Save'}
-              </Button>
-            </Box>
-          </Box>
-        )}
+        <Typography color="text.secondary">{username}</Typography>
       </Box>
-
       <Divider sx={{ my: 2 }} />
 
       <Box>

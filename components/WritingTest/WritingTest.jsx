@@ -78,8 +78,7 @@ export default function WritingTest() {
     setIsMounted(true);
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        const response = await getProductiveTestDetails(testId, token);
+        const response = await getProductiveTestDetails(testId);
         setTestData({
           title: response.title,
           level: response.level,
@@ -146,19 +145,15 @@ export default function WritingTest() {
     setOpenShareModal(false);
     setIsSaving(true);
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await createProductiveTest(
-        {
-          productive_test: testId,
-          total_time: secondsElapsed,
-          type: 'S',
-          start_time: startTime,
-          end_time: new Date().toISOString(),
-          user_note_text: note,
-          user_answer_text: text,
-        },
-        token,
-      );
+      const response = await createProductiveTest({
+        productive_test: testId,
+        total_time: secondsElapsed,
+        type: 'S',
+        start_time: startTime,
+        end_time: new Date().toISOString(),
+        user_note_text: note,
+        user_answer_text: text,
+      });
       console.log('Submission response:', response);
       setIsDraftSaved(true);
       setIsSaving(false);
@@ -181,19 +176,15 @@ export default function WritingTest() {
   const handleSaveDraft = async () => {
     setIsSaving(true);
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await createProductiveTest(
-        {
-          productive_test: testId,
-          total_time: secondsElapsed,
-          type: 'D',
-          start_time: startTime,
-          end_time: new Date().toISOString(),
-          user_note_text: note,
-          user_answer_text: text,
-        },
-        token,
-      );
+      const response = await createProductiveTest({
+        productive_test: testId,
+        total_time: secondsElapsed,
+        type: 'D',
+        start_time: startTime,
+        end_time: new Date().toISOString(),
+        user_note_text: note,
+        user_answer_text: text,
+      });
       setIsDraftSaved(true);
       setIsSaving(false);
       setSnackbar({ open: true, message: 'Draft saved successfully!', severity: 'success' });

@@ -66,8 +66,7 @@ export default function UpdateWritingTestEditor() {
 
   const loadTestData = useCallback(async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await getProductiveTestDetails(testId, token);
+      const response = await getProductiveTestDetails(testId);
 
       setTestData({
         skill: 'W',
@@ -120,7 +119,6 @@ export default function UpdateWritingTestEditor() {
   const handleSubmit = async (status) => {
     setIsSaving(true);
     try {
-      const token = localStorage.getItem('accessToken');
       const origin = originalData.current;
       if (!origin) return;
       const updatePayload = {};
@@ -140,7 +138,7 @@ export default function UpdateWritingTestEditor() {
 
       const isHtmlChanged = question.description !== origin.description;
       if (isHtmlChanged) {
-        const newUrl = await uploadHtmlContent(question.description, testId, token);
+        const newUrl = await uploadHtmlContent(question.description, testId);
         productivePayload.description = newUrl;
       }
 
@@ -157,7 +155,7 @@ export default function UpdateWritingTestEditor() {
       }
 
       if (Object.keys(updatePayload).length > 0) {
-        await updateProductiveTest(testId, updatePayload, token);
+        await updateProductiveTest(testId, updatePayload);
 
         setSnackbar({ open: true, message: 'Updated successfully!', severity: 'success' });
         setTimeout(() => {
