@@ -96,9 +96,6 @@ export default function HistoryItem({ data }) {
           >
             View Detail
           </Button>
-          <IconButton size="small" sx={{ bgcolor: '#f5f5f5' }}>
-            <ShareIcon fontSize="small" />
-          </IconButton>
         </Stack>
       </Stack>
     </Paper>

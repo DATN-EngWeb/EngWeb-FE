@@ -22,18 +22,28 @@ export default function FillBlankPart({
 
   useEffect(() => {
     const getAudio = async () => {
-      const url = await loadAudioSource(dataPart?.resources?.audio);
-      setAudioSrc(url);
+      const source = dataPart?.audio?.url || dataPart?.resources?.audio;
+
+      if (!source) return;
+
+      if (typeof source === 'string' && source.startsWith('blob:')) {
+        setAudioSrc(source);
+      } else {
+        const url = await loadAudioSource(source);
+        setAudioSrc(url);
+      }
     };
 
-    if (dataPart?.resources?.audio) {
-      getAudio();
-    }
+    getAudio();
 
     return () => {
-      if (audioSrc) URL.revokeObjectURL(audioSrc);
+      const originalSource = dataPart?.audio?.url || dataPart?.resources?.audio;
+
+      if (audioSrc && audioSrc.startsWith('blob:') && audioSrc !== originalSource) {
+        URL.revokeObjectURL(audioSrc);
+      }
     };
-  }, [dataPart?.resources?.audio]);
+  }, [dataPart?.audio?.url, dataPart?.resources?.audio]);
 
   useEffect(() => {
     if (!isActive) {
@@ -238,21 +248,40 @@ export default function FillBlankPart({
             </Typography>
           </Box>
           <Box sx={listeningPartStyles.listQuestionContainerGrid}>
-            {dataPart?.receptive_questions?.map((question, index) => (
-              <Box key={question.id} sx={listeningPartStyles.questionContainerRow}>
-                {/* -------- Question Name Section --------- */}
-                <Typography sx={listeningPartStyles.questionLabelCircle}>{index + 1}</Typography>
-                <TextField
-                  disabled={disabled}
-                  variant="standard"
-                  multiline
-                  placeholder="Type answer ..."
-                  defaultValue={userAnswers[question.id] || ''}
-                  sx={listeningPartStyles.inputQuestion}
-                  onBlur={(e) => handleUpdateUserAnswers(question.id, e.target.value)}
-                />
-              </Box>
-            ))}
+            {dataPart.type === 'fill_in_the_blanks'
+              ? dataPart?.answers?.map((answer, index) => (
+                  <Box key={answer.id} sx={listeningPartStyles.questionContainerRow}>
+                    {/* -------- Question Name Section --------- */}
+                    <Typography sx={listeningPartStyles.questionLabelCircle}>
+                      {index + 1}
+                    </Typography>
+                    <TextField
+                      disabled={disabled}
+                      variant="standard"
+                      multiline
+                      placeholder="Type answer ..."
+                      defaultValue={''}
+                      sx={listeningPartStyles.inputQuestion}
+                    />
+                  </Box>
+                ))
+              : dataPart?.receptive_questions?.map((question, index) => (
+                  <Box key={question.id} sx={listeningPartStyles.questionContainerRow}>
+                    {/* -------- Question Name Section --------- */}
+                    <Typography sx={listeningPartStyles.questionLabelCircle}>
+                      {index + 1}
+                    </Typography>
+                    <TextField
+                      disabled={disabled}
+                      variant="standard"
+                      multiline
+                      placeholder="Type answer ..."
+                      defaultValue={userAnswers[question.id] || ''}
+                      sx={listeningPartStyles.inputQuestion}
+                      onBlur={(e) => handleUpdateUserAnswers(question.id, e.target.value)}
+                    />
+                  </Box>
+                ))}
           </Box>
         </Box>
       </Box>

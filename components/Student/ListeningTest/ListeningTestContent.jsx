@@ -53,10 +53,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
     answer_histories: [],
   });
 
-  useEffect(() => {
-    console.log('All Answers: ', allAnswers);
-  }, [allAnswers]);
-
   const transformAnswers = (answersObj) => {
     const result = [];
 
@@ -221,18 +217,8 @@ export default function ListeningTestContent({ test_id, initialData }) {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
-  // Phần delay để hiển thị Sekeleton
-  const [isDelayed, setIsDelayed] = useState(true);
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsDelayed(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (!testData || isDelayed) {
-    return <Skeleton />;
+  if (!testData) {
+    return <Skeleton disabled={isReadOnly} />;
   }
 
   const goNextPart = () => {
@@ -365,7 +351,12 @@ export default function ListeningTestContent({ test_id, initialData }) {
       <Container maxWidth="lg">
         {/* -------- Test Heading Section --------- */}
         <Box sx={listeningtestStyles.testHeadingContainer}>
-          <Box sx={listeningtestStyles.timeLeft}>
+          <Box
+            sx={{
+              ...listeningtestStyles.timeLeft,
+              ...(isReadOnly === true && { visibility: 'hidden' }),
+            }}
+          >
             <AccessTimeIcon
               sx={{
                 color: 'secondary.main',
@@ -383,7 +374,13 @@ export default function ListeningTestContent({ test_id, initialData }) {
             </Typography>
           </Box>
           <Box sx={listeningtestStyles.summitButtonWrapper}>
-            <Button sx={listeningtestStyles.submitButton} onClick={handlePreSubmit}>
+            <Button
+              sx={{
+                ...listeningtestStyles.submitButton,
+                ...(isReadOnly === true && { visibility: 'hidden' }),
+              }}
+              onClick={handlePreSubmit}
+            >
               Submit Test
             </Button>
           </Box>
@@ -429,7 +426,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
               ...listeningtestStyles.backButton,
               visibility: indexPart === 0 ? 'hidden' : 'visible',
             }}
-            onClick={() => goPrevPart()}
+            onClick={goPrevPart}
           >
             <ExpandLessIcon
               sx={{
@@ -446,11 +443,17 @@ export default function ListeningTestContent({ test_id, initialData }) {
           </Typography>
           <Box sx={listeningtestStyles.summitButtonWrapper}>
             {indexPart !== receptiveParts.length - 1 ? (
-              <Button sx={listeningtestStyles.nextButton} onClick={() => goNextPart()}>
+              <Button sx={listeningtestStyles.nextButton} onClick={goNextPart}>
                 Next
               </Button>
             ) : (
-              <Button sx={listeningtestStyles.nextButton} onClick={() => goNextPart()}>
+              <Button
+                sx={{
+                  ...listeningtestStyles.nextButton,
+                  ...(isReadOnly === true && { visibility: 'hidden' }),
+                }}
+                onClick={handlePreSubmit}
+              >
                 Submit
               </Button>
             )}

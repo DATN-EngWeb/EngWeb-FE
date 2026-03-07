@@ -225,7 +225,7 @@ export default function ReceptiveTestHistory() {
 
         <Grid item sx={{ width: '30%' }}>
           <Stack spacing={3}>
-            <ProgressTrackingCard historyData={historyData} />
+            <ProgressTrackingCard historyData={historyData} type={testData.type} />
 
             {/* <SidebarForum count={234} /> */}
 

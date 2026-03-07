@@ -54,7 +54,7 @@ export const listeningtestStyles = {
     transform: 'translateX(-10px)',
   },
   summitButtonWrapper: {
-    width: { xs: 'auto', md: '200px' },
+    width: { xs: 'auto', sm: '200px' },
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -158,7 +158,7 @@ export const listeningtestStyles = {
     py: 0.5,
     fontWeight: 600,
     fontSize: { xs: '0.8rem', md: '1.2rem' },
-    minWidth: '200px',
+    minWidth: { xs: '0', sm: '200px' },
   },
   timeLeftSkeleton: {
     ...skeletonBase,
@@ -285,11 +285,11 @@ export const listeningPartStyles = {
     flexDirection: 'column',
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
+    overflow: 'hidden',
   },
   // -------- Question Section ---------
   questionSection: {
     position: 'relative',
-    overflow: 'hidden',
     width: '100%',
     height: 'auto',
     display: 'flex',
@@ -321,6 +321,7 @@ export const listeningPartStyles = {
     backgroundColor: 'background.default',
     zIndex: 10,
     borderRadius: '1rem',
+    clipPath: 'inset(8px 0px 0px 0px)',
   },
   innerInstruction: {
     width: '100%',
@@ -364,8 +365,9 @@ export const listeningPartStyles = {
     px: 2,
   },
   questionTextContainer: {
-    width: 'auto',
+    width: '100%',
     height: 'auto',
+    overflow: 'hidden',
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
@@ -403,6 +405,8 @@ export const listeningPartStyles = {
     fontSize: { xs: '0.8rem', md: '1rem' },
     fontWeight: 400,
     color: 'dark.main',
+    wordBreak: 'break-word',
+    overflowWrap: 'anywhere',
   },
   // -------- Option Section ---------
   optionsGrid: {
@@ -496,7 +500,7 @@ export const listeningPartStyles = {
     width: '100%',
     height: 'auto',
     display: 'grid',
-    gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+    gridTemplateColumns: { xs: '1fr', sm: '6fr 4fr' },
     alignItems: 'start',
     gap: 1,
   },

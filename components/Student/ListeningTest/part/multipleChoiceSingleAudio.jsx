@@ -23,27 +23,37 @@ export default function MultipleChoiceSingleAudio({
   useEffect(() => {
     const getAllAudios = async () => {
       const newAudioSrcs = {};
+      const promises = [];
 
-      const promises =
-        dataPart?.receptive_questions?.map(async (question) => {
-          const audioUrl = question.resources?.audio;
+      dataPart?.receptive_questions?.forEach((question) => {
+        // Lấy source: Ưu tiên audio.url (Frontend) rồi đến resources.audio (Server)
+        const audioUrl = question.audio?.url || question.resources?.audio;
 
-          if (audioUrl) {
-            const blobUrl = await loadAudioSource(audioUrl);
-            newAudioSrcs[question.id] = blobUrl;
-          }
-        }) || [];
+        if (audioUrl) {
+          const p = (async () => {
+            if (typeof audioUrl === 'string' && audioUrl.startsWith('blob:')) {
+              newAudioSrcs[question.id] = audioUrl;
+            } else {
+              const blobUrl = await loadAudioSource(audioUrl);
+              newAudioSrcs[question.id] = blobUrl;
+            }
+          })();
+          promises.push(p);
+        }
+      });
 
       await Promise.all(promises);
-
       setAudioSrcs(newAudioSrcs);
     };
 
     getAllAudios();
 
     return () => {
-      Object.values(audioSrcs).forEach((url) => {
-        if (url && url.startsWith('blob:')) {
+      Object.entries(audioSrcs).forEach(([id, url]) => {
+        const question = dataPart?.receptive_questions?.find((q) => q.id === id);
+        const originalSource = question?.audio?.url || question?.resources?.audio;
+
+        if (url?.startsWith('blob:') && !originalSource?.startsWith('blob:')) {
           URL.revokeObjectURL(url);
         }
       });
@@ -70,7 +80,14 @@ export default function MultipleChoiceSingleAudio({
           <Typography sx={{ color: 'red.text', fontSize: '1rem', fontWeight: 600 }}>
             Instruction
           </Typography>
-          <Typography sx={{ color: 'dark.main', fontSize: '0.8rem' }}>
+          <Typography
+            sx={{
+              color: 'dark.main',
+              fontSize: '0.8rem',
+              wordBreak: 'break-word',
+              overflowWrap: 'anywhere',
+            }}
+          >
             {dataPart?.description}
           </Typography>
         </Box>
@@ -82,7 +99,9 @@ export default function MultipleChoiceSingleAudio({
             {/* -------- Question Name Section --------- */}
             <Box sx={listeningPartStyles.questionTextContainer}>
               <Typography sx={listeningPartStyles.questionLabelRectangle}>{index + 1}</Typography>
-              <Typography sx={listeningPartStyles.questionText}>{question.content}</Typography>
+              <Typography sx={listeningPartStyles.questionText}>
+                {question.content || question.text}
+              </Typography>
             </Box>
             <Box sx={listeningPartStyles.audioAndOptionsContainer}>
               {/* -------- Audio Section --------- */}
@@ -122,10 +141,10 @@ export default function MultipleChoiceSingleAudio({
                       sx={multipleChoiceStyles.checkboxRoot}
                     />
                     <Typography sx={{ ...multipleChoiceStyles.optionLabel, flexShrink: 0 }}>
-                      {option.option_label}.
+                      {option.option_label || option.label}.
                     </Typography>
                     <Typography sx={{ ...multipleChoiceStyles.optionLabel, fontWeight: 400 }}>
-                      {option.answer_text}
+                      {option.answer_text || option.text}
                     </Typography>
                   </Box>
                 ))}

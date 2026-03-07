@@ -34,18 +34,28 @@ export default function MultipleChoiceQuestionAudio({
 
   useEffect(() => {
     const getAudio = async () => {
-      const url = await loadAudioSource(dataPart?.resources?.audio);
-      setAudioSrc(url);
+      const source = dataPart?.audio?.url || dataPart?.resources?.audio;
+
+      if (!source) return;
+
+      if (typeof source === 'string' && source.startsWith('blob:')) {
+        setAudioSrc(source);
+      } else {
+        const url = await loadAudioSource(source);
+        setAudioSrc(url);
+      }
     };
 
-    if (dataPart?.resources?.audio) {
-      getAudio();
-    }
+    getAudio();
 
     return () => {
-      if (audioSrc) URL.revokeObjectURL(audioSrc);
+      const originalSource = dataPart?.audio?.url || dataPart?.resources?.audio;
+
+      if (audioSrc && audioSrc.startsWith('blob:') && audioSrc !== originalSource) {
+        URL.revokeObjectURL(audioSrc);
+      }
     };
-  }, [dataPart?.resources?.audio]);
+  }, [dataPart?.audio?.url, dataPart?.resources?.audio]);
 
   useEffect(() => {
     if (!isActive) {
@@ -243,7 +253,9 @@ export default function MultipleChoiceQuestionAudio({
             {/* -------- Question Name Section --------- */}
             <Box sx={listeningPartStyles.questionTextContainer}>
               <Typography sx={listeningPartStyles.questionLabelRectangle}>{index + 1}</Typography>
-              <Typography sx={listeningPartStyles.questionText}>{question.content}</Typography>
+              <Typography sx={listeningPartStyles.questionText}>
+                {question.content || question.text}
+              </Typography>
             </Box>
             <Box sx={listeningPartStyles.audioAndOptionsContainer}>
               {/* -------- Options Section --------- */}
@@ -267,10 +279,10 @@ export default function MultipleChoiceQuestionAudio({
                       sx={multipleChoiceStyles.checkboxRoot}
                     />
                     <Typography sx={{ ...multipleChoiceStyles.optionLabel, flexShrink: 0 }}>
-                      {option.option_label}.
+                      {option.option_label || option.label}.
                     </Typography>
                     <Typography sx={{ ...multipleChoiceStyles.optionLabel, fontWeight: 400 }}>
-                      {option.answer_text}
+                      {option.answer_text || option.text}
                     </Typography>
                   </Box>
                 ))}

@@ -20,6 +20,7 @@ import MultiChoiceTextPart from './MultiChoiceTextPart';
 import FillInTheBlankPart from './FillInTheBlankPart';
 import MatchingPart from './MatchingPart';
 import ScrollToTopButton from '../CreateTest/ScrollToTopButton';
+import PreviewReadingTest from '../Teacher/previewReadingTest';
 
 import { validateTest, getValidationErrorMessage } from '../../utils/testValidation';
 import {
@@ -91,6 +92,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(isEditMode);
+  const [isPreviewActive, setIsPreviewActive] = useState(false);
   const [editingTestId, setEditingTestId] = useState(testId || null);
 
   useEffect(() => {
@@ -191,6 +193,17 @@ export default function ListeningTestEditor({ testId: propTestId }) {
         return newPart;
       });
     });
+  };
+
+  const handlePreview = () => {
+    const validationErrors = validateTest(basicInfo, parts);
+    if (validationErrors) {
+      setErrors(validationErrors);
+      const errorMessage = getValidationErrorMessage(validationErrors);
+      setSnackbar({ open: true, message: errorMessage, severity: 'error' });
+      return;
+    }
+    setIsPreviewActive((prev) => !prev);
   };
 
   const handleSubmit = async (status) => {
@@ -299,7 +312,13 @@ export default function ListeningTestEditor({ testId: propTestId }) {
     }
   };
 
-  return (
+  return isPreviewActive ? (
+    <PreviewReadingTest
+      basicInfo={basicInfo}
+      parts={parts}
+      onPreview={() => setIsPreviewActive((prev) => !prev)}
+    />
+  ) : (
     <Box sx={container}>
       <TestEditorHeader
         title={isEditMode ? 'Edit Listening Test' : 'Create New Listening Test'}
@@ -310,7 +329,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
         }
       />
       <TestEditorActions
-        onPreview={() => {}}
+        onPreview={() => handlePreview()}
         onSendReview={() => handleSubmit('In review')}
         onSaveDraft={() => handleSubmit('Draft')}
         onPublish={() => handleSubmit('Published')}

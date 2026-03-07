@@ -31,18 +31,28 @@ export default function Matching({ dataPart, isActive, userAnswers, onUpdateAnsw
 
   useEffect(() => {
     const getAudio = async () => {
-      const url = await loadAudioSource(dataPart?.resources?.audio);
-      setAudioSrc(url);
+      const source = dataPart?.audio?.url || dataPart?.resources?.audio;
+
+      if (!source) return;
+
+      if (typeof source === 'string' && source.startsWith('blob:')) {
+        setAudioSrc(source);
+      } else {
+        const url = await loadAudioSource(source);
+        setAudioSrc(url);
+      }
     };
 
-    if (dataPart?.resources?.audio) {
-      getAudio();
-    }
+    getAudio();
 
     return () => {
-      if (audioSrc) URL.revokeObjectURL(audioSrc);
+      const originalSource = dataPart?.audio?.url || dataPart?.resources?.audio;
+
+      if (audioSrc && audioSrc.startsWith('blob:') && audioSrc !== originalSource) {
+        URL.revokeObjectURL(audioSrc);
+      }
     };
-  }, [dataPart?.resources?.audio]);
+  }, [dataPart?.audio?.url, dataPart?.resources?.audio]);
 
   useEffect(() => {
     if (!isActive) {
@@ -121,8 +131,14 @@ export default function Matching({ dataPart, isActive, userAnswers, onUpdateAnsw
                   }}
                 >
                   <Typography sx={listeningPartStyles.questionLabelCircle}>{index + 1}</Typography>
-                  <Typography sx={{ ...multipleChoiceStyles.optionLabel, fontWeight: 400 }}>
-                    {question.content}
+                  <Typography
+                    sx={{
+                      ...multipleChoiceStyles.optionLabel,
+                      fontWeight: 400,
+                      wordBreak: 'break-word',
+                    }}
+                  >
+                    {question.content || question.text}
                   </Typography>
                 </Box>
                 <FormControl
@@ -155,28 +171,61 @@ export default function Matching({ dataPart, isActive, userAnswers, onUpdateAnsw
             ))}
           </Box>
           <Box sx={listeningPartStyles.questionContainerCol}>
-            {answers
-              ?.sort((a, b) => a.option_label.localeCompare(b.option_label))
-              .map((answer, index) => (
-                <Box
-                  key={answer.option_label}
-                  sx={{
-                    ...listeningPartStyles.questionContainerRow,
-                    border: 'none',
-                    alignItems: 'flex-start',
-                  }}
-                >
-                  {/* -------- Question Name Section --------- */}
-                  <Typography
-                    sx={{ ...multipleChoiceStyles.optionLabel, fontWeight: 700, flexShrink: 0 }}
+            {dataPart.type === 'matching'
+              ? dataPart.answers.map((answer, index) => (
+                  <Box
+                    key={answer.id}
+                    sx={{
+                      ...listeningPartStyles.questionContainerRow,
+                      border: 'none',
+                      alignItems: 'flex-start',
+                    }}
                   >
-                    {answer.option_label}.
-                  </Typography>
-                  <Typography sx={{ ...multipleChoiceStyles.optionLabel, fontWeight: 400 }}>
-                    {answer.answer_text}
-                  </Typography>
-                </Box>
-              ))}
+                    {/* -------- Question Name Section --------- */}
+                    <Typography
+                      sx={{ ...multipleChoiceStyles.optionLabel, fontWeight: 700, flexShrink: 0 }}
+                    >
+                      {String.fromCharCode(65 + index)}.
+                    </Typography>
+                    <Typography
+                      sx={{
+                        ...multipleChoiceStyles.optionLabel,
+                        fontWeight: 400,
+                        wordBreak: 'break-word',
+                      }}
+                    >
+                      {answer.text}
+                    </Typography>
+                  </Box>
+                ))
+              : answers
+                  ?.sort((a, b) => a.option_label.localeCompare(b.option_label))
+                  .map((answer, index) => (
+                    <Box
+                      key={answer.option_label}
+                      sx={{
+                        ...listeningPartStyles.questionContainerRow,
+                        border: 'none',
+                        alignItems: 'flex-start',
+                      }}
+                    >
+                      {/* -------- Question Name Section --------- */}
+                      <Typography
+                        sx={{ ...multipleChoiceStyles.optionLabel, fontWeight: 700, flexShrink: 0 }}
+                      >
+                        {answer.option_label}.
+                      </Typography>
+                      <Typography
+                        sx={{
+                          ...multipleChoiceStyles.optionLabel,
+                          fontWeight: 400,
+                          wordBreak: 'break-word',
+                        }}
+                      >
+                        {answer.answer_text}
+                      </Typography>
+                    </Box>
+                  ))}
           </Box>
         </Box>
       </Box>
