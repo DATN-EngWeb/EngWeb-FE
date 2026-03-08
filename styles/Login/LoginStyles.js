@@ -19,7 +19,7 @@ export const loginStyles = {
     alignItems: 'flex-start', // Sát trái
     justifyContent: 'center', // Căn giữa theo chiều dọc
     flexShrink: 0,
-    pl: 0,
+    pl: { xs: 2, lg: 8 },
     pt: 0,
     pb: 0,
   },
@@ -29,6 +29,7 @@ export const loginStyles = {
     objectFit: 'contain',
     objectPosition: 'left', // Cố định sát lề trái
     margin: 0,
+    borderRadius: '32px', // Bo tròn 4 góc
   },
   linkNoDecoration: {
     textDecoration: 'none',
