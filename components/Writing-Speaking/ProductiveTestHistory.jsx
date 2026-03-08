@@ -92,7 +92,7 @@ export default function ProductiveTestHistory() {
       <Grid container spacing={4}>
         {/* column left */}
         <Grid item sx={{ width: '65%' }}>
-          <Paper sx={styles.paperCard}>
+          <Paper elevation={0} sx={styles.paperCard}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
               <Typography variant="h4" fontWeight={800} color="#4e342e">
                 {testData.title || 'Productive Test'}
@@ -114,7 +114,7 @@ export default function ProductiveTestHistory() {
           {draft ? (
             <Box sx={{ mb: 4 }}>
               <SectionTitle title="Current Session" color="#ffb300" />
-              <Paper sx={styles.draftPaper}>
+              <Paper elevation={0} sx={styles.draftPaper}>
                 <DraftActive
                   lastSaved={
                     draft
@@ -142,6 +142,11 @@ export default function ProductiveTestHistory() {
                   borderRadius: '12px',
                   backgroundColor: 'warning.main',
                   color: 'primary.main',
+                  boxShadow: 'none',
+                  '&:hover': {
+                    boxShadow: 'none',
+                    backgroundColor: 'warning.dark',
+                  },
                 }}
                 onClick={() => handlePracticeNow()}
               >
@@ -180,6 +185,7 @@ export default function ProductiveTestHistory() {
               ))
             ) : (
               <Paper
+                elevation={0}
                 sx={{
                   color: 'primary.main',
                   p: 6,

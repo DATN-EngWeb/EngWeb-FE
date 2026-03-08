@@ -10,7 +10,7 @@ export const containerStyles = {
 export const headerWrapperStyles = {
   backgroundColor: 'background.paper',
   borderRadius: '0px',
-  padding: '16px 0',
+  padding: '8px 0',
   boxShadow: 'none',
   display: 'flex',
   flexDirection: 'column',
@@ -61,11 +61,11 @@ export const tabsContainerStyles = {
 
 export const tabStyles = {
   textTransform: 'none',
-  fontSize: '0.875rem',
+  fontSize: '0.85rem',
   fontWeight: 500,
-  minHeight: 44,
-  px: 3.5,
-  py: 0.75,
+  minHeight: 36,
+  px: 2,
+  py: 0.5,
   borderRadius: 3,
   border: '1px solid',
   borderColor: 'divider',

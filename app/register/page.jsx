@@ -196,7 +196,12 @@ function RegisterContent() {
               )}
 
               <Box sx={loginStyles.fieldContainer}>
-                <Typography sx={loginStyles.fieldLabel}>Email Address</Typography>
+                <Typography sx={loginStyles.fieldLabel}>
+                  Email Address{' '}
+                  <Box component="span" sx={{ color: 'error.dark' }}>
+                    *
+                  </Box>
+                </Typography>
                 <TextField
                   name="email"
                   value={email}
@@ -234,7 +239,12 @@ function RegisterContent() {
               </Box>
 
               <Box sx={loginStyles.fieldContainer}>
-                <Typography sx={loginStyles.fieldLabel}>User name</Typography>
+                <Typography sx={loginStyles.fieldLabel}>
+                  User name{' '}
+                  <Box component="span" sx={{ color: 'error.dark' }}>
+                    *
+                  </Box>
+                </Typography>
                 <TextField
                   name="username"
                   value={username}
@@ -271,7 +281,12 @@ function RegisterContent() {
               </Box>
 
               <Box sx={loginStyles.fieldContainer}>
-                <Typography sx={loginStyles.fieldLabel}>Password</Typography>
+                <Typography sx={loginStyles.fieldLabel}>
+                  Password{' '}
+                  <Box component="span" sx={{ color: 'error.dark' }}>
+                    *
+                  </Box>
+                </Typography>
                 <TextField
                   name="password"
                   value={password}

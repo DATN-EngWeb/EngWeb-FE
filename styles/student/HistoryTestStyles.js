@@ -10,7 +10,8 @@ export const mainWrapper = {
 export const paperCard = {
   p: 4,
   borderRadius: '24px',
-  boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+  boxShadow: 'none',
+  border: '1px solid #f0f0f0',
   mb: 4,
 };
 
@@ -47,7 +48,7 @@ export const sidebarPaper = {
   p: 3,
   borderRadius: '24px',
   mb: 3,
-  boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
+  boxShadow: 'none',
   textAlign: 'center',
   border: '1px solid #f0f0f0',
   width: '100%',
@@ -93,6 +94,7 @@ export const historyItemPaper = {
   transition: 'all 0.2s',
   '&:hover': {
     borderColor: '#ffb300',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+    backgroundColor: '#fffdf9',
+    boxShadow: 'none',
   },
 };

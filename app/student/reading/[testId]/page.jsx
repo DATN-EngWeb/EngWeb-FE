@@ -12,6 +12,7 @@ import {
   transformFillBlanksTest,
   transformMatchingTest,
 } from '@/utils/testDataTransform';
+import ReceptiveTestHistory from '@/components/Reading/ReceptiveTestHistory';
 
 export default function ReadingTestPage() {
   const params = useParams();
@@ -22,6 +23,7 @@ export default function ReadingTestPage() {
   const [error, setError] = useState(null);
   const [answers, setAnswers] = useState({});
   const [currentPartIndex, setCurrentPartIndex] = useState(0);
+  const [isPracticing, setIsPracticing] = useState(false);
 
   useEffect(() => {
     async function fetchTestData() {
@@ -261,6 +263,10 @@ export default function ReadingTestPage() {
         );
     }
   };
+
+  if (!isPracticing) {
+    return <ReceptiveTestHistory testData={testData} onPracticeNow={() => setIsPracticing(true)} />;
+  }
 
   return <>{renderPartComponent()}</>;
 }
