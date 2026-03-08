@@ -15,7 +15,7 @@ import StarsIcon from '@mui/icons-material/Stars';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import * as styles from './../../styles/student/HistoryTestStyles';
 
-export default function ProgressTrackingCard({ historyData }) {
+export default function ProgressTrackingCard({ historyData, type }) {
   const submissions = historyData?.filter((h) => h.type === 'S') || [];
 
   if (submissions.length === 0) {
@@ -51,7 +51,7 @@ export default function ProgressTrackingCard({ historyData }) {
     .slice(-5)
     .map((h) => ({
       date: new Date(h.end_time).toLocaleDateString('en-US', { month: 'short', day: '2-digit' }),
-      score: h.earned_bonus_point || 0,
+      score: (type === 'R' ? h.total_score : h.earned_bonus_point) || 0,
     }));
 
   // 2. find best score

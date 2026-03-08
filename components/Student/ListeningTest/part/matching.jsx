@@ -21,28 +21,38 @@ import {
 import { uploadReadingStyles } from '../../../../styles/Teacher/Reading/UploadReadingStyles';
 import { loadAudioSource } from '../../../../api/teacher/upload-reading';
 
-export default function Matching({ dataPart, isActive }) {
+export default function Matching({ dataPart, isActive, userAnswers, onUpdateAnswers, disabled }) {
   const [audioSrc, setAudioSrc] = useState(null);
   const answers = dataPart.receptive_questions.map((question) => ({
+    id: question.receptive_answers[0]?.id || null,
     option_label: question.receptive_answers[0]?.option_label || '',
     answer_text: question.receptive_answers[0]?.answer_text || '',
   }));
-  const [userAnswers, setUserAnswers] = useState({});
 
   useEffect(() => {
     const getAudio = async () => {
-      const url = await loadAudioSource(dataPart?.resources?.audio);
-      setAudioSrc(url);
+      const source = dataPart?.audio?.url || dataPart?.resources?.audio;
+
+      if (!source) return;
+
+      if (typeof source === 'string' && source.startsWith('blob:')) {
+        setAudioSrc(source);
+      } else {
+        const url = await loadAudioSource(source);
+        setAudioSrc(url);
+      }
     };
 
-    if (dataPart?.resources?.audio) {
-      getAudio();
-    }
+    getAudio();
 
     return () => {
-      if (audioSrc) URL.revokeObjectURL(audioSrc);
+      const originalSource = dataPart?.audio?.url || dataPart?.resources?.audio;
+
+      if (audioSrc && audioSrc.startsWith('blob:') && audioSrc !== originalSource) {
+        URL.revokeObjectURL(audioSrc);
+      }
     };
-  }, [dataPart?.resources?.audio]);
+  }, [dataPart?.audio?.url, dataPart?.resources?.audio]);
 
   useEffect(() => {
     if (!isActive) {
@@ -54,35 +64,29 @@ export default function Matching({ dataPart, isActive }) {
     }
   }, [isActive]);
 
-  const handleUpdateCorrectAnswer = (questionId, selectedLabel) => {
-    setUserAnswers((prev) => {
-      const newAnswers = { ...prev };
+  const handleUpdateCorrectAnswer = (questionId, optionID) => {
+    const newAnswers = {
+      ...userAnswers,
+    };
 
-      Object.keys(newAnswers).forEach((key) => {
-        if (newAnswers[key] === selectedLabel) {
-          newAnswers[key] = '';
-        }
-      });
-
-      newAnswers[questionId] = selectedLabel;
-
-      return newAnswers;
+    Object.keys(newAnswers).forEach((key) => {
+      if (newAnswers[key] === optionID) {
+        newAnswers[key] = undefined;
+      }
     });
+
+    newAnswers[questionId] = optionID;
+
+    onUpdateAnswers(newAnswers);
   };
 
   return (
     <Container
-      maxWidth="lg"
-      sx={{ ...listeningPartStyles.container46, display: isActive ? 'grid' : 'none' }}
+      maxWidth="md"
+      sx={{ ...listeningPartStyles.containerCol, display: isActive ? 'grid' : 'none' }}
     >
       {/* -------- Audio and Instruction Section --------- */}
-      <Box
-        sx={{
-          ...listeningPartStyles.basicFlexColCenStart,
-          position: { sm: 'sticky' },
-          top: '18px',
-        }}
-      >
+      <Box sx={listeningPartStyles.basicFlexColCenStart}>
         <Box sx={{ width: '100%', height: 'auto' }}>
           {audioSrc ? (
             <CustomAudioPlayer src={audioSrc} isActive={isActive} />
@@ -127,8 +131,14 @@ export default function Matching({ dataPart, isActive }) {
                   }}
                 >
                   <Typography sx={listeningPartStyles.questionLabelCircle}>{index + 1}</Typography>
-                  <Typography sx={{ ...multipleChoiceStyles.optionLabel, fontWeight: 400 }}>
-                    {question.content}
+                  <Typography
+                    sx={{
+                      ...multipleChoiceStyles.optionLabel,
+                      fontWeight: 400,
+                      wordBreak: 'break-word',
+                    }}
+                  >
+                    {question.content || question.text}
                   </Typography>
                 </Box>
                 <FormControl
@@ -138,6 +148,7 @@ export default function Matching({ dataPart, isActive }) {
                   }}
                 >
                   <Select
+                    disabled={disabled}
                     value={userAnswers[question.id] || ''}
                     onChange={(e) => handleUpdateCorrectAnswer(question.id, e.target.value)}
                     displayEmpty
@@ -150,7 +161,7 @@ export default function Matching({ dataPart, isActive }) {
                     {answers
                       ?.sort((a, b) => a.option_label.localeCompare(b.option_label))
                       .map((answer) => (
-                        <MenuItem key={answer.option_label} value={answer.option_label}>
+                        <MenuItem key={answer.option_label} value={answer.id}>
                           {answer.option_label}
                         </MenuItem>
                       ))}
@@ -160,22 +171,61 @@ export default function Matching({ dataPart, isActive }) {
             ))}
           </Box>
           <Box sx={listeningPartStyles.questionContainerCol}>
-            {answers
-              ?.sort((a, b) => a.option_label.localeCompare(b.option_label))
-              .map((answer, index) => (
-                <Box
-                  key={answer.option_label}
-                  sx={{ ...listeningPartStyles.questionContainerRow, border: 'none' }}
-                >
-                  {/* -------- Question Name Section --------- */}
-                  <Typography sx={{ ...multipleChoiceStyles.optionLabel, fontWeight: 600 }}>
-                    {answer.option_label}
-                  </Typography>
-                  <Typography sx={{ ...multipleChoiceStyles.optionLabel, fontWeight: 400 }}>
-                    {answer.answer_text}
-                  </Typography>
-                </Box>
-              ))}
+            {dataPart.type === 'matching'
+              ? dataPart.answers.map((answer, index) => (
+                  <Box
+                    key={answer.id}
+                    sx={{
+                      ...listeningPartStyles.questionContainerRow,
+                      border: 'none',
+                      alignItems: 'flex-start',
+                    }}
+                  >
+                    {/* -------- Question Name Section --------- */}
+                    <Typography
+                      sx={{ ...multipleChoiceStyles.optionLabel, fontWeight: 700, flexShrink: 0 }}
+                    >
+                      {String.fromCharCode(65 + index)}.
+                    </Typography>
+                    <Typography
+                      sx={{
+                        ...multipleChoiceStyles.optionLabel,
+                        fontWeight: 400,
+                        wordBreak: 'break-word',
+                      }}
+                    >
+                      {answer.text}
+                    </Typography>
+                  </Box>
+                ))
+              : answers
+                  ?.sort((a, b) => a.option_label.localeCompare(b.option_label))
+                  .map((answer, index) => (
+                    <Box
+                      key={answer.option_label}
+                      sx={{
+                        ...listeningPartStyles.questionContainerRow,
+                        border: 'none',
+                        alignItems: 'flex-start',
+                      }}
+                    >
+                      {/* -------- Question Name Section --------- */}
+                      <Typography
+                        sx={{ ...multipleChoiceStyles.optionLabel, fontWeight: 700, flexShrink: 0 }}
+                      >
+                        {answer.option_label}.
+                      </Typography>
+                      <Typography
+                        sx={{
+                          ...multipleChoiceStyles.optionLabel,
+                          fontWeight: 400,
+                          wordBreak: 'break-word',
+                        }}
+                      >
+                        {answer.answer_text}
+                      </Typography>
+                    </Box>
+                  ))}
           </Box>
         </Box>
       </Box>

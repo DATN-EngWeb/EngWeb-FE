@@ -8,9 +8,8 @@ import {
   Container,
   Typography,
   Button,
-  TextField,
+  Stack,
   FormControl,
-  InputLabel,
   OutlinedInput,
   FormLabel,
   Select,
@@ -33,6 +32,7 @@ import MultipleChoiceForm from '../../../../components/Teacher/ReadingTest/multi
 import MatchingForm from '../../../../components/Teacher/ReadingTest/matching';
 import FillBlankForm from '../../../../components/Teacher/ReadingTest/fillBlanks';
 import ReadingPreview from '../../../../components/Teacher/ReadingTest/ReadingPreview';
+import ScrollToTopButton from '../../../../components/CreateTest/ScrollToTopButton';
 import { createNewTest, uploadReadingTestContent } from '../../../../api/teacher/upload-reading';
 import {
   collectFilesReading,
@@ -60,6 +60,7 @@ export default function Page() {
   const [isLoading, setIsLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
 
+  // Scroll đến Part mới tạo
   useEffect(() => {
     if (parts.length > prevPartsLengthRef.current) {
       if (lastPartRef.current) {
@@ -445,6 +446,7 @@ export default function Page() {
           {snackbar.message}
         </Alert>
       </Snackbar>
+      <ScrollToTopButton />
       <Container maxWidth="lg">
         {/* -------- Title Section --------- */}
         <Box sx={uploadReadingStyles.cardTitle}>
@@ -503,15 +505,7 @@ export default function Page() {
           </Typography>
           {/* -------------------- Basic Information -------------------- */}
           <Box sx={uploadReadingStyles.basicInfoContainer}>
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'row',
-                gap: 2,
-                justifyContent: 'flex-start',
-                alignItems: 'center',
-              }}
-            >
+            <Stack direction="row" spacing={2} alignItems="center">
               <Box
                 sx={{
                   width: '4px',
@@ -521,7 +515,7 @@ export default function Page() {
                 }}
               ></Box>
               <Typography sx={uploadReadingStyles.basicInfoHeading}>Basic infomation</Typography>
-            </Box>
+            </Stack>
             <Box sx={uploadReadingStyles.nameTestAndTime}>
               <FormControl fullWidth sx={uploadReadingStyles.formControl}>
                 <FormLabel sx={uploadReadingStyles.labelInput}>Test title</FormLabel>
@@ -603,15 +597,7 @@ export default function Page() {
             >
               {!part.format ? (
                 <>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      gap: 2,
-                      justifyContent: 'flex-start',
-                      alignItems: 'center',
-                    }}
-                  >
+                  <Stack direction="row" spacing={2} alignItems="center">
                     <Box
                       sx={{
                         width: '4px',
@@ -623,7 +609,7 @@ export default function Page() {
                     <Typography sx={uploadReadingStyles.basicInfoHeading}>
                       Select Part Type
                     </Typography>
-                  </Box>
+                  </Stack>
                   <Box sx={uploadReadingStyles.partContentContainer}>
                     {/* Multiple Choice Long Text */}
                     <Button

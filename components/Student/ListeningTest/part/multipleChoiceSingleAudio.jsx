@@ -10,46 +10,63 @@ import { listeningPartStyles } from '../../../../styles/Student/Listening/listen
 import { multipleChoiceStyles } from '../../../../styles/Teacher/Reading/QuesitonTypeStyles';
 import { loadAudioSource } from '../../../../api/teacher/upload-reading';
 
-export default function MultipleChoiceSingleAudio({ dataPart, isActive }) {
+export default function MultipleChoiceSingleAudio({
+  dataPart,
+  isActive,
+  userAnswers,
+  onUpdateAnswers,
+  disabled,
+}) {
   const [audioSrcs, setAudioSrcs] = useState({});
-  const [userAnswers, setUserAnswers] = useState({});
   const [currentPlayingId, setCurrentPlayingId] = useState(null);
 
   useEffect(() => {
     const getAllAudios = async () => {
       const newAudioSrcs = {};
+      const promises = [];
 
-      const promises =
-        dataPart?.receptive_questions?.map(async (question) => {
-          const audioUrl = question.resources?.audio;
+      dataPart?.receptive_questions?.forEach((question) => {
+        // Lấy source: Ưu tiên audio.url (Frontend) rồi đến resources.audio (Server)
+        const audioUrl = question.audio?.url || question.resources?.audio;
 
-          if (audioUrl) {
-            const blobUrl = await loadAudioSource(audioUrl);
-            newAudioSrcs[question.id] = blobUrl;
-          }
-        }) || [];
+        if (audioUrl) {
+          const p = (async () => {
+            if (typeof audioUrl === 'string' && audioUrl.startsWith('blob:')) {
+              newAudioSrcs[question.id] = audioUrl;
+            } else {
+              const blobUrl = await loadAudioSource(audioUrl);
+              newAudioSrcs[question.id] = blobUrl;
+            }
+          })();
+          promises.push(p);
+        }
+      });
 
       await Promise.all(promises);
-
       setAudioSrcs(newAudioSrcs);
     };
 
     getAllAudios();
 
     return () => {
-      Object.values(audioSrcs).forEach((url) => {
-        if (url && url.startsWith('blob:')) {
+      Object.entries(audioSrcs).forEach(([id, url]) => {
+        const question = dataPart?.receptive_questions?.find((q) => q.id === id);
+        const originalSource = question?.audio?.url || question?.resources?.audio;
+
+        if (url?.startsWith('blob:') && !originalSource?.startsWith('blob:')) {
           URL.revokeObjectURL(url);
         }
       });
     };
   }, [dataPart?.receptive_questions]);
 
-  const handleSetCorrectOption = (questionId, optionLabel) => {
-    setUserAnswers((prev) => ({
-      ...prev,
-      [questionId]: optionLabel,
-    }));
+  const handleSetCorrectOption = (questionId, optionID) => {
+    const newAnswers = {
+      ...userAnswers,
+      [questionId]: optionID,
+    };
+
+    onUpdateAnswers(newAnswers);
   };
 
   return (
@@ -63,7 +80,14 @@ export default function MultipleChoiceSingleAudio({ dataPart, isActive }) {
           <Typography sx={{ color: 'red.text', fontSize: '1rem', fontWeight: 600 }}>
             Instruction
           </Typography>
-          <Typography sx={{ color: 'dark.main', fontSize: '0.8rem' }}>
+          <Typography
+            sx={{
+              color: 'dark.main',
+              fontSize: '0.8rem',
+              wordBreak: 'break-word',
+              overflowWrap: 'anywhere',
+            }}
+          >
             {dataPart?.description}
           </Typography>
         </Box>
@@ -75,7 +99,9 @@ export default function MultipleChoiceSingleAudio({ dataPart, isActive }) {
             {/* -------- Question Name Section --------- */}
             <Box sx={listeningPartStyles.questionTextContainer}>
               <Typography sx={listeningPartStyles.questionLabelRectangle}>{index + 1}</Typography>
-              <Typography sx={listeningPartStyles.questionText}>{question.content}</Typography>
+              <Typography sx={listeningPartStyles.questionText}>
+                {question.content || question.text}
+              </Typography>
             </Box>
             <Box sx={listeningPartStyles.audioAndOptionsContainer}>
               {/* -------- Audio Section --------- */}
@@ -100,10 +126,11 @@ export default function MultipleChoiceSingleAudio({ dataPart, isActive }) {
                   <Box
                     key={`${option.id}`}
                     sx={{ ...multipleChoiceStyles.optionContainer, cursor: 'pointer' }}
-                    onClick={() => handleSetCorrectOption(question.id, option.option_label)}
+                    onClick={() => !disabled && handleSetCorrectOption(question.id, option.id)}
                   >
                     <Checkbox
-                      checked={userAnswers[question.id] === option.option_label}
+                      disabled={disabled}
+                      checked={userAnswers[question.id] === option.id}
                       icon={<RadioButtonUncheckedIcon sx={multipleChoiceStyles.uncheckIcon} />}
                       checkedIcon={
                         <Box sx={multipleChoiceStyles.checkedIconWrapper}>
@@ -113,11 +140,11 @@ export default function MultipleChoiceSingleAudio({ dataPart, isActive }) {
                       }
                       sx={multipleChoiceStyles.checkboxRoot}
                     />
-                    <Typography sx={multipleChoiceStyles.optionLabel}>
-                      {option.option_label}.
+                    <Typography sx={{ ...multipleChoiceStyles.optionLabel, flexShrink: 0 }}>
+                      {option.option_label || option.label}.
                     </Typography>
                     <Typography sx={{ ...multipleChoiceStyles.optionLabel, fontWeight: 400 }}>
-                      {option.answer_text}
+                      {option.answer_text || option.text}
                     </Typography>
                   </Box>
                 ))}

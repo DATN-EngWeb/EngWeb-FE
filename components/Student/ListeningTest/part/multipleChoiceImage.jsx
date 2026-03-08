@@ -7,40 +7,62 @@ import InstructionIcon from '../../../Test/instructionIcon';
 import { listeningPartStyles } from '../../../../styles/Student/Listening/listeningTestStyles';
 import { loadAudioSource, loadImageSource } from '../../../../api/teacher/upload-reading';
 
-export default function MultipleChoiceImagePart({ dataPart, isActive }) {
+export default function MultipleChoiceImagePart({
+  dataPart,
+  isActive,
+  userAnswers,
+  onUpdateAnswers,
+  disabled,
+}) {
   const [audioSrc, setAudioSrc] = useState(null);
   const [imageSrcs, setImageSrcs] = useState({});
-  const [userAnswers, setUserAnswers] = useState({});
 
   useEffect(() => {
     const getAudio = async () => {
-      const url = await loadAudioSource(dataPart?.resources?.audio);
-      setAudioSrc(url);
+      const source = dataPart?.audio?.url || dataPart?.resources?.audio;
+      if (!source) return;
+
+      if (typeof source === 'string' && source.startsWith('blob:')) {
+        setAudioSrc(source);
+      } else {
+        const url = await loadAudioSource(source);
+        setAudioSrc(url);
+      }
     };
 
-    if (dataPart?.resources?.audio) {
-      getAudio();
-    }
+    getAudio();
 
     return () => {
-      if (audioSrc) URL.revokeObjectURL(audioSrc);
+      const currentSource = dataPart?.audio?.url || dataPart?.resources?.audio;
+      if (audioSrc && audioSrc.startsWith('blob:') && !currentSource?.startsWith('blob:')) {
+        URL.revokeObjectURL(audioSrc);
+      }
     };
-  }, [dataPart?.resources?.audio]);
+  }, [dataPart?.audio?.url, dataPart?.resources?.audio]);
 
   useEffect(() => {
     const getAllImages = async () => {
       const newImageSrcs = {};
+      const promises = [];
 
-      const promises =
-        dataPart?.receptive_questions?.flatMap((question) =>
-          question.receptive_answers.map(async (option) => {
-            const imageUrl = option.resources?.image;
-            if (imageUrl) {
-              const blobUrl = await loadImageSource(imageUrl);
-              newImageSrcs[option.id] = blobUrl;
-            }
-          }),
-        ) || [];
+      dataPart?.receptive_questions?.forEach((question) => {
+        question.receptive_answers?.forEach((option) => {
+          // Lấy source: Ưu tiên image.url (Frontend) rồi đến resources.image (Server)
+          const imageUrl = option.image?.url || option.resources?.image;
+
+          if (imageUrl) {
+            const p = (async () => {
+              if (typeof imageUrl === 'string' && imageUrl.startsWith('blob:')) {
+                newImageSrcs[option.id] = imageUrl;
+              } else {
+                const blobUrl = await loadImageSource(imageUrl);
+                newImageSrcs[option.id] = blobUrl;
+              }
+            })();
+            promises.push(p);
+          }
+        });
+      });
 
       await Promise.all(promises);
       setImageSrcs(newImageSrcs);
@@ -49,8 +71,16 @@ export default function MultipleChoiceImagePart({ dataPart, isActive }) {
     getAllImages();
 
     return () => {
-      Object.values(imageSrcs).forEach((url) => {
-        if (url && url.startsWith('blob:')) URL.revokeObjectURL(url);
+      Object.entries(imageSrcs).forEach(([id, url]) => {
+        const question = dataPart?.receptive_questions?.find((q) =>
+          q.receptive_answers.some((opt) => opt.id === id),
+        );
+        const option = question?.receptive_answers.find((opt) => opt.id === id);
+        const originalSource = option?.image?.url || option?.resources?.image;
+
+        if (url?.startsWith('blob:') && !originalSource?.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
       });
     };
   }, [dataPart?.receptive_questions]);
@@ -65,26 +95,22 @@ export default function MultipleChoiceImagePart({ dataPart, isActive }) {
     }
   }, [isActive]);
 
-  const handleSetCorrectOption = (questionId, optionLabel) => {
-    setUserAnswers((prev) => ({
-      ...prev,
-      [questionId]: optionLabel,
-    }));
+  const handleSetCorrectOption = (questionId, optionID) => {
+    const newAnswers = {
+      ...userAnswers,
+      [questionId]: optionID,
+    };
+
+    onUpdateAnswers(newAnswers);
   };
 
   return (
     <Container
-      maxWidth="lg"
-      sx={{ ...listeningPartStyles.container46, display: isActive ? 'grid' : 'none' }}
+      maxWidth="md"
+      sx={{ ...listeningPartStyles.containerCol, display: isActive ? 'grid' : 'none' }}
     >
       {/* -------- Audio And Instruction Section --------- */}
-      <Box
-        sx={{
-          ...listeningPartStyles.basicFlexColCenStart,
-          position: { sm: 'sticky' },
-          top: '18px',
-        }}
-      >
+      <Box sx={listeningPartStyles.basicFlexColCenStart}>
         {/* -------- Audio --------- */}
         <Box sx={{ width: '100%', height: 'auto' }}>
           {audioSrc ? (
@@ -100,7 +126,14 @@ export default function MultipleChoiceImagePart({ dataPart, isActive }) {
             <Typography sx={{ color: 'red.text', fontSize: '1rem', fontWeight: 600 }}>
               Instruction
             </Typography>
-            <Typography sx={{ color: 'dark.main', fontSize: '0.8rem' }}>
+            <Typography
+              sx={{
+                color: 'dark.main',
+                fontSize: '0.8rem',
+                wordBreak: 'break-word',
+                overflowWrap: 'anywhere',
+              }}
+            >
               {dataPart?.description ||
                 'Listen to the audio and look at the pictures. Choose the correct picture for each questions.'}
             </Typography>
@@ -114,7 +147,9 @@ export default function MultipleChoiceImagePart({ dataPart, isActive }) {
             {/* -------- Question Name Section --------- */}
             <Box sx={listeningPartStyles.questionTextContainer}>
               <Typography sx={listeningPartStyles.questionLabelRectangle}>{index + 1}</Typography>
-              <Typography sx={listeningPartStyles.questionText}>{question.content}</Typography>
+              <Typography sx={listeningPartStyles.questionText}>
+                {question.content || question.text}
+              </Typography>
             </Box>
             {/* -------- Options Section --------- */}
             <Box sx={listeningPartStyles.optionsGrid}>
@@ -127,16 +162,20 @@ export default function MultipleChoiceImagePart({ dataPart, isActive }) {
                     key={option.id}
                     sx={{
                       ...listeningPartStyles.labelButton,
-                      ...(userAnswers[question.id] === option.option_label && {
+                      ...(userAnswers[question.id] === option.id && {
                         backgroundColor: 'primary.main',
                         boxShadow: 'none',
                         color: 'yellow.main',
                         '&:hover': {},
+                        '&.Mui-disabled': {
+                          color: 'primary.contrastText',
+                        },
                       }),
                     }}
-                    onClick={() => handleSetCorrectOption(question.id, option.option_label)}
+                    onClick={() => handleSetCorrectOption(question.id, option.id)}
+                    disabled={disabled}
                   >
-                    {option.option_label}
+                    {option.option_label || option.label}
                   </Button>
                 </Box>
               ))}

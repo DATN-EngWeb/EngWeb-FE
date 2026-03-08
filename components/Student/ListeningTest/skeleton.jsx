@@ -1,5 +1,4 @@
-import { Box, Container, Typography, Button } from '@mui/material';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { Box, Container, Typography } from '@mui/material';
 import { listeningtestStyles } from '../../../styles/Student/Listening/listeningTestStyles';
 import Spinner from '../../../components/spinner';
 
@@ -8,24 +7,10 @@ export default function Skeleton() {
     <Box sx={{ ...listeningtestStyles.mainContainer, overflow: 'hidden' }}>
       <Container maxWidth="lg">
         {/* -------- Test Heading Section --------- */}
-        <Box sx={listeningtestStyles.testHeadingContainer}>
-          <Typography sx={listeningtestStyles.backButton}>
-            <ExpandLessIcon
-              sx={{
-                cursor: 'pointer',
-                fontSize: { xs: '1.6rem', md: '1.8rem' },
-                color: 'gray.main',
-                transform: 'rotate(270deg)',
-              }}
-            />
-            Back to homepage
-          </Typography>
+        <Box sx={{ ...listeningtestStyles.testHeadingContainer, justifyContent: 'center' }}>
           <Box sx={listeningtestStyles.nameTestAndFormatPart}>
             <Typography sx={listeningtestStyles.nameTestSkeleton}></Typography>
             <Typography sx={listeningtestStyles.formatNameSkeleton}></Typography>
-          </Box>
-          <Box sx={listeningtestStyles.summitButtonWrapper}>
-            <Button sx={listeningtestStyles.submitButton}>Submit Test</Button>
           </Box>
         </Box>
         <Box sx={listeningtestStyles.separatorLine}></Box>

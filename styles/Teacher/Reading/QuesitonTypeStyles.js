@@ -104,6 +104,7 @@ export const multipleChoiceStyles = {
   optionContainer: {
     width: '100%',
     height: 'auto',
+    overflow: 'hidden',
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center ',
@@ -149,6 +150,8 @@ export const multipleChoiceStyles = {
     fontSize: { xs: '0.8rem', md: '1rem' },
     color: 'text.primary',
     fontWeight: 600,
+    wordBreak: 'break-word',
+    overflowWrap: 'anywhere',
   },
   optionInput: {
     flexGrow: 1,

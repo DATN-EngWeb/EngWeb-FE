@@ -5,7 +5,7 @@ import ListeningTestContent from '../../../../../components/Student/ListeningTes
 // import { getRecepiveTestDetails } from '../../../../../api/teacher/upload-reading';
 
 export default async function Page({ params }) {
-  const { test_id } = params;
+  const { test_id, attempt } = params;
 
   // const cookieStore = await cookies();
   // const token = cookieStore.get('accessToken')?.value;
