@@ -20,7 +20,7 @@ export default function ProgressTrackingCard({ historyData, type }) {
 
   if (submissions.length === 0) {
     return (
-      <Paper sx={styles.sidebarPaper}>
+      <Paper elevation={0} sx={styles.sidebarPaper}>
         <Typography variant="subtitle2" fontWeight={800} textAlign="left" mb={2}>
           Progress Tracking
         </Typography>
@@ -58,7 +58,7 @@ export default function ProgressTrackingCard({ historyData, type }) {
   const bestScore = Math.max(...chartData.map((d) => d.score), 0);
 
   return (
-    <Paper sx={styles.sidebarPaper}>
+    <Paper elevation={0} sx={styles.sidebarPaper}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
         <Typography
           variant="subtitle2"

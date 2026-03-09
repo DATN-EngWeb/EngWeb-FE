@@ -217,15 +217,8 @@ const TestCard = ({
   const submitStyle = getSubmitStyles(progress_status);
 
   const handleStudentViewTest = () => {
-    {
-      skill === 'S'
-        ? router.push(`/student/speaking/${id}`)
-        : skill === 'W'
-          ? router.push(`/student/writing/${id}`)
-          : skill === 'R'
-            ? router.push(`/student/reading/${id}`)
-            : router.push(`/student/listening/${id}`);
-    }
+    const skillName = skillMap[skill];
+    router.push(`/student/${skillName}/${id}`);
   };
 
   return (

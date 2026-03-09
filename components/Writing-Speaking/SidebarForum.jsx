@@ -4,7 +4,7 @@ import { Box, Button, Typography, Stack, Paper } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 export const SidebarForum = ({ count = 0 }) => (
-  <Paper sx={styles.forumBox}>
+  <Paper elevation={0} sx={styles.forumBox}>
     <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
       <Box sx={{ bgcolor: '#f5f5f5', p: 1.5, borderRadius: '12px', display: 'flex' }}>
         <ForumIcon color="action" />

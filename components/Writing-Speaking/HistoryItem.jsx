@@ -30,7 +30,7 @@ export default function HistoryItem({ data }) {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
   return (
-    <Paper sx={styles.historyItemPaper}>
+    <Paper elevation={0} sx={styles.historyItemPaper}>
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Box>
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>

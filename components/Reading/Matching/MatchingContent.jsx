@@ -14,6 +14,7 @@ import {
   FormControl,
 } from '@mui/material';
 import Header from '../../Home/Header';
+import TestHeading from '../../Student/Common/TestHeading';
 import {
   containerStyles,
   headerWrapperStyles,
@@ -175,6 +176,12 @@ const MatchingContent = ({
       }}
     >
       <Header />
+      <TestHeading
+        testName={testName}
+        onSubmit={handleSubmit}
+        isTeacher={isTeacher}
+        timerNode={!isTeacher ? <TestTimer /> : null}
+      />
       <Box sx={{ backgroundColor: 'background.paper' }}>
         <Container maxWidth={false} disableGutters sx={{ px: { xs: 2, md: 4 } }}>
           <Box sx={headerWrapperStyles}>
@@ -187,13 +194,6 @@ const MatchingContent = ({
                 gap: 2,
               }}
             >
-              {/* Timer bên trái */}
-              {!isTeacher && (
-                <Box sx={{ minWidth: 120, display: 'flex', justifyContent: 'flex-start' }}>
-                  <TestTimer />
-                </Box>
-              )}
-
               {/* Tabs ở giữa */}
               <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
                 <Tabs
@@ -203,7 +203,7 @@ const MatchingContent = ({
                     ...tabsContainerStyles,
                     '& .MuiTabs-flexContainer': {
                       justifyContent: 'center',
-                      gap: 3,
+                      gap: 1.5,
                     },
                     '& .MuiTabs-indicator': {
                       display: 'none',
@@ -230,15 +230,6 @@ const MatchingContent = ({
                   ))}
                 </Tabs>
               </Box>
-
-              {/* Submit bên phải */}
-              {!isTeacher && (
-                <Box sx={{ minWidth: 160, display: 'flex', justifyContent: 'flex-end' }}>
-                  <Button variant="contained" sx={submitButtonStyles} onClick={handleSubmit}>
-                    Submit Test
-                  </Button>
-                </Box>
-              )}
             </Box>
           </Box>
         </Container>

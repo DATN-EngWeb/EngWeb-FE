@@ -302,15 +302,18 @@ function LoginContent() {
               </Stack>
             </Box>
 
-            <Box component="form" sx={loginStyles.form} onSubmit={handleSubmit}>
-              {serverError && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  {serverError}
-                </Alert>
-              )}
-
-              <Box sx={loginStyles.fieldContainer}>
-                <Typography sx={loginStyles.fieldLabel}>Username or Email</Typography>
+            <Box
+              component="form"
+              sx={{ ...loginStyles.form, gap: 1.5, mt: 2 }}
+              onSubmit={handleSubmit}
+            >
+              <Box sx={{ ...loginStyles.fieldContainer, mb: 1 }}>
+                <Typography sx={loginStyles.fieldLabel}>
+                  Username or Email{' '}
+                  <Box component="span" sx={{ color: 'error.dark' }}>
+                    *
+                  </Box>
+                </Typography>
                 <TextField
                   name="username"
                   value={username}
@@ -346,8 +349,13 @@ function LoginContent() {
                 />
               </Box>
 
-              <Box sx={loginStyles.fieldContainerSmall}>
-                <Typography sx={loginStyles.fieldLabel}>Password</Typography>
+              <Box sx={{ ...loginStyles.fieldContainerSmall, mb: 0.5 }}>
+                <Typography sx={loginStyles.fieldLabel}>
+                  Password{' '}
+                  <Box component="span" sx={{ color: 'error.dark' }}>
+                    *
+                  </Box>
+                </Typography>
                 <TextField
                   name="password"
                   value={password}
@@ -395,12 +403,7 @@ function LoginContent() {
                 />
               </Box>
 
-              <Box sx={loginStyles.formMeta}>
-                <FormControlLabel
-                  control={<Checkbox color="warning" size="small" />}
-                  label="Remember me"
-                  sx={loginStyles.rememberMeLabel}
-                />
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 0.5 }}>
                 <Link href="/forgot-password" style={{ textDecoration: 'none' }}>
                   <Button variant="text" sx={loginStyles.forgotPasswordButton}>
                     Forgot Password ?
@@ -408,17 +411,23 @@ function LoginContent() {
                 </Link>
               </Box>
 
+              {serverError && (
+                <Alert severity="error" sx={{ py: 0.5, my: 0 }}>
+                  {serverError}
+                </Alert>
+              )}
+
               <Button
                 type="submit"
                 variant="contained"
-                sx={loginStyles.primaryButton}
+                sx={{ ...loginStyles.primaryButton, mt: 0.5, py: 1 }}
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Logging in...' : 'Login'}
               </Button>
             </Box>
 
-            <Divider sx={loginStyles.divider}>Continue with</Divider>
+            <Divider sx={{ ...loginStyles.divider, my: 1.5 }}>Continue with</Divider>
 
             <Box sx={loginStyles.socialRow}>
               <Button variant="outlined" sx={loginStyles.socialButton} onClick={handleGoogleLogin}>
