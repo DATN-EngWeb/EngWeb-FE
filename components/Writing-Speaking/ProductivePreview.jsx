@@ -1,7 +1,7 @@
 import { Box, Paper, Typography, Divider, Button, Collapse } from '@mui/material';
 import SignpostIcon from '@mui/icons-material/Signpost';
 import { useState } from 'react';
-import DisplayAudio from '../Upload/DisplayAudio';
+import CustomAudioPlayer from '../Test/customAudioPlayer';
 import * as styles from '../../styles/Teacher/productive/ProductiveStyles';
 
 export default function ProductivePreview({
@@ -49,7 +49,7 @@ export default function ProductivePreview({
 
         {audio && (
           <Box sx={{ mt: 4 }}>
-            <DisplayAudio src={audio} />
+            <CustomAudioPlayer src={audio} />
           </Box>
         )}
 
