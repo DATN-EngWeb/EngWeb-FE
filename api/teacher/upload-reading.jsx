@@ -9,8 +9,55 @@ if (!API_BASE_URL) {
 
 const TESTS_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/tests`;
 
-export async function createNewTest(testData) {
-  return apiFetch(`${TESTS_BASE_URL}/overview`, {
+// Hàm xử lý response chung
+async function handleResponse(response) {
+  const contentType = response.headers.get('content-type') || '';
+  const data = contentType.includes('application/json')
+    ? await response.json().catch(() => null)
+    : null;
+
+  if (response.ok) {
+    return data ?? {};
+  }
+
+  // Tạo object lỗi chi tiết
+  const errorMessage =
+    data?.message ||
+    data?.detail ||
+    data?.error ||
+    data?.errors ||
+    Object.values(data || {})?.[0]?.[0] ||
+    'Something went wrong';
+
+  if (response.status === 401 && typeof window !== 'undefined') {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('username');
+    localStorage.removeItem('avatar');
+    localStorage.removeItem('userStatus');
+    document.cookie = 'userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+    window.location.href = '/login';
+    return new Promise(() => {});
+  }
+
+  const error = new Error(errorMessage);
+  error.data = data;
+  error.status = response.status;
+
+  throw error;
+}
+
+export async function createNewTest(testData, accessToken) {
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  const response = await fetch(`${TESTS_BASE_URL}/overview`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -56,7 +103,6 @@ export const fetchHtmlContent = async (url) => {
     if (!response.ok) throw new Error('Fetch failed');
     return await response.text();
   } catch (error) {
-    console.error(`Lỗi tải nội dung từ: ${url}`, error);
     return '';
   }
 };
@@ -85,7 +131,6 @@ export const loadAudioSource = async (url) => {
 
     return URL.createObjectURL(audioBlob);
   } catch (error) {
-    console.error(`Lỗi xử lý audio từ: ${url}`, error);
     return null;
   }
 };
@@ -106,7 +151,6 @@ export const loadImageSource = async (url) => {
 
     return URL.createObjectURL(imageBlob);
   } catch (error) {
-    console.error(`Lỗi xử lý hình ảnh từ: ${url}`, error);
     return null;
   }
 };

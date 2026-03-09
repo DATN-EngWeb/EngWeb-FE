@@ -55,10 +55,8 @@ function FillBlanksPageContent() {
     setAnswers(newAnswers);
   };
 
-  const handleSubmit = (finalAnswers) => {
-    window.alert(
-      `Test submitted successfully!\n\nAnswers: ${JSON.stringify(finalAnswers, null, 2)}`,
-    );
+  const handleSubmit = () => {
+    // Test submitted successfully
   };
 
   const handleBack = () => {

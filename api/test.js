@@ -207,3 +207,24 @@ export const createReceptiveTest = async (data) => {
     body: JSON.stringify(data),
   });
 };
+
+export const submitReceptiveTest = async (data, token) => {
+  return apiFetch(`${TEST_HISTORIES_BASE_URL}/receptive`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+};
+
+export const getReceptiveTestHistory = async (history_id, token) => {
+  return apiFetch(`${TEST_HISTORIES_BASE_URL}/receptive/${history_id}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
