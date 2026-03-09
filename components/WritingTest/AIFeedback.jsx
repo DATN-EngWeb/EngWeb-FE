@@ -9,7 +9,6 @@ import {
   Replay,
 } from '@mui/icons-material';
 import * as styles from '../../styles/student/Writing/AIFeedbackStyles';
-
 export default function AIFeedback() {
   const [categories, setCategories] = useState([]);
   const [overall, setOverall] = useState({ summary: '', next_actions: '' });
