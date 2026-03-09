@@ -57,7 +57,7 @@ export const groupIcon = {
 export const divider = {
   width: 4,
   height: 4,
-  bgcolor: '#ff7043',
+  bgcolor: 'primary.light',
   borderRadius: '50%',
   opacity: 0.5,
 };

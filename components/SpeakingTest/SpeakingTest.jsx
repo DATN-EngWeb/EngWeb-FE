@@ -331,13 +331,13 @@ export default function WritingTest() {
               sx={{ mt: 1 }}
               divider={<Box sx={styles.divider} />}
             >
-              <Box sx={{ ...styles.groupIcon, color: levelTheme[testData.level]?.text }}>
+              <Box sx={{ ...styles.groupIcon }}>
                 <HistoryEduIcon />
                 <Typography variant="body2">
                   {FormatMapper[testData.type] || 'General Speaking Task'}
                 </Typography>
               </Box>
-              <Box sx={{ ...styles.groupIcon, color: levelTheme[testData.level]?.text }}>
+              <Box sx={{ ...styles.groupIcon }}>
                 <TimerIcon />
                 <Typography variant="body2">{testData.time} mins</Typography>
               </Box>

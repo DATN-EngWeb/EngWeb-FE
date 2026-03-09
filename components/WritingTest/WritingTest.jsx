@@ -246,19 +246,19 @@ export default function WritingTest() {
               sx={{ mt: 1 }}
               divider={<Box sx={styles.divider} />}
             >
-              <Box sx={{ ...styles.groupIcon, color: levelTheme[testData.level]?.text }}>
+              <Box sx={{ ...styles.groupIcon }}>
                 <HistoryEduIcon />
                 <Typography variant="body2">
                   {FormatMapper[testData.type] || 'Writing an article'}
                 </Typography>
               </Box>
-              <Box sx={{ ...styles.groupIcon, color: levelTheme[testData.level]?.text }}>
+              <Box sx={{ ...styles.groupIcon }}>
                 <MenuBookIcon />
                 <Typography variant="body2">
                   {settings.minWords} - {settings.maxWords} words
                 </Typography>
               </Box>
-              <Box sx={{ ...styles.groupIcon, color: levelTheme[testData.level]?.text }}>
+              <Box sx={{ ...styles.groupIcon }}>
                 <TimerIcon />
                 <Typography variant="body2">{testData.time} mins</Typography>
               </Box>
