@@ -10,6 +10,7 @@ if (!API_BASE_URL) {
 const STORAGE_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/storage`;
 const TESTS_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/tests`;
 const TEST_HISTORIES_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/test-histories`;
+const TEST_AI_FEEDBACK_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/feedback/ai-feedback`;
 
 export const createTest = async (basicInfo) => {
   return apiFetch(`${TESTS_BASE_URL}/overview`, {
@@ -205,5 +206,17 @@ export const createReceptiveTest = async (data) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(data),
+  });
+};
+
+export const getAIFeedback = async ({ id }) => {
+  return apiFetch(`${TEST_AI_FEEDBACK_URL}/writing`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      productive_test_history_id: id,
+    }),
   });
 };

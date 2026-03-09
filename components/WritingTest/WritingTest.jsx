@@ -31,14 +31,15 @@ import TimerIcon from '@mui/icons-material/Timer';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
-import { getProductiveTestDetails, createProductiveTest, getProductiveTest } from '@/api/test';
+import { getProductiveTestDetails, createProductiveTest, getAIFeedback } from '@/api/test';
 import ProductivePreview from '../Writing-Speaking/ProductivePreview';
 import { levelTheme } from '../TestCard';
 import * as styles from '../../styles/student/Writing/WritingTestStyles';
-
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 export default function WritingTest() {
   const params = useParams();
   const testId = params.test_id;
+  const attempt = params.attempt;
   const router = useRouter();
 
   // States
@@ -55,6 +56,7 @@ export default function WritingTest() {
   const [isFinished, setIsFinished] = useState(false);
   const [isDraftSaved, setIsDraftSaved] = useState(false);
   const [note, setNote] = useState('');
+  const [historyID, setHistoryID] = useState(0);
   const [startTime, setStartTime] = useState(new Date().toISOString());
   const [isReadOnly, setIsReadOnly] = useState(false);
   // Word Count Logic
@@ -170,6 +172,63 @@ export default function WritingTest() {
     } catch (error) {
       console.error('Submission error:', error);
       setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
+    }
+  };
+  const handleAIFeedback = async () => {
+    setIsSaving(true);
+    setOpenShareModal(false);
+
+    let newHistoryID = null; // Biến tạm để lưu ID vừa tạo
+
+    try {
+      // step1: submit test
+      const response = await createProductiveTest({
+        productive_test: testId,
+        total_time: secondsElapsed,
+        type: 'S',
+        start_time: startTime,
+        end_time: new Date().toISOString(),
+        user_note_text: note,
+        user_answer_text: text,
+      });
+
+      console.log('Submit Success:', response);
+      newHistoryID = response.id;
+      setHistoryID(newHistoryID);
+
+      // reset form
+      setIsDraftSaved(true);
+      setText('');
+      setNote('');
+      setSecondsElapsed(0);
+      setIsFinished(false);
+      sessionStorage.removeItem('current_productive_attempt');
+
+      setSnackbar({
+        open: true,
+        message: 'Test submitted! Fetching AI Feedback...',
+        severity: 'success',
+      });
+    } catch (error) {
+      console.error('Submission error:', error);
+      setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
+      setIsSaving(false);
+      return;
+    }
+
+    // step2: get feedback
+    try {
+      if (!newHistoryID) throw new Error('No History ID found');
+      console.log('Fetching feedback for ID:', newHistoryID);
+      const category = await getAIFeedback({ id: newHistoryID });
+      localStorage.setItem('category', JSON.stringify(category.ai_feedback));
+      localStorage.setItem('remainAIturns', category.remaining_turns);
+      router.push(`/student/writing/${testId}/${attempt}/AI-feedback`);
+    } catch (error) {
+      console.error('Error fetching AI feedback:', error);
+      setSnackbar({ open: true, message: 'Failed to get AI feedback', severity: 'error' });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -379,9 +438,22 @@ export default function WritingTest() {
                       <Button
                         fullWidth
                         variant="contained"
+                        startIcon={<AutoAwesomeIcon />}
+                        onClick={() => handleAIFeedback('AI Feedback')}
+                        sx={styles.aiButton}
+                      >
+                        AI Feedback
+                      </Button>
+                      <Button
+                        fullWidth
+                        variant="contained"
                         startIcon={<EditNoteIcon />}
                         onClick={() => handleSaveDraft('Save Draft')}
-                        sx={styles.aiButton}
+                        sx={{
+                          ...styles.aiButton,
+                          bgcolor: 'info.pastel',
+                          '&:hover': { bgcolor: 'blue.main' },
+                        }}
                       >
                         Save Draft
                       </Button>
