@@ -154,25 +154,8 @@ const TestCard = ({
           color: 'success.main',
           icon: <SuccessIcon sx={{ fontSize: '1rem', color: 'success.main' }} />,
         };
-      case 'I': // In Review
-        return {
-          label: 'In review',
-          color: 'secondary.dark',
-          icon: (
-            <PendingIcon
-              sx={{
-                fontSize: '1rem',
-                color: 'secondary.dark',
-                animation: 'spin 2s linear infinite',
-                '@keyframes spin': {
-                  '0%': { transform: 'rotate(0deg)' },
-                  '100%': { transform: 'rotate(360deg)' },
-                },
-              }}
-            />
-          ),
-        };
       case 'D': // Draft
+      case 'I': // In Review
       default:
         return {
           label: 'Draft',
