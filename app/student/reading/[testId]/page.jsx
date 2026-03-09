@@ -47,6 +47,7 @@ export default function ReadingTestPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
     async function fetchTestData() {
       if (!testId) {
         setError('Test ID is required.');
@@ -355,7 +356,15 @@ export default function ReadingTestPage() {
   };
 
   if (!isPracticing) {
-    return <ReceptiveTestHistory testData={testData} onPracticeNow={() => setIsPracticing(true)} />;
+    return (
+      <ReceptiveTestHistory
+        testData={testData}
+        onPracticeNow={() => {
+          setIsPracticing(true);
+          window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        }}
+      />
+    );
   }
 
   return (

@@ -35,6 +35,7 @@ export default function ProductiveTestHistory() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
     const fetchData = async () => {
       try {
         setLoading(true);
