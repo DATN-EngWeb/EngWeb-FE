@@ -91,7 +91,7 @@ export default function WritingTestEditor() {
       setErrors(null);
       setIsSaving(false);
       setTimeout(() => {
-        router.push(`/teacher/upload`);
+        router.push(`/teacher/upload-test`);
       }, 1000);
     } catch (error) {
       setSnackbar({ open: true, message: `Submit failed: ${error.message}`, severity: 'error' });
