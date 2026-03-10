@@ -223,7 +223,7 @@ export default function ProductiveTestHistory() {
           <Stack spacing={3}>
             <ProgressTrackingCard historyData={historyData} />
 
-            <SidebarForum count={234} />
+            <SidebarForum />
 
             <StudyTip level={testData.level} />
           </Stack>
