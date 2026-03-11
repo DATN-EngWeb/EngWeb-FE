@@ -98,7 +98,26 @@ export default function HistoryItem({ data }) {
           >
             View Detail
           </Button>
-          <IconButton size="small" sx={{ bgcolor: '#f5f5f5' }}>
+          <IconButton
+            size="small"
+            sx={{ bgcolor: '#f5f5f5' }}
+            disabled={!!data.is_shared}
+            onClick={() => {
+              if (data.is_shared) {
+                if (data.skill === 'W') {
+                  router.push(`/student/writing/${data.productive_test}/forum`);
+                } else {
+                  router.push(`/student/speaking/${data.productive_test}/forum`);
+                }
+              } else {
+                if (data.skill === 'W') {
+                  router.push(`/student/writing/${data.productive_test}/share/${data.id}`);
+                } else {
+                  router.push(`/student/speaking/${data.productive_test}/share/${data.id}`);
+                }
+              }
+            }}
+          >
             <ShareIcon fontSize="small" />
           </IconButton>
         </Stack>
