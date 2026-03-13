@@ -172,12 +172,15 @@ export const createProductiveTest = async (data) => {
 };
 
 export const getProductiveTest = async (test_id) => {
-  return apiFetch(`${TEST_HISTORIES_BASE_URL}/productive?productive_test=${test_id}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
+  return apiFetch(
+    `${TEST_HISTORIES_BASE_URL}/productive?productive_test=${test_id}&is_shared=true`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     },
-  });
+  );
 };
 
 export const getReceptivetTest = async (test_id) => {

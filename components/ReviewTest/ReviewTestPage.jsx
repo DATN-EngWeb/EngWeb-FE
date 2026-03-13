@@ -345,7 +345,9 @@ export default function ReviewTestPage() {
                           variant="contained"
                           color={item.status === 'I' ? 'primary' : 'inherit'}
                           onClick={() => {
-                            router.push(`/teacher/ReviewTest/${item.id}`); // Review Page
+                            router.push(
+                              `/teacher/review-test/${item.skill === 'S' ? 'speaking' : item.skill === 'W' ? 'writing' : item.skill === 'R' ? 'reading' : 'listening'}/${item.id}`,
+                            ); // Review Page
                           }}
                         >
                           {item.status === 'I' ? 'Review Now' : 'Detail'}

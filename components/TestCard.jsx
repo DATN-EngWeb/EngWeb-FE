@@ -142,7 +142,7 @@ const TestCard = ({
     if (role === 'student') {
       router.push(`/student/${skillName}/${id}`);
     } else {
-      router.push(`/teacher/update-test/${skillName}/${id}`);
+      router.push(`/teacher/view-test/${skillName}/${id}`);
     }
   };
 
@@ -440,16 +440,6 @@ const TestCard = ({
             </>
           )}
         </Button>
-
-        {role !== 'student' && status !== 'P' && (
-          <IconButtonAction
-            icon={<PencilIcon />}
-            color={currentLevelTheme.badge}
-            onClick={() => {
-              handleEdit();
-            }}
-          />
-        )}
 
         {role !== 'student' && (
           <IconButtonAction

@@ -9,11 +9,11 @@ import ForumPostModal from './ForumPostModal';
 
 const DEBOUNCE_MS = 800;
 
-export default function ForumPostCard({ post }) {
+export default function ForumPostCard({ post, initialOpen = false }) {
   const [liked, setLiked] = useState(post.is_liked ?? false);
   const [likeCount, setLikeCount] = useState(post.like_count ?? 0);
   const [commentCount, setCommentCount] = useState(post.comment_count ?? 0);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(initialOpen);
   const debounceRef = useRef(null);
   const pendingLikedRef = useRef(post.is_liked ?? false);
 
