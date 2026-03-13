@@ -16,6 +16,7 @@ export default function HistoryItem({ data }) {
       startTime: item.start_time,
       totalTime: item.total_time,
       audio: item.audio_path,
+      feedback: item.ai_feedback,
     };
     sessionStorage.setItem('current_productive_attempt', JSON.stringify(dataToSave));
     {
@@ -55,21 +56,33 @@ export default function HistoryItem({ data }) {
                 }}
               />
             )}
-            <Chip
-              label="AI REVIEWED"
-              size="small"
-              sx={{
-                height: 20,
-                fontSize: '0.6rem',
-                fontWeight: 800,
-                bgcolor: '#f3e5f5',
-                color: '#9c27b0',
-              }}
-            />
+            {data.ai_feedback && (
+              <Chip
+                onClick={() => {
+                  localStorage.setItem('category', JSON.stringify(data.ai_feedback));
+                  {
+                    data.remaining_turns &&
+                      localStorage.setItem('remainAIturns', JSON.stringify(data.remaining_turns));
+                  }
+                  router.push(
+                    `/student/writing/${data.productive_test}/${data.attempt}/AI-feedback`,
+                  );
+                }}
+                label="AI REVIEWED"
+                size="small"
+                sx={{
+                  height: 20,
+                  fontSize: '0.6rem',
+                  fontWeight: 800,
+                  bgcolor: '#f3e5f5',
+                  color: '#9c27b0',
+                }}
+              />
+            )}
           </Stack>
           <Stack direction="row" spacing={3}>
             <Typography variant="caption" fontWeight={700} color="#ffb300">
-              ⭐ 100 XP
+              ⭐ {data.earned_bonus_point} XP
             </Typography>
             {data.skill === 'W' && (
               <Typography variant="caption" fontWeight={700} color="text.secondary">

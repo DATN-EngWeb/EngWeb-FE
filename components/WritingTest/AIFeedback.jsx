@@ -1,5 +1,6 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { Box, Container, Typography, Card, CardContent, Chip, Button, Stack } from '@mui/material';
 import {
   LightbulbOutlined,
@@ -12,7 +13,12 @@ import * as styles from '../../styles/student/Writing/AIFeedbackStyles';
 export default function AIFeedback() {
   const [categories, setCategories] = useState([]);
   const [overall, setOverall] = useState({ summary: '', next_actions: '' });
-  const [turns, setTurns] = useState({ weekly: 0, bonus: 0 });
+  // const [turns, setTurns] = useState({ weekly: 0, bonus: 0 });
+
+  const params = useParams();
+  const testId = params.test_id;
+  const attempt = params.attempt;
+  const router = useRouter();
 
   useEffect(() => {
     const data = JSON.parse(localStorage.getItem('category') || '{}');
@@ -21,14 +27,13 @@ export default function AIFeedback() {
     if (data.overall) {
       setOverall(data.overall);
     }
-
-    const responseData = JSON.parse(localStorage.getItem('remainAIturns') || '{}');
-    if (responseData.remaining_turns) {
-      setTurns({
-        weekly: responseData.remaining_turns.weekly_ai_turn,
-        bonus: responseData.remaining_turns.bonus_ai_turn,
-      });
-    }
+    // const responseData = JSON.parse(localStorage.getItem('remainAIturns') || '{}');
+    // if (responseData.remaining_turns) {
+    //   setTurns({
+    //     weekly: responseData.remaining_turns.weekly_ai_turn,
+    //     bonus: responseData.remaining_turns.bonus_ai_turn,
+    //   });
+    // }
 
     // convvert json to array and filter out overall and remaining turns
     const catArray = Object.entries(data)
@@ -209,12 +214,17 @@ export default function AIFeedback() {
           <Stack direction="row" spacing={1} alignItems="center" color="text.disabled">
             <Replay fontSize="small" />
             <Typography variant="body2" fontWeight="700" color="text.primary">
-              {turns.weekly + turns.bonus} turns left this week
+              {/*turns.weekly + turns.bonus*/}
+              turns left this week
             </Typography>
           </Stack>
 
           <Stack direction="row" spacing={2}>
-            <Button variant="contained" sx={styles.tryAgainButton}>
+            <Button
+              variant="contained"
+              sx={styles.tryAgainButton}
+              onClick={() => router.push(`/student/writing/${testId}/${parseInt(attempt) + 1}`)}
+            >
               Try Again
             </Button>
           </Stack>

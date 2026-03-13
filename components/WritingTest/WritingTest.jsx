@@ -223,6 +223,7 @@ export default function WritingTest() {
       const category = await getAIFeedback({ id: newHistoryID });
       localStorage.setItem('category', JSON.stringify(category.ai_feedback));
       localStorage.setItem('remainAIturns', category.remaining_turns);
+      console.log('Fetched AI feedback:', category);
       router.push(`/student/writing/${testId}/${attempt}/AI-feedback`);
     } catch (error) {
       console.error('Error fetching AI feedback:', error);
