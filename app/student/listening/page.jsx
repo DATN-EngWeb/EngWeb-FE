@@ -44,6 +44,8 @@ const filterSidebarStyles = {
   p: 2,
   borderRadius: 4,
   height: 'fit-content',
+  position: 'sticky',
+  top: 24,
 };
 
 const YEARS = ['2024', '2023', '2022', 'All years'];

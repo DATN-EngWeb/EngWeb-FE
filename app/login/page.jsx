@@ -153,8 +153,12 @@ function LoginContent() {
           document.cookie = `userRole=${roleFromToken}; path=/; max-age=2592000; SameSite=Lax`;
         }
 
-        // Redirect based on role
-        if (roleFromToken === 'T') {
+        // Redirect based on role or explicit redirect param
+        const redirectUrl = searchParams.get('redirect');
+
+        if (redirectUrl) {
+          router.push(redirectUrl);
+        } else if (roleFromToken === 'T') {
           router.push('/teacher');
         } else {
           router.push('/');

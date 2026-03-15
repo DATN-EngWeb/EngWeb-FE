@@ -19,14 +19,27 @@ async function handleResponse(response) {
   }
 
   // Create error with full data for detailed error handling
-  const error = new Error();
-  error.message =
+  const errorMessage =
     data?.message ||
     data?.detail ||
     data?.error ||
     data?.errors ||
     Object.values(data || {})?.[0]?.[0] ||
     'Something went wrong';
+
+  if (response.status === 401 && typeof window !== 'undefined') {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('username');
+    localStorage.removeItem('avatar');
+    localStorage.removeItem('userStatus');
+    document.cookie = 'userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+    window.location.href = '/login';
+    return new Promise(() => {});
+  }
+
+  const error = new Error(errorMessage);
   error.data = data; // Include full error data
   error.status = response.status;
 

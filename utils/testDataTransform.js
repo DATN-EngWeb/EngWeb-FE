@@ -53,15 +53,18 @@ export function transformFillBlanksTest(backendTest) {
     .filter((part) => part.format === 'I' || part.format === 'H')
     .map((part, index) => ({
       id: part.order || index + 1,
+      databaseId: part.id,
       title: `Part ${part.order || index + 1}`,
       passage: part.content || '',
       passageTitle: part.description || '',
       blanks: extractBlanks(part.receptive_questions || []),
       questions:
         part.receptive_questions?.map((q) => ({
-          id: q.question_number,
+          id: q.id,
+          questionNumber: q.question_number,
           options:
             q.receptive_answers?.map((a) => ({
+              id: a.id,
               value: a.option_label,
               label: `${a.option_label}. ${a.answer_text}`,
             })) || [],
@@ -140,15 +143,17 @@ export function transformMultiChoiceTest(backendTest) {
     )
     .map((part, index) => {
       const questions =
-        part.receptive_questions?.map((question, qIndex) => {
+        part.receptive_questions?.map((question) => {
           const options =
             question.receptive_answers?.map((answer) => ({
+              id: answer.id,
               value: answer.option_label,
               label: `${answer.option_label}. ${answer.answer_text}`,
             })) || [];
 
           return {
-            id: `q${question.question_number || qIndex + 1}`,
+            id: question.id,
+            questionNumber: question.question_number,
             question: question.content,
             options,
           };
@@ -156,6 +161,7 @@ export function transformMultiChoiceTest(backendTest) {
 
       return {
         id: part.order || index + 1,
+        databaseId: part.id,
         title: `Part ${part.order || index + 1}`,
         passage: part.content || '',
         passageTitle: part.description || '',

@@ -201,7 +201,16 @@ const TestCard = ({
 
   const handleStudentViewTest = () => {
     const skillName = skillMap[skill];
-    router.push(`/student/${skillName}/${id}`);
+    const targetUrl = `/student/${skillName}/${id}`;
+
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        router.push(`/login?redirect=${encodeURIComponent(targetUrl)}`);
+        return;
+      }
+    }
+    router.push(targetUrl);
   };
 
   return (

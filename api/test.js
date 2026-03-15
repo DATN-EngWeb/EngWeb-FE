@@ -218,5 +218,23 @@ export const getAIFeedback = async ({ id }) => {
     body: JSON.stringify({
       productive_test_history_id: id,
     }),
+export const submitReceptiveTest = async (data, token) => {
+  return apiFetch(`${TEST_HISTORIES_BASE_URL}/receptive`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+};
+
+export const getReceptiveTestHistory = async (history_id, token) => {
+  return apiFetch(`${TEST_HISTORIES_BASE_URL}/receptive/${history_id}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
   });
 };
