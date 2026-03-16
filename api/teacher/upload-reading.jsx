@@ -48,16 +48,8 @@ async function handleResponse(response) {
   throw error;
 }
 
-export async function createNewTest(testData, accessToken) {
-  const headers = {
-    'Content-Type': 'application/json',
-  };
-
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`;
-  }
-
-  const response = await fetch(`${TESTS_BASE_URL}/overview`, {
+export async function createNewTest(testData) {
+  return apiFetch(`${TESTS_BASE_URL}/overview`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

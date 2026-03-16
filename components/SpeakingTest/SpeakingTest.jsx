@@ -504,7 +504,7 @@ export default function WritingTest() {
                     }}
                     onClick={handleFinalSubmit}
                   >
-                    Submit test and share to the forum
+                    Submit test
                   </Button>
                 </Box>
               </Box>

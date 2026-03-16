@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { Box, Container, Typography, Button } from '@mui/material';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { listeningtestStyles } from '../../styles/Student/Listening/listeningTestStyles';
 import { getListeningTestTypeLabel } from '../../utils/stringFormat';
 import MultipleChoiceImagePart from '../Student/ListeningTest/part/multipleChoiceImage';
@@ -90,7 +89,7 @@ export default function PreviewReadingTest({
   };
 
   return (
-    <Box sx={listeningtestStyles.mainContainer}>
+    <Box sx={{ ...listeningtestStyles.mainContainer, position: 'relative', overflow: 'hidden' }}>
       <Container maxWidth="lg">
         {/* -------- Test Heading Section --------- */}
         <Box sx={listeningtestStyles.testHeadingContainer}>

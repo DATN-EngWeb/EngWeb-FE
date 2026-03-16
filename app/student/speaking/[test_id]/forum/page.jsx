@@ -132,7 +132,13 @@ export default function ForumPage() {
       </Box>
 
       {posts.length > 0 ? (
-        posts.map((post) => <ForumPostCard key={post.id} post={post} />)
+        posts.map((post) => (
+          <ForumPostCard
+            key={post.id}
+            post={post}
+            initialOpen={String(post.id) === searchParams.get('open_post')}
+          />
+        ))
       ) : (
         <Typography textAlign="center" color="text.secondary" py={6}>
           No posts found.

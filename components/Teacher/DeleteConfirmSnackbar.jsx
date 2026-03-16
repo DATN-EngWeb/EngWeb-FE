@@ -1,11 +1,13 @@
 'use client';
 
+import { forwardRef } from 'react';
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import { Box, Button, Paper, Snackbar, Stack, Typography } from '@mui/material';
 
-function ConfirmCard({ onClose, onConfirm, loading }) {
+const ConfirmCard = forwardRef(function ConfirmCard({ onClose, onConfirm, loading }, ref) {
   return (
     <Paper
+      ref={ref}
       elevation={10}
       sx={{
         width: { xs: 'calc(100vw - 32px)', sm: 460 },
@@ -52,7 +54,7 @@ function ConfirmCard({ onClose, onConfirm, loading }) {
       </Stack>
     </Paper>
   );
-}
+});
 
 export default function DeleteConfirmSnackbar({
   open,

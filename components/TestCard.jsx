@@ -61,6 +61,13 @@ const Formatlabels = {
   J: 'Read Aloud',
 };
 
+const SkillLabels = {
+  R: 'Reading',
+  L: 'Listening',
+  S: 'Speaking',
+  W: 'Writing',
+};
+
 const IconButtonAction = ({ icon, color, isDelete = false, onClick }) => (
   <Button
     onClick={onClick}
@@ -161,7 +168,7 @@ const TestCard = ({
     if (role === 'student') {
       router.push(`/student/${skillName}/${id}`);
     } else {
-      router.push(`/teacher/update-test/${skillName}/${id}`);
+      router.push(`/teacher/view-test/${skillName}/${id}`);
     }
   };
 
@@ -234,6 +241,7 @@ const TestCard = ({
 
   const statusStyle = getStatusStyles(status);
   const submitStyle = getSubmitStyles(progress_status);
+  const skillLabel = SkillLabels[skill] || skill || 'Unknown';
 
   const handleStudentViewTest = () => {
     const skillName = skillMap[skill];
@@ -375,27 +383,48 @@ const TestCard = ({
         )}
 
         <Box sx={{ display: 'flex', gap: 2 }}>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.5,
-              color: currentLevelTheme.text,
-              backgroundColor: 'background.paper',
-              borderRadius: '10px',
-              py: 0.2,
-              px: 1,
-            }}
-          >
-            <UserIcon sx={{ fontSize: 16 }} />
-            <Typography
+          {role === 'teacher' ? (
+            <Box
               sx={{
-                fontSize: '0.8rem',
+                display: 'flex',
+                alignItems: 'center',
+                color: currentLevelTheme.badge,
+                bgcolor: 'background.paper',
+                borderRadius: '999px',
+                py: 0.4,
+                px: 1.1,
+                border: '1px solid',
+                borderColor: currentLevelTheme.badge,
+                boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
               }}
             >
-              {submissions}
-            </Typography>
-          </Box>
+              <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, letterSpacing: 0.2 }}>
+                {skillLabel}
+              </Typography>
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                color: currentLevelTheme.text,
+                backgroundColor: 'background.paper',
+                borderRadius: '10px',
+                py: 0.2,
+                px: 1,
+              }}
+            >
+              <UserIcon sx={{ fontSize: 16 }} />
+              <Typography
+                sx={{
+                  fontSize: '0.8rem',
+                }}
+              >
+                {submissions}
+              </Typography>
+            </Box>
+          )}
           {role === 'teacher' && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               {statusStyle.icon}
