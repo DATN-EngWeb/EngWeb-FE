@@ -123,7 +123,7 @@ export default function ForumPage() {
             }}
             sx={{
               borderRadius: 2,
-              fontSize: 14,
+              fontSize: 18,
               '& .MuiOutlinedInput-notchedOutline': { borderColor: '#ccc' },
             }}
           >

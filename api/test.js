@@ -125,6 +125,12 @@ export const updateProductiveTest = async (testId, data) => {
   });
 };
 
+export const deleteProductiveTest = async (testId) => {
+  return apiFetch(`${TESTS_BASE_URL}/full-test/productive/${testId}`, {
+    method: 'DELETE',
+  });
+};
+
 export const updateTestParts = async ({ testId, basicInfo, receptiveTestData }) => {
   return apiFetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
     method: 'PATCH',
@@ -135,6 +141,12 @@ export const updateTestParts = async ({ testId, basicInfo, receptiveTestData }) 
       ...(basicInfo && basicInfo),
       receptive_test: receptiveTestData,
     }),
+  });
+};
+
+export const deleteReceptiveTest = async (testId) => {
+  return apiFetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
+    method: 'DELETE',
   });
 };
 

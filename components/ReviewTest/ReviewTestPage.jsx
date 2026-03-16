@@ -84,6 +84,13 @@ export default function ReviewTestPage() {
     [],
   );
 
+  const getSkillPath = useCallback((skill) => {
+    if (skill === 'S') return 'speaking';
+    if (skill === 'W') return 'writing';
+    if (skill === 'R') return 'reading';
+    return 'listening';
+  }, []);
+
   const getPaginationRange = (current, total) => {
     const delta = 1;
     const range = [];
@@ -333,7 +340,11 @@ export default function ReviewTestPage() {
                             size="small"
                             variant="contained"
                             color="warning"
-                            onClick={() => router.push(`/teacher/ViewFeedback/${item.id}`)}
+                            onClick={() =>
+                              router.push(
+                                `/teacher/view-test/${getSkillPath(item.skill)}/${item.id}/feedback`,
+                              )
+                            }
                           >
                             View Feedback
                           </Button>
@@ -345,7 +356,9 @@ export default function ReviewTestPage() {
                           variant="contained"
                           color={item.status === 'I' ? 'primary' : 'inherit'}
                           onClick={() => {
-                            router.push(`/teacher/ReviewTest/${item.id}`); // Review Page
+                            router.push(
+                              `/teacher/review-test/${getSkillPath(item.skill)}/${item.id}`,
+                            ); // Review Page
                           }}
                         >
                           {item.status === 'I' ? 'Review Now' : 'Detail'}

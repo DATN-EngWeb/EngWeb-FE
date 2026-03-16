@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Button, Box, Typography, Divider, Avatar, Stack } from '@mui/material';
+import { Alert, Button, Box, Typography, Divider, Avatar, Stack, Snackbar } from '@mui/material';
 import {
   VisibilityOutlined as EyeIcon,
   DeleteOutline as TrashIcon,
@@ -14,6 +14,8 @@ import {
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import ReplayIcon from '@mui/icons-material/Replay';
+import { deleteProductiveTest, deleteReceptiveTest } from '../api/test';
+import DeleteConfirmSnackbar from './Teacher/DeleteConfirmSnackbar';
 
 export const levelTheme = {
   A1: {
@@ -96,6 +98,9 @@ const TestCard = ({
   progress_status,
 }) => {
   const [randomDelay, setRandomDelay] = useState('0s');
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const currentLevelTheme = levelTheme[level] || levelTheme.A1;
   const formatCode = test_details?.format;
@@ -129,13 +134,27 @@ const TestCard = ({
 
   const router = useRouter();
 
-  const handleEdit = () => {
-    skill = skillMap[skill];
-    router.push(`/teacher/update-test/${skill}/${id}`);
-  };
   const handleDelete = () => {
-    // const confirmDelete = confirm("Are you sure you want to delete this test?");
-    // if (!confirmDelete) return;
+    if (role === 'student' || deleting) return;
+    setConfirmDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setConfirmDeleteOpen(false);
+
+    try {
+      setDeleting(true);
+      if (skill === 'R' || skill === 'L') {
+        await deleteReceptiveTest(id);
+      } else {
+        await deleteProductiveTest(id);
+      }
+      router.refresh();
+    } catch (err) {
+      setDeleteError(`Failed to delete test: ${err.message}`);
+    } finally {
+      setDeleting(false);
+    }
   };
   const handleViewTest = () => {
     const skillName = skillMap[skill];
@@ -233,6 +252,7 @@ const TestCard = ({
   return (
     <Box
       sx={{
+        position: 'relative',
         backgroundColor: currentLevelTheme.bg,
         borderRadius: '16px',
         border: '1px solid',
@@ -441,16 +461,6 @@ const TestCard = ({
           )}
         </Button>
 
-        {role !== 'student' && status !== 'P' && (
-          <IconButtonAction
-            icon={<PencilIcon />}
-            color={currentLevelTheme.badge}
-            onClick={() => {
-              handleEdit();
-            }}
-          />
-        )}
-
         {role !== 'student' && (
           <IconButtonAction
             icon={<TrashIcon />}
@@ -462,6 +472,25 @@ const TestCard = ({
           />
         )}
       </Box>
+
+      <DeleteConfirmSnackbar
+        open={confirmDeleteOpen}
+        onClose={() => setConfirmDeleteOpen(false)}
+        onConfirm={handleConfirmDelete}
+        loading={deleting}
+        withinParent
+      />
+
+      <Snackbar
+        open={Boolean(deleteError)}
+        autoHideDuration={3000}
+        onClose={() => setDeleteError('')}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setDeleteError('')} severity="error" sx={{ width: '100%' }}>
+          {deleteError}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

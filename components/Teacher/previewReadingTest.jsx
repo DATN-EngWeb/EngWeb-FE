@@ -12,7 +12,12 @@ import MultipleChoiceSingleAudio from '../Student/ListeningTest/part/multipleCho
 import MultipleChoiceQuestionAudio from '../Student/ListeningTest/part/multipleChoiceMultiQuestionAudio';
 import Matching from '../Student/ListeningTest/part/matching';
 
-export default function PreviewReadingTest({ basicInfo, parts, onPreview }) {
+export default function PreviewReadingTest({
+  basicInfo,
+  parts,
+  onPreview,
+  showHeaderActions = true,
+}) {
   const [indexPart, setIndexPart] = useState(0);
   const [receptiveParts, setReceptiveParts] = useState([]);
 
@@ -89,20 +94,24 @@ export default function PreviewReadingTest({ basicInfo, parts, onPreview }) {
       <Container maxWidth="lg">
         {/* -------- Test Heading Section --------- */}
         <Box sx={listeningtestStyles.testHeadingContainer}>
-          <Typography
-            sx={{ ...listeningtestStyles.backButton, fontSize: { xs: '0.8rem', md: '1rem' } }}
-            onClick={onPreview}
-          >
-            <ExpandLessIcon
-              sx={{
-                cursor: 'pointer',
-                fontSize: { xs: '1.6rem', md: '1.8rem' },
-                color: 'gray.main',
-                transform: 'rotate(270deg)',
-              }}
-            />
-            Back
-          </Typography>
+          {showHeaderActions ? (
+            <Typography
+              sx={{ ...listeningtestStyles.backButton, fontSize: { xs: '0.8rem', md: '1rem' } }}
+              onClick={onPreview}
+            >
+              <ExpandLessIcon
+                sx={{
+                  cursor: 'pointer',
+                  fontSize: { xs: '1.6rem', md: '1.8rem' },
+                  color: 'gray.main',
+                  transform: 'rotate(270deg)',
+                }}
+              />
+              Back
+            </Typography>
+          ) : (
+            <Box sx={{ minWidth: 80 }} />
+          )}
           <Box sx={listeningtestStyles.nameTestAndFormatPart}>
             <Typography sx={listeningtestStyles.nameTest}>{basicInfo?.testName}</Typography>
             <Typography sx={listeningtestStyles.formatName}>
@@ -110,11 +119,15 @@ export default function PreviewReadingTest({ basicInfo, parts, onPreview }) {
               {getListeningTestTypeLabel(parts[indexPart]?.format || parts[indexPart]?.type)}
             </Typography>
           </Box>
-          <Box sx={listeningtestStyles.summitButtonWrapper}>
-            <Button sx={listeningtestStyles.submitButton} disabled>
-              Submit Test
-            </Button>
-          </Box>
+          {showHeaderActions ? (
+            <Box sx={listeningtestStyles.summitButtonWrapper}>
+              <Button sx={listeningtestStyles.submitButton} disabled>
+                Submit Test
+              </Button>
+            </Box>
+          ) : (
+            <Box sx={{ minWidth: 120 }} />
+          )}
         </Box>
         <Box sx={listeningtestStyles.separatorLine}></Box>
         {/* -------- List Part Selection --------- */}
