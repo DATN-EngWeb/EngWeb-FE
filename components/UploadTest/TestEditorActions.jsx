@@ -15,14 +15,25 @@ export default function TestEditorActions({
   onSaveDraft,
   onPublish,
   onCancelClick,
+  isLoading = false,
+  sx,
 }) {
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        mb: 4,
+        ...sx,
+      }}
+    >
       {onPreview && (
         <Button
           startIcon={isPreviewActive ? <VisibilityOffIcon /> : <VisibilityIcon />}
           variant="text"
           onClick={onPreview}
+          disabled={isLoading}
         >
           {isPreviewActive ? 'Hide Preview' : 'Show Preview'}
         </Button>
@@ -30,17 +41,32 @@ export default function TestEditorActions({
 
       <Box sx={{ display: 'flex', gap: 2 }}>
         {onCancelClick && (
-          <Button variant="outlined" startIcon={<CancelIcon />} onClick={onCancelClick}>
+          <Button
+            variant="outlined"
+            startIcon={<CancelIcon />}
+            onClick={onCancelClick}
+            disabled={isLoading}
+          >
             Cancel
           </Button>
         )}
         {onSendReview && (
-          <Button variant="outlined" startIcon={<SendIcon />} onClick={onSendReview}>
+          <Button
+            variant="outlined"
+            startIcon={<SendIcon />}
+            onClick={onSendReview}
+            disabled={isLoading}
+          >
             Send for Review
           </Button>
         )}
         {onSaveDraft && (
-          <Button variant="outlined" startIcon={<SaveIcon />} onClick={onSaveDraft}>
+          <Button
+            variant="outlined"
+            startIcon={<SaveIcon />}
+            onClick={onSaveDraft}
+            disabled={isLoading}
+          >
             Save Draft
           </Button>
         )}
@@ -50,6 +76,7 @@ export default function TestEditorActions({
             color="warning"
             startIcon={<PublishIcon />}
             onClick={onPublish}
+            disabled={isLoading}
           >
             Public
           </Button>

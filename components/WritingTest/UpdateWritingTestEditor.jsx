@@ -30,8 +30,7 @@ export default function UpdateWritingTestEditor() {
   };
 
   const { test_id: testId } = useParams();
-  const [isReadOnly, setIsReadOnly] = useState(true);
-  const [isCanceling, setIsCanceling] = useState(false);
+  const [isReadOnly] = useState(false);
 
   const [testData, setTestData] = useState({
     skill: 'W',
@@ -164,8 +163,6 @@ export default function UpdateWritingTestEditor() {
       } else {
         setSnackbar({ open: true, message: 'No changes detected', severity: 'info' });
       }
-
-      setIsReadOnly(true);
     } catch (error) {
       console.error('Update error:', error);
       setSnackbar({ open: true, message: 'Failed to update test', severity: 'error' });
@@ -176,7 +173,7 @@ export default function UpdateWritingTestEditor() {
 
   return (
     <ProductiveTestEditor
-      title=" View Writing Test"
+      title="Update Writing Test"
       testData={testData}
       setTestData={setTestData}
       settings={settings}
@@ -192,14 +189,8 @@ export default function UpdateWritingTestEditor() {
       snackbar={snackbar}
       setSnackbar={setSnackbar}
       isReadOnly={isReadOnly}
-      onEditClick={() => {
-        setIsReadOnly(false);
-        setIsCanceling(false);
-      }}
-      onCancelClick={() => {
-        setIsReadOnly(true);
-        setIsCanceling(true);
-      }}
+      onEditClick={undefined}
+      onCancelClick={undefined}
       previewContent={
         <ProductivePreview
           title={testData.testName}
@@ -207,17 +198,10 @@ export default function UpdateWritingTestEditor() {
           suggestion={question.suggestion}
           audio={question.audio}
           isReadOnly={isReadOnly}
-          onEditClick={() => {
-            setIsReadOnly(false);
-            setIsCanceling(false);
-          }}
-          onCancelClick={() => {
-            setIsReadOnly(true);
-            setIsCanceling(true);
-          }}
+          onEditClick={undefined}
+          onCancelClick={undefined}
           handleSubmit={async (status) => {
             await handleSubmit(status);
-            setIsReadOnly(true);
           }}
         />
       }

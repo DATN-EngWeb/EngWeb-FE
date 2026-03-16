@@ -161,7 +161,7 @@ const TestCard = ({
     if (role === 'student') {
       router.push(`/student/${skillName}/${id}`);
     } else {
-      router.push(`/teacher/update-test/${skillName}/${id}`);
+      router.push(`/teacher/view-test/${skillName}/${id}`);
     }
   };
 

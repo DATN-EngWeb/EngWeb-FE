@@ -90,7 +90,7 @@ export default function SpeakingTestEditor() {
       setErrors(null);
       setIsSaving(false);
       setTimeout(() => {
-        router.push(`/teacher/upload`);
+        router.push(`/teacher`);
       }, 1000);
     } catch (error) {
       setSnackbar({ open: true, message: `Submit failed: ${error.message}`, severity: 'error' });
