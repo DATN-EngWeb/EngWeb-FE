@@ -107,7 +107,7 @@ export default function ViewWritingTestPage({ params }) {
         showDelete
         deleting={deleting}
         onDelete={handleDelete}
-        showEdit={status === 'D'}
+        showEdit={status === 'D' || status === 'I'}
         onEdit={() => router.push(`/teacher/update-test/writing/${test_id}`)}
       />
 
