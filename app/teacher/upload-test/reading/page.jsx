@@ -1,8 +1,10 @@
 /* eslint-env browser */
 /* eslint-disable no-console */
+/* global fetch */
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Box,
   Container,
@@ -17,10 +19,6 @@ import {
   Snackbar,
   Alert,
 } from '@mui/material';
-import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';
-import FileUploadIcon from '@mui/icons-material/FileUpload';
-import SendRounded from '@mui/icons-material/SendRounded';
-import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import AddIcon from '@mui/icons-material/Add';
 import ArticleOutlined from '@mui/icons-material/ArticleOutlined';
@@ -33,6 +31,8 @@ import MatchingForm from '../../../../components/Teacher/ReadingTest/matching';
 import FillBlankForm from '../../../../components/Teacher/ReadingTest/fillBlanks';
 import ReadingPreview from '../../../../components/Teacher/ReadingTest/ReadingPreview';
 import ScrollToTopButton from '../../../../components/CreateTest/ScrollToTopButton';
+import TestEditorHeader from '../../../../components/UploadTest/TestEditorHeader';
+import TestEditorActions from '../../../../components/UploadTest/TestEditorActions';
 import { createNewTest, uploadReadingTestContent } from '../../../../api/teacher/upload-reading';
 import {
   collectFilesReading,
@@ -42,6 +42,7 @@ import {
 import { getPresignedUrl, uploadToObjectStorage, confirmUpload } from '../../../../api/test';
 
 export default function Page() {
+  const router = useRouter();
   const [test, setTest] = useState({
     title: '',
     type: 'R',
@@ -196,6 +197,9 @@ export default function Page() {
 
       await uploadReadingTestContent(newTestId, preparedParts);
       setSnackbar({ open: true, message: 'Upload test successfully!', severity: 'success' });
+      setTimeout(() => {
+        router.push('/teacher');
+      }, 1000);
     } catch (error) {
       if (error.status === 400) {
         setSnackbar({
@@ -448,53 +452,18 @@ export default function Page() {
       </Snackbar>
       <ScrollToTopButton />
       <Container maxWidth="lg">
-        {/* -------- Title Section --------- */}
-        <Box sx={uploadReadingStyles.cardTitle}>
-          <Typography variant="h3" sx={uploadReadingStyles.mainTitleHeading}>
-            Create New Reading Test
-          </Typography>
-          <Typography variant="body1" sx={uploadReadingStyles.description}>
-            Fill in detail beloxw to create a new reading test for your students.
-          </Typography>
-        </Box>
-        {/* -------- Function Buttons Section --------- */}
-        <Box sx={uploadReadingStyles.functionButtonsWrapper}>
-          <Button
-            startIcon={
-              <VisibilityOutlined
-                sx={{ transform: { xs: 'translateY(0px)', md: 'translateY(3px)' } }}
-              />
-            }
-            sx={{ ...uploadReadingStyles.previewButton, gridArea: 'item1' }}
-            onClick={() => setShowPreview(true)}
-          >
-            Show Preview
-          </Button>
-          <Button
-            startIcon={
-              <SendRounded sx={{ transform: 'rotate(-45deg) translateY(2px) translateX(7px)' }} />
-            }
-            sx={{ ...uploadReadingStyles.rightButton, gridArea: 'item2' }}
-          >
-            Send For Review
-          </Button>
-          <Button
-            startIcon={<DescriptionOutlined sx={{ fontSize: 20, transform: 'translateY(0px)' }} />}
-            sx={{ ...uploadReadingStyles.rightButton, gridArea: 'item3' }}
-            onClick={() => handleUploadParts('D')}
-            disabled={isLoading}
-          >
-            Save Draft
-          </Button>
-          <Button
-            startIcon={<FileUploadIcon sx={{ fontSize: 20, transform: 'translateY(0px)' }} />}
-            sx={{ ...uploadReadingStyles.publicButton, gridArea: 'item4' }}
-            onClick={() => handleUploadParts('P')}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Uploading...' : 'Public'}
-          </Button>
-        </Box>
+        <TestEditorHeader
+          title="Create New Reading Test"
+          description="Fill in the details below to create a new reading test for your students"
+        />
+        <TestEditorActions
+          onPreview={() => setShowPreview((prev) => !prev)}
+          isPreviewActive={showPreview}
+          onSendReview={() => handleUploadParts('I')}
+          onSaveDraft={() => handleUploadParts('D')}
+          onPublish={() => handleUploadParts('P')}
+          isLoading={isLoading}
+        />
         {/* -------- Upload Reading Test Form Section --------- */}
         <Box sx={uploadReadingStyles.uploadReadingFormSection}>
           <Typography

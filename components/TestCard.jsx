@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Button, Box, Typography, Divider, Avatar, Stack } from '@mui/material';
+import { Alert, Button, Box, Typography, Divider, Avatar, Stack, Snackbar } from '@mui/material';
 import {
   VisibilityOutlined as EyeIcon,
   DeleteOutline as TrashIcon,
@@ -14,6 +14,8 @@ import {
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import ReplayIcon from '@mui/icons-material/Replay';
+import { deleteProductiveTest, deleteReceptiveTest } from '../api/test';
+import DeleteConfirmSnackbar from './Teacher/DeleteConfirmSnackbar';
 
 export const levelTheme = {
   A1: {
@@ -59,6 +61,13 @@ const Formatlabels = {
   J: 'Read Aloud',
 };
 
+const SkillLabels = {
+  R: 'Reading',
+  L: 'Listening',
+  S: 'Speaking',
+  W: 'Writing',
+};
+
 const IconButtonAction = ({ icon, color, isDelete = false, onClick }) => (
   <Button
     onClick={onClick}
@@ -96,6 +105,9 @@ const TestCard = ({
   progress_status,
 }) => {
   const [randomDelay, setRandomDelay] = useState('0s');
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const currentLevelTheme = levelTheme[level] || levelTheme.A1;
   const formatCode = test_details?.format;
@@ -129,20 +141,34 @@ const TestCard = ({
 
   const router = useRouter();
 
-  const handleEdit = () => {
-    skill = skillMap[skill];
-    router.push(`/teacher/update-test/${skill}/${id}`);
-  };
   const handleDelete = () => {
-    // const confirmDelete = confirm("Are you sure you want to delete this test?");
-    // if (!confirmDelete) return;
+    if (role === 'student' || deleting) return;
+    setConfirmDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setConfirmDeleteOpen(false);
+
+    try {
+      setDeleting(true);
+      if (skill === 'R' || skill === 'L') {
+        await deleteReceptiveTest(id);
+      } else {
+        await deleteProductiveTest(id);
+      }
+      router.refresh();
+    } catch (err) {
+      setDeleteError(`Failed to delete test: ${err.message}`);
+    } finally {
+      setDeleting(false);
+    }
   };
   const handleViewTest = () => {
     const skillName = skillMap[skill];
     if (role === 'student') {
       router.push(`/student/${skillName}/${id}`);
     } else {
-      router.push(`/teacher/update-test/${skillName}/${id}`);
+      router.push(`/teacher/view-test/${skillName}/${id}`);
     }
   };
 
@@ -215,6 +241,7 @@ const TestCard = ({
 
   const statusStyle = getStatusStyles(status);
   const submitStyle = getSubmitStyles(progress_status);
+  const skillLabel = SkillLabels[skill] || skill || 'Unknown';
 
   const handleStudentViewTest = () => {
     const skillName = skillMap[skill];
@@ -233,6 +260,7 @@ const TestCard = ({
   return (
     <Box
       sx={{
+        position: 'relative',
         backgroundColor: currentLevelTheme.bg,
         borderRadius: '16px',
         border: '1px solid',
@@ -355,27 +383,48 @@ const TestCard = ({
         )}
 
         <Box sx={{ display: 'flex', gap: 2 }}>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.5,
-              color: currentLevelTheme.text,
-              backgroundColor: 'background.paper',
-              borderRadius: '10px',
-              py: 0.2,
-              px: 1,
-            }}
-          >
-            <UserIcon sx={{ fontSize: 16 }} />
-            <Typography
+          {role === 'teacher' ? (
+            <Box
               sx={{
-                fontSize: '0.8rem',
+                display: 'flex',
+                alignItems: 'center',
+                color: currentLevelTheme.badge,
+                bgcolor: 'background.paper',
+                borderRadius: '999px',
+                py: 0.4,
+                px: 1.1,
+                border: '1px solid',
+                borderColor: currentLevelTheme.badge,
+                boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
               }}
             >
-              {submissions}
-            </Typography>
-          </Box>
+              <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, letterSpacing: 0.2 }}>
+                {skillLabel}
+              </Typography>
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                color: currentLevelTheme.text,
+                backgroundColor: 'background.paper',
+                borderRadius: '10px',
+                py: 0.2,
+                px: 1,
+              }}
+            >
+              <UserIcon sx={{ fontSize: 16 }} />
+              <Typography
+                sx={{
+                  fontSize: '0.8rem',
+                }}
+              >
+                {submissions}
+              </Typography>
+            </Box>
+          )}
           {role === 'teacher' && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               {statusStyle.icon}
@@ -441,16 +490,6 @@ const TestCard = ({
           )}
         </Button>
 
-        {role !== 'student' && status !== 'P' && (
-          <IconButtonAction
-            icon={<PencilIcon />}
-            color={currentLevelTheme.badge}
-            onClick={() => {
-              handleEdit();
-            }}
-          />
-        )}
-
         {role !== 'student' && (
           <IconButtonAction
             icon={<TrashIcon />}
@@ -462,6 +501,25 @@ const TestCard = ({
           />
         )}
       </Box>
+
+      <DeleteConfirmSnackbar
+        open={confirmDeleteOpen}
+        onClose={() => setConfirmDeleteOpen(false)}
+        onConfirm={handleConfirmDelete}
+        loading={deleting}
+        withinParent
+      />
+
+      <Snackbar
+        open={Boolean(deleteError)}
+        autoHideDuration={3000}
+        onClose={() => setDeleteError('')}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setDeleteError('')} severity="error" sx={{ width: '100%' }}>
+          {deleteError}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

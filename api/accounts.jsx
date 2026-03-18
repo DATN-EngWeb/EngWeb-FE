@@ -133,7 +133,13 @@ export async function refreshToken(refreshTokenValue) {
     cache: 'no-store',
   });
 
-  return handleResponse(response);
+  if (!response.ok) {
+    const error = new Error('Refresh token expired or invalid');
+    error.status = response.status;
+    throw error;
+  }
+
+  return response.json();
 }
 
 export async function logout(refreshTokenValue, accessToken) {

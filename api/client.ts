@@ -1,6 +1,7 @@
 /* eslint-env browser */
 
-import { refreshToken } from './accounts';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const ACCOUNTS_BASE_URL = `${(API_BASE_URL || '').replace(/\/$/, '')}/api/accounts`;
 
 let accessToken: string | null = null;
 let refreshPromise: Promise<string> | null = null;
@@ -47,11 +48,24 @@ async function refreshAccessToken() {
   if (!refreshPromise) {
     const refreshTokenValue = getRefreshToken();
 
-    refreshPromise = refreshToken(refreshTokenValue!)
+    refreshPromise = fetch(`${ACCOUNTS_BASE_URL}/token/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh: refreshTokenValue }),
+      cache: 'no-store',
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const error: any = new Error('Refresh token expired or invalid');
+          error.status = res.status;
+          throw error;
+        }
+        return res.json();
+      })
       .then((data) => {
         setAccessToken(data.access);
         setRefreshToken(data.refresh);
-        return data.access;
+        return data.access as string;
       })
       .finally(() => {
         refreshPromise = null;
@@ -87,7 +101,14 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
       });
     } catch (err) {
       accessToken = null;
+      localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('username');
+      localStorage.removeItem('avatar');
+      localStorage.removeItem('userStatus');
+      document.cookie = 'userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+      window.location.href = '/login';
       throw err;
     }
   }

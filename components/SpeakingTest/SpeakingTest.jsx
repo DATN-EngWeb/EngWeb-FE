@@ -504,7 +504,7 @@ export default function WritingTest() {
                     }}
                     onClick={handleFinalSubmit}
                   >
-                    Submit test and share to the forum
+                    Submit test
                   </Button>
                 </Box>
               </Box>
@@ -539,21 +539,14 @@ export default function WritingTest() {
               textAlign: 'center',
             }}
           >
-            Share to forum
+            Submit
           </DialogTitle>
           <DialogContent>
             <Typography variant="body2" display="block">
-              Great job! You have completed your speaking. Would you like to share your work with
-              the community forum?
+              Great job! You have completed your speaking.
             </Typography>
           </DialogContent>
           <DialogActions sx={{ p: 3 }}>
-            <Button
-              onClick={() => setOpenShareModal(false)}
-              sx={{ color: '#8d6e63', textTransform: 'none', fontWeight: 600 }}
-            >
-              Submit without sharing
-            </Button>
             <Button
               variant="contained"
               onClick={handleFinalSubmit}
@@ -565,7 +558,7 @@ export default function WritingTest() {
                 '&:hover': { bgcolor: '#3e2723' },
               }}
             >
-              Confirm and Share
+              Submit
             </Button>
           </DialogActions>
         </Dialog>

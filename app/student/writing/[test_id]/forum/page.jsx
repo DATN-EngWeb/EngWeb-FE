@@ -17,7 +17,6 @@ import {
 import { useParams, useRouter, useSearchParams, usePathname } from 'next/navigation';
 import ForumPostCard from '../../../../../components/Forum/ForumPostCard';
 import { getPosts } from '../../../../../api/forum';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SearchIcon from '@mui/icons-material/Search';
 
 export default function ForumPage() {
@@ -123,7 +122,7 @@ export default function ForumPage() {
             }}
             sx={{
               borderRadius: 2,
-              fontSize: 14,
+              fontSize: 18,
               '& .MuiOutlinedInput-notchedOutline': { borderColor: '#ccc' },
             }}
           >
@@ -134,7 +133,13 @@ export default function ForumPage() {
       </Box>
 
       {posts.length > 0 ? (
-        posts.map((post) => <ForumPostCard key={post.id} post={post} />)
+        posts.map((post) => (
+          <ForumPostCard
+            key={post.id}
+            post={post}
+            initialOpen={String(post.id) === searchParams.get('open_post')}
+          />
+        ))
       ) : (
         <Typography textAlign="center" color="text.secondary" py={6}>
           No posts found.

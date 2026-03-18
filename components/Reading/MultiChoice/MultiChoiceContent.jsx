@@ -60,6 +60,7 @@ const MultiChoiceContent = ({
   onNext = () => {},
   currentSection = 1,
   totalSections = 5,
+  embedded = false,
 }) => {
   const [selectedPart, setSelectedPart] = useState(currentPart - 1);
   const [selectedAnswers, setSelectedAnswers] = useState(answers || {});
@@ -74,14 +75,15 @@ const MultiChoiceContent = ({
     setSelectedAnswers(answers || {});
   }, [answers]);
 
-  // Disable body scroll when component mounts
+  // Disable body scroll when component mounts (not in embedded mode)
   useEffect(() => {
+    if (embedded) return;
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = originalOverflow;
     };
-  }, []);
+  }, [embedded]);
 
   // Handle drag to resize left/right panes on desktop
   useEffect(() => {
@@ -157,20 +159,24 @@ const MultiChoiceContent = ({
   return (
     <Box
       sx={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        height: '100vh',
-        width: '100vw',
+        ...(embedded
+          ? { position: 'relative', width: '100%', minHeight: '100%' }
+          : {
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: '100vh',
+              width: '100vw',
+              overflow: 'hidden',
+            }),
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden',
         backgroundColor: 'background.default',
       }}
     >
-      <Header />
+      {!embedded && <Header />}
       <TestHeading
         testName={testName}
         onSubmit={handleSubmit}
