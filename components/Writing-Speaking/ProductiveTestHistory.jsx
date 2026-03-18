@@ -44,10 +44,11 @@ export default function ProductiveTestHistory() {
           getProductiveTest(test_id),
           getProductiveTestDetails(test_id),
         ]);
+        setHistoryData(listAttempt?.results || []);
         setTestData(details);
-        setHistoryData(listAttempt);
       } catch (error) {
         console.error('Error fetching data:', error);
+        setHistoryData([]);
       } finally {
         setLoading(false);
       }
