@@ -70,6 +70,8 @@ const FillBlanksContent = ({
   currentSection = 1,
   totalSections = 5,
   embedded = false,
+  onAIReview,
+  onExit,
 }) => {
   const [selectedPart, setSelectedPart] = useState(currentPart - 1);
   const [selectedAnswers, setSelectedAnswers] = useState(answers || {});
@@ -206,6 +208,8 @@ const FillBlanksContent = ({
         onSubmit={handleSubmit}
         isTeacher={isTeacher}
         timerNode={!isTeacher ? <TestTimer /> : null}
+        onAIReview={onAIReview}
+        onExit={onExit}
       />
       <Box sx={{ backgroundColor: 'background.paper' }}>
         <Container maxWidth={false} disableGutters sx={{ px: { xs: 2, md: 4 } }}>
@@ -547,7 +551,12 @@ const FillBlanksContent = ({
                         ))}
                   </Box>
 
-                  <Box sx={navigationFooterStyles}>
+                  <Box
+                    sx={{
+                      ...navigationFooterStyles,
+                      display: isTeacher ? 'none' : 'flex',
+                    }}
+                  >
                     <Button onClick={onBack} sx={backLinkStyles} disabled={isTeacher}>
                       &lt; Back
                     </Button>

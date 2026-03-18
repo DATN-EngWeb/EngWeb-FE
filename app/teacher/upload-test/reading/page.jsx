@@ -18,7 +18,13 @@ import {
   MenuItem,
   Snackbar,
   Alert,
+  IconButton,
 } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';
+import FileUploadIcon from '@mui/icons-material/FileUpload';
+import SendRounded from '@mui/icons-material/SendRounded';
+import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import AddIcon from '@mui/icons-material/Add';
 import ArticleOutlined from '@mui/icons-material/ArticleOutlined';
@@ -53,7 +59,23 @@ export default function Page() {
     status: 'P',
   });
   const [parts, setParts] = useState([]);
-  const [showPreview, setShowPreview] = useState(false);
+
+  // Restore data from sessionStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedData = window.sessionStorage.getItem('readingTestPreviewData');
+      if (savedData) {
+        try {
+          const { test: savedTest, parts: savedParts } = JSON.parse(savedData);
+          if (savedTest) setTest(savedTest);
+          if (savedParts) setParts(savedParts);
+          // sessionStorage.removeItem('readingTestPreviewData'); // Keep it so refresh works
+        } catch (e) {
+          console.error('Failed to restore data from sessionStorage', e);
+        }
+      }
+    }
+  }, []);
 
   const lastPartRef = useRef(null);
   const prevPartsLengthRef = useRef(parts.length);
@@ -107,6 +129,7 @@ export default function Page() {
 
       if (response && response.id) {
         const newTestId = response.id;
+        setTest((prev) => ({ ...prev, status }));
         return newTestId;
       } else {
         return null;
@@ -436,7 +459,7 @@ export default function Page() {
   };
 
   return (
-    <Box sx={uploadReadingStyles.mainContainer}>
+    <Box sx={{ ...uploadReadingStyles.mainContainer, minHeight: '100vh' }}>
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
@@ -452,18 +475,71 @@ export default function Page() {
       </Snackbar>
       <ScrollToTopButton />
       <Container maxWidth="lg">
-        <TestEditorHeader
-          title="Create New Reading Test"
-          description="Fill in the details below to create a new reading test for your students"
-        />
-        <TestEditorActions
-          onPreview={() => setShowPreview((prev) => !prev)}
-          isPreviewActive={showPreview}
-          onSendReview={() => handleUploadParts('I')}
-          onSaveDraft={() => handleUploadParts('D')}
-          onPublish={() => handleUploadParts('P')}
-          isLoading={isLoading}
-        />
+        {/* -------- Title Section --------- */}
+        <Box sx={uploadReadingStyles.cardTitle}>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+            <IconButton
+              onClick={() => router.push('/teacher/upload-test')}
+              sx={{ color: 'primary.main', p: 0 }}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+            <Typography variant="h3" sx={uploadReadingStyles.mainTitleHeading}>
+              Create New Reading Test
+            </Typography>
+          </Stack>
+          <Typography variant="body1" sx={uploadReadingStyles.description}>
+            Fill in details below to create a new reading test for your students.
+          </Typography>
+        </Box>
+        {/* -------- Function Buttons Section --------- */}
+        <Box sx={uploadReadingStyles.functionButtonsWrapper}>
+          <Button
+            startIcon={
+              <VisibilityOutlined
+                sx={{ transform: { xs: 'translateY(0px)', md: 'translateY(3px)' } }}
+              />
+            }
+            sx={{ ...uploadReadingStyles.previewButton, gridArea: 'item1' }}
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                window.sessionStorage.setItem(
+                  'readingTestPreviewData',
+                  JSON.stringify({ test, parts }),
+                );
+              }
+              router.push('/teacher/upload-test/reading/preview');
+            }}
+          >
+            Show Preview
+          </Button>
+          <Button
+            startIcon={
+              <SendRounded sx={{ transform: 'rotate(-45deg) translateY(2px) translateX(7px)' }} />
+            }
+            sx={{ ...uploadReadingStyles.rightButton, gridArea: 'item2' }}
+            onClick={() => handleUploadParts('S')}
+            disabled={isLoading}
+          >
+            Send For Review
+          </Button>
+          <Button
+            startIcon={<DescriptionOutlined sx={{ fontSize: 20, transform: 'translateY(0px)' }} />}
+            sx={{ ...uploadReadingStyles.rightButton, gridArea: 'item3' }}
+            onClick={() => handleUploadParts('D')}
+            disabled={isLoading}
+          >
+            Save Draft
+          </Button>
+          <Button
+            startIcon={<FileUploadIcon sx={{ fontSize: 20, transform: 'translateY(0px)' }} />}
+            sx={{ ...uploadReadingStyles.publicButton, gridArea: 'item4' }}
+            onClick={() => handleUploadParts('P')}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Uploading...' : 'Public'}
+          </Button>
+        </Box>
         {/* -------- Upload Reading Test Form Section --------- */}
         <Box sx={uploadReadingStyles.uploadReadingFormSection}>
           <Typography
@@ -490,8 +566,8 @@ export default function Page() {
                 <FormLabel sx={uploadReadingStyles.labelInput}>Test title</FormLabel>
                 <OutlinedInput
                   placeholder="Enter test title here"
-                  defaultValue={test.title}
-                  onBlur={(e) => setTest({ ...test, title: e.target.value })}
+                  value={test.title}
+                  onChange={(e) => setTest({ ...test, title: e.target.value })}
                   sx={uploadReadingStyles.input}
                 />
               </FormControl>
@@ -499,9 +575,9 @@ export default function Page() {
                 <FormLabel sx={uploadReadingStyles.labelInput}>Time</FormLabel>
                 <OutlinedInput
                   placeholder="Enter time here"
-                  defaultValue={test.time}
+                  value={test.time}
                   sx={uploadReadingStyles.input}
-                  onBlur={(e) => setTest({ ...test, time: Number(e.target.value) })}
+                  onChange={(e) => setTest({ ...test, time: Number(e.target.value) || '' })}
                 />
               </FormControl>
             </Box>
@@ -510,8 +586,8 @@ export default function Page() {
               <OutlinedInput
                 multiline
                 placeholder="Enter description here"
-                defaultValue={test.description}
-                onBlur={(e) => setTest({ ...test, description: e.target.value })}
+                value={test.description}
+                onChange={(e) => setTest({ ...test, description: e.target.value })}
                 sx={uploadReadingStyles.inputMultiline}
               />
             </FormControl>
@@ -519,7 +595,7 @@ export default function Page() {
               <FormLabel sx={uploadReadingStyles.labelInput}>Level</FormLabel>
               <Select
                 displayEmpty
-                defaultValue=""
+                value={test.level}
                 sx={{
                   ...uploadReadingStyles.input,
                   '& .MuiSelect-icon': {
@@ -666,11 +742,6 @@ export default function Page() {
           </Button>
         </Box>
       </Container>
-      <ReadingPreview
-        open={showPreview}
-        onClose={() => setShowPreview(false)}
-        testData={{ ...test, parts }}
-      />
     </Box>
   );
 }
