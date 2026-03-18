@@ -7,7 +7,7 @@ import FillBlanksContent from '../../Reading/FillBlanks/FillBlanksContent';
 import MatchingContent from '../../Reading/Matching/MatchingContent';
 import MultiChoiceContent from '../../Reading/MultiChoice/MultiChoiceContent';
 
-const ReadingPreview = ({ open, onClose, testData, onPublish }) => {
+const ReadingPreview = ({ open, onClose, testData, inline = false }) => {
   const [currentPartIndex, setCurrentPartIndex] = useState(0);
 
   const parts = testData?.parts || [];
@@ -36,6 +36,7 @@ const ReadingPreview = ({ open, onClose, testData, onPublish }) => {
       onNext: () => handlePartChange(currentPartIndex + 1),
       currentSection: currentPartIndex + 1,
       totalSections: parts.length,
+      embedded: inline,
     };
 
     switch (currentPart.format) {
@@ -101,9 +102,27 @@ const ReadingPreview = ({ open, onClose, testData, onPublish }) => {
     }
   }, [currentPart, currentPartIndex, parts, partTitles, testData.title]);
 
-  if (!open) return null;
+  if (!open && !inline) return null;
 
   const ContentComponent = transformedData?.component;
+
+  if (inline) {
+    return (
+      <Box>
+        {ContentComponent ? (
+          <ContentComponent {...transformedData.props} />
+        ) : (
+          <Box sx={{ p: 4, textAlign: 'center' }}>
+            <Typography color="text.secondary">
+              {parts.length === 0
+                ? 'No parts added yet.'
+                : 'This part type is not supported for preview yet or is invalid.'}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+    );
+  }
 
   return (
     <Dialog

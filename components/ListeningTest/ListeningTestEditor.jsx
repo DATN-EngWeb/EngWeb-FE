@@ -305,7 +305,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
 
       setTimeout(() => {
         router.push('/teacher');
-      }, 2000);
+      }, 1000);
     } catch (error) {
       setSnackbar({ open: true, message: `Submit failed: ${error.message}`, severity: 'error' });
       setIsSaving(false);
@@ -321,18 +321,20 @@ export default function ListeningTestEditor({ testId: propTestId }) {
   ) : (
     <Box sx={container}>
       <TestEditorHeader
-        title={isEditMode ? 'Edit Listening Test' : 'Create New Listening Test'}
+        title={isEditMode ? 'Update Listening Test' : 'Create New Listening Test'}
         description={
           isEditMode
             ? 'Update the test details below'
             : 'Fill in the details below to create a new listening test for your students'
         }
+        sx={{ mb: 2.5 }}
       />
       <TestEditorActions
         onPreview={() => handlePreview()}
         onSendReview={() => handleSubmit('In review')}
         onSaveDraft={() => handleSubmit('Draft')}
         onPublish={() => handleSubmit('Published')}
+        sx={{ mb: 3 }}
       />
 
       {isLoading ? (
@@ -350,8 +352,17 @@ export default function ListeningTestEditor({ testId: propTestId }) {
         <Box sx={{ filter: isSaving ? 'blur' : 'none' }}>
           <Box sx={contentWrap}>
             <Box sx={{ px: { xs: 0, lg: '180px' } }}>
-              <Typography sx={{ typography: 'h4', color: 'primary.main', marginBottom: '20px' }}>
-                Test editor
+              <Typography
+                sx={{
+                  color: 'primary.main',
+                  fontWeight: 600,
+                  lineHeight: 1.1,
+                  letterSpacing: '-0.5px',
+                  fontSize: { xs: '1rem', sm: '1.8rem' },
+                  marginBottom: '20px',
+                }}
+              >
+                Test Editor
               </Typography>
               <BasicInformation
                 {...basicInfo}

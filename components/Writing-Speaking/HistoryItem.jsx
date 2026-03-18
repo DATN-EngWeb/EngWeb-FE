@@ -114,13 +114,16 @@ export default function HistoryItem({ data }) {
           <IconButton
             size="small"
             sx={{ bgcolor: '#f5f5f5' }}
-            disabled={!!data.is_shared}
             onClick={() => {
               if (data.is_shared) {
                 if (data.skill === 'W') {
-                  router.push(`/student/writing/${data.productive_test}/forum`);
+                  router.push(
+                    `/student/writing/${data.productive_test}/forum?open_post=${data.post_id}`,
+                  );
                 } else {
-                  router.push(`/student/speaking/${data.productive_test}/forum`);
+                  router.push(
+                    `/student/speaking/${data.productive_test}/forum?open_post=${data.post_id}`,
+                  );
                 }
               } else {
                 if (data.skill === 'W') {

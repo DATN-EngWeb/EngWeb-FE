@@ -21,20 +21,16 @@ export default function ProductivePreview({
         </Typography>
       )}
       <Paper sx={styles.PREVIEW_PAPER_STYLE}>
-        {preview && (
-          <>
-            <Typography
-              variant="h5"
-              align="center"
-              fontWeight={700}
-              sx={{ mb: 2, color: 'primary.main' }}
-            >
-              {title || 'Test Title'}
-            </Typography>
+        <Typography
+          variant="h5"
+          align="center"
+          fontWeight={700}
+          sx={{ mb: 2, color: 'primary.main' }}
+        >
+          {title || 'Test Title'}
+        </Typography>
 
-            <Divider sx={{ my: 2 }} />
-          </>
-        )}
+        <Divider sx={{ my: 2 }} />
 
         <Box
           className="ck-content"

@@ -25,8 +25,7 @@ export default function UpdateSpeakingTestEditor() {
   };
 
   const { test_id: testId } = useParams();
-  const [isReadOnly, setIsReadOnly] = useState(true);
-  const [isCanceling, setIsCanceling] = useState(false);
+  const [isReadOnly] = useState(false);
 
   const [testData, setTestData] = useState({
     skill: 'S',
@@ -178,8 +177,6 @@ export default function UpdateSpeakingTestEditor() {
       } else {
         setSnackbar({ open: true, message: 'No changes detected', severity: 'info' });
       }
-
-      setIsReadOnly(true);
     } catch (error) {
       console.error('Update error:', error);
       setSnackbar({ open: true, message: 'Failed to update test', severity: 'error' });
@@ -190,7 +187,7 @@ export default function UpdateSpeakingTestEditor() {
 
   return (
     <ProductiveTestEditor
-      title=" View Speaking Test"
+      title="Update Speaking Test"
       testData={testData}
       setTestData={setTestData}
       settings={settings}
@@ -206,14 +203,8 @@ export default function UpdateSpeakingTestEditor() {
       snackbar={snackbar}
       setSnackbar={setSnackbar}
       isReadOnly={isReadOnly}
-      onEditClick={() => {
-        setIsReadOnly(false);
-        setIsCanceling(false);
-      }}
-      onCancelClick={() => {
-        setIsReadOnly(true);
-        setIsCanceling(true);
-      }}
+      onEditClick={undefined}
+      onCancelClick={undefined}
       previewContent={
         <ProductivePreview
           title={testData.testName}
@@ -221,17 +212,10 @@ export default function UpdateSpeakingTestEditor() {
           suggestion={question.suggestion}
           isReadOnly={isReadOnly}
           audio={question.audio?.url}
-          onEditClick={() => {
-            setIsReadOnly(false);
-            setIsCanceling(false);
-          }}
-          onCancelClick={() => {
-            setIsReadOnly(true);
-            setIsCanceling(true);
-          }}
+          onEditClick={undefined}
+          onCancelClick={undefined}
           handleSubmit={async (status) => {
             await handleSubmit(status);
-            setIsReadOnly(true);
           }}
         />
       }
@@ -242,9 +226,7 @@ export default function UpdateSpeakingTestEditor() {
         question={question}
         showAudio={true}
         onChange={(field, value) => {
-          if (!isReadOnly) {
-            setQuestion((p) => ({ ...p, [field]: value }));
-          }
+          setQuestion((p) => ({ ...p, [field]: value }));
         }}
       />
     </ProductiveTestEditor>
