@@ -1,5 +1,7 @@
+'use client';
+
 import StudentDashboard from '@/components/Dashboard/dashboard';
 
-export default async function Page() {
+export default function Page() {
   return <StudentDashboard />;
 }
