@@ -400,7 +400,9 @@ export default function MultipleChoiceForm({
                                     }
                                     sx={multipleChoiceStyles.checkboxRoot}
                                   />
-                                  <Typography sx={multipleChoiceStyles.optionLabel}>
+                                  <Typography
+                                    sx={{ ...multipleChoiceStyles.optionLabel, flexShrink: 0 }}
+                                  >
                                     {option.option_label}.
                                   </Typography>
                                   <OutlinedInput

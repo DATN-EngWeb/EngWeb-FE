@@ -33,7 +33,8 @@ import ReadingPreview from '../../../../components/Teacher/ReadingTest/ReadingPr
 import ScrollToTopButton from '../../../../components/CreateTest/ScrollToTopButton';
 import TestEditorHeader from '../../../../components/UploadTest/TestEditorHeader';
 import TestEditorActions from '../../../../components/UploadTest/TestEditorActions';
-import { createNewTest, uploadReadingTestContent } from '../../../../api/teacher/upload-reading';
+import { uploadReadingTestContent } from '../../../../api/teacher/upload-reading';
+import { createTest } from '../../../../api/test';
 import {
   collectFilesReading,
   transformReadingPartsWithUrls,
@@ -103,7 +104,7 @@ export default function Page() {
     };
 
     try {
-      const response = await createNewTest(payload);
+      const response = await createTest(payload);
 
       if (response && response.id) {
         const newTestId = response.id;

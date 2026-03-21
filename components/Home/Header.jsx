@@ -264,6 +264,16 @@ export default function Header() {
                     >
                       <Typography>Profile</Typography>
                     </MenuItem>
+                    {user?.role !== 'T' && (
+                      <MenuItem
+                        onClick={() => {
+                          handleMenuClose();
+                          router.push('/student/dashboard');
+                        }}
+                      >
+                        <Typography>Dashboard</Typography>
+                      </MenuItem>
+                    )}
                     <MenuItem onClick={handleLogout}>
                       <Typography color="error">Logout</Typography>
                     </MenuItem>

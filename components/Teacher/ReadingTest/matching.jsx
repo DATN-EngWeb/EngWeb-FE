@@ -374,7 +374,7 @@ export default function MatchingForm({
               <Box sx={matchingStyles.linkOptionContainer}>
                 {answers.map((answer, _aIndex) => (
                   <Box key={answer.option_label} sx={multipleChoiceStyles.optionContainer}>
-                    <Typography sx={multipleChoiceStyles.optionLabel}>
+                    <Typography sx={{ ...multipleChoiceStyles.optionLabel, flexShrink: 0 }}>
                       {answer.option_label}.
                     </Typography>
                     <OutlinedInput
