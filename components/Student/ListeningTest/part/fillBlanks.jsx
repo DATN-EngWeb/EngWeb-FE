@@ -6,7 +6,6 @@ import CustomAudioPlayer from '../../../Test/customAudioPlayer';
 import InstructionIcon from '../../../Test/instructionIcon';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import { listeningPartStyles } from '../../../../styles/Student/Listening/listeningTestStyles';
-import { loadAudioSource, fetchHtmlContent } from '../../../../api/teacher/upload-reading';
 
 export default function FillBlankPart({
   dataPart,
@@ -14,36 +13,11 @@ export default function FillBlankPart({
   userAnswers,
   onUpdateAnswers,
   disabled,
+  media,
 }) {
-  const [audioSrc, setAudioSrc] = useState(null);
-  const [passageSrc, setPassageSrc] = useState(null);
+  const { audioSrc, passageSrc } = media;
   const [leftWidth, setLeftWidth] = useState(40); // percentage width
   const [isDragging, setIsDragging] = useState(false);
-
-  useEffect(() => {
-    const getAudio = async () => {
-      const source = dataPart?.audio?.url || dataPart?.resources?.audio;
-
-      if (!source) return;
-
-      if (typeof source === 'string' && source.startsWith('blob:')) {
-        setAudioSrc(source);
-      } else {
-        const url = await loadAudioSource(source);
-        setAudioSrc(url);
-      }
-    };
-
-    getAudio();
-
-    return () => {
-      const originalSource = dataPart?.audio?.url || dataPart?.resources?.audio;
-
-      if (audioSrc && audioSrc.startsWith('blob:') && audioSrc !== originalSource) {
-        URL.revokeObjectURL(audioSrc);
-      }
-    };
-  }, [dataPart?.audio?.url, dataPart?.resources?.audio]);
 
   useEffect(() => {
     if (!isActive) {
@@ -54,17 +28,6 @@ export default function FillBlankPart({
       });
     }
   }, [isActive]);
-
-  useEffect(() => {
-    const loadData = async () => {
-      if (dataPart?.content) {
-        const result = await fetchHtmlContent(dataPart.content);
-        setPassageSrc(result);
-      }
-    };
-
-    loadData();
-  }, [dataPart?.content]);
 
   const handleUpdateUserAnswers = (questionId, answerText) => {
     const newAnswers = {

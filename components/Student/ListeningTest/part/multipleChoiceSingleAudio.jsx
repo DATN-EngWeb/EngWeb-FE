@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Container, Box, Typography, Checkbox } from '@mui/material';
 import CustomAudioPlayer from '../../../Test/customAudioPlayer';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
@@ -8,7 +8,6 @@ import CircleIcon from '@mui/icons-material/Circle';
 import InstructionIcon from '../../../Test/instructionIcon';
 import { listeningPartStyles } from '../../../../styles/Student/Listening/listeningTestStyles';
 import { multipleChoiceStyles } from '../../../../styles/Teacher/Reading/QuesitonTypeStyles';
-import { loadAudioSource } from '../../../../api/teacher/upload-reading';
 
 export default function MultipleChoiceSingleAudio({
   dataPart,
@@ -16,49 +15,10 @@ export default function MultipleChoiceSingleAudio({
   userAnswers,
   onUpdateAnswers,
   disabled,
+  media,
 }) {
-  const [audioSrcs, setAudioSrcs] = useState({});
+  const { audioSrcs } = media;
   const [currentPlayingId, setCurrentPlayingId] = useState(null);
-
-  useEffect(() => {
-    const getAllAudios = async () => {
-      const newAudioSrcs = {};
-      const promises = [];
-
-      dataPart?.receptive_questions?.forEach((question) => {
-        // Lấy source: Ưu tiên audio.url (Frontend) rồi đến resources.audio (Server)
-        const audioUrl = question.audio?.url || question.resources?.audio;
-
-        if (audioUrl) {
-          const p = (async () => {
-            if (typeof audioUrl === 'string' && audioUrl.startsWith('blob:')) {
-              newAudioSrcs[question.id] = audioUrl;
-            } else {
-              const blobUrl = await loadAudioSource(audioUrl);
-              newAudioSrcs[question.id] = blobUrl;
-            }
-          })();
-          promises.push(p);
-        }
-      });
-
-      await Promise.all(promises);
-      setAudioSrcs(newAudioSrcs);
-    };
-
-    getAllAudios();
-
-    return () => {
-      Object.entries(audioSrcs).forEach(([id, url]) => {
-        const question = dataPart?.receptive_questions?.find((q) => q.id === id);
-        const originalSource = question?.audio?.url || question?.resources?.audio;
-
-        if (url?.startsWith('blob:') && !originalSource?.startsWith('blob:')) {
-          URL.revokeObjectURL(url);
-        }
-      });
-    };
-  }, [dataPart?.receptive_questions]);
 
   const handleSetCorrectOption = (questionId, optionID) => {
     const newAnswers = {
