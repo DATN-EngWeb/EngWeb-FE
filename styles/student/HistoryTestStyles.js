@@ -47,7 +47,7 @@ export const draftPaper = {
 export const sidebarPaper = {
   p: 3,
   borderRadius: '24px',
-  mb: 3,
+  // mb: 3,
   boxShadow: 'none',
   textAlign: 'center',
   border: '1px solid #f0f0f0',

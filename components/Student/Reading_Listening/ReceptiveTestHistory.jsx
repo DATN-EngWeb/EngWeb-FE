@@ -45,7 +45,7 @@ export default function ReceptiveTestHistory() {
           getReceptiveTestDetails(test_id),
         ]);
         setTestData(details);
-        setHistoryData(listAttempt);
+        setHistoryData(listAttempt?.results || []);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {

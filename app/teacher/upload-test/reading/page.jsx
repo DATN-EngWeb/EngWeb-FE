@@ -33,7 +33,8 @@ import MatchingForm from '../../../../components/Teacher/ReadingTest/matching';
 import FillBlankForm from '../../../../components/Teacher/ReadingTest/fillBlanks';
 import ReadingPreview from '../../../../components/Teacher/ReadingTest/ReadingPreview';
 import ScrollToTopButton from '../../../../components/CreateTest/ScrollToTopButton';
-import { createNewTest, uploadReadingTestContent } from '../../../../api/teacher/upload-reading';
+import { uploadReadingTestContent } from '../../../../api/teacher/upload-reading';
+import { createTest } from '../../../../api/test';
 import {
   collectFilesReading,
   transformReadingPartsWithUrls,
@@ -102,7 +103,7 @@ export default function Page() {
     };
 
     try {
-      const response = await createNewTest(payload);
+      const response = await createTest(payload);
 
       if (response && response.id) {
         const newTestId = response.id;
