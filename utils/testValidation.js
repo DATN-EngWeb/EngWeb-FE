@@ -318,3 +318,92 @@ export const getValidationErrorMessage = (errors) => {
 
   return 'Please fill out the required field';
 };
+
+export const validateReadingPartPayload = (parts) => {
+  const isEmptyText = (text) => {
+    if (!text) return true;
+    const trimmed = String(text).trim();
+    return trimmed === '' || trimmed === '<p><br></p>' || trimmed === '<p></p>';
+  };
+
+  if (!parts || parts.length === 0) {
+    return 'The test has no parts.';
+  }
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    const partName = `Part ${part.order || i + 1}`;
+    const format = part.format;
+
+    if (format === 'F') {
+      if (isEmptyText(part.description)) {
+        return `Error in ${partName}: Description is required.`;
+      }
+    }
+
+    if (['G', 'H', 'I', 'J'].includes(format)) {
+      if (isEmptyText(part.content)) {
+        return `Error in ${partName}: Passage content is required.`;
+      }
+    }
+
+    if (!part.questions || part.questions.length === 0) {
+      return `Error in ${partName}: No questions have been created.`;
+    }
+
+    for (let j = 0; j < part.questions.length; j++) {
+      const q = part.questions[j];
+      const qNum = q.question_number || j + 1;
+
+      if (['F', 'G', 'H', 'I', 'J'].includes(format)) {
+        if (isEmptyText(q.explanation)) {
+          return `Error in ${partName}, Question ${qNum}: Explanation is required.`;
+        }
+      }
+
+      if (!q.answers || q.answers.length === 0) {
+        return `Error in ${partName}, Question ${qNum}: No answers provided.`;
+      }
+
+      if (['F', 'G', 'H'].includes(format)) {
+        if (q.answers.length < 3) {
+          return `Error in ${partName}, Question ${qNum}: There must be at least 3 answers.`;
+        }
+      }
+
+      const hasCorrectAnswer = q.answers.some((ans) => ans.is_correct === true);
+      if (!hasCorrectAnswer) {
+        return `Error in ${partName}, Question ${qNum}: At least one correct answer must be selected.`;
+      }
+
+      if (['F', 'G', 'H'].includes(format)) {
+        if (isEmptyText(q.content)) {
+          return `Error in ${partName}, Question ${qNum}: Question content cannot be empty.`;
+        }
+      }
+
+      if (['F', 'G', 'H', 'J'].includes(format)) {
+        for (let k = 0; k < q.answers.length; k++) {
+          const ans = q.answers[k];
+          if (isEmptyText(ans.answer_text)) {
+            const label = ans.option_label ? `(${ans.option_label})` : `Option ${k + 1}`;
+            return `Error in ${partName}, Question ${qNum}: Content for answer ${label} cannot be empty.`;
+          }
+        }
+      }
+
+      if (format === 'I') {
+        const correctAns = q.answers.find((a) => a.is_correct);
+        if (correctAns && isEmptyText(correctAns.answer_text)) {
+          return `Error in ${partName}, Question ${qNum}: The correct answer (keyword) cannot be empty.`;
+        }
+      }
+
+      const parsedScore = parseInt(q.score, 10);
+      if (isNaN(parsedScore) || Number(q.score) !== parsedScore || parsedScore <= 0) {
+        return `Error in ${partName}, Question ${qNum}: Score must be a positive integer greater than 0.`;
+      }
+    }
+  }
+  return null;
+};
