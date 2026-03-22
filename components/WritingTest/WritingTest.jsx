@@ -196,6 +196,17 @@ export default function WritingTest() {
       newHistoryID = response.id;
       setHistoryID(newHistoryID);
 
+      // Save context for AI Feedback page
+      localStorage.setItem(
+        'aiFeedbackContext',
+        JSON.stringify({
+          text: text,
+          wordCount: wordCount,
+          title: testData.title,
+          type: testData.type,
+        }),
+      );
+
       // reset form
       setIsDraftSaved(true);
       setText('');
