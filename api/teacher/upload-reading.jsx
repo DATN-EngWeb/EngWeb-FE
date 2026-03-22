@@ -48,17 +48,6 @@ async function handleResponse(response) {
   throw error;
 }
 
-export async function createNewTest(testData) {
-  return apiFetch(`${TESTS_BASE_URL}/overview`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(testData),
-    cache: 'no-store',
-  });
-}
-
 export async function uploadReadingTestContent(testId, partsData) {
   const bodyPayload = {
     data: {

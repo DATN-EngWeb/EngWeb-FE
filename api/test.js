@@ -10,6 +10,7 @@ if (!API_BASE_URL) {
 const STORAGE_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/storage`;
 const TESTS_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/tests`;
 const TEST_HISTORIES_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/test-histories`;
+const TEST_STATISTICS_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/statistic`;
 
 export const createTest = async (basicInfo) => {
   return apiFetch(`${TESTS_BASE_URL}/overview`, {
@@ -234,12 +235,53 @@ export const submitReceptiveTest = async (data, token) => {
   });
 };
 
-export const getReceptiveTestHistory = async (history_id, token) => {
+export const getReceptiveTestHistory = async (history_id) => {
   return apiFetch(`${TEST_HISTORIES_BASE_URL}/receptive/${history_id}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const getListReceptiveTestHistory = async (type, skill, page, page_size) => {
+  return apiFetch(
+    `${TEST_HISTORIES_BASE_URL}/receptive?type=${type}&skill=${skill}&page=${page}&page_size=${page_size}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+};
+
+export const getListProductiveTestHistory = async (type, skill, page, page_size) => {
+  return apiFetch(
+    `${TEST_HISTORIES_BASE_URL}/productive?type=${type}&skill=${skill}&page=${page}&page_size=${page_size}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+};
+
+export const getStatisticsForSkill = async (skill) => {
+  return apiFetch(`${TEST_STATISTICS_BASE_URL}/summary/${skill}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+};
+
+export const getProductiveTestHistory = async (history_id) => {
+  return apiFetch(`${TEST_HISTORIES_BASE_URL}/productive/${history_id}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
     },
   });
 };

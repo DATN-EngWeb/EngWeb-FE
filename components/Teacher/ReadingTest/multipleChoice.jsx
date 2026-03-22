@@ -232,6 +232,13 @@ export default function MultipleChoiceForm({
               defaultValue={part.scoreForEachQuestion}
               sx={uploadReadingStyles.input}
               onBlur={(e) => handleUpdateScoreForEachQuestionPart(partId, e.target.value)}
+              onChange={(e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+              }}
+              inputProps={{
+                inputMode: 'numeric',
+                pattern: '[0-9]*',
+              }}
             />
           </FormControl>
           {/* -------------- Description Section -------------- */}
@@ -400,7 +407,9 @@ export default function MultipleChoiceForm({
                                     }
                                     sx={multipleChoiceStyles.checkboxRoot}
                                   />
-                                  <Typography sx={multipleChoiceStyles.optionLabel}>
+                                  <Typography
+                                    sx={{ ...multipleChoiceStyles.optionLabel, flexShrink: 0 }}
+                                  >
                                     {option.option_label}.
                                   </Typography>
                                   <OutlinedInput

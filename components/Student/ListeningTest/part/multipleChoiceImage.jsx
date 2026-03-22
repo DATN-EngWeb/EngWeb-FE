@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Container, Box, Typography, Button } from '@mui/material';
 import CustomAudioPlayer from '../../../Test/customAudioPlayer';
 import InstructionIcon from '../../../Test/instructionIcon';
 import { listeningPartStyles } from '../../../../styles/Student/Listening/listeningTestStyles';
-import { loadAudioSource, loadImageSource } from '../../../../api/teacher/upload-reading';
 
 export default function MultipleChoiceImagePart({
   dataPart,
@@ -13,77 +12,9 @@ export default function MultipleChoiceImagePart({
   userAnswers,
   onUpdateAnswers,
   disabled,
+  media,
 }) {
-  const [audioSrc, setAudioSrc] = useState(null);
-  const [imageSrcs, setImageSrcs] = useState({});
-
-  useEffect(() => {
-    const getAudio = async () => {
-      const source = dataPart?.audio?.url || dataPart?.resources?.audio;
-      if (!source) return;
-
-      if (typeof source === 'string' && source.startsWith('blob:')) {
-        setAudioSrc(source);
-      } else {
-        const url = await loadAudioSource(source);
-        setAudioSrc(url);
-      }
-    };
-
-    getAudio();
-
-    return () => {
-      const currentSource = dataPart?.audio?.url || dataPart?.resources?.audio;
-      if (audioSrc && audioSrc.startsWith('blob:') && !currentSource?.startsWith('blob:')) {
-        URL.revokeObjectURL(audioSrc);
-      }
-    };
-  }, [dataPart?.audio?.url, dataPart?.resources?.audio]);
-
-  useEffect(() => {
-    const getAllImages = async () => {
-      const newImageSrcs = {};
-      const promises = [];
-
-      dataPart?.receptive_questions?.forEach((question) => {
-        question.receptive_answers?.forEach((option) => {
-          // Lấy source: Ưu tiên image.url (Frontend) rồi đến resources.image (Server)
-          const imageUrl = option.image?.url || option.resources?.image;
-
-          if (imageUrl) {
-            const p = (async () => {
-              if (typeof imageUrl === 'string' && imageUrl.startsWith('blob:')) {
-                newImageSrcs[option.id] = imageUrl;
-              } else {
-                const blobUrl = await loadImageSource(imageUrl);
-                newImageSrcs[option.id] = blobUrl;
-              }
-            })();
-            promises.push(p);
-          }
-        });
-      });
-
-      await Promise.all(promises);
-      setImageSrcs(newImageSrcs);
-    };
-
-    getAllImages();
-
-    return () => {
-      Object.entries(imageSrcs).forEach(([id, url]) => {
-        const question = dataPart?.receptive_questions?.find((q) =>
-          q.receptive_answers.some((opt) => opt.id === id),
-        );
-        const option = question?.receptive_answers.find((opt) => opt.id === id);
-        const originalSource = option?.image?.url || option?.resources?.image;
-
-        if (url?.startsWith('blob:') && !originalSource?.startsWith('blob:')) {
-          URL.revokeObjectURL(url);
-        }
-      });
-    };
-  }, [dataPart?.receptive_questions]);
+  const { audioSrc, imageSrcs } = media;
 
   useEffect(() => {
     if (!isActive) {
