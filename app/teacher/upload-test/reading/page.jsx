@@ -56,7 +56,7 @@ export default function Page() {
     skill: 'R',
     time: 60,
     description: '',
-    status: 'P',
+    status: 'D',
   });
   const [parts, setParts] = useState([]);
 
@@ -142,7 +142,7 @@ export default function Page() {
         if (status === 400) {
           setSnackbar({
             open: true,
-            message: 'All fields are required.',
+            message: error.message || 'Please check all required fields.',
             severity: 'error',
           });
         } else if (status === 401) {
@@ -220,6 +220,12 @@ export default function Page() {
 
       await uploadReadingTestContent(newTestId, preparedParts);
       setSnackbar({ open: true, message: 'Upload test successfully!', severity: 'success' });
+
+      // Clear sessionStorage to prevent this test data from reappearing in "Create New"
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.removeItem('readingTestPreviewData');
+      }
+
       setTimeout(() => {
         router.push('/teacher');
       }, 1000);
@@ -518,7 +524,7 @@ export default function Page() {
               <SendRounded sx={{ transform: 'rotate(-45deg) translateY(2px) translateX(7px)' }} />
             }
             sx={{ ...uploadReadingStyles.rightButton, gridArea: 'item2' }}
-            onClick={() => handleUploadParts('S')}
+            onClick={() => handleUploadParts('I')}
             disabled={isLoading}
           >
             Send For Review

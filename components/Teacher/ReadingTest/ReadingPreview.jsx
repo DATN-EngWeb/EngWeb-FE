@@ -100,14 +100,91 @@ const ReadingPreview = ({ open, onClose, testData, inline = false }) => {
 
   const [statusAlert, setStatusAlert] = useState(false);
 
+  const buildReviewHtml = () => {
+    const allParts = testData?.parts || testData?.test?.parts || [];
+    const testTitle = testData?.test?.title || testData?.title || 'Reading Test';
+
+    const partHtml = allParts
+      .map((part, index) => {
+        const questionsHtml = (part.questions || [])
+          .map((q) => {
+            const answersHtml = (q.answers || [])
+              .map(
+                (ans) =>
+                  `<div class="answer-row"><span class="label">${ans.option_label || ''}.</span><span>${ans.answer_text || ''}</span></div>`,
+              )
+              .join('');
+
+            return `
+              <div class="question-block">
+                <div class="question-title">
+                  <span class="num">${q.question_number || ''}.</span>
+                  <span>${q.content || `Question ${q.question_number || ''}`}</span>
+                </div>
+                <div class="answers">${answersHtml}</div>
+              </div>
+            `;
+          })
+          .join('');
+
+        return `
+          <section class="part-block">
+            <h2>Part ${index + 1}</h2>
+            <div class="passage">${part.content || ''}</div>
+            <div class="questions">${questionsHtml}</div>
+          </section>
+        `;
+      })
+      .join('');
+
+    return `
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>${testTitle}</title>
+          <style>
+            @page { size: A4; margin: 16mm; }
+            body { font-family: Arial, sans-serif; color: #111; line-height: 1.5; }
+            h1 { text-align: center; margin: 0 0 24px; font-size: 24px; }
+            h2 { margin: 0 0 12px; font-size: 18px; color: #333; }
+            .part-block { page-break-after: always; margin-bottom: 20px; }
+            .part-block:last-child { page-break-after: auto; }
+            .passage { margin-bottom: 16px; }
+            .question-block { margin-bottom: 12px; page-break-inside: avoid; }
+            .question-title { display: flex; gap: 8px; font-weight: 600; margin-bottom: 6px; }
+            .num { min-width: 22px; display: inline-block; }
+            .answers { margin-left: 28px; }
+            .answer-row { display: flex; gap: 8px; margin-bottom: 3px; }
+            .label { min-width: 18px; display: inline-block; }
+          </style>
+        </head>
+        <body>
+          <h1>${testTitle}</h1>
+          ${partHtml}
+        </body>
+      </html>
+    `;
+  };
+
   const handleAIReview = () => {
-    // Cho phép AI Review nếu bài đã Public (P) hoặc Send for review (S)
-    // status: "P" (Public), "D" (Draft), "S" (Submitted/Send for review)
+    // Cho phép AI Review nếu bài đã Public (P) hoặc Draft (D) hoặc In Review (I)
+    // Và phải có ID (đã được lưu trên server)
     const status = testData?.test?.status || testData?.status;
-    if (status === 'D') {
+    const id = testData?.test?.id || testData?.id;
+
+    const isSaved = (status === 'P' || status === 'D' || status === 'I' || status === 'S') && id;
+
+    if (!isSaved) {
       setStatusAlert(true);
     } else {
-      window.print();
+      const reviewWindow = window.open('', '_blank', 'width=1024,height=768');
+      if (!reviewWindow) return;
+      reviewWindow.document.open();
+      reviewWindow.document.write(buildReviewHtml());
+      reviewWindow.document.close();
+      reviewWindow.focus();
+      reviewWindow.print();
     }
   };
 
@@ -269,8 +346,8 @@ const ReadingPreview = ({ open, onClose, testData, inline = false }) => {
         </DialogTitle>
         <DialogContent>
           <Typography variant="body1">
-            This test has <strong>not been submitted for review</strong>. Please submit the test for
-            review before using the AI Review feature.
+            This test has <strong>not been saved</strong> as a Draft or Published. Please save the
+            test before using the AI Review feature.
           </Typography>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>

@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import {
   Box,
   Container,
@@ -48,6 +48,7 @@ import { getPresignedUrl, uploadToObjectStorage, confirmUpload } from '../../../
 
 export default function Page() {
   const { test_id } = useParams();
+  const router = useRouter();
   const [test, setTest] = useState({
     title: '',
     type: 'R',
@@ -253,11 +254,20 @@ export default function Page() {
 
       await updateReadingTestContent(test_id, requestBody);
       setSnackbar({ open: true, message: 'Update test successfully!', severity: 'success' });
+
+      // Clear sessionStorage to prevent this test data from reappearing in "Create New" or another "Update"
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.removeItem('readingTestPreviewData');
+      }
+
+      setTimeout(() => {
+        router.push('/teacher');
+      }, 1000);
     } catch (error) {
       if (error.status === 400) {
         setSnackbar({
           open: true,
-          message: 'Invalid data format. Please check your input.',
+          message: error.message || 'Invalid data format. Please check your input.',
           severity: 'error',
         });
       } else if (error.status === 404) {
@@ -661,6 +671,15 @@ export default function Page() {
               />
             }
             sx={{ ...uploadReadingStyles.previewButton, gridArea: 'item1' }}
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                window.sessionStorage.setItem(
+                  'readingTestPreviewData',
+                  JSON.stringify({ test, parts }),
+                );
+              }
+              router.push('/teacher/upload-test/reading/preview');
+            }}
           >
             Show Preview
           </Button>
@@ -669,6 +688,8 @@ export default function Page() {
               <SendRounded sx={{ transform: 'rotate(-45deg) translateY(2px) translateX(7px)' }} />
             }
             sx={{ ...uploadReadingStyles.rightButton, gridArea: 'item2' }}
+            onClick={() => handleUploadParts('I')}
+            disabled={isLoading}
           >
             Send For Review
           </Button>

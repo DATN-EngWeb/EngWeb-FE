@@ -103,6 +103,7 @@ const TestCard = ({
   role = 'teacher',
   created_by,
   progress_status,
+  onDelete,
 }) => {
   const [randomDelay, setRandomDelay] = useState('0s');
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
@@ -156,7 +157,11 @@ const TestCard = ({
       } else {
         await deleteProductiveTest(id);
       }
-      router.refresh();
+      if (onDelete) {
+        onDelete();
+      } else {
+        router.refresh();
+      }
     } catch (err) {
       setDeleteError(`Failed to delete test: ${err.message}`);
     } finally {
