@@ -483,10 +483,12 @@ const FillBlanksContent = ({
                             <Box key={question.id} sx={questionContainerStyles}>
                               <Box sx={questionNumberStyles}>{question.id}</Box>
                               <Box sx={{ flex: 1 }}>
-                                {/* Render question text if available, though Part 5 might not have specific text per question other than the gap */}
                                 <Typography
-                                  sx={{ ...questionTextStyles, display: 'none' }}
-                                  dangerouslySetInnerHTML={{ __html: `Question ${question.id}` }}
+                                  sx={questionTextStyles}
+                                  dangerouslySetInnerHTML={{
+                                    __html:
+                                      question.question || `Question ${question.question_number}`,
+                                  }}
                                 />
                                 <FormControl component="fieldset" fullWidth>
                                   <RadioGroup

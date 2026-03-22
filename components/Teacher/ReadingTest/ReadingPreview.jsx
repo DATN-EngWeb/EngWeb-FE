@@ -233,6 +233,15 @@ const ReadingPreview = ({ open, onClose, testData, inline = false }) => {
           props: {
             ...commonProps,
             blanks: currentPart.questions.map((q) => q.question_number).sort((a, b) => a - b),
+            questions: currentPart.questions.map((q) => ({
+              id: q.id,
+              question_number: q.question_number,
+              question: q.content || `Question ${q.question_number}`,
+              options: q.answers.map((a) => ({
+                value: String(a.id || a.option_label),
+                label: `${a.option_label}. ${a.answer_text}`,
+              })),
+            })),
           },
         };
 
