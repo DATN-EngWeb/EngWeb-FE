@@ -33,6 +33,7 @@ import { uploadReadingStyles } from '../../../../../styles/Teacher/Reading/Uploa
 import MultipleChoiceForm from '../../../../../components/Teacher/ReadingTest/multipleChoice';
 import MatchingForm from '../../../../../components/Teacher/ReadingTest/matching';
 import FillBlankForm from '../../../../../components/Teacher/ReadingTest/fillBlanks';
+import ReadingPreview from '../../../../../components/Teacher/ReadingTest/ReadingPreview';
 import {
   updateReadingTestContent,
   getRecepiveTestDetails,
@@ -49,6 +50,7 @@ import { getPresignedUrl, uploadToObjectStorage, confirmUpload } from '../../../
 export default function Page() {
   const { test_id } = useParams();
   const router = useRouter();
+  const [showInlinePreview, setShowInlinePreview] = useState(false);
   const [test, setTest] = useState({
     title: '',
     type: 'R',
@@ -254,11 +256,6 @@ export default function Page() {
 
       await updateReadingTestContent(test_id, requestBody);
       setSnackbar({ open: true, message: 'Update test successfully!', severity: 'success' });
-
-      // Clear sessionStorage to prevent this test data from reappearing in "Create New" or another "Update"
-      if (typeof window !== 'undefined') {
-        window.sessionStorage.removeItem('readingTestPreviewData');
-      }
 
       setTimeout(() => {
         router.push('/teacher');
@@ -671,17 +668,9 @@ export default function Page() {
               />
             }
             sx={{ ...uploadReadingStyles.previewButton, gridArea: 'item1' }}
-            onClick={() => {
-              if (typeof window !== 'undefined') {
-                window.sessionStorage.setItem(
-                  'readingTestPreviewData',
-                  JSON.stringify({ test, parts }),
-                );
-              }
-              router.push('/teacher/upload-test/reading/preview');
-            }}
+            onClick={() => setShowInlinePreview((prev) => !prev)}
           >
-            Show Preview
+            {showInlinePreview ? 'Hide Preview' : 'Show Preview'}
           </Button>
           <Button
             startIcon={
@@ -710,226 +699,245 @@ export default function Page() {
             {isLoading ? 'Uploading...' : 'Public'}
           </Button>
         </Box>
-        {/* -------- Upload Reading Test Form Section --------- */}
-        <Box sx={uploadReadingStyles.uploadReadingFormSection}>
-          <Typography
-            variant="h3"
-            sx={{ ...uploadReadingStyles.mainTitleHeading, alignSelf: 'flex-start' }}
-          >
-            Test Editor
-          </Typography>
-          {/* -------------------- Basic Information -------------------- */}
-          <Box sx={uploadReadingStyles.basicInfoContainer}>
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'row',
-                gap: 2,
-                justifyContent: 'flex-start',
-                alignItems: 'center',
+
+        {showInlinePreview && (
+          <Box sx={{ mt: 2, mb: 3 }}>
+            <ReadingPreview
+              inline
+              open={false}
+              onClose={() => setShowInlinePreview(false)}
+              testData={{
+                id: test.id,
+                status: test.status,
+                title: test.title,
+                parts: parts.filter((part) => part.action !== 'delete'),
               }}
+              showBackButton={false}
+            />
+          </Box>
+        )}
+        {/* -------- Upload Reading Test Form Section --------- */}
+        {!showInlinePreview && (
+          <Box sx={uploadReadingStyles.uploadReadingFormSection}>
+            <Typography
+              variant="h3"
+              sx={{ ...uploadReadingStyles.mainTitleHeading, alignSelf: 'flex-start' }}
             >
+              Test Editor
+            </Typography>
+            {/* -------------------- Basic Information -------------------- */}
+            <Box sx={uploadReadingStyles.basicInfoContainer}>
               <Box
                 sx={{
-                  width: '4px',
-                  height: '36px',
-                  backgroundColor: 'yellow.main',
-                  borderRadius: '1rem',
+                  display: 'flex',
+                  flexDirection: 'row',
+                  gap: 2,
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
                 }}
-              ></Box>
-              <Typography sx={uploadReadingStyles.basicInfoHeading}>Basic infomation</Typography>
-            </Box>
-            <Box sx={uploadReadingStyles.nameTestAndTime}>
+              >
+                <Box
+                  sx={{
+                    width: '4px',
+                    height: '36px',
+                    backgroundColor: 'yellow.main',
+                    borderRadius: '1rem',
+                  }}
+                ></Box>
+                <Typography sx={uploadReadingStyles.basicInfoHeading}>Basic infomation</Typography>
+              </Box>
+              <Box sx={uploadReadingStyles.nameTestAndTime}>
+                <FormControl fullWidth sx={uploadReadingStyles.formControl}>
+                  <FormLabel sx={uploadReadingStyles.labelInput}>Test title</FormLabel>
+                  <OutlinedInput
+                    placeholder="Enter test title here"
+                    defaultValue={test.title}
+                    onBlur={(e) => setTest({ ...test, title: e.target.value })}
+                    sx={uploadReadingStyles.input}
+                  />
+                </FormControl>
+                <FormControl fullWidth sx={uploadReadingStyles.formControl}>
+                  <FormLabel sx={uploadReadingStyles.labelInput}>Time</FormLabel>
+                  <OutlinedInput
+                    placeholder="Enter time here"
+                    defaultValue={test.time}
+                    sx={uploadReadingStyles.input}
+                    onBlur={(e) => setTest({ ...test, time: Number(e.target.value) })}
+                  />
+                </FormControl>
+              </Box>
               <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-                <FormLabel sx={uploadReadingStyles.labelInput}>Test title</FormLabel>
+                <FormLabel sx={uploadReadingStyles.labelInput}>Description</FormLabel>
                 <OutlinedInput
-                  placeholder="Enter test title here"
-                  defaultValue={test.title}
-                  onBlur={(e) => setTest({ ...test, title: e.target.value })}
-                  sx={uploadReadingStyles.input}
+                  multiline
+                  placeholder="Enter description here"
+                  defaultValue={test.description}
+                  onBlur={(e) => setTest({ ...test, description: e.target.value })}
+                  sx={uploadReadingStyles.inputMultiline}
                 />
               </FormControl>
               <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-                <FormLabel sx={uploadReadingStyles.labelInput}>Time</FormLabel>
-                <OutlinedInput
-                  placeholder="Enter time here"
-                  defaultValue={test.time}
-                  sx={uploadReadingStyles.input}
-                  onBlur={(e) => setTest({ ...test, time: Number(e.target.value) })}
-                />
-              </FormControl>
-            </Box>
-            <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-              <FormLabel sx={uploadReadingStyles.labelInput}>Description</FormLabel>
-              <OutlinedInput
-                multiline
-                placeholder="Enter description here"
-                defaultValue={test.description}
-                onBlur={(e) => setTest({ ...test, description: e.target.value })}
-                sx={uploadReadingStyles.inputMultiline}
-              />
-            </FormControl>
-            <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-              <FormLabel sx={uploadReadingStyles.labelInput}>Level</FormLabel>
-              <Select
-                displayEmpty
-                value={test.level || ''}
-                sx={{
-                  ...uploadReadingStyles.input,
-                  '& .MuiSelect-icon': {
-                    color: 'primary.main',
-                    fontSize: '1.8rem',
-                    right: '12px',
-                    transition: 'transform 0.2s',
-                  },
-                  '& .MuiSelect-iconOpen': {
-                    transform: 'rotate(180deg)',
-                  },
-                }}
-                IconComponent={KeyboardArrowDownIcon}
-                MenuProps={{
-                  PaperProps: {
-                    sx: {
-                      '& .MuiMenuItem-root': {
-                        fontFamily: 'inherit',
-                        fontSize: { xs: '0.7rem', md: '0.9rem' },
+                <FormLabel sx={uploadReadingStyles.labelInput}>Level</FormLabel>
+                <Select
+                  displayEmpty
+                  value={test.level || ''}
+                  sx={{
+                    ...uploadReadingStyles.input,
+                    '& .MuiSelect-icon': {
+                      color: 'primary.main',
+                      fontSize: '1.8rem',
+                      right: '12px',
+                      transition: 'transform 0.2s',
+                    },
+                    '& .MuiSelect-iconOpen': {
+                      transform: 'rotate(180deg)',
+                    },
+                  }}
+                  IconComponent={KeyboardArrowDownIcon}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        '& .MuiMenuItem-root': {
+                          fontFamily: 'inherit',
+                          fontSize: { xs: '0.7rem', md: '0.9rem' },
+                        },
                       },
                     },
-                  },
-                }}
-                onChange={(e) => {
-                  setTest({ ...test, level: e.target.value });
-                }}
-              >
-                <MenuItem value="" disabled>
-                  <span>Choose level</span>
-                </MenuItem>
-                <MenuItem value="A1">A1</MenuItem>
-                <MenuItem value="A2">A2</MenuItem>
-                <MenuItem value="B1">B1</MenuItem>
-                <MenuItem value="B2">B2</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-          {/* ------------ Parts Section ------------- */}
-          {parts
-            .filter((part) => part.action !== 'delete')
-            .sort((a, b) => (a.order || 0) - (b.order || 0))
-            .map((part, index) => (
-              <Box
-                key={part.id}
-                ref={index === parts.length - 1 ? lastPartRef : null}
-                sx={uploadReadingStyles.basicInfoContainer}
-              >
-                {!part.format ? (
-                  <>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        gap: 2,
-                        justifyContent: 'flex-start',
-                        alignItems: 'center',
-                      }}
-                    >
+                  }}
+                  onChange={(e) => {
+                    setTest({ ...test, level: e.target.value });
+                  }}
+                >
+                  <MenuItem value="" disabled>
+                    <span>Choose level</span>
+                  </MenuItem>
+                  <MenuItem value="A1">A1</MenuItem>
+                  <MenuItem value="A2">A2</MenuItem>
+                  <MenuItem value="B1">B1</MenuItem>
+                  <MenuItem value="B2">B2</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+            {/* ------------ Parts Section ------------- */}
+            {parts
+              .filter((part) => part.action !== 'delete')
+              .sort((a, b) => (a.order || 0) - (b.order || 0))
+              .map((part, index) => (
+                <Box
+                  key={part.id}
+                  ref={index === parts.length - 1 ? lastPartRef : null}
+                  sx={uploadReadingStyles.basicInfoContainer}
+                >
+                  {!part.format ? (
+                    <>
                       <Box
                         sx={{
-                          width: '4px',
-                          height: '36px',
-                          backgroundColor: 'yellow.main',
-                          borderRadius: '1rem',
+                          display: 'flex',
+                          flexDirection: 'row',
+                          gap: 2,
+                          justifyContent: 'flex-start',
+                          alignItems: 'center',
                         }}
-                      ></Box>
-                      <Typography sx={uploadReadingStyles.basicInfoHeading}>
-                        Select Part Type
-                      </Typography>
-                    </Box>
-                    <Box sx={uploadReadingStyles.partContentContainer}>
-                      {/* Multiple Choice Long Text */}
-                      <Button
-                        sx={uploadReadingStyles.selectedPart}
-                        onClick={() => handleSelectType(part.id, 'G')}
                       >
-                        <ArticleOutlined sx={uploadReadingStyles.iconSelectedPart} />
-                        <Box sx={uploadReadingStyles.partTextContainer}>
-                          <Typography sx={uploadReadingStyles.partTitle}>
-                            Multiple Choice Long Text
-                          </Typography>
-                          <Typography sx={uploadReadingStyles.partDescription}>
-                            Students select the correct answer.
-                          </Typography>
-                        </Box>
-                      </Button>
-                      {/* Multiple Choice Short Text */}
+                        <Box
+                          sx={{
+                            width: '4px',
+                            height: '36px',
+                            backgroundColor: 'yellow.main',
+                            borderRadius: '1rem',
+                          }}
+                        ></Box>
+                        <Typography sx={uploadReadingStyles.basicInfoHeading}>
+                          Select Part Type
+                        </Typography>
+                      </Box>
+                      <Box sx={uploadReadingStyles.partContentContainer}>
+                        {/* Multiple Choice Long Text */}
+                        <Button
+                          sx={uploadReadingStyles.selectedPart}
+                          onClick={() => handleSelectType(part.id, 'G')}
+                        >
+                          <ArticleOutlined sx={uploadReadingStyles.iconSelectedPart} />
+                          <Box sx={uploadReadingStyles.partTextContainer}>
+                            <Typography sx={uploadReadingStyles.partTitle}>
+                              Multiple Choice Long Text
+                            </Typography>
+                            <Typography sx={uploadReadingStyles.partDescription}>
+                              Students select the correct answer.
+                            </Typography>
+                          </Box>
+                        </Button>
+                        {/* Multiple Choice Short Text */}
+                        <Button
+                          sx={uploadReadingStyles.selectedPart}
+                          onClick={() => handleSelectType(part.id, 'F')}
+                        >
+                          <EditNoteOutlined sx={uploadReadingStyles.iconSelectedPart} />
+                          <Box sx={uploadReadingStyles.partTextContainer}>
+                            <Typography sx={uploadReadingStyles.partTitle}>
+                              Multiple Choice Short Text
+                            </Typography>
+                            <Typography sx={uploadReadingStyles.partDescription}>
+                              Students select the correct answer.
+                            </Typography>
+                          </Box>
+                        </Button>
+                        {/* Fill in The Blanks */}
+                        <Button
+                          sx={uploadReadingStyles.selectedPart}
+                          onClick={() => handleSelectType(part.id, 'I')}
+                        >
+                          <BorderColorOutlined sx={uploadReadingStyles.iconSelectedPart} />
+                          <Box sx={uploadReadingStyles.partTextContainer}>
+                            <Typography sx={uploadReadingStyles.partTitle}>
+                              Fill In The Blanks
+                            </Typography>
+                            <Typography sx={uploadReadingStyles.partDescription}>
+                              Students complete the missing words.
+                            </Typography>
+                          </Box>
+                        </Button>
+                        {/* Matching */}
+                        <Button
+                          sx={uploadReadingStyles.selectedPart}
+                          onClick={() => handleSelectType(part.id, 'J')}
+                        >
+                          <Link sx={uploadReadingStyles.iconSelectedPart} />
+                          <Box sx={uploadReadingStyles.partTextContainer}>
+                            <Typography sx={uploadReadingStyles.partTitle}>Matching</Typography>
+                            <Typography sx={uploadReadingStyles.partDescription}>
+                              Students match items together.
+                            </Typography>
+                          </Box>
+                        </Button>
+                      </Box>
                       <Button
-                        sx={uploadReadingStyles.selectedPart}
-                        onClick={() => handleSelectType(part.id, 'F')}
+                        sx={{
+                          color: 'text.gray',
+                          fontSize: { xs: '0.7rem', md: '0.9rem' },
+                          textTransform: 'none',
+                          px: 2,
+                        }}
+                        onClick={() => handleDeletePart(part.id)}
                       >
-                        <EditNoteOutlined sx={uploadReadingStyles.iconSelectedPart} />
-                        <Box sx={uploadReadingStyles.partTextContainer}>
-                          <Typography sx={uploadReadingStyles.partTitle}>
-                            Multiple Choice Short Text
-                          </Typography>
-                          <Typography sx={uploadReadingStyles.partDescription}>
-                            Students select the correct answer.
-                          </Typography>
-                        </Box>
+                        Cancel
                       </Button>
-                      {/* Fill in The Blanks */}
-                      <Button
-                        sx={uploadReadingStyles.selectedPart}
-                        onClick={() => handleSelectType(part.id, 'I')}
-                      >
-                        <BorderColorOutlined sx={uploadReadingStyles.iconSelectedPart} />
-                        <Box sx={uploadReadingStyles.partTextContainer}>
-                          <Typography sx={uploadReadingStyles.partTitle}>
-                            Fill In The Blanks
-                          </Typography>
-                          <Typography sx={uploadReadingStyles.partDescription}>
-                            Students complete the missing words.
-                          </Typography>
-                        </Box>
-                      </Button>
-                      {/* Matching */}
-                      <Button
-                        sx={uploadReadingStyles.selectedPart}
-                        onClick={() => handleSelectType(part.id, 'J')}
-                      >
-                        <Link sx={uploadReadingStyles.iconSelectedPart} />
-                        <Box sx={uploadReadingStyles.partTextContainer}>
-                          <Typography sx={uploadReadingStyles.partTitle}>Matching</Typography>
-                          <Typography sx={uploadReadingStyles.partDescription}>
-                            Students match items together.
-                          </Typography>
-                        </Box>
-                      </Button>
-                    </Box>
-                    <Button
-                      sx={{
-                        color: 'text.gray',
-                        fontSize: { xs: '0.7rem', md: '0.9rem' },
-                        textTransform: 'none',
-                        px: 2,
-                      }}
-                      onClick={() => handleDeletePart(part.id)}
-                    >
-                      Cancel
-                    </Button>
-                  </>
-                ) : (
-                  renderPartEditor(part, index)
-                )}
-              </Box>
-            ))}
-          {/* -------- Add New Part Button --------- */}
-          <Button
-            startIcon={<AddIcon />}
-            sx={uploadReadingStyles.addPartButton}
-            onClick={() => handleAddPart()}
-          >
-            Add New Part
-          </Button>
-        </Box>
+                    </>
+                  ) : (
+                    renderPartEditor(part, index)
+                  )}
+                </Box>
+              ))}
+            {/* -------- Add New Part Button --------- */}
+            <Button
+              startIcon={<AddIcon />}
+              sx={uploadReadingStyles.addPartButton}
+              onClick={() => handleAddPart()}
+            >
+              Add New Part
+            </Button>
+          </Box>
+        )}
       </Container>
     </Box>
   );

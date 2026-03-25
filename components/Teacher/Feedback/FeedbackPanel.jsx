@@ -130,7 +130,7 @@ export default function FeedbackPanel({ testId }) {
     }
   };
 
-  const isOwn = (fb) => fb.created_by !== 'A' && fb.author_id === currentUserId;
+  const isOwn = (fb) => fb.created_by !== 'A' && String(fb.author_id) === String(currentUserId);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>

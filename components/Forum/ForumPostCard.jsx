@@ -1,9 +1,11 @@
+/* global URLSearchParams */
 import { Card, CardContent, Typography, Avatar, Box, Button, Chip } from '@mui/material';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import CustomAudioPlayer from '../Test/customAudioPlayer';
 import { useState, useRef } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { reactToPost } from '../../api/forum';
 import ForumPostModal from './ForumPostModal';
 
@@ -14,8 +16,22 @@ export default function ForumPostCard({ post, initialOpen = false }) {
   const [likeCount, setLikeCount] = useState(post.like_count ?? 0);
   const [commentCount, setCommentCount] = useState(post.comment_count ?? 0);
   const [modalOpen, setModalOpen] = useState(initialOpen);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const debounceRef = useRef(null);
   const pendingLikedRef = useRef(post.is_liked ?? false);
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+
+    const next = new URLSearchParams(searchParams.toString());
+    if (next.get('open_post') !== String(post.id)) return;
+
+    next.delete('open_post');
+    const query = next.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
 
   const handleLike = () => {
     const nextLiked = !pendingLikedRef.current;
@@ -141,7 +157,7 @@ export default function ForumPostCard({ post, initialOpen = false }) {
       <ForumPostModal
         post={post}
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={handleCloseModal}
         liked={liked}
         likeCount={likeCount}
         onLikeToggle={handleLike}

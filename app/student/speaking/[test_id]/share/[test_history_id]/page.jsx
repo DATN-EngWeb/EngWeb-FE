@@ -32,7 +32,8 @@ export default function ShareSpeakingPage() {
           getProductiveTest(test_id),
           getProductiveTestDetails(test_id),
         ]);
-        const found = historyData?.find((item) => String(item.id) === String(test_history_id));
+        const historyList = Array.isArray(historyData) ? historyData : (historyData?.results ?? []);
+        const found = historyList.find((item) => String(item.id) === String(test_history_id));
         setAttempt(found);
         const descUrl = testData?.productive_test?.description;
         setTestDescUrl(descUrl || '');

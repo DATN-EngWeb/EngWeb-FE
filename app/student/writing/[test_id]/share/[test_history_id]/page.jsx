@@ -29,9 +29,8 @@ export default function WritingSharePage() {
       try {
         setLoading(true);
         const historyData = await getProductiveTest(test_id);
-        const found = Array.isArray(historyData)
-          ? historyData.find((item) => String(item.id) === String(test_history_id))
-          : null;
+        const historyList = Array.isArray(historyData) ? historyData : (historyData?.results ?? []);
+        const found = historyList.find((item) => String(item.id) === String(test_history_id));
         setAttempt(found);
         // Get description from testDetails.productive_test.description
         const testDetails = await getProductiveTestDetails(test_id);

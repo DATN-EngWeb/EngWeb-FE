@@ -20,7 +20,7 @@ import MultiChoiceTextPart from './MultiChoiceTextPart';
 import FillInTheBlankPart from './FillInTheBlankPart';
 import MatchingPart from './MatchingPart';
 import ScrollToTopButton from '../CreateTest/ScrollToTopButton';
-import PreviewReadingTest from '../Teacher/previewReadingTest';
+import ListeningPreview from '../Teacher/ListeningPreview';
 
 import { validateTest, getValidationErrorMessage } from '../../utils/testValidation';
 import {
@@ -313,7 +313,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
   };
 
   return isPreviewActive ? (
-    <PreviewReadingTest
+    <ListeningPreview
       basicInfo={basicInfo}
       parts={parts}
       onPreview={() => setIsPreviewActive((prev) => !prev)}
