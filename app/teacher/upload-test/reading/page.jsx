@@ -39,13 +39,15 @@ import ReadingPreview from '../../../../components/Teacher/ReadingTest/ReadingPr
 import ScrollToTopButton from '../../../../components/CreateTest/ScrollToTopButton';
 import TestEditorHeader from '../../../../components/UploadTest/TestEditorHeader';
 import TestEditorActions from '../../../../components/UploadTest/TestEditorActions';
-import { createNewTest, uploadReadingTestContent } from '../../../../api/teacher/upload-reading';
+import { uploadReadingTestContent } from '../../../../api/teacher/upload-reading';
+import { createTest } from '../../../../api/test';
 import {
   collectFilesReading,
   transformReadingPartsWithUrls,
   transformFormatData,
 } from '../../../../utils/testTransformers';
 import { getPresignedUrl, uploadToObjectStorage, confirmUpload } from '../../../../api/test';
+import { validateReadingPartPayload } from '../../../../utils/testValidation';
 
 export default function Page() {
   const router = useRouter();
@@ -101,7 +103,7 @@ export default function Page() {
     if (!test.title || !test.description) {
       setSnackbar({
         open: true,
-        message: 'Please fill in all required fields!',
+        message: 'Please fill title and description of test!',
         severity: 'error',
       });
       return null;
@@ -125,7 +127,7 @@ export default function Page() {
     };
 
     try {
-      const response = await createNewTest(payload);
+      const response = await createTest(payload);
 
       if (response && response.id) {
         const newTestId = response.id;
@@ -167,13 +169,24 @@ export default function Page() {
   const handleUploadParts = async (status) => {
     setIsLoading(true);
     try {
+      const transformedParts = transformFormatData(parts);
+      const errorMessage = validateReadingPartPayload(transformedParts);
+      if (errorMessage) {
+        setSnackbar({
+          open: true,
+          message: errorMessage,
+          severity: 'error',
+        });
+        return;
+      }
+
+      console.log('Transformed Parts:', transformedParts);
+
       const newTestId = await handleUploadTest(status);
       if (!newTestId) {
         setIsLoading(false);
         return;
       }
-
-      const transformedParts = transformFormatData(parts);
 
       const files = collectFilesReading(transformedParts);
       const filenameToUrl = {};
@@ -215,8 +228,6 @@ export default function Page() {
       }
 
       const preparedParts = transformReadingPartsWithUrls(transformedParts, filenameToUrl);
-
-      // console.log('Prepared Parts for Upload:', preparedParts);
 
       await uploadReadingTestContent(newTestId, preparedParts);
       setSnackbar({ open: true, message: 'Upload test successfully!', severity: 'success' });
@@ -405,6 +416,11 @@ export default function Page() {
   };
 
   const renderPartEditor = (part, index) => {
+    // 'F': Multiple choice (short text)
+    // 'G': Multiple choice (long text)
+    // 'H': Fill in the blank (multiple choice)
+    // 'I': Fill in the blank (text)
+    // 'J': Matching
     const partQuestions = part.questions || [];
 
     switch (part.format) {

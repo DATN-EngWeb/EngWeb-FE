@@ -9,7 +9,6 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CircleIcon from '@mui/icons-material/Circle';
 import { listeningPartStyles } from '../../../../styles/Student/Listening/listeningTestStyles';
 import { multipleChoiceStyles } from '../../../../styles/Teacher/Reading/QuesitonTypeStyles';
-import { loadAudioSource, fetchHtmlContent } from '../../../../api/teacher/upload-reading';
 
 export default function MultipleChoiceQuestionAudio({
   dataPart,
@@ -17,9 +16,9 @@ export default function MultipleChoiceQuestionAudio({
   userAnswers,
   onUpdateAnswers,
   disabled,
+  media,
 }) {
-  const [audioSrc, setAudioSrc] = useState(null);
-  const [passageSrc, setPassageSrc] = useState(null);
+  const { audioSrc, passageSrc } = media;
   const [leftWidth, setLeftWidth] = useState(40); // percentage width
   const [isDragging, setIsDragging] = useState(false);
 
@@ -33,31 +32,6 @@ export default function MultipleChoiceQuestionAudio({
   };
 
   useEffect(() => {
-    const getAudio = async () => {
-      const source = dataPart?.audio?.url || dataPart?.resources?.audio;
-
-      if (!source) return;
-
-      if (typeof source === 'string' && source.startsWith('blob:')) {
-        setAudioSrc(source);
-      } else {
-        const url = await loadAudioSource(source);
-        setAudioSrc(url);
-      }
-    };
-
-    getAudio();
-
-    return () => {
-      const originalSource = dataPart?.audio?.url || dataPart?.resources?.audio;
-
-      if (audioSrc && audioSrc.startsWith('blob:') && audioSrc !== originalSource) {
-        URL.revokeObjectURL(audioSrc);
-      }
-    };
-  }, [dataPart?.audio?.url, dataPart?.resources?.audio]);
-
-  useEffect(() => {
     if (!isActive) {
       const audioElements = document.querySelectorAll('audio');
       audioElements.forEach((audio) => {
@@ -66,17 +40,6 @@ export default function MultipleChoiceQuestionAudio({
       });
     }
   }, [isActive]);
-
-  useEffect(() => {
-    const loadData = async () => {
-      if (dataPart?.content) {
-        const result = await fetchHtmlContent(dataPart.content);
-        setPassageSrc(result);
-      }
-    };
-
-    loadData();
-  }, [dataPart?.content]);
 
   const containerRef = useRef(null);
 

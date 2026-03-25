@@ -257,6 +257,13 @@ export default function MatchingForm({
               defaultValue={part.scoreForEachQuestion}
               sx={uploadReadingStyles.input}
               onBlur={(e) => handleUpdateScoreForEachQuestionPart(partId, e.target.value)}
+              onChange={(e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+              }}
+              inputProps={{
+                inputMode: 'numeric',
+                pattern: '[0-9]*',
+              }}
             />
           </FormControl>
           {/* -------------- Description Section -------------- */}
@@ -374,7 +381,7 @@ export default function MatchingForm({
               <Box sx={matchingStyles.linkOptionContainer}>
                 {answers.map((answer, _aIndex) => (
                   <Box key={answer.option_label} sx={multipleChoiceStyles.optionContainer}>
-                    <Typography sx={multipleChoiceStyles.optionLabel}>
+                    <Typography sx={{ ...multipleChoiceStyles.optionLabel, flexShrink: 0 }}>
                       {answer.option_label}.
                     </Typography>
                     <OutlinedInput

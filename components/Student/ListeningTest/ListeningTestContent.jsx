@@ -23,8 +23,12 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { getRecepiveTestDetails } from '../../../api/teacher/upload-reading';
 import { createReceptiveTest } from '../../../api/test';
 import { listeningtestStyles } from '../../../styles/Student/Listening/listeningTestStyles';
+import {
+  loadAudioSource,
+  loadImageSource,
+  fetchHtmlContent,
+} from '../../../api/teacher/upload-reading';
 import { getListeningTestTypeLabel, formatTimeFromMinutes } from '../../../utils/stringFormat';
-import TestHeading from '../../Student/Common/TestHeading';
 import MultipleChoiceImagePart from './part/multipleChoiceImage';
 import FillBlankPart from './part/fillBlanks';
 import MultipleChoiceSingleAudio from './part/multipleChoiceSingleAudio';
@@ -35,9 +39,11 @@ import Skeleton from './skeleton';
 export default function ListeningTestContent({ test_id, initialData }) {
   const router = useRouter();
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
+  const [isInitial, setIsInitial] = useState(true);
 
   const [testData, setTestData] = useState(initialData || null);
   const [receptiveParts, setReceptiveParts] = useState([]);
+  const [mediaResources, setMediaResources] = useState({});
   const [indexPart, setIndexPart] = useState(0);
   const [timeLeft, setTimeLeft] = useState(testData?.time || 0);
   const [allAnswers, setAllAnswers] = useState({});
@@ -164,12 +170,77 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
+    let loadedResources = {};
     const fetchTestData = async () => {
       if (!test_id) return;
       try {
+        setIsInitial(true);
         const svData = await getRecepiveTestDetails(test_id);
+        const parts = svData.receptive_test.receptive_parts || [];
+
+        const resourcesMap = {};
+        const preloadPromises = parts.map(async (part) => {
+          resourcesMap[part.id] = {
+            audioSrc: null,
+            imageSrcs: {},
+            audioSrcs: {},
+            passageSrc: null,
+          };
+          const res = resourcesMap[part.id];
+
+          // Tải Audio chung của Part (Dùng cho format A, C, D, E)
+          const partAudio = part.audio?.url || part.resources?.audio;
+          if (partAudio) {
+            res.audioSrc = partAudio.startsWith('blob:')
+              ? partAudio
+              : await loadAudioSource(partAudio);
+          }
+
+          // Tải Nội dung HTML chung (Dùng cho format C, D)
+          if (part.content) {
+            res.passageSrc = await fetchHtmlContent(part.content);
+          }
+
+          // Tải tài nguyên chi tiết theo từng Format đặc thù
+          if (part.format === 'A') {
+            // Tải mảng hình ảnh cho các đáp án
+            const imgPromises = [];
+            part.receptive_questions?.forEach((q) => {
+              q.receptive_answers?.forEach((opt) => {
+                const imgUrl = opt.image?.url || opt.resources?.image;
+                if (imgUrl) {
+                  imgPromises.push(async () => {
+                    res.imageSrcs[opt.id] = imgUrl.startsWith('blob:')
+                      ? imgUrl
+                      : await loadImageSource(imgUrl);
+                  });
+                }
+              });
+            });
+            await Promise.all(imgPromises.map((p) => p()));
+          } else if (part.format === 'B') {
+            // Tải mảng audio cho từng câu hỏi
+            const audioPromises = [];
+            part.receptive_questions?.forEach((q) => {
+              const qAudio = q.audio?.url || q.resources?.audio;
+              if (qAudio) {
+                audioPromises.push(async () => {
+                  res.audioSrcs[q.id] = qAudio.startsWith('blob:')
+                    ? qAudio
+                    : await loadAudioSource(qAudio);
+                });
+              }
+            });
+            await Promise.all(audioPromises.map((p) => p()));
+          }
+        });
+
+        await Promise.all(preloadPromises);
+        loadedResources = resourcesMap;
+        setMediaResources(resourcesMap);
+
         setTestData(svData);
-        setReceptiveParts(svData.receptive_test.receptive_parts || []);
+        setReceptiveParts(parts);
         setTimeLeft(svData.time * 60);
 
         if (typeof window !== 'undefined') {
@@ -211,13 +282,26 @@ export default function ListeningTestContent({ test_id, initialData }) {
             });
           }
         }
-        // console.log('Dữ liệu bài thi nghe:', svData);
       } catch (error) {
         console.error('Lỗi tải dữ liệu bài thi:', error);
+      } finally {
+        setIsInitial(false);
       }
     };
 
     fetchTestData();
+
+    return () => {
+      Object.values(loadedResources).forEach((res) => {
+        if (res.audioSrc?.startsWith('blob:')) URL.revokeObjectURL(res.audioSrc);
+        Object.values(res.imageSrcs).forEach((url) => {
+          if (url?.startsWith('blob:')) URL.revokeObjectURL(url);
+        });
+        Object.values(res.audioSrcs).forEach((url) => {
+          if (url?.startsWith('blob:')) URL.revokeObjectURL(url);
+        });
+      });
+    };
   }, [test_id]);
 
   // Timer
@@ -229,7 +313,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
-  if (!testData) {
+  if (isInitial) {
     return <Skeleton disabled={isReadOnly} />;
   }
 
@@ -270,6 +354,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
       userAnswers: allAnswers[part.id] || {},
       disabled: isReadOnly,
       onUpdateAnswers: (answers) => handleUpdateAnswers(part.id, answers),
+      media: mediaResources[part.id] || {},
     };
 
     switch (part.format) {

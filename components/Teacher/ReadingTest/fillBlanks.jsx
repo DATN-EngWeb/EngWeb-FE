@@ -253,6 +253,13 @@ export default function FillBlankForm({
                 defaultValue={part.scoreForEachQuestion}
                 sx={uploadReadingStyles.input}
                 onBlur={(e) => handleUpdateScoreForEachQuestionPart(part.id, e.target.value)}
+                onChange={(e) => {
+                  e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                }}
+                inputProps={{
+                  inputMode: 'numeric',
+                  pattern: '[0-9]*',
+                }}
               />
             </FormControl>
             {/* -------------- Chọn loại format (H hoặc I) -------------- */}
@@ -451,7 +458,9 @@ export default function FillBlankForm({
                                       }
                                       sx={multipleChoiceStyles.checkboxRoot}
                                     />
-                                    <Typography sx={multipleChoiceStyles.optionLabel}>
+                                    <Typography
+                                      sx={{ ...multipleChoiceStyles.optionLabel, flexShrink: 0 }}
+                                    >
                                       {option.option_label}.
                                     </Typography>
                                     <OutlinedInput

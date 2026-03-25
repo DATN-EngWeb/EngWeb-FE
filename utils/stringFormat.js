@@ -26,3 +26,13 @@ export const formatTimeFromMinutes = (minutes) => {
   const secs = Math.round((minutes - mins) * 60);
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 };
+
+export const minutesToHour = (minutes) => {
+  if (!minutes || isNaN(minutes)) return '0';
+  if (minutes > 120) {
+    return (minutes / 60).toFixed(1);
+  }
+  const hours = Math.floor(minutes / 60);
+  const mins = Math.floor(minutes % 60);
+  return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+};
