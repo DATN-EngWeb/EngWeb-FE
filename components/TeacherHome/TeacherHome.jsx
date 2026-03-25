@@ -314,7 +314,7 @@ export default function TeacherHome() {
             <CircularProgress color="warning" />
           </Box>
         ) : tests.length > 0 ? (
-          tests.map((test) => <TestCard key={test.id} {...test} />)
+          tests.map((test) => <TestCard key={test.id} {...test} onDelete={fetchTests} />)
         ) : (
           <Typography sx={{ gridColumn: '1/-1', textAlign: 'center', py: 10 }}>
             No tests found.

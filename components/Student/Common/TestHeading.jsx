@@ -1,31 +1,41 @@
 'use client';
 
 import { Box, Button, Typography } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+
 import { listeningtestStyles } from '../../../styles/Student/Listening/listeningTestStyles';
 
-/**
- * Row 1 of the test header — reused by Listening and Reading test components.
- *
- * Props:
- *  testName   : string    — test title
- *  partLabel  : ReactNode — content inside the sub-label Typography (can be 2 separate text nodes)
- *                           e.g. <>{`Part 1: `}{formatLabel}</>
- *  timerNode  : ReactNode — content rendered on the left (e.g. <AccessTimeIcon /> + countdown)
- *  onSubmit   : () => void
- *  isTeacher  : boolean   — hides Submit button when true
- */
 export default function TestHeading({
   testName = '',
   partLabel,
   timerNode,
   onSubmit = () => {},
   isTeacher = false,
+  onAIReview,
+  onExit,
 }) {
   return (
     <>
       <Box sx={{ ...listeningtestStyles.testHeadingContainer, py: { xs: 0.5, md: 1 } }}>
-        {/* Left: Timer */}
-        <Box sx={{ width: { xs: 'auto', md: '200px' }, display: 'flex', alignItems: 'center' }}>
+        {/* Left: Timer or Back/Exit */}
+        <Box
+          sx={{ width: { xs: 'auto', md: '200px' }, display: 'flex', alignItems: 'center', gap: 1 }}
+        >
+          {isTeacher && onExit && (
+            <Button
+              onClick={onExit}
+              size="small"
+              startIcon={<ArrowBackIcon />}
+              sx={{
+                color: 'text.secondary',
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '1rem',
+              }}
+            >
+              Back
+            </Button>
+          )}
           {timerNode}
         </Box>
 
@@ -35,14 +45,20 @@ export default function TestHeading({
           {partLabel && <Typography sx={listeningtestStyles.formatName}>{partLabel}</Typography>}
         </Box>
 
-        {/* Right: Submit Test */}
-        {!isTeacher && (
-          <Box sx={listeningtestStyles.summitButtonWrapper}>
+        {/* Right: Submit Test or AI Review */}
+        <Box sx={listeningtestStyles.summitButtonWrapper}>
+          {!isTeacher ? (
             <Button sx={listeningtestStyles.submitButton} onClick={onSubmit}>
               Submit Test
             </Button>
-          </Box>
-        )}
+          ) : (
+            onAIReview && (
+              <Button sx={listeningtestStyles.submitButton} onClick={onAIReview}>
+                AI Review
+              </Button>
+            )
+          )}
+        </Box>
       </Box>
 
       {/* Orange separator */}

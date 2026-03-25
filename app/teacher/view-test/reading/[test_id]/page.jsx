@@ -80,6 +80,8 @@ export default function ViewReadingTestPage({ params }) {
 
         const parts = await transformReadingData(data);
         setTestData({
+          id: data.id,
+          status: data.status,
           title: data.title || '',
           level: data.level || '',
           time: data.time?.toString() || '',

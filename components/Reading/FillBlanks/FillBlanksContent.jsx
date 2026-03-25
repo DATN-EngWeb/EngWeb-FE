@@ -70,6 +70,8 @@ const FillBlanksContent = ({
   currentSection = 1,
   totalSections = 5,
   embedded = false,
+  onAIReview,
+  onExit,
 }) => {
   const [selectedPart, setSelectedPart] = useState(currentPart - 1);
   const [selectedAnswers, setSelectedAnswers] = useState(answers || {});
@@ -206,6 +208,8 @@ const FillBlanksContent = ({
         onSubmit={handleSubmit}
         isTeacher={isTeacher}
         timerNode={!isTeacher ? <TestTimer /> : null}
+        onAIReview={onAIReview}
+        onExit={onExit}
       />
       <Box sx={{ backgroundColor: 'background.paper' }}>
         <Container maxWidth={false} disableGutters sx={{ px: { xs: 2, md: 4 } }}>
@@ -479,10 +483,12 @@ const FillBlanksContent = ({
                             <Box key={question.id} sx={questionContainerStyles}>
                               <Box sx={questionNumberStyles}>{question.id}</Box>
                               <Box sx={{ flex: 1 }}>
-                                {/* Render question text if available, though Part 5 might not have specific text per question other than the gap */}
                                 <Typography
-                                  sx={{ ...questionTextStyles, display: 'none' }}
-                                  dangerouslySetInnerHTML={{ __html: `Question ${question.id}` }}
+                                  sx={questionTextStyles}
+                                  dangerouslySetInnerHTML={{
+                                    __html:
+                                      question.question || `Question ${question.question_number}`,
+                                  }}
                                 />
                                 <FormControl component="fieldset" fullWidth>
                                   <RadioGroup
@@ -547,7 +553,12 @@ const FillBlanksContent = ({
                         ))}
                   </Box>
 
-                  <Box sx={navigationFooterStyles}>
+                  <Box
+                    sx={{
+                      ...navigationFooterStyles,
+                      display: isTeacher ? 'none' : 'flex',
+                    }}
+                  >
                     <Button onClick={onBack} sx={backLinkStyles} disabled={isTeacher}>
                       &lt; Back
                     </Button>

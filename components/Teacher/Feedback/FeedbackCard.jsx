@@ -29,9 +29,48 @@ export default function FeedbackCard({ feedback, isAi = false }) {
 
         <Divider sx={{ my: 1.5 }} />
 
-        <Typography sx={{ whiteSpace: 'pre-wrap' }}>
-          {feedback.comment || 'No comment content.'}
-        </Typography>
+        {isAi ? (
+          <Box
+            sx={{
+              color: 'text.primary',
+              '& h3': {
+                fontSize: '1.15rem',
+                fontWeight: 700,
+                mt: 2,
+                mb: 1,
+                color: 'text.primary',
+              },
+              '& h3:first-of-type': {
+                mt: 0,
+              },
+              '& p': {
+                m: 0,
+                mb: 1.25,
+                lineHeight: 1.75,
+              },
+              '& ul, & ol': {
+                m: 0,
+                mb: 1.25,
+                pl: 3,
+              },
+              '& li': {
+                mb: 0.5,
+                lineHeight: 1.65,
+              },
+              '& strong': {
+                fontWeight: 700,
+              },
+              '& em': {
+                fontStyle: 'italic',
+              },
+            }}
+            dangerouslySetInnerHTML={{ __html: feedback.comment || '<p>No comment content.</p>' }}
+          />
+        ) : (
+          <Typography sx={{ whiteSpace: 'pre-wrap' }}>
+            {feedback.comment || 'No comment content.'}
+          </Typography>
+        )}
       </CardContent>
     </Card>
   );

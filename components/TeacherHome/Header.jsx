@@ -65,7 +65,15 @@ export default function TeacherHeader() {
   };
 
   return (
-    <AppBar position="static" sx={appBarStyles}>
+    <AppBar
+      position="static"
+      sx={{
+        ...appBarStyles,
+        '@media print': {
+          display: 'none',
+        },
+      }}
+    >
       <Container maxWidth="lg">
         <Toolbar sx={toolbarStyles}>
           <Box sx={navBoxStyles}>

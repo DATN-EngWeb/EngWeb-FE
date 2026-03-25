@@ -10,6 +10,120 @@ import FillBlankPart from '../Student/ListeningTest/part/fillBlanks';
 import MultipleChoiceSingleAudio from '../Student/ListeningTest/part/multipleChoiceSingleAudio';
 import MultipleChoiceQuestionAudio from '../Student/ListeningTest/part/multipleChoiceMultiQuestionAudio';
 import Matching from '../Student/ListeningTest/part/matching';
+import PrintIcon from '@mui/icons-material/Print';
+
+const PrintOnlyView = ({ basicInfo, parts }) => (
+  <Box
+    sx={{
+      display: 'none',
+      '@media print': {
+        display: 'block !important',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        bgcolor: 'white',
+        zIndex: 9999,
+        p: 2,
+        visibility: 'visible',
+      },
+      p: 0,
+    }}
+  >
+    <style>
+      {`
+        @media print {
+          body * {
+            visibility: hidden;
+            overflow: visible !important;
+          }
+          #print-area, #print-area * {
+            visibility: visible;
+          }
+          #print-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            display: block !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+        }
+      `}
+    </style>
+
+    <Box id="print-area">
+      <Typography variant="h4" align="center" sx={{ mb: 4, fontWeight: 700, color: '#000' }}>
+        {basicInfo?.testName || 'Reading Test'}
+      </Typography>
+
+      {parts?.map((part, index) => (
+        <Box
+          key={part.id || index}
+          sx={{
+            mb: 6,
+            pageBreakAfter: 'always',
+            '&:last-child': { pageBreakAfter: 'auto' },
+          }}
+        >
+          <Typography
+            variant="h5"
+            sx={{ mb: 2, fontWeight: 600, color: '#000', borderBottom: '1px solid #000', pb: 1 }}
+          >
+            Part {index + 1}: {getListeningTestTypeLabel(part.format || part.type)}
+          </Typography>
+
+          {part.content && (
+            <Box
+              sx={{
+                mb: 4,
+                lineHeight: 1.8,
+                fontSize: '1.1rem',
+                textAlign: 'justify',
+                color: '#000',
+              }}
+            >
+              <div dangerouslySetInnerHTML={{ __html: part.content }} />
+            </Box>
+          )}
+
+          <Box sx={{ mt: 3 }}>
+            {(part.receptive_questions || part.questions || []).map((q, qIndex) => (
+              <Box key={qIndex} sx={{ mb: 4, pageBreakInside: 'avoid' }}>
+                <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                  <Typography sx={{ fontWeight: 600, color: '#000' }}>
+                    {q.question_number || qIndex + 1}.
+                  </Typography>
+                  <div
+                    style={{ fontWeight: 600, color: '#000' }}
+                    dangerouslySetInnerHTML={{
+                      __html: q.content || `Question ${q.question_number || qIndex + 1}`,
+                    }}
+                  />
+                </Box>
+
+                <Box sx={{ ml: 4 }}>
+                  {(q.receptive_answers || q.answers || []).map((ans, aIndex) => (
+                    <Box key={aIndex} sx={{ display: 'flex', gap: 1, mb: 0.5 }}>
+                      <Typography variant="body2" sx={{ color: '#333' }}>
+                        {ans.option_label || String.fromCharCode(65 + aIndex)}.
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#333' }}>
+                        {ans.answer_text || ans.content}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      ))}
+    </Box>
+  </Box>
+);
 
 export default function PreviewReadingTest({
   basicInfo,
@@ -89,8 +203,19 @@ export default function PreviewReadingTest({
   };
 
   return (
-    <Box sx={{ ...listeningtestStyles.mainContainer, position: 'relative', overflow: 'hidden' }}>
-      <Container maxWidth="lg">
+    <Box
+      sx={{
+        ...listeningtestStyles.mainContainer,
+        position: 'relative',
+        overflow: 'hidden',
+        '@media print': {
+          overflow: 'visible !important',
+          height: 'auto !important',
+          minHeight: 'auto !important',
+        },
+      }}
+    >
+      <Container maxWidth="lg" className="no-print">
         {/* -------- Test Heading Section --------- */}
         <Box sx={listeningtestStyles.testHeadingContainer}>
           {showHeaderActions ? (
@@ -119,7 +244,23 @@ export default function PreviewReadingTest({
             </Typography>
           </Box>
           {showHeaderActions ? (
-            <Box sx={listeningtestStyles.summitButtonWrapper}>
+            <Box sx={{ ...listeningtestStyles.summitButtonWrapper, display: 'flex', gap: 1 }}>
+              <Button
+                variant="outlined"
+                startIcon={<PrintIcon />}
+                onClick={() => window.print()}
+                sx={{
+                  ...listeningtestStyles.submitButton,
+                  borderColor: 'primary.main',
+                  color: 'primary.main',
+                  '&:hover': {
+                    borderColor: 'primary.dark',
+                    backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                  },
+                }}
+              >
+                Print All
+              </Button>
               <Button sx={listeningtestStyles.submitButton} disabled>
                 Submit Test
               </Button>
@@ -158,11 +299,18 @@ export default function PreviewReadingTest({
         <Box sx={{ ...listeningtestStyles.separatorLine, backgroundColor: 'gray.main' }}></Box>
       </Container>
       {/* -------- Part Content Section --------- */}
-      <Box sx={{ width: '100%', height: 'auto', backgroundColor: 'background.gray' }}>
+      <Box
+        className="no-print"
+        sx={{ width: '100%', height: 'auto', backgroundColor: 'background.gray' }}
+      >
         {receptiveParts.map((part, index) => renderPart(part, index))}
       </Box>
+
       {/* -------- Stepper Section --------- */}
-      <Box sx={{ width: '100%', height: 'auto', backgroundColor: 'background.gray' }}>
+      <Box
+        className="no-print"
+        sx={{ width: '100%', height: 'auto', backgroundColor: 'background.gray' }}
+      >
         <Container maxWidth="lg" sx={listeningtestStyles.stepperContainer}>
           <Typography
             sx={{
@@ -191,6 +339,8 @@ export default function PreviewReadingTest({
           </Box>
         </Container>
       </Box>
+
+      <PrintOnlyView basicInfo={basicInfo} parts={receptiveParts} />
     </Box>
   );
 }
