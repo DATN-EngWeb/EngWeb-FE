@@ -2,7 +2,16 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Box, Typography, Button, Stack, CircularProgress } from '@mui/material';
+import {
+  Box,
+  Typography,
+  Button,
+  Stack,
+  CircularProgress,
+  Dialog,
+  IconButton,
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import ReplayIcon from '@mui/icons-material/Replay';
@@ -67,10 +76,10 @@ function CustomTick(props) {
   const score = category ? category.score.toFixed(1) : '';
 
   let shortName = payload.value;
-  if (payload.value === 'CONTENT') shortName = 'C';
-  else if (payload.value === 'ORGANISATION') shortName = 'O';
-  else if (payload.value === 'LANGUAGE') shortName = 'L';
-  else shortName = 'CA';
+  if (payload.value === 'CONTENT') shortName = 'CONTENT';
+  else if (payload.value === 'ORGANISATION') shortName = 'ORGANISATION';
+  else if (payload.value === 'LANGUAGE') shortName = 'LANGUAGE';
+  else shortName = 'COMMUNICATIVE ACHIEVEMENT';
 
   // Push labels radially outwards from the center evenly
   const vecX = x - cx;
@@ -103,6 +112,7 @@ function CustomTick(props) {
 
 export default function AIFeedback() {
   const [categories, setCategories] = useState([]);
+  const [openFeedback, setOpenFeedback] = useState(true);
   const [overall, setOverall] = useState({ summary: '', next_actions: '' });
   const [context, setContext] = useState({ text: '', wordCount: 0, title: '', type: '' });
   const [testData, setTestData] = useState(null);
@@ -167,7 +177,7 @@ export default function AIFeedback() {
   return (
     <Box sx={styles.mainWrapper}>
       <Box sx={styles.layoutContainer}>
-        <Box sx={styles.gridLayout}>
+        <Box sx={{ ...styles.gridLayout, gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' } }}>
           {/* LEFT COLUMN: Prompt Context */}
           <Box
             sx={{
@@ -236,224 +246,267 @@ export default function AIFeedback() {
             <Typography sx={styles.textContent}>
               {context.text || 'No submission text found.'}
             </Typography>
+
+            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+              <Button
+                variant="contained"
+                onClick={() => setOpenFeedback(true)}
+                startIcon={<AutoAwesomeIcon sx={{ color: '#fbc02d' }} />}
+                sx={{
+                  bgcolor: '#4e342e',
+                  '&:hover': { bgcolor: '#3e2723' },
+                  borderRadius: 2,
+                  px: 4,
+                  py: 1.5,
+                  fontWeight: 'bold',
+                }}
+              >
+                View AI Feedback
+              </Button>
+            </Box>
           </Box>
 
           {/* RIGHT COLUMN: Feedback & Score */}
-          <Box sx={styles.rightColumn}>
-            {/* OVERALL SCORE & RADAR CHART */}
+          <Dialog
+            open={openFeedback}
+            onClose={() => setOpenFeedback(false)}
+            maxWidth="md"
+            fullWidth
+            PaperProps={{ sx: { borderRadius: 3, overflowY: 'scroll' } }}
+          >
             <Box
               sx={{
-                bgcolor: '#fff',
-                borderRadius: 3,
-                p: 2.5,
-                boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
                 display: 'flex',
-                flexDirection: 'column',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                p: 2,
+                borderBottom: '1px solid #eee',
+                bgcolor: '#F9F6F0',
               }}
             >
-              <Box>
-                <Typography
-                  variant="body2"
-                  fontWeight="700"
-                  color="text.secondary"
-                  sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}
-                >
-                  Overall Score
-                </Typography>
-                <Typography
-                  variant="h3"
-                  fontWeight="900"
-                  color="#d32f2f"
-                  sx={{ lineHeight: 1, mt: 0.5 }}
-                >
-                  {overallScore.toFixed(1)}
-                  <Typography
-                    component="span"
-                    variant="h6"
-                    color="text.disabled"
-                    fontWeight="700"
-                    sx={{ ml: 0.5 }}
-                  >
-                    / 5.0
-                  </Typography>
-                </Typography>
-              </Box>
-
-              <Box sx={{ width: '100%', height: 240, mt: 1 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart cx="50%" cy="50%" outerRadius="55%" data={categories}>
-                    <PolarGrid gridType="circle" stroke="#e0e0e0" radialLines={false} />
-                    <PolarAngleAxis
-                      dataKey="title"
-                      tick={(props) => <CustomTick {...props} categories={categories} />}
-                      axisLine={false}
-                    />
-                    <PolarRadiusAxis
-                      angle={90}
-                      domain={[0, 5]}
-                      ticks={[1, 2, 3, 4, 5]}
-                      tick={false}
-                      axisLine={false}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Radar
-                      name="Score"
-                      dataKey="score"
-                      stroke="#d32f2f"
-                      fill="#d32f2f"
-                      fillOpacity={0.15}
-                      strokeWidth={2}
-                      dot={{ r: 3, fill: '#d32f2f' }}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </Box>
+              <Typography variant="h6" fontWeight="bold" color="primary.main">
+                AI Feedback Report
+              </Typography>
+              <IconButton onClick={() => setOpenFeedback(false)}>
+                <CloseIcon />
+              </IconButton>
             </Box>
-
-            {/* AI REVIEW DETAILS ACCORDIONS */}
-            <Box sx={{ mt: 3 }}>
-              {/* EDITORIAL SUMMARY */}
-              <Accordion sx={styles.accordionStyle} defaultExpanded>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={styles.accordionSummary}>
-                  <Stack direction="row" spacing={1.5} alignItems="center">
-                    <AutoAwesomeIcon sx={{ color: '#8B5A2B', fontSize: 20 }} />
-                    <Typography variant="subtitle1" fontWeight="800" color="#3e2723">
-                      Editorial Summary
-                    </Typography>
-                  </Stack>
-                </AccordionSummary>
-                <AccordionDetails sx={styles.accordionDetails}>
+            <Box sx={{ ...styles.rightColumn, p: { xs: 2, md: 4 }, bgcolor: '#fafafa' }}>
+              {/* OVERALL SCORE & RADAR CHART */}
+              <Box
+                sx={{
+                  bgcolor: '#fff',
+                  borderRadius: 3,
+                  p: 2.5,
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                <Box>
                   <Typography
-                    variant="caption"
+                    variant="body2"
+                    fontWeight="700"
                     color="text.secondary"
-                    sx={{ lineHeight: 1.6, fontStyle: 'italic' }}
+                    sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}
                   >
-                    {overall.summary || 'Summary not available.'}
+                    Overall Score
                   </Typography>
-                </AccordionDetails>
-              </Accordion>
+                  <Typography
+                    variant="h3"
+                    fontWeight="900"
+                    color="#d32f2f"
+                    sx={{ lineHeight: 1, mt: 0.5 }}
+                  >
+                    {overallScore.toFixed(1)}
+                    <Typography
+                      component="span"
+                      variant="h6"
+                      color="text.disabled"
+                      fontWeight="700"
+                      sx={{ ml: 0.5 }}
+                    >
+                      / 5.0
+                    </Typography>
+                  </Typography>
+                </Box>
 
-              {/* NEXT ACTIONS */}
-              {overall.next_actions && (
-                <Accordion sx={styles.accordionStyle}>
+                <Box sx={{ width: '100%', height: 240, mt: 1 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart cx="50%" cy="50%" outerRadius="55%" data={categories}>
+                      <PolarGrid gridType="circle" stroke="#e0e0e0" radialLines={false} />
+                      <PolarAngleAxis
+                        dataKey="title"
+                        tick={(props) => <CustomTick {...props} categories={categories} />}
+                        axisLine={false}
+                      />
+                      <PolarRadiusAxis
+                        angle={90}
+                        domain={[0, 5]}
+                        ticks={[1, 2, 3, 4, 5]}
+                        tick={false}
+                        axisLine={false}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Radar
+                        name="Score"
+                        dataKey="score"
+                        stroke="#d32f2f"
+                        fill="#d32f2f"
+                        fillOpacity={0.15}
+                        strokeWidth={2}
+                        dot={{ r: 3, fill: '#d32f2f' }}
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </Box>
+              </Box>
+
+              {/* AI REVIEW DETAILS ACCORDIONS */}
+              <Box sx={{ mt: 3 }}>
+                {/* EDITORIAL SUMMARY */}
+                <Accordion sx={styles.accordionStyle} defaultExpanded={false}>
                   <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={styles.accordionSummary}>
                     <Stack direction="row" spacing={1.5} alignItems="center">
-                      <FlashOnIcon sx={{ color: '#fbc02d', fontSize: 20 }} />
+                      <AutoAwesomeIcon sx={{ color: '#8B5A2B', fontSize: 20 }} />
                       <Typography variant="subtitle1" fontWeight="800" color="#3e2723">
-                        Action Plan
+                        Editorial Summary
                       </Typography>
                     </Stack>
                   </AccordionSummary>
                   <AccordionDetails sx={styles.accordionDetails}>
-                    <Stack spacing={1.5}>
-                      {overall.next_actions
-                        ?.split(/(?=\d+\.\s)/)
-                        .filter((text) => text.trim() !== '')
-                        .map((text, i) => (
-                          <Stack key={i} direction="row" spacing={1} alignItems="flex-start">
-                            <CheckCircleIcon sx={{ color: '#ed6c02', fontSize: 16, mt: 0.2 }} />
-                            <Typography variant="caption" color="text.secondary" fontWeight="500">
-                              {text.replace(/^\d+\.\s*/, '').trim()}
-                            </Typography>
-                          </Stack>
-                        ))}
-                    </Stack>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ lineHeight: 1.6, fontStyle: 'italic' }}
+                    >
+                      {overall.summary || 'Summary not available.'}
+                    </Typography>
                   </AccordionDetails>
                 </Accordion>
-              )}
 
-              {/* DETAILED ASSESSMENT */}
-              <Accordion sx={styles.accordionStyle} defaultExpanded>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={styles.accordionSummary}>
-                  <Stack direction="row" spacing={1.5} alignItems="center">
-                    <AssignmentTurnedInIcon sx={{ color: '#2e7d32', fontSize: 20 }} />
-                    <Typography variant="subtitle1" fontWeight="800" color="#3e2723">
-                      Detailed Assessment
-                    </Typography>
-                  </Stack>
-                </AccordionSummary>
-                <AccordionDetails
-                  sx={{ ...styles.accordionDetails, p: 2, pb: 0, bgcolor: '#fafafa' }}
-                >
-                  {categories.map((cat, index) => (
-                    <Box key={index} sx={styles.feedbackCard}>
-                      <Stack direction="row" justifyContent="space-between" alignItems="center">
-                        <Typography
-                          variant="caption"
-                          fontWeight="800"
-                          sx={{ letterSpacing: 1, color: '#333' }}
-                        >
-                          {cat.title}
+                {/* NEXT ACTIONS */}
+                {overall.next_actions && (
+                  <Accordion sx={styles.accordionStyle}>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={styles.accordionSummary}>
+                      <Stack direction="row" spacing={1.5} alignItems="center">
+                        <FlashOnIcon sx={{ color: '#fbc02d', fontSize: 20 }} />
+                        <Typography variant="subtitle1" fontWeight="800" color="#3e2723">
+                          Action Plan
                         </Typography>
-                        <Box
-                          sx={{
-                            bgcolor: cat.bg,
-                            color: cat.color,
-                            px: 1,
-                            py: 0.2,
-                            borderRadius: 1,
-                            fontSize: '0.75rem',
-                            fontWeight: 800,
-                          }}
-                        >
-                          {cat.score.toFixed(1)}
-                        </Box>
                       </Stack>
-                      <Box sx={styles.feedbackIconWrapper}>
-                        {cat.score >= 4 ? (
-                          <CheckCircleIcon sx={{ color: cat.color, fontSize: 18, mt: 0.3 }} />
-                        ) : (
-                          <LightbulbIcon sx={{ color: cat.color, fontSize: 18, mt: 0.3 }} />
-                        )}
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ lineHeight: 1.5 }}
-                        >
-                          {cat.score >= 4 ? cat.strengths : cat.improvements}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  ))}
-                </AccordionDetails>
-              </Accordion>
-            </Box>
+                    </AccordionSummary>
+                    <AccordionDetails sx={styles.accordionDetails}>
+                      <Stack spacing={1.5}>
+                        {overall.next_actions
+                          ?.split(/(?=\d+\.\s)/)
+                          .filter((text) => text.trim() !== '')
+                          .map((text, i) => (
+                            <Stack key={i} direction="row" spacing={1} alignItems="flex-start">
+                              <CheckCircleIcon sx={{ color: '#ed6c02', fontSize: 16, mt: 0.2 }} />
+                              <Typography variant="caption" color="text.secondary" fontWeight="500">
+                                {text.replace(/^\d+\.\s*/, '').trim()}
+                              </Typography>
+                            </Stack>
+                          ))}
+                      </Stack>
+                    </AccordionDetails>
+                  </Accordion>
+                )}
 
-            <Box sx={{ mt: 2 }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
-                <Typography
-                  variant="caption"
-                  fontWeight="800"
-                  color="text.secondary"
-                  sx={{ letterSpacing: 1 }}
+                {/* DETAILED ASSESSMENT */}
+                <Accordion sx={styles.accordionStyle} defaultExpanded={false}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={styles.accordionSummary}>
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <AssignmentTurnedInIcon sx={{ color: '#2e7d32', fontSize: 20 }} />
+                      <Typography variant="subtitle1" fontWeight="800" color="#3e2723">
+                        Detailed Assessment
+                      </Typography>
+                    </Stack>
+                  </AccordionSummary>
+                  <AccordionDetails
+                    sx={{ ...styles.accordionDetails, p: 2, pb: 0, bgcolor: '#fafafa' }}
+                  >
+                    {categories.map((cat, index) => (
+                      <Box key={index} sx={styles.feedbackCard}>
+                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+                          <Typography
+                            variant="caption"
+                            fontWeight="800"
+                            sx={{ letterSpacing: 1, color: '#333' }}
+                          >
+                            {cat.title}
+                          </Typography>
+                          <Box
+                            sx={{
+                              bgcolor: cat.bg,
+                              color: cat.color,
+                              px: 1,
+                              py: 0.2,
+                              borderRadius: 1,
+                              fontSize: '0.75rem',
+                              fontWeight: 800,
+                            }}
+                          >
+                            {cat.score.toFixed(1)}
+                          </Box>
+                        </Stack>
+                        <Box sx={styles.feedbackIconWrapper}>
+                          {cat.score >= 4 ? (
+                            <CheckCircleIcon sx={{ color: cat.color, fontSize: 18, mt: 0.3 }} />
+                          ) : (
+                            <LightbulbIcon sx={{ color: cat.color, fontSize: 18, mt: 0.3 }} />
+                          )}
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ lineHeight: 1.5 }}
+                          >
+                            {cat.score >= 4 ? cat.strengths : cat.improvements}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    ))}
+                  </AccordionDetails>
+                </Accordion>
+              </Box>
+
+              <Box sx={{ mt: 2 }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
+                  <Typography
+                    variant="caption"
+                    fontWeight="800"
+                    color="text.secondary"
+                    sx={{ letterSpacing: 1 }}
+                  >
+                    REMAINING TURNS
+                  </Typography>
+                  <Box sx={styles.dotsContainer}>
+                    {[1, 2, 3].map((i) => (
+                      <Box
+                        key={`solid-${i}`}
+                        sx={{ width: 12, height: 6, bgcolor: '#8B5A2B', borderRadius: 4 }}
+                      />
+                    ))}
+                    {[1, 2].map((i) => (
+                      <Box
+                        key={`empty-${i}`}
+                        sx={{ width: 12, height: 6, bgcolor: '#e0e0e0', borderRadius: 4 }}
+                      />
+                    ))}
+                  </Box>
+                </Stack>
+                <Button
+                  variant="contained"
+                  sx={styles.tryAgainButton}
+                  onClick={() => router.push(`/student/writing/${testId}/${parseInt(attempt) + 1}`)}
+                  startIcon={<ReplayIcon />}
                 >
-                  REMAINING TURNS
-                </Typography>
-                <Box sx={styles.dotsContainer}>
-                  {[1, 2, 3].map((i) => (
-                    <Box
-                      key={`solid-${i}`}
-                      sx={{ width: 12, height: 6, bgcolor: '#8B5A2B', borderRadius: 4 }}
-                    />
-                  ))}
-                  {[1, 2].map((i) => (
-                    <Box
-                      key={`empty-${i}`}
-                      sx={{ width: 12, height: 6, bgcolor: '#e0e0e0', borderRadius: 4 }}
-                    />
-                  ))}
-                </Box>
-              </Stack>
-              <Button
-                variant="contained"
-                sx={styles.tryAgainButton}
-                onClick={() => router.push(`/student/writing/${testId}/${parseInt(attempt) + 1}`)}
-                startIcon={<ReplayIcon />}
-              >
-                Try Again
-              </Button>
+                  Try Again
+                </Button>
+              </Box>
             </Box>
-          </Box>
+          </Dialog>
         </Box>
       </Box>
     </Box>
