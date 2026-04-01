@@ -1,7 +1,6 @@
 'use client';
 
-import { use, useCallback, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { forwardRef, use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Box,
@@ -11,18 +10,27 @@ import {
   Chip,
   CircularProgress,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Pagination,
+  Snackbar,
   Stack,
   Typography,
 } from '@mui/material';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import ForumIcon from '@mui/icons-material/Forum';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import { getTestFeedbacks } from '../../../../../../api/feedback';
+import { generateAIReadingFeedback, getTestFeedbacks } from '../../../../../../api/feedback';
 import FeedbackCard from '../../../../../../components/Teacher/Feedback/FeedbackCard';
 import {
+  confirmUpload,
+  fetchHtmlContent,
+  getPresignedUrl,
   getProductiveTestDetails,
   getReceptiveTestDetails,
   getRecepiveTestDetails,
+  uploadToObjectStorage,
 } from '../../../../../../api/test';
 
 const STATUS_LABELS = {
@@ -45,20 +53,142 @@ const TEST_DETAIL_FETCHERS = {
   speaking: getProductiveTestDetails,
 };
 
+const FEEDBACK_PAGE_SIZE = 5;
+const MAX_PDF_SIZE_BYTES = 50 * 1024 * 1024;
+
+const HiddenReviewContent = forwardRef(({ testData, captureTargetRef }, ref) => (
+  <Box
+    ref={ref}
+    sx={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '794px',
+      bgcolor: '#fff',
+      color: '#111',
+      p: 2,
+      opacity: 0,
+      pointerEvents: 'none',
+      zIndex: -1,
+    }}
+  >
+    <div ref={captureTargetRef}>
+      <Typography variant="h4" align="center" sx={{ mb: 3, fontWeight: 700 }}>
+        {testData.title || 'Reading Test'}
+      </Typography>
+
+      {(testData.parts || []).map((part, index) => (
+        <Box
+          key={index}
+          sx={{
+            mb: 3,
+            pageBreakAfter: 'always',
+            '&:last-child': { pageBreakAfter: 'auto' },
+            '& p': { m: 0, p: 0 },
+          }}
+        >
+          <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 700 }}>
+            Part {index + 1}
+          </Typography>
+
+          <Box sx={{ mb: 2, lineHeight: 1.7, fontSize: '1rem' }}>
+            <div dangerouslySetInnerHTML={{ __html: part.content || '' }} />
+          </Box>
+
+          {(part.questions || []).map((q, qIndex) => (
+            <Box key={qIndex} sx={{ mb: 1.5, pageBreakInside: 'avoid' }}>
+              <Box sx={{ display: 'flex', gap: 1, fontWeight: 600 }}>
+                <Typography sx={{ fontWeight: 600 }}>{q.question_number}.</Typography>
+                <div
+                  dangerouslySetInnerHTML={{ __html: q.content || `Question ${q.question_number}` }}
+                />
+              </Box>
+              <Box sx={{ ml: 3, mt: 0.5 }}>
+                {(q.answers || []).map((ans, aIndex) => (
+                  <Box key={aIndex} sx={{ display: 'flex', gap: 1, mb: 0.25 }}>
+                    <Typography variant="body2">{ans.option_label}.</Typography>
+                    <Typography variant="body2">{ans.answer_text}</Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          ))}
+        </Box>
+      ))}
+    </div>
+  </Box>
+));
+
+HiddenReviewContent.displayName = 'HiddenReviewContent';
+
+async function transformReadingData(data) {
+  const parts = data?.receptive_test?.receptive_parts ?? [];
+
+  return Promise.all(
+    parts.map(async (part) => {
+      const { format } = part;
+
+      const newPart = {
+        id: part.id,
+        order: part.order,
+        format,
+        description: part.description || '',
+        content: part.content || '',
+      };
+
+      if (newPart.content?.startsWith('http')) {
+        newPart.content = await fetchHtmlContent(newPart.content);
+      }
+
+      newPart.questions = await Promise.all(
+        (part.receptive_questions || []).map(async (q) => {
+          const newQ = {
+            id: q.id,
+            question_number: q.question_number,
+            explanation: q.explanation || '',
+            score: q.score,
+            content: !['I', 'J'].includes(format) ? q.content || '' : undefined,
+          };
+
+          if (newQ.content?.startsWith?.('http')) {
+            newQ.content = await fetchHtmlContent(newQ.content);
+          }
+
+          newQ.answers = (q.receptive_answers || []).map(({ resources, ...ans }) => {
+            if (format === 'I') {
+              const { option_label, ...ansNoLabel } = ans;
+              return ansNoLabel;
+            }
+            return ans;
+          });
+
+          return newQ;
+        }),
+      );
+
+      return newPart;
+    }),
+  );
+}
+
 function normalizeFeedbackResponse(data) {
   if (Array.isArray(data)) {
-    return { items: data, next: null };
+    return {
+      items: data,
+      next: null,
+      count: data.length,
+    };
   }
 
   return {
     items: data?.results ?? [],
     next: data?.next ?? null,
+    count: typeof data?.count === 'number' ? data.count : (data?.results ?? []).length,
   };
 }
 
 export default function ViewTestFeedbackPage({ params }) {
   const { skill, test_id } = use(params);
-  const router = useRouter();
 
   const normalizedSkill = (skill || '').toLowerCase();
 
@@ -69,13 +199,19 @@ export default function ViewTestFeedbackPage({ params }) {
 
   const [aiFeedback, setAiFeedback] = useState(null);
   const [teacherFeedbacks, setTeacherFeedbacks] = useState([]);
-  const [nextTeacherPage, setNextTeacherPage] = useState(null);
+  const [teacherPage, setTeacherPage] = useState(1);
+  const [teacherTotalCount, setTeacherTotalCount] = useState(0);
   const [loadingFeedbacks, setLoadingFeedbacks] = useState(true);
   const [feedbackError, setFeedbackError] = useState(null);
-  const [loadingMoreTeachers, setLoadingMoreTeachers] = useState(false);
+  const [loadingTeacherPage, setLoadingTeacherPage] = useState(false);
+  const [readingReviewData, setReadingReviewData] = useState(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [confirmAISendOpen, setConfirmAISendOpen] = useState(false);
+  const [toast, setToast] = useState({ open: false, severity: 'info', message: '' });
+  const hiddenReviewRef = useRef(null);
+  const captureRef = useRef(null);
 
-  const supportsAiGeneration = ['speaking', 'writing'].includes(normalizedSkill);
-  const canGenerateAiFeedback = supportsAiGeneration && testStatus === 'I';
+  const showAiFeedbackSection = normalizedSkill === 'reading';
 
   const skillLabel = useMemo(
     () => SKILL_LABELS[normalizedSkill] || (skill ? String(skill) : 'Unknown'),
@@ -88,8 +224,8 @@ export default function ViewTestFeedbackPage({ params }) {
 
     try {
       const [aiFeedbackData, teacherFeedbackData] = await Promise.all([
-        getTestFeedbacks({ test_id, created_by: 'A' }),
-        getTestFeedbacks({ test_id, created_by: 'T' }),
+        getTestFeedbacks({ test_id, created_by: 'A', page_size: FEEDBACK_PAGE_SIZE }),
+        getTestFeedbacks({ test_id, created_by: 'T', page_size: FEEDBACK_PAGE_SIZE }),
       ]);
 
       const aiPayload = normalizeFeedbackResponse(aiFeedbackData);
@@ -97,7 +233,8 @@ export default function ViewTestFeedbackPage({ params }) {
 
       setAiFeedback(aiPayload.items[0] || null);
       setTeacherFeedbacks(teacherPayload.items);
-      setNextTeacherPage(teacherPayload.next);
+      setTeacherPage(1);
+      setTeacherTotalCount(teacherPayload.count || teacherPayload.items.length);
     } catch (err) {
       setFeedbackError(err.message || 'Failed to load feedback list.');
     } finally {
@@ -119,6 +256,16 @@ export default function ViewTestFeedbackPage({ params }) {
         const details = await detailFetcher(test_id);
         setTestTitle(details?.title || `${skillLabel} Test Feedback`);
         setTestStatus(details?.status || null);
+
+        if (normalizedSkill === 'reading') {
+          const parts = await transformReadingData(details);
+          setReadingReviewData({
+            id: details.id,
+            status: details.status,
+            title: details.title || '',
+            parts,
+          });
+        }
       } catch (err) {
         setPageError(err.message || 'Failed to load test details.');
       } finally {
@@ -135,25 +282,127 @@ export default function ViewTestFeedbackPage({ params }) {
     }
   }, [loadFeedbacks, pageLoading, pageError]);
 
-  const handleLoadMoreTeachers = async () => {
-    if (!nextTeacherPage || loadingMoreTeachers) return;
+  const showToast = useCallback((severity, message) => {
+    setToast({ open: true, severity, message });
+  }, []);
 
-    setLoadingMoreTeachers(true);
-    try {
-      const page = new URL(nextTeacherPage).searchParams.get('page');
-      const data = await getTestFeedbacks({ test_id, created_by: 'T', page });
-      const payload = normalizeFeedbackResponse(data);
-      setTeacherFeedbacks((prev) => [...prev, ...payload.items]);
-      setNextTeacherPage(payload.next);
-    } catch (err) {
-      setFeedbackError(err.message || 'Failed to load more teacher feedbacks.');
-    } finally {
-      setLoadingMoreTeachers(false);
+  const handleSendAI = useCallback(async () => {
+    const testId = Number(test_id);
+    const canReview = testStatus === 'I' && testId;
+
+    if (!canReview) {
+      showToast('warning', 'This test must be In Review before you can request AI Review.');
+      return;
     }
-  };
 
-  const handleRequestAiFeedback = async () => {
-    setFeedbackError('Generate AI feedback is not implemented yet.');
+    try {
+      setReviewLoading(true);
+
+      if (!captureRef.current) {
+        throw new Error('Review content is not ready for PDF generation.');
+      }
+
+      const html2pdfModule = await import('html2pdf.js');
+      const html2pdf = html2pdfModule.default || html2pdfModule;
+
+      const pdfBlob = await html2pdf()
+        .set({
+          margin: [10, 10, 10, 10],
+          filename: `reading-review-${testId}.pdf`,
+          image: { type: 'jpeg', quality: 0.95 },
+          html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak: { mode: ['css', 'legacy'] },
+        })
+        .from(captureRef.current)
+        .outputPdf('blob');
+
+      if (!pdfBlob?.size || pdfBlob.size > MAX_PDF_SIZE_BYTES) {
+        throw new Error('Generated PDF is empty or exceeds 50MB.');
+      }
+
+      const fileName = `reading-review-${testId}-${Date.now()}.pdf`;
+      const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+      const presign = await getPresignedUrl({
+        filename: pdfFile.name,
+        fileSize: pdfFile.size,
+        mimeType: pdfFile.type,
+        category: 'tests',
+        testId,
+      });
+
+      const { etag } = await uploadToObjectStorage({
+        url: presign.url,
+        mimeType: pdfFile.type,
+        file: pdfFile,
+      });
+
+      const confirm = await confirmUpload({
+        key: presign.key,
+        fileSize: pdfFile.size,
+        mimeType: pdfFile.type,
+        etag,
+      });
+
+      const fileUrl = confirm?.file_url || '';
+      const gcsHttpPrefix = 'https://storage.googleapis.com/';
+      if (!fileUrl.startsWith(gcsHttpPrefix)) {
+        throw new Error('Uploaded file URL is invalid. Expected Google Cloud Storage URL.');
+      }
+
+      const gcsPath = fileUrl.slice(gcsHttpPrefix.length);
+      const separatorIndex = gcsPath.indexOf('/');
+      if (separatorIndex <= 0 || separatorIndex === gcsPath.length - 1) {
+        throw new Error('Uploaded file URL format is invalid.');
+      }
+
+      const bucket = gcsPath.slice(0, separatorIndex);
+      const objectKey = gcsPath.slice(separatorIndex + 1);
+      const pdfGcsUri = `gs://${bucket}/${objectKey}`;
+
+      await generateAIReadingFeedback({
+        test_id: testId,
+        pdf_gcs_uri: pdfGcsUri,
+      });
+
+      await loadFeedbacks();
+      showToast('success', 'AI feedback generated successfully.');
+    } catch (error) {
+      showToast('error', error?.message || 'Failed to generate AI review. Please try again.');
+    } finally {
+      setReviewLoading(false);
+      setConfirmAISendOpen(false);
+    }
+  }, [loadFeedbacks, showToast, testStatus, test_id]);
+
+  const teacherTotalPages = useMemo(() => {
+    if (teacherTotalCount <= FEEDBACK_PAGE_SIZE) return 1;
+    return Math.max(1, Math.ceil(teacherTotalCount / FEEDBACK_PAGE_SIZE));
+  }, [teacherTotalCount]);
+
+  const handleTeacherPageChange = async (_, page) => {
+    if (loadingTeacherPage || page === teacherPage) return;
+
+    setLoadingTeacherPage(true);
+    setFeedbackError(null);
+    try {
+      const data = await getTestFeedbacks({
+        test_id,
+        created_by: 'T',
+        page,
+        page_size: FEEDBACK_PAGE_SIZE,
+      });
+      const payload = normalizeFeedbackResponse(data);
+
+      setTeacherFeedbacks(payload.items);
+      setTeacherPage(page);
+      setTeacherTotalCount(payload.count || payload.items.length);
+    } catch (err) {
+      setFeedbackError(err.message || 'Failed to change feedback page.');
+    } finally {
+      setLoadingTeacherPage(false);
+    }
   };
 
   if (pageLoading) {
@@ -199,53 +448,44 @@ export default function ViewTestFeedbackPage({ params }) {
         sx={{
           display: 'grid',
           gap: 2,
-          gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+          gridTemplateColumns: showAiFeedbackSection ? { xs: '1fr', md: '1fr 1fr' } : '1fr',
           alignItems: 'start',
         }}
       >
-        <Card variant="outlined" sx={{ borderRadius: 3 }}>
-          <CardContent>
-            <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
-              <SmartToyIcon color="info" />
-              <Typography variant="h6" fontWeight={700}>
-                AI Feedback
-              </Typography>
-            </Stack>
-
-            {loadingFeedbacks ? (
-              <Box display="flex" justifyContent="center" py={3}>
-                <CircularProgress size={24} />
-              </Box>
-            ) : aiFeedback ? (
-              <FeedbackCard feedback={aiFeedback} isAi />
-            ) : (
-              <Stack spacing={1.5}>
-                <Alert severity="info">No AI feedback for this test yet.</Alert>
-                {supportsAiGeneration && (
-                  <Button
-                    variant="contained"
-                    startIcon={<AutoFixHighIcon />}
-                    onClick={handleRequestAiFeedback}
-                    disabled={!canGenerateAiFeedback}
-                    sx={{ width: 'fit-content', textTransform: 'none', fontWeight: 700 }}
-                  >
-                    Generate AI Feedback
-                  </Button>
-                )}
-                {supportsAiGeneration && !canGenerateAiFeedback && (
-                  <Typography variant="body2" color="text.secondary">
-                    AI feedback can be generated only when the test status is In Review.
-                  </Typography>
-                )}
-                {!supportsAiGeneration && (
-                  <Typography variant="body2" color="text.secondary">
-                    Auto-generated AI feedback is currently available for Speaking and Writing only.
-                  </Typography>
-                )}
+        {showAiFeedbackSection && (
+          <Card variant="outlined" sx={{ borderRadius: 3 }}>
+            <CardContent>
+              <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
+                <SmartToyIcon color="info" />
+                <Typography variant="h6" fontWeight={700}>
+                  AI Feedback
+                </Typography>
               </Stack>
-            )}
-          </CardContent>
-        </Card>
+
+              {loadingFeedbacks ? (
+                <Box display="flex" justifyContent="center" py={3}>
+                  <CircularProgress size={24} />
+                </Box>
+              ) : aiFeedback ? (
+                <FeedbackCard feedback={aiFeedback} isAi />
+              ) : (
+                <Stack spacing={1.5}>
+                  <Alert severity="info">No AI feedback for this test yet.</Alert>
+                  <Box>
+                    <Button
+                      variant="contained"
+                      onClick={() => setConfirmAISendOpen(true)}
+                      disabled={reviewLoading || !readingReviewData}
+                      sx={{ textTransform: 'none', fontWeight: 600 }}
+                    >
+                      {reviewLoading ? 'Sending...' : 'Send AI'}
+                    </Button>
+                  </Box>
+                </Stack>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <Card variant="outlined" sx={{ borderRadius: 3 }}>
           <CardContent>
@@ -256,7 +496,7 @@ export default function ViewTestFeedbackPage({ params }) {
               </Typography>
             </Stack>
 
-            {loadingFeedbacks ? (
+            {loadingFeedbacks || loadingTeacherPage ? (
               <Box display="flex" justifyContent="center" py={3}>
                 <CircularProgress size={24} />
               </Box>
@@ -268,21 +508,75 @@ export default function ViewTestFeedbackPage({ params }) {
                   <FeedbackCard key={feedback.id} feedback={feedback} />
                 ))}
 
-                {nextTeacherPage && (
-                  <Button
-                    variant="text"
-                    onClick={handleLoadMoreTeachers}
-                    disabled={loadingMoreTeachers}
-                    sx={{ textTransform: 'none', fontWeight: 700 }}
-                  >
-                    {loadingMoreTeachers ? 'Loading...' : 'Load more'}
-                  </Button>
+                {teacherTotalPages > 1 && (
+                  <Box display="flex" justifyContent="center" pt={0.5}>
+                    <Pagination
+                      count={teacherTotalPages}
+                      page={teacherPage}
+                      onChange={handleTeacherPageChange}
+                      color="primary"
+                      shape="rounded"
+                      size="large"
+                    />
+                  </Box>
                 )}
               </Stack>
             )}
           </CardContent>
         </Card>
       </Box>
+
+      <Dialog
+        open={confirmAISendOpen}
+        onClose={() => setConfirmAISendOpen(false)}
+        slotProps={{
+          paper: { sx: { borderRadius: '12px', p: 1, maxWidth: '420px' } },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Confirm AI Feedback Generation</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            Send this test to AI for evaluation now? You can stay on this page and wait for result.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setConfirmAISendOpen(false)} sx={{ textTransform: 'none' }}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSendAI}
+            disabled={reviewLoading}
+            sx={{ textTransform: 'none' }}
+          >
+            {reviewLoading ? 'Sending...' : 'Confirm'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <HiddenReviewContent
+        ref={hiddenReviewRef}
+        captureTargetRef={captureRef}
+        testData={{
+          title: readingReviewData?.title || testTitle || 'Reading Test',
+          parts: readingReviewData?.parts || [],
+        }}
+      />
+
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={4000}
+        onClose={() => setToast((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          severity={toast.severity}
+          onClose={() => setToast((prev) => ({ ...prev, open: false }))}
+          sx={{ width: '100%' }}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 }

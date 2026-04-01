@@ -33,12 +33,19 @@ export default function FeedbackCard({ feedback, isAi = false }) {
           <Box
             sx={{
               color: 'text.primary',
+              fontSize: '0.95rem',
+              lineHeight: 1.7,
               '& h3': {
                 fontSize: '1.15rem',
                 fontWeight: 700,
+                color: 'text.primary',
                 mt: 2,
                 mb: 1,
-                color: 'text.primary',
+                backgroundColor: 'rgba(25, 118, 210, 0.05)',
+                padding: '8px 12px',
+                borderRadius: 1,
+                borderLeft: '4px solid',
+                borderLeftColor: 'primary.main',
               },
               '& h3:first-of-type': {
                 mt: 0,
@@ -48,13 +55,24 @@ export default function FeedbackCard({ feedback, isAi = false }) {
                 mb: 1.25,
                 lineHeight: 1.75,
               },
-              '& ul, & ol': {
+              '& ul': {
                 m: 0,
                 mb: 1.25,
-                pl: 3,
+                pl: 2.5,
+                listStyleType: 'disc',
+              },
+              '& ol': {
+                m: 0,
+                mb: 1.25,
+                pl: 2.5,
+                listStyleType: 'decimal',
+              },
+              '& ul li, & ol li': {
+                mb: 0.75,
+                lineHeight: 1.65,
               },
               '& li': {
-                mb: 0.5,
+                mb: 0.75,
                 lineHeight: 1.65,
               },
               '& strong': {

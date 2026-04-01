@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Box, CircularProgress, Alert, Container } from '@mui/material';
-import PreviewReadingTest from '../../../../../components/Teacher/previewReadingTest';
+import ListeningPreview from '../../../../../components/Teacher/ListeningPreview';
 import ViewTestHeader from '../../../../../components/Teacher/ViewTestHeader';
 import DeleteConfirmSnackbar from '../../../../../components/Teacher/DeleteConfirmSnackbar';
 import {
@@ -107,7 +107,7 @@ export default function ViewListeningTestPage({ params }) {
         showEdit={status === 'D' || status === 'I'}
         onEdit={() => router.push(`/teacher/update-test/listening/${test_id}`)}
       />
-      <PreviewReadingTest
+      <ListeningPreview
         basicInfo={basicInfo}
         parts={parts}
         onPreview={() => router.back()}

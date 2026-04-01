@@ -13,9 +13,9 @@ export default function FillBlankPart({
   userAnswers,
   onUpdateAnswers,
   disabled,
-  media,
+  media = {},
 }) {
-  const { audioSrc, passageSrc } = media;
+  const { audioSrc = '', passageSrc = '' } = media;
   const [leftWidth, setLeftWidth] = useState(40); // percentage width
   const [isDragging, setIsDragging] = useState(false);
 
@@ -117,7 +117,7 @@ export default function FillBlankPart({
         </Box>
         <Box
           sx={listeningPartStyles.passageContainer}
-          dangerouslySetInnerHTML={{ __html: passageSrc }}
+          dangerouslySetInnerHTML={{ __html: passageSrc || '' }}
         />
       </Box>
       {/* -------- Drag Section --------- */}

@@ -147,7 +147,13 @@ export default function ViewReadingTestPage({ params }) {
         showEdit={status === 'D' || status === 'I'}
         onEdit={() => router.push(`/teacher/update-test/reading/${test_id}`)}
       />
-      <ReadingPreview inline open={false} onClose={() => router.back()} testData={testData} />
+      <ReadingPreview
+        inline
+        open={false}
+        onClose={() => router.back()}
+        testData={testData}
+        showBackButton={false}
+      />
       <DeleteConfirmSnackbar
         open={confirmDeleteOpen}
         onClose={() => setConfirmDeleteOpen(false)}

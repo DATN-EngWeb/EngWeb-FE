@@ -10,122 +10,13 @@ import FillBlankPart from '../Student/ListeningTest/part/fillBlanks';
 import MultipleChoiceSingleAudio from '../Student/ListeningTest/part/multipleChoiceSingleAudio';
 import MultipleChoiceQuestionAudio from '../Student/ListeningTest/part/multipleChoiceMultiQuestionAudio';
 import Matching from '../Student/ListeningTest/part/matching';
-import PrintIcon from '@mui/icons-material/Print';
+import {
+  fetchHtmlContent,
+  loadAudioSource,
+  loadImageSource,
+} from '../../api/teacher/upload-reading';
 
-const PrintOnlyView = ({ basicInfo, parts }) => (
-  <Box
-    sx={{
-      display: 'none',
-      '@media print': {
-        display: 'block !important',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        bgcolor: 'white',
-        zIndex: 9999,
-        p: 2,
-        visibility: 'visible',
-      },
-      p: 0,
-    }}
-  >
-    <style>
-      {`
-        @media print {
-          body * {
-            visibility: hidden;
-            overflow: visible !important;
-          }
-          #print-area, #print-area * {
-            visibility: visible;
-          }
-          #print-area {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            display: block !important;
-          }
-          .no-print {
-            display: none !important;
-          }
-        }
-      `}
-    </style>
-
-    <Box id="print-area">
-      <Typography variant="h4" align="center" sx={{ mb: 4, fontWeight: 700, color: '#000' }}>
-        {basicInfo?.testName || 'Reading Test'}
-      </Typography>
-
-      {parts?.map((part, index) => (
-        <Box
-          key={part.id || index}
-          sx={{
-            mb: 6,
-            pageBreakAfter: 'always',
-            '&:last-child': { pageBreakAfter: 'auto' },
-          }}
-        >
-          <Typography
-            variant="h5"
-            sx={{ mb: 2, fontWeight: 600, color: '#000', borderBottom: '1px solid #000', pb: 1 }}
-          >
-            Part {index + 1}: {getListeningTestTypeLabel(part.format || part.type)}
-          </Typography>
-
-          {part.content && (
-            <Box
-              sx={{
-                mb: 4,
-                lineHeight: 1.8,
-                fontSize: '1.1rem',
-                textAlign: 'justify',
-                color: '#000',
-              }}
-            >
-              <div dangerouslySetInnerHTML={{ __html: part.content }} />
-            </Box>
-          )}
-
-          <Box sx={{ mt: 3 }}>
-            {(part.receptive_questions || part.questions || []).map((q, qIndex) => (
-              <Box key={qIndex} sx={{ mb: 4, pageBreakInside: 'avoid' }}>
-                <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                  <Typography sx={{ fontWeight: 600, color: '#000' }}>
-                    {q.question_number || qIndex + 1}.
-                  </Typography>
-                  <div
-                    style={{ fontWeight: 600, color: '#000' }}
-                    dangerouslySetInnerHTML={{
-                      __html: q.content || `Question ${q.question_number || qIndex + 1}`,
-                    }}
-                  />
-                </Box>
-
-                <Box sx={{ ml: 4 }}>
-                  {(q.receptive_answers || q.answers || []).map((ans, aIndex) => (
-                    <Box key={aIndex} sx={{ display: 'flex', gap: 1, mb: 0.5 }}>
-                      <Typography variant="body2" sx={{ color: '#333' }}>
-                        {ans.option_label || String.fromCharCode(65 + aIndex)}.
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#333' }}>
-                        {ans.answer_text || ans.content}
-                      </Typography>
-                    </Box>
-                  ))}
-                </Box>
-              </Box>
-            ))}
-          </Box>
-        </Box>
-      ))}
-    </Box>
-  </Box>
-);
-
-export default function PreviewReadingTest({
+export default function ListeningPreview({
   basicInfo,
   parts,
   onPreview,
@@ -133,6 +24,7 @@ export default function PreviewReadingTest({
 }) {
   const [indexPart, setIndexPart] = useState(0);
   const [receptiveParts, setReceptiveParts] = useState([]);
+  const [mediaResources, setMediaResources] = useState({});
 
   const goNextPart = () => {
     if (indexPart < parts.length - 1) {
@@ -149,32 +41,111 @@ export default function PreviewReadingTest({
   };
 
   useEffect(() => {
-    if (!parts || parts.length === 0) return;
+    if (!parts || parts.length === 0) {
+      setReceptiveParts([]);
+      setMediaResources({});
+      return;
+    }
 
-    const newParts = parts.map((part) => {
-      // Ép kiểu dữ liệu để đảm bảo cấu trúc receptive_...
-      const questions = part.receptive_questions || part.questions || [];
+    let mounted = true;
+    let loadedResources = {};
 
-      return {
-        ...part,
-        receptive_questions: questions.map((q) => ({
-          ...q,
-          receptive_answers: q.receptive_answers || q.answers || [],
-        })),
-      };
-    });
+    const buildPreviewData = async () => {
+      const newParts = parts.map((part) => {
+        const questions = part.receptive_questions || part.questions || [];
 
-    setReceptiveParts(newParts);
-    // console.log('Mảng parts mới đã map:', newParts);
+        return {
+          ...part,
+          receptive_questions: questions.map((q) => ({
+            ...q,
+            receptive_answers: q.receptive_answers || q.answers || [],
+          })),
+        };
+      });
+
+      const resourcesMap = {};
+
+      await Promise.all(
+        newParts.map(async (part) => {
+          resourcesMap[part.id] = {
+            audioSrc: null,
+            imageSrcs: {},
+            audioSrcs: {},
+            passageSrc: '',
+          };
+
+          const res = resourcesMap[part.id];
+          const partAudio = part.audio?.url || part.resources?.audio;
+          if (partAudio) {
+            res.audioSrc = partAudio.startsWith('blob:')
+              ? partAudio
+              : await loadAudioSource(partAudio);
+          }
+
+          if (part.content) {
+            res.passageSrc = part.content.startsWith('http')
+              ? await fetchHtmlContent(part.content)
+              : part.content;
+          }
+
+          if (part.format === 'A' || part.type === 'multichoice_images') {
+            const imageTasks = [];
+            part.receptive_questions?.forEach((q) => {
+              q.receptive_answers?.forEach((opt) => {
+                const imageUrl = opt.image?.url || opt.resources?.image;
+                if (imageUrl) {
+                  imageTasks.push(async () => {
+                    res.imageSrcs[opt.id] = imageUrl.startsWith('blob:')
+                      ? imageUrl
+                      : await loadImageSource(imageUrl);
+                  });
+                }
+              });
+            });
+            await Promise.all(imageTasks.map((task) => task()));
+          }
+
+          if (part.format === 'B' || part.type === 'multichoice_texts') {
+            const audioTasks = [];
+            part.receptive_questions?.forEach((q) => {
+              const qAudio = q.audio?.url || q.resources?.audio;
+              if (qAudio) {
+                audioTasks.push(async () => {
+                  res.audioSrcs[q.id] = qAudio.startsWith('blob:')
+                    ? qAudio
+                    : await loadAudioSource(qAudio);
+                });
+              }
+            });
+            await Promise.all(audioTasks.map((task) => task()));
+          }
+        }),
+      );
+
+      loadedResources = resourcesMap;
+      if (!mounted) return;
+
+      setReceptiveParts(newParts);
+      setMediaResources(resourcesMap);
+    };
+
+    buildPreviewData();
+
+    return () => {
+      mounted = false;
+      Object.values(loadedResources).forEach((res) => {
+        if (res.audioSrc?.startsWith('blob:')) URL.revokeObjectURL(res.audioSrc);
+        Object.values(res.imageSrcs || {}).forEach((url) => {
+          if (url?.startsWith('blob:')) URL.revokeObjectURL(url);
+        });
+        Object.values(res.audioSrcs || {}).forEach((url) => {
+          if (url?.startsWith('blob:')) URL.revokeObjectURL(url);
+        });
+      });
+    };
   }, [parts]);
 
   const renderPart = (part, index) => {
-    // - 'A': Listening - Multiple choice images
-    // - 'B': Listening - Multiple choice text (one audio per question)
-    // - 'C': Listening - Multiple choice text (one audio for all question)
-    // - 'D': Listening - Fill in the blank (text)
-    // - 'E': Listening - Matching
-
     const isActive = indexPart === index;
 
     const commonProps = {
@@ -182,6 +153,7 @@ export default function PreviewReadingTest({
       isActive: isActive,
       userAnswers: {},
       disabled: true,
+      media: mediaResources[part.id] || {},
     };
 
     switch (part.type) {
@@ -190,9 +162,8 @@ export default function PreviewReadingTest({
       case 'multichoice_texts':
         if (part.audioFormat === 'onetomany') {
           return <MultipleChoiceQuestionAudio key={part.id} {...commonProps} />;
-        } else {
-          return <MultipleChoiceSingleAudio key={part.id} {...commonProps} />;
         }
+        return <MultipleChoiceSingleAudio key={part.id} {...commonProps} />;
       case 'fill_in_the_blanks':
         return <FillBlankPart key={part.id} {...commonProps} />;
       case 'matching':
@@ -216,7 +187,6 @@ export default function PreviewReadingTest({
       }}
     >
       <Container maxWidth="lg" className="no-print">
-        {/* -------- Test Heading Section --------- */}
         <Box sx={listeningtestStyles.testHeadingContainer}>
           {showHeaderActions ? (
             <Typography
@@ -245,22 +215,6 @@ export default function PreviewReadingTest({
           </Box>
           {showHeaderActions ? (
             <Box sx={{ ...listeningtestStyles.summitButtonWrapper, display: 'flex', gap: 1 }}>
-              <Button
-                variant="outlined"
-                startIcon={<PrintIcon />}
-                onClick={() => window.print()}
-                sx={{
-                  ...listeningtestStyles.submitButton,
-                  borderColor: 'primary.main',
-                  color: 'primary.main',
-                  '&:hover': {
-                    borderColor: 'primary.dark',
-                    backgroundColor: 'rgba(25, 118, 210, 0.04)',
-                  },
-                }}
-              >
-                Print All
-              </Button>
               <Button sx={listeningtestStyles.submitButton} disabled>
                 Submit Test
               </Button>
@@ -270,7 +224,6 @@ export default function PreviewReadingTest({
           )}
         </Box>
         <Box sx={listeningtestStyles.separatorLine}></Box>
-        {/* -------- List Part Selection --------- */}
         <Box sx={listeningtestStyles.listPartContainer}>
           {parts.map((part, index) => (
             <Box
@@ -298,7 +251,6 @@ export default function PreviewReadingTest({
         </Box>
         <Box sx={{ ...listeningtestStyles.separatorLine, backgroundColor: 'gray.main' }}></Box>
       </Container>
-      {/* -------- Part Content Section --------- */}
       <Box
         className="no-print"
         sx={{ width: '100%', height: 'auto', backgroundColor: 'background.gray' }}
@@ -306,7 +258,6 @@ export default function PreviewReadingTest({
         {receptiveParts.map((part, index) => renderPart(part, index))}
       </Box>
 
-      {/* -------- Stepper Section --------- */}
       <Box
         className="no-print"
         sx={{ width: '100%', height: 'auto', backgroundColor: 'background.gray' }}
@@ -339,8 +290,6 @@ export default function PreviewReadingTest({
           </Box>
         </Container>
       </Box>
-
-      <PrintOnlyView basicInfo={basicInfo} parts={receptiveParts} />
     </Box>
   );
 }
