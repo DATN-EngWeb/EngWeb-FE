@@ -3,7 +3,7 @@
 import { Box, Button, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-import { listeningtestStyles } from '../../../styles/Student/Listening/listeningTestStyles';
+import { listeningtestStyles } from '../../../styles/student/Listening/ListeningTestStyles.js';
 
 export default function TestHeading({
   testName = '',

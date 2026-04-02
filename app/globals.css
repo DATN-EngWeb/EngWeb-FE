@@ -3,7 +3,8 @@
 
 :root {
   --background: #fff4e9;
-  --foreground: #171717;
+  --yellow-bg: #fff4e9;
+  --foreground: #532822;
   --card: #ffffff;
   --card-foreground: #171717;
   --popover: #ffffff;
@@ -87,7 +88,8 @@
 }
 
 body {
-  background: var(--background);
+  background: var(--yellow-bg);
+  background-attachment: fixed;
   color: var(--foreground);
   font-family:
     'Poppins',

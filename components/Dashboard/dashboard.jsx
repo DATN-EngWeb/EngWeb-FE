@@ -16,7 +16,7 @@ import {
   Select,
   MenuItem,
 } from '@mui/material';
-import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
+import { listeningtestStyles } from '@/styles/student/Listening/ListeningTestStyles';
 import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -152,7 +152,7 @@ export default function StudentDashboard() {
           setHistoryData(statsResponse?.last_30_attempts || []);
         }
       } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+        console.error('Error fetching dashboard data:', error); // eslint-disable-line no-console
       } finally {
         setIsLoading(false);
         setIsInitialMount(false);

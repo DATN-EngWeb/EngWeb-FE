@@ -5,7 +5,7 @@ import { Container, Box, Typography, TextField } from '@mui/material';
 import CustomAudioPlayer from '../../../Test/customAudioPlayer';
 import InstructionIcon from '../../../Test/instructionIcon';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
-import { listeningPartStyles } from '../../../../styles/Student/Listening/listeningTestStyles';
+import { listeningPartStyles } from '../../../../styles/student/Listening/ListeningTestStyles.js';
 
 export default function FillBlankPart({
   dataPart,

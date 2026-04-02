@@ -53,7 +53,7 @@ export default function ProductiveTestHistory() {
         setHistoryData(Array.isArray(listAttempt) ? listAttempt : (listAttempt?.results ?? []));
         setTotalCount(Array.isArray(listAttempt) ? listAttempt.length : (listAttempt?.count ?? 0));
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching data:', error); // eslint-disable-line no-console
       } finally {
         setLoading(false);
       }
@@ -216,9 +216,6 @@ export default function ProductiveTestHistory() {
                   bgcolor: 'white',
                 }}
               >
-                <Box sx={{ mb: 2, opacity: 0.3 }}>
-                  <HistoryEduIcon sx={{ fontSize: 64 }} />
-                </Box>
                 <Typography variant="body1" fontWeight={700}>
                   You haven't submitted any responses yet.
                 </Typography>

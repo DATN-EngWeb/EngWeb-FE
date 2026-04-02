@@ -99,6 +99,7 @@ export default function ReadingHub() {
         if (filters.title) params.title = filters.title;
         if (filters.level) params.level = filters.level;
         if (filters.mine) params.mine = 'true';
+        params.progress_status = true;
 
         if (user?.role === 'A') {
           if (filters.status) params.status = filters.status;
@@ -117,7 +118,7 @@ export default function ReadingHub() {
           setTotalPages(1);
         }
       } catch (err) {
-        console.error('Failed to fetch tests:', err);
+        console.error('Failed to fetch tests:', err); // eslint-disable-line no-console
         setError(err.message || 'Failed to load tests. Please try again later.');
       } finally {
         setLoading(false);
@@ -136,7 +137,7 @@ export default function ReadingHub() {
   };
 
   const handleApplyFilters = () => {
-    console.log('Applying filters:', filters);
+    console.log('Applying filters:', filters); // eslint-disable-line no-console
   };
 
   const handlePageChange = (event, value) => {

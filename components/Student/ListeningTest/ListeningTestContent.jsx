@@ -20,9 +20,9 @@ import {
 } from '@mui/material';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import { getRecepiveTestDetails } from '../../../api/teacher/upload-reading';
+import { getReceptiveTestDetails } from '../../../api/teacher/upload-reading';
 import { createReceptiveTest } from '../../../api/test';
-import { listeningtestStyles } from '../../../styles/Student/Listening/listeningTestStyles';
+import { listeningtestStyles } from '../../../styles/student/Listening/ListeningTestStyles.js';
 import {
   loadAudioSource,
   loadImageSource,
@@ -175,7 +175,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
       if (!test_id) return;
       try {
         setIsInitial(true);
-        const svData = await getRecepiveTestDetails(test_id);
+        const svData = await getReceptiveTestDetails(test_id);
         const parts = svData.receptive_test.receptive_parts || [];
 
         const resourcesMap = {};

@@ -22,7 +22,7 @@ export default function ProgressTracking({ historyData, type, activeTab }) {
 
   const handleViewDetail = async (historyId) => {
     if (!historyId) return;
-    console.log('Fetching ID:', historyId);
+    console.log('Fetching ID:', historyId); // eslint-disable-line no-console
     let res;
     if (type === 'R') {
       res = await getReceptiveTestHistory(historyId);

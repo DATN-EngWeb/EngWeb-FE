@@ -48,7 +48,7 @@ const SKILL_LABELS = {
 
 const TEST_DETAIL_FETCHERS = {
   reading: getReceptiveTestDetails,
-  listening: getRecepiveTestDetails,
+  listening: getReceptiveTestDetails,
   writing: getProductiveTestDetails,
   speaking: getProductiveTestDetails,
 };

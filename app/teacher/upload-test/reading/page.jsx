@@ -21,7 +21,7 @@ import {
   IconButton,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import SendRounded from '@mui/icons-material/SendRounded';
 import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
@@ -497,7 +497,7 @@ export default function Page() {
         <Box sx={uploadReadingStyles.functionButtonsWrapper}>
           <Button
             startIcon={
-              <VisibilityOutlined
+              <VisibilityOutlinedIcon
                 sx={{ transform: { xs: 'translateY(0px)', md: 'translateY(3px)' } }}
               />
             }

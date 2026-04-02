@@ -36,7 +36,7 @@ import {
   confirmUpload,
   submitTestParts,
   updateTestParts,
-  getRecepiveTestDetails,
+  getReceptiveTestDetails,
   fetchHtmlContent,
 } from '../../api/test';
 
@@ -102,7 +102,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
 
     const loadTestData = async () => {
       try {
-        const data = await getRecepiveTestDetails(testId);
+        const data = await getReceptiveTestDetails(testId);
         setEditingTestId(data.id);
 
         const loadedBasicInfo = {

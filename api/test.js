@@ -151,7 +151,7 @@ export const deleteReceptiveTest = async (testId) => {
   });
 };
 
-export async function getRecepiveTestDetails(testId) {
+export async function getReceptiveTestDetails(testId) {
   return apiFetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
     method: 'GET',
     headers: {
@@ -199,7 +199,7 @@ export const getProductiveTest = async (test_id, params = {}) => {
   });
 };
 
-export const getReceptivetTest = async (test_id) => {
+export const getReceptiveTestHistoryByTestId = async (test_id) => {
   return apiFetch(`${TEST_HISTORIES_BASE_URL}/receptive?receptive_test=${test_id}`, {
     method: 'GET',
     headers: {
@@ -208,14 +208,7 @@ export const getReceptivetTest = async (test_id) => {
   });
 };
 
-export const getReceptiveTestDetails = async (testId) => {
-  return apiFetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-};
+// Duplicate function removed
 
 export const createReceptiveTest = async (data) => {
   return apiFetch(`${TEST_HISTORIES_BASE_URL}/receptive`, {

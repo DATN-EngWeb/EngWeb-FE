@@ -65,7 +65,7 @@ export async function uploadReadingTestContent(testId, partsData) {
   });
 }
 
-export async function getRecepiveTestDetails(testId) {
+export async function getReceptiveTestDetails(testId) {
   return apiFetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
     method: 'GET',
     headers: {

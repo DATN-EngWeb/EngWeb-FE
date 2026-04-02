@@ -36,7 +36,7 @@ import FillBlankForm from '../../../../../components/Teacher/ReadingTest/fillBla
 import ReadingPreview from '../../../../../components/Teacher/ReadingTest/ReadingPreview';
 import {
   updateReadingTestContent,
-  getRecepiveTestDetails,
+  getReceptiveTestDetails,
   fetchHtmlContent,
 } from '../../../../../api/teacher/upload-reading';
 import {
@@ -99,7 +99,7 @@ export default function Page() {
       if (!test_id) return;
 
       try {
-        const svData = await getRecepiveTestDetails(test_id);
+        const svData = await getReceptiveTestDetails(test_id);
 
         setTest({
           id: svData.id ?? '',

@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { CircularProgress, Box, Alert } from '@mui/material';
 import ListeningTestEditor from '../../../../../components/ListeningTest/ListeningTestEditor';
-import { getRecepiveTestDetails } from '../../../../../api/test';
+import { getReceptiveTestDetails } from '../../../../../api/test';
 
 export default function EditListeningTestPage({ params }) {
   const { test_id } = use(params);
@@ -15,7 +15,7 @@ export default function EditListeningTestPage({ params }) {
   useEffect(() => {
     const validateTest = async () => {
       try {
-        const data = await getRecepiveTestDetails(test_id);
+        const data = await getReceptiveTestDetails(test_id);
 
         if (data.status !== 'D') {
           setError('Only draft tests can be edited');
