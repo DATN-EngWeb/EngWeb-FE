@@ -10,10 +10,13 @@ import {
   CircularProgress,
   Dialog,
   IconButton,
+  Paper,
+  Chip,
+  alpha,
 } from '@mui/material';
+import { LightbulbOutlined, CheckCircleOutline } from '@mui/icons-material';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import ReplayIcon from '@mui/icons-material/Replay';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -31,6 +34,7 @@ import {
   PolarRadiusAxis,
   ResponsiveContainer,
 } from 'recharts';
+import DiffViewer from './DiffViewer';
 import * as styles from '../../styles/student/Writing/AIFeedbackStyles';
 
 function CustomTooltip({ active, payload }) {
@@ -73,8 +77,7 @@ function CustomTooltip({ active, payload }) {
 function CustomTick(props) {
   const { payload, x, y, cx, cy, textAnchor, categories } = props;
   const category = categories.find((c) => c.title === payload.value);
-  const score = category ? category.score.toFixed(1) : '';
-
+  const score = category?.score?.toFixed(1) || '';
   let shortName = payload.value;
   if (payload.value === 'CONTENT') shortName = 'CONTENT';
   else if (payload.value === 'ORGANISATION') shortName = 'ORGANISATION';
@@ -116,33 +119,49 @@ export default function AIFeedback() {
   const [overall, setOverall] = useState({ summary: '', next_actions: '' });
   const [context, setContext] = useState({ text: '', wordCount: 0, title: '', type: '' });
   const [testData, setTestData] = useState(null);
+  const [revised_text, setRevisedText] = useState('');
   // const [turns, setTurns] = useState({ weekly: 0, bonus: 0 });
 
   const params = useParams();
   const testId = params.test_id;
   const attempt = params.attempt;
   const router = useRouter();
-
   useEffect(() => {
     const data = JSON.parse(localStorage.getItem('category') || '{}');
+
     const ctx = JSON.parse(localStorage.getItem('aiFeedbackContext') || '{}');
-
     setContext(ctx);
+    // 1. Extract specific non-category items first
+    const { revised_text, overall: overallData, ...categoriesOnly } = data;
+    // 2. Set the non-category states
+    // setContext({
+    //   ...ctx, // Keep existing title, type, wordCount, etc.
+    //   text: revised_text || ctx.text // Use revised_text if available
+    // });
 
-    if (data.overall) {
-      setOverall(data.overall);
+    if (revised_text) {
+      setRevisedText(revised_text);
+    }
+    if (overallData) {
+      setOverall({
+        summary: overallData.summary || '',
+        next_actions: overallData.next_actions || '',
+      });
     }
 
-    const catArray = Object.entries(data)
-      .filter(([key]) => key !== 'overall')
-      .map(([key, value]) => ({
+    // 3. Map only the remaining category objects
+    const catArray = Object.entries(categoriesOnly).map(([key, value]) => {
+      const score = value.band ?? 0;
+      return {
         title: key.replaceAll('_', ' ').toUpperCase(),
-        score: value.band,
+        score: score,
         strengths: value.strengths,
         improvements: value.improvements,
-        color: value.band >= 4 ? '#2e7d32' : value.band >= 3 ? '#ed6c02' : '#d32f2f',
-        bg: value.band >= 4 ? '#e8f5e9' : value.band >= 3 ? '#fff3e0' : '#ffebee',
-      }));
+        color: score >= 4 ? '#2e7d32' : score >= 3 ? '#ed6c02' : '#d32f2f',
+        bg: score >= 4 ? '#e8f5e9' : score >= 3 ? '#fff3e0' : '#ffebee',
+      };
+    });
+
     setCategories(catArray);
   }, []);
 
@@ -174,6 +193,8 @@ export default function AIFeedback() {
   // Determine color for the big score ring
   const strokeColor = overallScore >= 4 ? '#2e7d32' : overallScore >= 3 ? '#ed6c02' : '#d32f2f';
 
+  console.log('revised_text:', revised_text);
+  console.log('original_text:', context.text);
   return (
     <Box sx={styles.mainWrapper}>
       <Box sx={styles.layoutContainer}>
@@ -243,9 +264,9 @@ export default function AIFeedback() {
               </Box>
             </Stack>
 
-            <Typography sx={styles.textContent}>
-              {context.text || 'No submission text found.'}
-            </Typography>
+            <Box>
+              <DiffViewer originalText={context.text} revisedText={revised_text} />
+            </Box>
 
             <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
               <Button
@@ -448,22 +469,44 @@ export default function AIFeedback() {
                               fontWeight: 800,
                             }}
                           >
-                            {cat.score.toFixed(1)}
+                            {cat.score?.toFixed(1)}
                           </Box>
                         </Stack>
                         <Box sx={styles.feedbackIconWrapper}>
-                          {cat.score >= 4 ? (
-                            <CheckCircleIcon sx={{ color: cat.color, fontSize: 18, mt: 0.3 }} />
-                          ) : (
-                            <LightbulbIcon sx={{ color: cat.color, fontSize: 18, mt: 0.3 }} />
-                          )}
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{ lineHeight: 1.5 }}
-                          >
-                            {cat.score >= 4 ? cat.strengths : cat.improvements}
-                          </Typography>
+                          <Stack spacing={2}>
+                            <Box>
+                              <Typography
+                                variant="caption"
+                                color="success.main"
+                                fontWeight="800"
+                                display="flex"
+                                alignItems="center"
+                                gap={0.5}
+                              >
+                                <CheckCircleOutline sx={{ fontSize: 14 }} /> STRENGTHS
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {' '}
+                                {cat.strengths}
+                              </Typography>
+                            </Box>
+                            <Box>
+                              <Typography
+                                variant="caption"
+                                color="warning.dark"
+                                fontWeight="800"
+                                display="flex"
+                                alignItems="center"
+                                gap={0.5}
+                              >
+                                <LightbulbOutlined sx={{ fontSize: 14 }} /> IMPROVEMENTS
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {' '}
+                                {cat.improvements}
+                              </Typography>
+                            </Box>
+                          </Stack>
                         </Box>
                       </Box>
                     ))}

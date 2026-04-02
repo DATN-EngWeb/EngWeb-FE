@@ -5,12 +5,10 @@ import {
   Card,
   CardContent,
   Chip,
-  Button,
   Stack,
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
   IconButton,
 } from '@mui/material';
 import {
@@ -29,20 +27,29 @@ export default function HistoryAIFeedbackModal({ open, onClose, data }) {
   useEffect(() => {
     if (!data) return;
 
-    if (data.overall) {
-      setOverall(data.overall);
+    // 1. Extract specific non-category items first
+    const { revised_text, overall: overallData, ...categoriesOnly } = data;
+
+    if (overallData) {
+      setOverall({
+        summary: overallData.summary || '',
+        next_actions: overallData.next_actions || '',
+      });
     }
 
-    const catArray = Object.entries(data)
-      .filter(([key]) => key !== 'overall')
-      .map(([key, value]) => ({
-        title: key.replaceAll('_', ' '),
-        score: value.band,
+    // 3. Map only the remaining category objects
+    const catArray = Object.entries(categoriesOnly).map(([key, value]) => {
+      const score = value.band ?? 0;
+      return {
+        title: key.replaceAll('_', ' ').toUpperCase(),
+        score: score,
         strengths: value.strengths,
         improvements: value.improvements,
-        color: value.band >= 4 ? '#2e7d32' : value.band >= 3 ? '#ed6c02' : '#d32f2f',
-        bg: value.band >= 4 ? '#e8f5e9' : value.band >= 3 ? '#fff3e0' : '#ffebee',
-      }));
+        color: score >= 4 ? '#2e7d32' : score >= 3 ? '#ed6c02' : '#d32f2f',
+        bg: score >= 4 ? '#e8f5e9' : score >= 3 ? '#fff3e0' : '#ffebee',
+      };
+    });
+
     setCategories(catArray);
   }, [data]);
 
