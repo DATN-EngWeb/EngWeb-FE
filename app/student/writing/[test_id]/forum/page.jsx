@@ -50,7 +50,7 @@ export default function ForumPage() {
         setPosts(response.results || []);
         setCount(response.count || 0);
       } catch (error) {
-        console.error('Error fetching posts:', error); // eslint-disable-line no-console
+        console.error('Error fetching posts:', error);
       }
     };
     fetchPosts();

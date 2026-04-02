@@ -88,7 +88,7 @@ export default function Header() {
         await logoutAPI(refreshToken, accessToken);
       }
     } catch (err) {
-      console.error('Logout API error:', err); // eslint-disable-line no-console
+      console.error('Logout API error:', err);
     } finally {
       logoutHook();
       router.push('/');

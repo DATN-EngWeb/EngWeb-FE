@@ -47,7 +47,7 @@ export default function ReceptiveTestHistory() {
         setTestData(details);
         setHistoryData(listAttempt?.results || []);
       } catch (error) {
-        console.error('Error fetching data:', error); // eslint-disable-line no-console
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
@@ -67,7 +67,7 @@ export default function ReceptiveTestHistory() {
 
   const handleContinue = () => {
     if (!draft) {
-      console.error('Biến draft đang bị null hoặc undefined!'); // eslint-disable-line no-console
+      console.error('Biến draft đang bị null hoặc undefined!');
       return;
     }
 
@@ -86,7 +86,7 @@ export default function ReceptiveTestHistory() {
 
         // console.log('Đã lưu vào SS:', window.sessionStorage.getItem('current_receptive_attempt'));
       } catch (e) {
-        console.error('Lỗi khi lưu vào sessionStorage:', e); // eslint-disable-line no-console
+        console.error('Lỗi khi lưu vào sessionStorage:', e);
       }
     }
 

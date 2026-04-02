@@ -53,7 +53,7 @@ export default function ProductiveTestHistory() {
         setHistoryData(Array.isArray(listAttempt) ? listAttempt : (listAttempt?.results ?? []));
         setTotalCount(Array.isArray(listAttempt) ? listAttempt.length : (listAttempt?.count ?? 0));
       } catch (error) {
-        console.error('Error fetching data:', error); // eslint-disable-line no-console
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }

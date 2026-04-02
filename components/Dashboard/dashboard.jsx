@@ -152,7 +152,7 @@ export default function StudentDashboard() {
           setHistoryData(statsResponse?.last_30_attempts || []);
         }
       } catch (error) {
-        console.error('Error fetching dashboard data:', error); // eslint-disable-line no-console
+        console.error('Error fetching dashboard data:', error);
       } finally {
         setIsLoading(false);
         setIsInitialMount(false);

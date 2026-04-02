@@ -118,7 +118,7 @@ export default function ReadingHub() {
           setTotalPages(1);
         }
       } catch (err) {
-        console.error('Failed to fetch tests:', err); // eslint-disable-line no-console
+        console.error('Failed to fetch tests:', err);
         setError(err.message || 'Failed to load tests. Please try again later.');
       } finally {
         setLoading(false);
@@ -137,7 +137,7 @@ export default function ReadingHub() {
   };
 
   const handleApplyFilters = () => {
-    console.log('Applying filters:', filters); // eslint-disable-line no-console
+    console.log('Applying filters:', filters);
   };
 
   const handlePageChange = (event, value) => {
