@@ -118,11 +118,13 @@ export default function StudentDashboard() {
     { id: 'WRITING', label: 'WRITING', icon: <EditOutlinedIcon fontSize="small" /> },
     { id: 'SPEAKING', label: 'SPEAKING', icon: <CampaignOutlinedIcon fontSize="small" /> },
   ];
+  const [filterLevelForTab, setFilterLevelForTab] = useState('A1');
 
   const [progressHistory, setProgressHistory] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterSkill, setFilterSkill] = useState('R');
+  const [filterLevelForHistory, setFilterLevelForHistory] = useState('A1');
   const itemsPerPage = 20;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
@@ -143,7 +145,7 @@ export default function StudentDashboard() {
         };
         const skill = skillMap[activeTab];
 
-        const statsPromise = getStatisticsForSkill(skill);
+        const statsPromise = getStatisticsForSkill(skill, filterLevelForTab);
 
         const statsResponse = await statsPromise;
 
@@ -160,7 +162,7 @@ export default function StudentDashboard() {
     };
 
     fetchData();
-  }, [activeTab]);
+  }, [activeTab, filterLevelForTab]);
 
   useEffect(() => {
     const fetchProgressHistory = async () => {
@@ -168,9 +170,21 @@ export default function StudentDashboard() {
       try {
         let res;
         if (filterSkill === 'R' || filterSkill === 'L') {
-          res = await getListReceptiveTestHistory('S', filterSkill, currentPage, itemsPerPage);
+          res = await getListReceptiveTestHistory(
+            'S',
+            filterSkill,
+            currentPage,
+            itemsPerPage,
+            filterLevelForHistory,
+          );
         } else {
-          res = await getListProductiveTestHistory('S', filterSkill, currentPage, itemsPerPage);
+          res = await getListProductiveTestHistory(
+            'S',
+            filterSkill,
+            currentPage,
+            itemsPerPage,
+            filterLevelForHistory,
+          );
         }
 
         if (res) {
@@ -186,7 +200,7 @@ export default function StudentDashboard() {
     };
 
     fetchProgressHistory();
-  }, [filterSkill, currentPage]);
+  }, [filterSkill, currentPage, filterLevelForHistory]);
 
   if (isInitialMount) {
     return <SkeletonStudentDashboard />;
@@ -217,46 +231,109 @@ export default function StudentDashboard() {
         {/* Header Tabs */}
         <Box
           sx={{
-            display: { xs: 'grid', sm: 'flex' },
-            gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'none' },
+            display: { xs: 'grid', md: 'flex' },
+            gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'none' },
+            justifyContent: { xs: 'center', md: 'space-between' },
             gap: 1,
             width: '100%',
           }}
         >
-          {tabs.map((tab) => (
-            <Button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              disableElevation
+          <Stack direction="row" gap={1} sx={{ display: { xs: 'none', md: 'flex' } }}>
+            {tabs.map((tab) => (
+              <Button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                disableElevation
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 1,
+                  px: { xs: 1, sm: 3 },
+                  py: 1,
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase',
+                  width: { xs: '100%', sm: 'auto' },
+                  borderStyle: { xs: 'solid', sm: 'none' },
+                  borderWidth: { xs: '1.5px', sm: 0 },
+                  borderColor: 'yellow.main',
+                  ...(activeTab === tab.id
+                    ? {
+                        bgcolor: 'yellow.main',
+                        color: 'primary.main',
+                      }
+                    : {
+                        bgcolor: 'transparent',
+                        color: 'primary.main',
+                        '&:hover': { bgcolor: 'action.hover' },
+                      }),
+                }}
+              >
+                {tab.icon}
+                {tab.label}
+              </Button>
+            ))}
+          </Stack>
+
+          <FormControl size="small" sx={{ minWidth: 120, display: { xs: 'flex', md: 'none' } }}>
+            <Select
+              value={activeTab}
+              onChange={(e) => {
+                setActiveTab(e.target.value);
+              }}
+              displayEmpty
+              IconComponent={KeyboardArrowDownIcon}
               sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 1,
-                px: { xs: 1, sm: 3 },
-                py: 1,
+                borderRadius: '8px',
                 fontWeight: 'bold',
-                textTransform: 'uppercase',
-                width: { xs: '100%', sm: 'auto' },
-                borderStyle: { xs: 'solid', sm: 'none' },
-                borderWidth: { xs: '1.5px', sm: 0 },
-                borderColor: 'yellow.main',
-                ...(activeTab === tab.id
-                  ? {
-                      bgcolor: 'yellow.main',
-                      color: 'primary.main',
-                    }
-                  : {
-                      bgcolor: 'transparent',
-                      color: 'primary.main',
-                      '&:hover': { bgcolor: 'action.hover' },
-                    }),
+                color: 'primary.main',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'divider',
+                },
+                '& .MuiSelect-icon': {
+                  transition: 'transform 0.2s ease-in-out',
+                },
+                '& .MuiSelect-iconOpen': {
+                  transform: 'rotate(180deg)',
+                },
               }}
             >
-              {tab.icon}
-              {tab.label}
-            </Button>
-          ))}
+              {tabs.map((tab) => (
+                <MenuItem key={tab.id} value={tab.id}>
+                  {tab.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <Select
+              value={filterLevelForTab}
+              onChange={(e) => {
+                setFilterLevelForTab(e.target.value);
+              }}
+              displayEmpty
+              IconComponent={KeyboardArrowDownIcon}
+              sx={{
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                color: 'primary.main',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'divider',
+                },
+                '& .MuiSelect-icon': {
+                  transition: 'transform 0.2s ease-in-out',
+                },
+                '& .MuiSelect-iconOpen': {
+                  transform: 'rotate(180deg)',
+                },
+              }}
+            >
+              <MenuItem value="A1">A1</MenuItem>
+              <MenuItem value="A2">A2</MenuItem>
+              <MenuItem value="B1">B1</MenuItem>
+              <MenuItem value="B2">B2</MenuItem>
+            </Select>
+          </FormControl>
         </Box>
         {/* Content Area */}
         <Box
@@ -367,36 +444,67 @@ export default function StudentDashboard() {
           >
             Progress history
           </Typography>
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <Select
-              value={filterSkill}
-              onChange={(e) => {
-                setFilterSkill(e.target.value);
-                setCurrentPage(1);
-              }}
-              displayEmpty
-              IconComponent={KeyboardArrowDownIcon}
-              sx={{
-                borderRadius: '8px',
-                fontWeight: 'bold',
-                color: 'primary.main',
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'divider',
-                },
-                '& .MuiSelect-icon': {
-                  transition: 'transform 0.2s ease-in-out',
-                },
-                '& .MuiSelect-iconOpen': {
-                  transform: 'rotate(180deg)',
-                },
-              }}
-            >
-              <MenuItem value="R">Reading</MenuItem>
-              <MenuItem value="L">Listening</MenuItem>
-              <MenuItem value="W">Writing</MenuItem>
-              <MenuItem value="S">Speaking</MenuItem>
-            </Select>
-          </FormControl>
+          <Stack direction="row" gap={1} alignItems="center">
+            <FormControl size="small" sx={{ minWidth: { xs: 80, sm: 120 } }}>
+              <Select
+                value={filterLevelForHistory}
+                onChange={(e) => {
+                  setFilterLevelForHistory(e.target.value);
+                }}
+                displayEmpty
+                IconComponent={KeyboardArrowDownIcon}
+                sx={{
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  color: 'primary.main',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'divider',
+                  },
+                  '& .MuiSelect-icon': {
+                    transition: 'transform 0.2s ease-in-out',
+                  },
+                  '& .MuiSelect-iconOpen': {
+                    transform: 'rotate(180deg)',
+                  },
+                }}
+              >
+                <MenuItem value="A1">A1</MenuItem>
+                <MenuItem value="A2">A2</MenuItem>
+                <MenuItem value="B1">B1</MenuItem>
+                <MenuItem value="B2">B2</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl size="small" sx={{ minWidth: 120 }}>
+              <Select
+                value={filterSkill}
+                onChange={(e) => {
+                  setFilterSkill(e.target.value);
+                  setCurrentPage(1);
+                }}
+                displayEmpty
+                IconComponent={KeyboardArrowDownIcon}
+                sx={{
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  color: 'primary.main',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'divider',
+                  },
+                  '& .MuiSelect-icon': {
+                    transition: 'transform 0.2s ease-in-out',
+                  },
+                  '& .MuiSelect-iconOpen': {
+                    transform: 'rotate(180deg)',
+                  },
+                }}
+              >
+                <MenuItem value="R">Reading</MenuItem>
+                <MenuItem value="L">Listening</MenuItem>
+                <MenuItem value="W">Writing</MenuItem>
+                <MenuItem value="S">Speaking</MenuItem>
+              </Select>
+            </FormControl>
+          </Stack>
         </Stack>
         <Box
           sx={{
