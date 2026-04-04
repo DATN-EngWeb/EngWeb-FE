@@ -14,7 +14,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import * as styles from '../../styles/Student/HistoryTestStyles';
+import * as styles from '../../styles/student/HistoryTestStyles';
 import { getProductiveTestHistory, getReceptiveTestHistory } from '@/api/test';
 
 export default function ProgressTracking({ historyData, type, activeTab }) {

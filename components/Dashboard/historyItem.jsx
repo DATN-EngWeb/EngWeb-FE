@@ -1,8 +1,8 @@
 /* global sessionStorage, setInterval, clearInterval */
 'use client';
 import React from 'react';
-import { Paper, Stack, Box, Typography, Chip, Button } from '@mui/material';
-import * as styles from '../../styles/Student/HistoryTestStyles';
+import { Paper, Stack, Box, Typography, Button } from '@mui/material';
+import * as styles from '../../styles/student/HistoryTestStyles';
 import { useRouter } from 'next/navigation';
 
 export default function HistoryItem({ data, filterSkill }) {
