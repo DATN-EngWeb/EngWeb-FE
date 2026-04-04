@@ -29,7 +29,7 @@ export default function HistoryItem({ data, filterSkill }) {
     };
 
     const path = skillPaths[filterSkill] || 'reading';
-    router.push(`/student/${path}/${item.receptive_test}/${item.attempt}`);
+    router.push(`/student/${path}/${item.receptive_test || item.productive_test}/${item.attempt}`);
   };
 
   const formatTime = (totalSeconds) => {
