@@ -35,6 +35,7 @@ import MultipleChoiceSingleAudio from './part/multipleChoiceSingleAudio';
 import MultipleChoiceQuestionAudio from './part/multipleChoiceMultiQuestionAudio';
 import Matching from './part/matching';
 import Skeleton from './skeleton';
+import FireWork from '../../Animation/fireWork';
 
 export default function ListeningTestContent({ test_id, initialData }) {
   const router = useRouter();
@@ -48,6 +49,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
   const [timeLeft, setTimeLeft] = useState(testData?.time || 0);
   const [allAnswers, setAllAnswers] = useState({});
   const [isReadOnly, setIsReadOnly] = useState(false);
+  const [showFirework, setShowFirework] = useState(false);
 
   const [openConfirm, setOpenConfirm] = useState(false);
   const [submitType, setSubmitType] = useState('D');
@@ -138,12 +140,16 @@ export default function ListeningTestContent({ test_id, initialData }) {
         severity: 'success',
       });
 
-      setTimeout(() => {
-        if (typeof window !== 'undefined') {
-          window.sessionStorage.removeItem('current_receptive_attempt');
-        }
-        router.push(`/student/listening/${test_id}`);
-      }, 1000);
+      if (submitType === 'S') {
+        setShowFirework(true);
+      } else {
+        setTimeout(() => {
+          if (typeof window !== 'undefined') {
+            window.sessionStorage.removeItem('current_receptive_attempt');
+          }
+          router.push(`/student/listening/${test_id}`);
+        }, 1000);
+      }
     } catch (error) {
       console.error('Draft save error:', error);
       if (error.status === 400) {
@@ -339,6 +345,13 @@ export default function ListeningTestContent({ test_id, initialData }) {
     }));
   };
 
+  const handleFireworkComplete = () => {
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem('current_receptive_attempt');
+    }
+    router.push(`/student/listening/${test_id}`);
+  };
+
   const renderPart = (part, index) => {
     // - 'A': Listening - Multiple choice images
     // - 'B': Listening - Multiple choice text (one audio per question)
@@ -375,6 +388,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
   return (
     <Box sx={{ ...listeningtestStyles.mainContainer, position: 'relative' }}>
+      {showFirework && <FireWork onComplete={handleFireworkComplete} />}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}

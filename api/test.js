@@ -244,9 +244,9 @@ export const getReceptiveTestHistory = async (history_id) => {
   });
 };
 
-export const getListReceptiveTestHistory = async (type, skill, page, page_size) => {
+export const getListReceptiveTestHistory = async (type, skill, page, page_size, level) => {
   return apiFetch(
-    `${TEST_HISTORIES_BASE_URL}/receptive?type=${type}&skill=${skill}&page=${page}&page_size=${page_size}`,
+    `${TEST_HISTORIES_BASE_URL}/receptive?type=${type}&skill=${skill}&page=${page}&page_size=${page_size}&level=${level}`,
     {
       method: 'GET',
       headers: {
@@ -256,9 +256,9 @@ export const getListReceptiveTestHistory = async (type, skill, page, page_size) 
   );
 };
 
-export const getListProductiveTestHistory = async (type, skill, page, page_size) => {
+export const getListProductiveTestHistory = async (type, skill, page, page_size, level) => {
   return apiFetch(
-    `${TEST_HISTORIES_BASE_URL}/productive?type=${type}&skill=${skill}&page=${page}&page_size=${page_size}`,
+    `${TEST_HISTORIES_BASE_URL}/productive?type=${type}&skill=${skill}&page=${page}&page_size=${page_size}&level=${level}`,
     {
       method: 'GET',
       headers: {
@@ -268,8 +268,8 @@ export const getListProductiveTestHistory = async (type, skill, page, page_size)
   );
 };
 
-export const getStatisticsForSkill = async (skill) => {
-  return apiFetch(`${TEST_STATISTICS_BASE_URL}/summary/${skill}`, {
+export const getStatisticsForSkill = async (skill, level) => {
+  return apiFetch(`${TEST_STATISTICS_BASE_URL}/summary/${skill}/${level}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
