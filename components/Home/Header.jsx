@@ -109,13 +109,17 @@ export default function Header() {
                   color="inherit"
                   sx={{
                     ...navButtonStyles,
-                    backgroundColor: pathname?.includes('/reading')
-                      ? 'secondary.main'
-                      : 'transparent',
-                    color: pathname?.includes('/reading') ? '#FFFFFF' : 'primary.main',
-                    borderRadius: '20px',
-                    px: pathname?.includes('/reading') ? 3 : 2,
-                    py: 0.5,
+                    borderRadius: 0,
+                    backgroundColor: 'transparent',
+                    color: pathname?.includes('/reading') ? 'secondary.main' : 'primary.main',
+                    fontWeight: pathname?.includes('/reading') ? 700 : 500,
+                    borderBottom: '3px solid',
+                    borderColor: pathname?.includes('/reading') ? 'secondary.main' : 'transparent',
+                    px: 1,
+                    pt: 1.5,
+                    pb: 0.5,
+                    marginX: '15px',
+                    transition: 'all 0.2s',
                     '&:hover': {
                       backgroundColor: pathname?.includes('/reading')
                         ? 'secondary.dark'
@@ -134,10 +138,11 @@ export default function Header() {
                     backgroundColor: pathname?.includes('/listening')
                       ? 'secondary.main'
                       : 'transparent',
-                    color: pathname?.includes('/listening') ? '#FFFFFF' : 'primary.main',
-                    borderRadius: '20px',
-                    px: pathname?.includes('/listening') ? 3 : 2,
-                    py: 0.5,
+                    px: 1,
+                    pt: 1.5,
+                    pb: 0.5,
+                    marginX: '15px',
+                    transition: 'all 0.2s',
                     '&:hover': {
                       backgroundColor: pathname?.includes('/listening')
                         ? 'secondary.dark'
@@ -153,13 +158,17 @@ export default function Header() {
                   color="inherit"
                   sx={{
                     ...navButtonStyles,
-                    backgroundColor: pathname?.includes('/writing')
-                      ? 'secondary.main'
-                      : 'transparent',
-                    color: pathname?.includes('/writing') ? '#FFFFFF' : 'primary.main',
-                    borderRadius: '20px',
-                    px: pathname?.includes('/writing') ? 3 : 2,
-                    py: 0.5,
+                    borderRadius: 0,
+                    backgroundColor: 'transparent',
+                    color: pathname?.includes('/writing') ? 'secondary.main' : 'primary.main',
+                    fontWeight: pathname?.includes('/writing') ? 700 : 500,
+                    borderBottom: '3px solid',
+                    borderColor: pathname?.includes('/writing') ? 'secondary.main' : 'transparent',
+                    px: 1,
+                    pt: 1.5,
+                    pb: 0.5,
+                    marginX: '15px',
+                    transition: 'all 0.2s',
                     '&:hover': {
                       backgroundColor: pathname?.includes('/writing')
                         ? 'secondary.dark'
@@ -175,13 +184,17 @@ export default function Header() {
                   color="inherit"
                   sx={{
                     ...navButtonStyles,
-                    backgroundColor: pathname?.includes('/speaking')
-                      ? 'secondary.main'
-                      : 'transparent',
-                    color: pathname?.includes('/speaking') ? '#FFFFFF' : 'primary.main',
-                    borderRadius: '20px',
-                    px: pathname?.includes('/speaking') ? 3 : 2,
-                    py: 0.5,
+                    borderRadius: 0,
+                    backgroundColor: 'transparent',
+                    color: pathname?.includes('/speaking') ? 'secondary.main' : 'primary.main',
+                    fontWeight: pathname?.includes('/speaking') ? 700 : 500,
+                    borderBottom: '3px solid',
+                    borderColor: pathname?.includes('/speaking') ? 'secondary.main' : 'transparent',
+                    px: 1,
+                    pt: 1.5,
+                    pb: 0.5,
+                    marginX: '15px',
+                    transition: 'all 0.2s',
                     '&:hover': {
                       backgroundColor: pathname?.includes('/speaking')
                         ? 'secondary.dark'

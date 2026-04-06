@@ -1,13 +1,17 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import Header from '../../components/Home/Header';
 import Footer from '../../components/Home/Footer';
 
 export default function StudentLayout({ children }) {
   return (
     <>
-      <Header />
+      <Suspense fallback={null}>
+        <Header />
+      </Suspense>
       <main style={{ minHeight: '60vh' }}>{children}</main>
-      <Footer />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
     </>
   );
 }

@@ -4,7 +4,8 @@ import { useEffect } from 'react';
 import { Container, Box, Typography, Button } from '@mui/material';
 import CustomAudioPlayer from '../../../Test/customAudioPlayer';
 import InstructionIcon from '../../../Test/instructionIcon';
-import { listeningPartStyles } from '../../../../styles/Student/Listening/listeningTestStyles';
+import { listeningPartStyles } from '../../../../styles/student/Listening/ListeningTestStyles.js';
+import { loadAudioSource, loadImageSource } from '@/api/teacher/upload-reading';
 
 export default function MultipleChoiceImagePart({
   dataPart,

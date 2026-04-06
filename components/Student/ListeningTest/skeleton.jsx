@@ -1,5 +1,5 @@
 import { Box, Container, Typography } from '@mui/material';
-import { listeningtestStyles } from '../../../styles/Student/Listening/listeningTestStyles';
+import { listeningtestStyles } from '../../../styles/student/Listening/ListeningTestStyles.js';
 import Spinner from '../../../components/spinner';
 
 export default function Skeleton() {

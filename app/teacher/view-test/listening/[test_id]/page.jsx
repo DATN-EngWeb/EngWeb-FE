@@ -7,7 +7,7 @@ import ListeningPreview from '../../../../../components/Teacher/ListeningPreview
 import ViewTestHeader from '../../../../../components/Teacher/ViewTestHeader';
 import DeleteConfirmSnackbar from '../../../../../components/Teacher/DeleteConfirmSnackbar';
 import {
-  getRecepiveTestDetails,
+  getReceptiveTestDetails,
   fetchHtmlContent,
   deleteReceptiveTest,
 } from '../../../../../api/test';
@@ -27,7 +27,7 @@ export default function ViewListeningTestPage({ params }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await getRecepiveTestDetails(test_id);
+        const data = await getReceptiveTestDetails(test_id);
         setStatus(data.status);
         setBasicInfo({
           testName: data.title || '',

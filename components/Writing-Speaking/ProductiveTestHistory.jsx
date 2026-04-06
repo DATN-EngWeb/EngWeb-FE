@@ -216,9 +216,6 @@ export default function ProductiveTestHistory() {
                   bgcolor: 'white',
                 }}
               >
-                <Box sx={{ mb: 2, opacity: 0.3 }}>
-                  <HistoryEduIcon sx={{ fontSize: 64 }} />
-                </Box>
                 <Typography variant="body1" fontWeight={700}>
                   You haven't submitted any responses yet.
                 </Typography>
