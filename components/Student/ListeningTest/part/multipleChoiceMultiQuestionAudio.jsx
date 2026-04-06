@@ -7,7 +7,7 @@ import InstructionIcon from '../../../Test/instructionIcon';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CircleIcon from '@mui/icons-material/Circle';
-import { listeningPartStyles } from '../../../../styles/student/Listening/ListeningTestStyles.js';
+import { listeningPartStyles } from '../../../../styles/student/Listening/listeningTestStyles';
 import { multipleChoiceStyles } from '../../../../styles/Teacher/Reading/QuesitonTypeStyles';
 
 export default function MultipleChoiceQuestionAudio({

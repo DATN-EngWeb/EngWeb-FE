@@ -24,7 +24,7 @@ export default function TestEditorActions({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        mb: 4,
+        mb: 2,
         ...sx,
       }}
     >

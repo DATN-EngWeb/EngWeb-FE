@@ -1,12 +1,12 @@
 export const container = {
-  backgroundColor: 'background.default',
+  background: 'linear-gradient(to bottom, #FFF4E9 0%, #FFFFFF 100%)',
   minHeight: 'calc(100vh - 200px)',
-  px: { xs: 3, sm: 5, md: 10, lg: 20 },
+  px: { xs: 2, sm: 3, md: 4, lg: 5 },
   py: { xs: 1, md: 2 },
 };
 
 export const contentWrap = {
-  maxWidth: 1280,
+  maxWidth: '100%',
   width: '100%',
   mx: 'auto',
 };
@@ -42,16 +42,19 @@ export const twoColRow = {
 };
 
 export const addPartBox = {
-  border: '2px dashed',
-  borderColor: 'gray.main',
+  border: '1px solid',
+  borderColor: 'yellow.main',
   bgcolor: 'primary.contrastText',
-  borderRadius: '1rem',
+  borderRadius: '1.5rem',
   p: { xs: 2, sm: 3 },
   mb: 3,
   textAlign: 'center',
-  color: 'text.primary',
-  fontWeight: 500,
+  color: 'primary.main',
+  fontWeight: 600,
   cursor: 'pointer',
+  '&:hover': {
+    backgroundColor: 'action.hover',
+  },
 };
 
 export const emptyStateBox = {
@@ -64,6 +67,27 @@ export const emptyStateBox = {
   fontSize: { xs: '0.8rem', md: '1rem' },
   lineHeight: 1.7,
   fontWeight: 500,
+};
+
+export const addQuestionBox = {
+  width: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 1.5,
+  py: { xs: 1.2, md: 1.5 },
+  mt: 2,
+  cursor: 'pointer',
+  border: '1px solid',
+  borderColor: 'gray.main',
+  borderRadius: '1rem',
+  color: 'text.primary',
+  fontWeight: 500,
+  '&:hover': {
+    backgroundColor: 'action.hover',
+    borderColor: 'primary.main',
+    color: 'primary.main',
+  },
 };
 
 export const scrollEditorBox = {

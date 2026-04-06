@@ -362,6 +362,32 @@ export default function Page() {
           if (format === 'G' || format === 'H' || format === 'I' || format === 'J') {
             updatedPart.content = '';
           }
+
+          // Tự động thêm câu hỏi đầu tiên
+          const newQuestion = {
+            id: Date.now(),
+            question_number: 1,
+            explanation: '',
+            score: p.scoreForEachQuestion || 10,
+          };
+
+          if (format === 'G' || format === 'F') {
+            newQuestion.content = '';
+            newQuestion.answers = [
+              { id: 0, option_label: 'A', is_correct: true, answer_text: '' },
+              { id: 1, option_label: 'B', is_correct: false, answer_text: '' },
+              { id: 2, option_label: 'C', is_correct: false, answer_text: '' },
+            ];
+          } else if (format === 'H') {
+            newQuestion.content = '';
+            newQuestion.answers = [{ id: 0, option_label: 'A', is_correct: true, answer_text: '' }];
+          } else if (format === 'I') {
+            newQuestion.answers = [{ id: 0, is_correct: true, answer_text: '' }];
+          } else if (format === 'J') {
+            newQuestion.answers = [{ id: 0, option_label: '', is_correct: true, answer_text: '' }];
+          }
+
+          updatedPart.questions = [newQuestion];
           return updatedPart;
         }
         return p;
@@ -475,7 +501,7 @@ export default function Page() {
         </Alert>
       </Snackbar>
       <ScrollToTopButton />
-      <Container maxWidth="lg">
+      <Container maxWidth={false}>
         {/* -------- Title Section --------- */}
         <Box sx={uploadReadingStyles.cardTitle}>
           <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>

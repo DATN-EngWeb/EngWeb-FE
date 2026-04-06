@@ -10,11 +10,11 @@ import {
   Stack,
   Snackbar,
   Alert,
+  Collapse,
 } from '@mui/material';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
+import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import AudioUploader from '../Upload/AudioUploader';
 import ClientSideCustomEditor from '../Editor/ClientSideCustomEditor';
 import { useState } from 'react';
@@ -35,6 +35,14 @@ import {
 export default function FillInTheBlankPart({ index, part = {}, onChange, onDelete }) {
   const answers = Array.isArray(part.answers) ? part.answers : [];
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [collapsedQuestions, setCollapsedQuestions] = useState({});
+
+  const toggleQuestionCollapse = (questionId) => {
+    setCollapsedQuestions((prev) => ({
+      ...prev,
+      [questionId]: !prev[questionId],
+    }));
+  };
   const [content, setContent] = useState(part.content || '');
   const [snackbar, setSnackbar] = useState({ open: false, message: '' });
 
@@ -90,7 +98,6 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
       <Box sx={partHeader}>
         <Box sx={sectionHeader}>
           <Box sx={accentBar} />
-          <DragIndicatorIcon color="disabled" />
           <Box>
             <Typography fontWeight={600} sx={{ color: 'primary.main' }}>
               Part {index + 1}
@@ -103,132 +110,157 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
 
         <Box>
           <IconButton onClick={onDelete} sx={trashIconButton}>
-            <DeleteOutlineIcon />
+            <DeleteRoundedIcon sx={{ fontSize: '1.4rem' }} />
           </IconButton>
           <IconButton onClick={() => setIsCollapsed(!isCollapsed)}>
-            {isCollapsed ? <KeyboardArrowDownIcon /> : <KeyboardArrowUpIcon />}
+            {isCollapsed ? (
+              <ExpandMoreRoundedIcon sx={{ fontSize: '1.6rem' }} />
+            ) : (
+              <ExpandLessRoundedIcon sx={{ fontSize: '1.6rem' }} />
+            )}
           </IconButton>
         </Box>
       </Box>
 
       {!isCollapsed && (
-        <>
-          <Box sx={{ mb: 3 }}>
-            <Box sx={rowContent}>
-              <Typography sx={labelText}>
-                The score for each question <span style={{ color: 'red' }}>*</span>
-              </Typography>
-            </Box>
-            <TextField
-              fullWidth
-              size="small"
-              type="number"
-              value={part.score ?? ''}
-              onChange={(e) => {
-                const scoreValue = parseFloat(e.target.value) || 0;
-                const newAnswers = answers.map((a) => ({
-                  ...a,
-                  score: scoreValue,
-                }));
-                updatePart({ ...part, score: scoreValue, answers: newAnswers });
-              }}
-              sx={textInput}
-            />
-          </Box>
-
-          <Typography sx={labelText}>
-            Audio File <span style={{ color: 'red' }}>*</span>
-          </Typography>
-          <AudioUploader
-            value={part.audio}
-            onChange={(audio) => updatePart({ ...part, audio })}
-            accept="audio/mp3,audio/m4a"
-          />
-
-          <Box sx={{ mb: 3 }}>
-            <Box sx={rowContent}>
-              <Typography sx={labelText}>
-                Description <span style={{ color: 'red' }}>*</span>
-              </Typography>
-            </Box>
-            <TextField
-              fullWidth
-              multiline
-              minRows={2}
-              placeholder="e.g., Listen to the audio between Alice and Sam and choose the correct picture..."
-              value={part.description ?? ''}
-              onChange={(e) => updatePart({ ...part, description: e.target.value })}
-              sx={textInput}
-            />
-          </Box>
-
-          <Box sx={{ mb: 3 }}>
-            <Box sx={rowContent}>
-              <Typography sx={labelText}>
-                Content <span style={{ color: 'red' }}>*</span>
-              </Typography>
-            </Box>
-            <Box sx={scrollEditorBox}>
-              <ClientSideCustomEditor
-                data={content}
-                onChange={(newContent) => {
-                  setContent(newContent);
-                  syncAnswersWithBlanks(newContent);
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 4, mt: 2 }}>
+          {/* -------------- Left Column: Config & Content -------------- */}
+          <Box sx={{ flex: 1.2, minWidth: 0 }}>
+            <Box sx={{ mb: 3 }}>
+              <Box sx={rowContent}>
+                <Typography sx={labelText}>
+                  The score for each question <span style={{ color: 'red' }}>*</span>
+                </Typography>
+              </Box>
+              <TextField
+                fullWidth
+                size="small"
+                type="number"
+                value={part.score ?? ''}
+                onChange={(e) => {
+                  const scoreValue = parseFloat(e.target.value) || 0;
+                  const newAnswers = answers.map((a) => ({
+                    ...a,
+                    score: scoreValue,
+                  }));
+                  updatePart({ ...part, score: scoreValue, answers: newAnswers });
                 }}
-                onError={(message) => setSnackbar({ open: true, message })}
-                startingBlankId={1}
+                sx={textInput}
               />
             </Box>
-          </Box>
 
-          <Box sx={rowContent}>
-            <Typography sx={labelText}>
-              Answers <span style={{ color: 'red' }}>*</span>
-            </Typography>
-          </Box>
-
-          {answers.length === 0 ? (
-            <Box sx={emptyStateBox}>
-              No blanks inserted yet. Use the editor toolbar to insert blanks.
+            <Box sx={{ mb: 3 }}>
+              <Typography sx={labelText}>
+                Audio File <span style={{ color: 'red' }}>*</span>
+              </Typography>
+              <AudioUploader
+                value={part.audio}
+                onChange={(audio) => updatePart({ ...part, audio })}
+                accept="audio/mp3,audio/m4a"
+              />
             </Box>
-          ) : (
-            <Stack spacing={2}>
-              {answers.map((answer, aIdx) => (
-                <Paper key={answer.id} variant="outlined" sx={outlinedCard}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                    <Box sx={numberIndicator}>{aIdx + 1}</Box>
 
-                    <TextField
-                      size="small"
-                      fullWidth
-                      placeholder="Enter answer text"
-                      value={answer.text}
-                      onChange={(e) => setAnswerText(aIdx, e.target.value)}
-                      sx={textInput}
-                    />
-                  </Box>
+            <Box sx={{ mb: 3 }}>
+              <Box sx={rowContent}>
+                <Typography sx={labelText}>
+                  Description <span style={{ color: 'red' }}>*</span>
+                </Typography>
+              </Box>
+              <TextField
+                fullWidth
+                multiline
+                minRows={2}
+                placeholder="e.g., Listen to the audio between Alice and Sam and choose the correct picture..."
+                value={part.description ?? ''}
+                onChange={(e) => updatePart({ ...part, description: e.target.value })}
+                sx={textInput}
+              />
+            </Box>
 
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box sx={{ width: 28 }} />
-                    <TextField
-                      size="small"
-                      fullWidth
-                      placeholder="Enter explanation"
-                      value={answer.explanation || ''}
-                      onChange={(e) => {
-                        const newAnswers = answers.map((ans, i) =>
-                          i === aIdx ? { ...ans, explanation: e.target.value } : ans,
-                        );
-                        updatePart({ ...part, answers: newAnswers });
-                      }}
-                      sx={textInput}
-                    />
-                  </Box>
-                </Paper>
-              ))}
-            </Stack>
-          )}
-        </>
+            <Box sx={{ mb: 3 }}>
+              <Box sx={rowContent}>
+                <Typography sx={labelText}>
+                  Content <span style={{ color: 'red' }}>*</span>
+                </Typography>
+              </Box>
+              <Box sx={scrollEditorBox}>
+                <ClientSideCustomEditor
+                  data={content}
+                  onChange={(newContent) => {
+                    setContent(newContent);
+                    syncAnswersWithBlanks(newContent);
+                  }}
+                  onError={(message) => setSnackbar({ open: true, message })}
+                  startingBlankId={1}
+                />
+              </Box>
+            </Box>
+          </Box>
+
+          {/* -------------- Right Column: Answers -------------- */}
+          <Box sx={{ flex: 1.5, minWidth: 0 }}>
+            <Box sx={rowContent}>
+              <Typography sx={labelText}>
+                Answers <span style={{ color: 'red' }}>*</span>
+              </Typography>
+            </Box>
+
+            {answers.length === 0 ? (
+              <Box sx={emptyStateBox}>
+                No blanks inserted yet. Use the editor toolbar to insert blanks.
+              </Box>
+            ) : (
+              <Stack spacing={2}>
+                {answers.map((answer, aIdx) => (
+                  <Paper key={answer.id} variant="outlined" sx={outlinedCard}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0, mb: 1 }}>
+                      <Box sx={numberIndicator}>{aIdx + 1}</Box>
+                      <Box sx={{ flexGrow: 1 }} />
+                      <IconButton onClick={() => toggleQuestionCollapse(answer.id)}>
+                        <ExpandLessRoundedIcon
+                          sx={{
+                            fontSize: '1.4rem',
+                            transition: 'transform 0.3s ease',
+                            transform: collapsedQuestions[answer.id]
+                              ? 'rotate(180deg)'
+                              : 'rotate(0deg)',
+                          }}
+                        />
+                      </IconButton>
+                    </Box>
+
+                    <Collapse in={!collapsedQuestions[answer.id]} sx={{ width: '100%' }}>
+                      <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <TextField
+                          size="small"
+                          fullWidth
+                          placeholder="Enter answer text"
+                          value={answer.text}
+                          onChange={(e) => setAnswerText(aIdx, e.target.value)}
+                          sx={textInput}
+                        />
+
+                        <TextField
+                          size="small"
+                          fullWidth
+                          placeholder="Enter explanation"
+                          value={answer.explanation || ''}
+                          onChange={(e) => {
+                            const newAnswers = answers.map((ans, i) =>
+                              i === aIdx ? { ...ans, explanation: e.target.value } : ans,
+                            );
+                            updatePart({ ...part, answers: newAnswers });
+                          }}
+                          sx={textInput}
+                        />
+                      </Box>
+                    </Collapse>
+                  </Paper>
+                ))}
+              </Stack>
+            )}
+          </Box>
+        </Box>
       )}
     </>
   );

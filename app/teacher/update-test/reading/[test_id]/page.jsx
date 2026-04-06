@@ -516,6 +516,80 @@ export default function Page() {
           if (format === 'G' || format === 'H' || format === 'I' || format === 'J') {
             updatedPart.content = '';
           }
+
+          // Tự động thêm câu hỏi đầu tiên (nếu part chưa có câu hỏi nào đang active)
+          const activeQuestions = p.questions
+            ? p.questions.filter((q) => q.action !== 'delete')
+            : [];
+          if (format && activeQuestions.length === 0) {
+            const now = Date.now();
+            const newQuestion = {
+              id: now,
+              question_number: 1,
+              explanation: '',
+              score: p.scoreForEachQuestion || 10,
+              ...(test.flag === 'update' && { action: 'create' }),
+            };
+
+            if (format === 'G' || format === 'F') {
+              newQuestion.content = '';
+              newQuestion.answers = [
+                {
+                  id: 0,
+                  option_label: 'A',
+                  is_correct: true,
+                  answer_text: '',
+                  ...(test.flag === 'update' && { action: 'create' }),
+                },
+                {
+                  id: 1,
+                  option_label: 'B',
+                  is_correct: false,
+                  answer_text: '',
+                  ...(test.flag === 'update' && { action: 'create' }),
+                },
+                {
+                  id: 2,
+                  option_label: 'C',
+                  is_correct: false,
+                  answer_text: '',
+                  ...(test.flag === 'update' && { action: 'create' }),
+                },
+              ];
+            } else if (format === 'H') {
+              newQuestion.content = '';
+              newQuestion.answers = [
+                {
+                  id: 0,
+                  option_label: 'A',
+                  is_correct: true,
+                  answer_text: '',
+                  ...(test.flag === 'update' && { action: 'create' }),
+                },
+              ];
+            } else if (format === 'I') {
+              newQuestion.answers = [
+                {
+                  id: 0,
+                  is_correct: true,
+                  answer_text: '',
+                  ...(test.flag === 'update' && { action: 'create' }),
+                },
+              ];
+            } else if (format === 'J') {
+              newQuestion.answers = [
+                {
+                  id: 0,
+                  option_label: '',
+                  is_correct: true,
+                  answer_text: '',
+                  ...(test.flag === 'update' && { action: 'create' }),
+                },
+              ];
+            }
+            updatedPart.questions = [...(p.questions || []), newQuestion];
+          }
+
           return updatedPart;
         }
         return p;
@@ -649,7 +723,7 @@ export default function Page() {
           {snackbar.message}
         </Alert>
       </Snackbar>
-      <Container maxWidth="lg">
+      <Container maxWidth={false}>
         {/* -------- Title Section --------- */}
         <Box sx={uploadReadingStyles.cardTitle}>
           <Typography variant="h3" sx={uploadReadingStyles.mainTitleHeading}>

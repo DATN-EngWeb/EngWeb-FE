@@ -25,7 +25,7 @@ import {
   createTestFeedback,
   updateTestFeedback,
   deleteTestFeedback,
-} from '../../../api/feedback';
+} from '../../api/feedback';
 
 export default function FeedbackPanel({ testId }) {
   const [feedbacks, setFeedbacks] = useState([]);
@@ -47,7 +47,7 @@ export default function FeedbackPanel({ testId }) {
       setFeedbacks(data?.results ?? data ?? []);
       setNextPage(data?.next ?? null);
     } catch (err) {
-      console.error('Failed to load feedbacks:', err); // eslint-disable-line no-console
+      console.error('Failed to load feedbacks:', err);
     } finally {
       setLoadingFeedbacks(false);
     }
@@ -67,7 +67,7 @@ export default function FeedbackPanel({ testId }) {
       setFeedbacks((prev) => [...prev, ...(data?.results ?? [])]);
       setNextPage(data?.next ?? null);
     } catch (err) {
-      console.error('Failed to load more feedbacks:', err); // eslint-disable-line no-console
+      console.error('Failed to load more feedbacks:', err);
     } finally {
       setLoadingMore(false);
     }
@@ -83,7 +83,7 @@ export default function FeedbackPanel({ testId }) {
       setComment('');
       await fetchFeedbacks();
     } catch (err) {
-      console.error('Failed to submit feedback:', err); // eslint-disable-line no-console
+      console.error('Failed to submit feedback:', err);
     } finally {
       setSubmitting(false);
     }
@@ -111,7 +111,7 @@ export default function FeedbackPanel({ testId }) {
       setEditingId(null);
       setEditText('');
     } catch (err) {
-      console.error('Failed to update feedback:', err); // eslint-disable-line no-console
+      console.error('Failed to update feedback:', err);
     } finally {
       setSavingId(null);
     }
@@ -124,13 +124,14 @@ export default function FeedbackPanel({ testId }) {
       await deleteTestFeedback(feedbackId);
       setFeedbacks((prev) => prev.filter((fb) => fb.id !== feedbackId));
     } catch (err) {
-      console.error('Failed to delete feedback:', err); // eslint-disable-line no-console
+      console.error('Failed to delete feedback:', err);
     } finally {
       setDeletingId(null);
     }
   };
 
-  const isOwn = (fb) => fb.created_by !== 'A' && String(fb.author_id) === String(currentUserId);
+  const isOwn = (fb) =>
+    fb.created_by !== 'A' && String(fb.author_id ?? fb.created_by_id) === String(currentUserId);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>

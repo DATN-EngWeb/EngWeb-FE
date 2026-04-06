@@ -16,8 +16,6 @@ import {
   CircularProgress,
 } from '@mui/material';
 import {
-  MenuBook as LibraryIcon,
-  AutoAwesome as SparklesIcon,
   Search as SearchIcon,
   FilterList as FilterIcon,
   Add as PlusIcon,
@@ -27,22 +25,6 @@ import {
 import { TeacherHomepageStyles as styles } from '../../styles/Teacher/TeacherHomepageStyles.js';
 
 const PAGE_SIZE = 9;
-
-const StatCard = ({ icon, value, variant }) => (
-  <Box sx={styles.statBadge(variant)}>
-    <Typography component="span" sx={{ fontSize: '1.2rem' }}>
-      {icon}
-    </Typography>
-    <Typography
-      component="span"
-      sx={{
-        fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' },
-      }}
-    >
-      {value}
-    </Typography>
-  </Box>
-);
 
 export default function TeacherHome() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -178,19 +160,6 @@ export default function TeacherHome() {
         <Typography variant="body1" sx={styles.welcomeSub}>
           Manage and track all your tests in one place
         </Typography>
-
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <StatCard
-            icon={<LibraryIcon fontSize="medium" sx={{ color: 'warning.dark' }} />}
-            value="120+ tests"
-            variant="yellow"
-          />
-          <StatCard
-            icon={<SparklesIcon fontSize="medium" sx={{ color: 'warning.dark' }} />}
-            value="162 total submissions"
-            variant="green"
-          />
-        </Box>
       </Box>
 
       <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>

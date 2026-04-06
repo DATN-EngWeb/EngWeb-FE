@@ -189,19 +189,7 @@ const TestCard = ({
         return {
           label: 'In review',
           color: 'secondary.dark',
-          icon: (
-            <PendingIcon
-              sx={{
-                fontSize: '1rem',
-                color: 'secondary.dark',
-                animation: 'spin 2s linear infinite',
-                '@keyframes spin': {
-                  '0%': { transform: 'rotate(0deg)' },
-                  '100%': { transform: 'rotate(360deg)' },
-                },
-              }}
-            />
-          ),
+          icon: <PendingIcon sx={{ fontSize: '1rem', color: 'secondary.dark' }} />,
         };
       case 'D': // Draft
       default:
@@ -222,19 +210,7 @@ const TestCard = ({
       case 'draft': // In Review
         return {
           color: 'secondary.dark',
-          icon: (
-            <PendingIcon
-              sx={{
-                fontSize: 'large',
-                color: 'secondary.dark',
-                animation: 'spin 2s linear infinite',
-                '@keyframes spin': {
-                  '0%': { transform: 'rotate(0deg)' },
-                  '100%': { transform: 'rotate(360deg)' },
-                },
-              }}
-            />
-          ),
+          icon: <PendingIcon sx={{ fontSize: 'large', color: 'secondary.dark' }} />,
         };
       case 'none': // Draft
       default:
@@ -453,10 +429,19 @@ const TestCard = ({
           size="small"
           variant="outlined"
           onClick={() => {
-            {
-              role === 'student' ? handleStudentViewTest() : handleViewTest();
-            }
+            role === 'student' ? handleStudentViewTest() : handleViewTest();
           }}
+          startIcon={
+            role === 'student' ? (
+              progress_status === 'completed' ? (
+                <ReplayIcon />
+              ) : (
+                <Edit fontSize="small" />
+              )
+            ) : (
+              <EyeIcon fontSize="small" />
+            )
+          }
           sx={{
             bgcolor: 'background.paper',
             color: currentLevelTheme.badge,
@@ -471,28 +456,13 @@ const TestCard = ({
             },
           }}
         >
-          {role === 'student' ? (
-            progress_status === 'completed' ? (
-              <>
-                <ReplayIcon /> Try Again
-              </>
-            ) : progress_status === 'draft' ? (
-              <>
-                <Edit fontSize="small" />
-                Continue
-              </>
-            ) : (
-              <>
-                <Edit fontSize="small" />
-                Practice
-              </>
-            )
-          ) : (
-            <>
-              <EyeIcon fontSize="small" />
-              View
-            </>
-          )}
+          {role === 'student'
+            ? progress_status === 'completed'
+              ? 'Try Again'
+              : progress_status === 'draft'
+                ? 'Continue'
+                : 'Practice'
+            : 'View'}
         </Button>
 
         {role !== 'student' && (

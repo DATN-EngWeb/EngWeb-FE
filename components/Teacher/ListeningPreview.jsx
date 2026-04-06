@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Box, Container, Typography, Button } from '@mui/material';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import { listeningtestStyles } from '../../styles/student/Listening/ListeningTestStyles.js';
+import { listeningtestStyles } from '../../styles/student/Listening/listeningTestStyles';
 import { getListeningTestTypeLabel } from '../../utils/stringFormat';
 import MultipleChoiceImagePart from '../Student/ListeningTest/part/multipleChoiceImage';
 import FillBlankPart from '../Student/ListeningTest/part/fillBlanks';

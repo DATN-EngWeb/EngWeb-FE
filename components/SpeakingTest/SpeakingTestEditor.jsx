@@ -29,7 +29,7 @@ export default function SpeakingTestEditor() {
     audio: null,
   });
   const [isSaving, setIsSaving] = useState(false);
-  const [showPreview, setShowPreview] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
   const [basicOpen, setBasicOpen] = useState(true);
   const [settingOpen, setSettingOpen] = useState(true);
   const [errors, setErrors] = useState(null);
@@ -121,6 +121,7 @@ export default function SpeakingTestEditor() {
           description={question.description}
           suggestion={question.suggestion}
           audio={question.audio?.url}
+          preview={false}
         />
       }
       errors={errors}

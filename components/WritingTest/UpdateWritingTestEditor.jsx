@@ -51,7 +51,7 @@ export default function UpdateWritingTestEditor() {
     audio: null,
   });
   const [isSaving, setIsSaving] = useState(false);
-  const [showPreview, setShowPreview] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
   const [basicOpen, setBasicOpen] = useState(true);
   const [settingOpen, setSettingOpen] = useState(true);
   const [snackbar, setSnackbar] = useState({
@@ -103,6 +103,7 @@ export default function UpdateWritingTestEditor() {
         min_word: response.productive_test.min_word,
       };
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Fetch error:', error);
       setSnackbar({ open: true, message: 'Failed to load test data', severity: 'error' });
     }
@@ -164,6 +165,7 @@ export default function UpdateWritingTestEditor() {
         setSnackbar({ open: true, message: 'No changes detected', severity: 'info' });
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Update error:', error);
       setSnackbar({ open: true, message: 'Failed to update test', severity: 'error' });
     } finally {
@@ -198,8 +200,7 @@ export default function UpdateWritingTestEditor() {
           suggestion={question.suggestion}
           audio={question.audio}
           isReadOnly={isReadOnly}
-          onEditClick={undefined}
-          onCancelClick={undefined}
+          preview={false}
           handleSubmit={async (status) => {
             await handleSubmit(status);
           }}

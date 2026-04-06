@@ -38,13 +38,13 @@ export default function BasicInformation({ testName, level, time, description, o
         </Box>
         <Box sx={{ flex: 1 }}>
           <Typography sx={{ ...labelText, mb: 0.5 }}>
-            Time (minutes) <span style={{ color: 'red' }}>*</span>
+            Time <span style={{ color: 'red' }}>*</span>
           </Typography>
           <TextField
             fullWidth
             size="small"
             type="number"
-            placeholder="Enter time in minutes"
+            placeholder="Enter time"
             value={time ?? ''}
             onChange={(e) => onChange('time', e.target.value)}
             error={errors?.time}
