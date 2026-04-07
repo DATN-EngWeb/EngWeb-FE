@@ -13,7 +13,7 @@ export default function ProductiveEditor({
   return (
     <Paper sx={{ ...styles.panelPaper, mb: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, marginBottom: '16px' }}>
-        <Box sx={{ ...styles.accentBar, backgroundColor: 'error.dark' }} />
+        <Box sx={styles.accentBar} />
         <Typography fontWeight={600} sx={{ color: 'primary.main' }}>
           Question Content
         </Typography>
@@ -38,7 +38,7 @@ export default function ProductiveEditor({
             sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}
           >
             <Typography variant="body2" sx={{ mb: 1 }}>
-              Audio File (Optional)
+              Audio File
             </Typography>
             {question.audio && !isReadOnly && (
               <Button
@@ -64,7 +64,7 @@ export default function ProductiveEditor({
 
       <Box>
         <Typography variant="body2" sx={{ mb: 1 }}>
-          Suggestion (Optional)
+          Suggestion
         </Typography>
         <Box className="editor-container">
           <ClientSideCustomEditor

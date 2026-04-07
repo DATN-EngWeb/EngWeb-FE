@@ -2,6 +2,9 @@
 'use client';
 import React from 'react';
 import { Paper, Stack, Box, Typography, Chip, Button, IconButton } from '@mui/material';
+import StarIcon from '@mui/icons-material/Star';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import DescriptionIcon from '@mui/icons-material/Description';
 import * as styles from '../../../styles/student/HistoryTestStyles';
 import { useRouter } from 'next/navigation';
 
@@ -65,17 +68,32 @@ export default function HistoryItem({ data }) {
             />
           </Stack>
           <Stack direction="row" spacing={3}>
-            <Typography variant="caption" fontWeight={700} color="#ffb300">
-              ⭐ 100 XP
+            <Typography
+              variant="caption"
+              fontWeight={700}
+              color="#ffb300"
+              sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+            >
+              <StarIcon sx={{ fontSize: '1rem' }} /> 100 XP
             </Typography>
             {data.skill === 'W' && (
-              <Typography variant="caption" fontWeight={700} color="text.secondary">
-                📄 {data.min_words} words
+              <Typography
+                variant="caption"
+                fontWeight={700}
+                color="text.secondary"
+                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+              >
+                <DescriptionIcon sx={{ fontSize: '1rem' }} /> {data.min_words} words
               </Typography>
             )}
 
-            <Typography variant="caption" fontWeight={700} color="text.secondary">
-              ⏱️ {formatTime(data.total_time)} mins
+            <Typography
+              variant="caption"
+              fontWeight={700}
+              color="text.secondary"
+              sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+            >
+              <AccessTimeIcon sx={{ fontSize: '1rem' }} /> {formatTime(data.total_time)} mins
             </Typography>
           </Stack>
         </Box>

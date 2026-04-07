@@ -22,7 +22,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { getReceptiveTestDetails } from '../../../api/teacher/upload-reading';
 import { createReceptiveTest } from '../../../api/test';
-import { listeningtestStyles } from '../../../styles/student/Listening/ListeningTestStyles.js';
+import { listeningtestStyles } from '../../../styles/student/Listening/listeningTestStyles';
 import {
   loadAudioSource,
   loadImageSource,

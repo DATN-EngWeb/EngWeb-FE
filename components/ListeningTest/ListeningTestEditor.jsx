@@ -1,7 +1,12 @@
 'use client';
 
 import { Box, Paper, Typography, Snackbar, Alert, Backdrop, CircularProgress } from '@mui/material';
-import { Image, TextFields, Edit, Link } from '@mui/icons-material';
+import {
+  ImageRounded as Image,
+  TextFieldsRounded as TextFields,
+  EditRounded as Edit,
+  LinkRounded as Link,
+} from '@mui/icons-material';
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
@@ -19,6 +24,7 @@ import MultiChoiceImagePart from './MultiChoiceImagePart';
 import MultiChoiceTextPart from './MultiChoiceTextPart';
 import FillInTheBlankPart from './FillInTheBlankPart';
 import MatchingPart from './MatchingPart';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import ScrollToTopButton from '../CreateTest/ScrollToTopButton';
 import ListeningPreview from '../Teacher/ListeningPreview';
 
@@ -86,7 +92,20 @@ export default function ListeningTestEditor({ testId: propTestId }) {
     time: '',
     description: '',
   });
-  const [parts, setParts] = useState([]);
+  const [parts, setParts] = useState(() => {
+    const testIdStr = propTestId || searchParams.get('testId');
+    if (testIdStr) return [];
+
+    return [
+      {
+        id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now(),
+        type: null,
+        order: 1,
+        questions: [],
+        answers: [],
+      },
+    ];
+  });
   const [originalParts, setOriginalParts] = useState([]);
   const [errors, setErrors] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
@@ -190,6 +209,50 @@ export default function ListeningTestEditor({ testId: propTestId }) {
         if (type === 'multichoice_texts') {
           newPart.audioFormat = p.audioFormat || 'onetoone';
         }
+
+        // Tự động thêm câu hỏi đầu tiên
+        if (type && type !== 'fill_in_the_blanks' && (!p.questions || p.questions.length === 0)) {
+          if (type === 'multichoice_images' || type === 'multichoice_texts') {
+            const now = Date.now();
+            const newQ = {
+              id: now.toString(),
+              text: '',
+              score: p.score || 10,
+              explanation: '',
+              answers: [
+                { id: 'a-' + now + '-0', label: 'A' },
+                { id: 'b-' + now + '-1', label: 'B' },
+                { id: 'c-' + now + '-2', label: 'C' },
+              ],
+              correctIndex: null,
+            };
+            if (type === 'multichoice_images') {
+              newQ.answers = newQ.answers.map((ans) => ({ ...ans, image: null }));
+            }
+            if (type === 'multichoice_texts' && newPart.audioFormat === 'onetoone') {
+              newQ.audio = null;
+            }
+            newPart.questions = [newQ];
+          } else if (type === 'matching') {
+            const now = Date.now();
+            newPart.questions = [
+              {
+                id: now.toString(),
+                text: '',
+                score: p.score || 10,
+                selectedAnswerId: null,
+                explanation: '',
+              },
+            ];
+            newPart.answers = [
+              {
+                id: now.toString() + '-ans',
+                text: '',
+              },
+            ];
+          }
+        }
+
         return newPart;
       });
     });
@@ -351,7 +414,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
       ) : (
         <Box sx={{ filter: isSaving ? 'blur' : 'none' }}>
           <Box sx={contentWrap}>
-            <Box sx={{ px: { xs: 0, lg: '180px' } }}>
+            <Box sx={{ px: 0 }}>
               <Typography
                 sx={{
                   color: 'primary.main',
@@ -438,8 +501,17 @@ export default function ListeningTestEditor({ testId: propTestId }) {
                   </Paper>
                 ))}
 
-              <Box sx={addPartBox} onClick={handleAddPart}>
-                + Add new part
+              <Box
+                sx={addPartBox}
+                onClick={handleAddPart}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                }}
+              >
+                <AddRoundedIcon sx={{ fontSize: '1.4rem' }} /> Add new part
               </Box>
             </Box>
           </Box>

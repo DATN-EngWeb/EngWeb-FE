@@ -11,13 +11,13 @@ import {
   Stack,
   Snackbar,
   Alert,
+  Collapse,
 } from '@mui/material';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import AddIcon from '@mui/icons-material/Add';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
+import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
 import AudioUploader from '../Upload/AudioUploader';
 import ImageUploader from '../Upload/ImageUploader';
 import { useState } from 'react';
@@ -36,11 +36,20 @@ import {
   actionTextButton,
   outlinedCard,
   trashIconButton,
+  addQuestionBox,
 } from '../../styles/Teacher/Listening/ListeningStyles';
 
 export default function MultiChoiceImagePart({ index, part = {}, onChange, onDelete }) {
   const questions = Array.isArray(part.questions) ? part.questions : [];
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [collapsedQuestions, setCollapsedQuestions] = useState({});
+
+  const toggleQuestionCollapse = (questionId) => {
+    setCollapsedQuestions((prev) => ({
+      ...prev,
+      [questionId]: !prev[questionId],
+    }));
+  };
   const [snackbar, setSnackbar] = useState({ open: false, message: '' });
 
   const updatePart = (newPart) => {
@@ -153,7 +162,6 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
       <Box sx={partHeader}>
         <Box sx={sectionHeader}>
           <Box sx={accentBar} />
-          <DragIndicatorIcon color="disabled" />
           <Box>
             <Typography fontWeight={600} sx={{ color: 'primary.main' }}>
               Part {index + 1}
@@ -166,196 +174,214 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
 
         <Box>
           <IconButton onClick={onDelete} sx={trashIconButton}>
-            <DeleteOutlineIcon />
+            <DeleteRoundedIcon sx={{ fontSize: '1.4rem' }} />
           </IconButton>
           <IconButton onClick={() => setIsCollapsed(!isCollapsed)}>
-            {isCollapsed ? <KeyboardArrowDownIcon /> : <KeyboardArrowUpIcon />}
+            {isCollapsed ? (
+              <ExpandMoreRoundedIcon sx={{ fontSize: '1.6rem' }} />
+            ) : (
+              <ExpandLessRoundedIcon sx={{ fontSize: '1.6rem' }} />
+            )}
           </IconButton>
         </Box>
       </Box>
 
       {!isCollapsed && (
-        <>
-          <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 4, mt: 2 }}>
+          {/* -------------- Left Column: Config & Audio -------------- */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box sx={{ mb: 3 }}>
+              <Box sx={rowContent}>
+                <Typography sx={labelText}>
+                  The score for each question <span style={{ color: 'red' }}>*</span>
+                </Typography>
+              </Box>
+              <TextField
+                fullWidth
+                size="small"
+                type="number"
+                value={part.score ?? ''}
+                onChange={(e) => {
+                  const scoreValue = parseFloat(e.target.value) || 0;
+                  const newQuestions = questions.map((q) => ({
+                    ...q,
+                    score: scoreValue,
+                  }));
+                  updatePart({ ...part, score: scoreValue, questions: newQuestions });
+                }}
+                sx={textInput}
+              />
+            </Box>
+
+            <Box sx={{ mb: 3 }}>
+              <Typography sx={labelText}>
+                Audio File <span style={{ color: 'red' }}>*</span>
+              </Typography>
+              <AudioUploader
+                value={part.audio}
+                onChange={(audio) => updatePart({ ...part, audio })}
+                accept="audio/mp3,audio/m4a"
+              />
+            </Box>
+
+            <Box sx={{ mb: 3 }}>
+              <Box sx={rowContent}>
+                <Typography sx={labelText}>
+                  Description <span style={{ color: 'red' }}>*</span>
+                </Typography>
+              </Box>
+              <TextField
+                fullWidth
+                multiline
+                minRows={4}
+                placeholder="e.g., Listen to the audio between Alice and Sam and choose the correct picture..."
+                value={part.description ?? ''}
+                onChange={(e) => updatePart({ ...part, description: e.target.value })}
+                sx={textInput}
+              />
+            </Box>
+          </Box>
+
+          {/* -------------- Right Column: Questions -------------- */}
+          <Box sx={{ flex: 1.5, minWidth: 0 }}>
             <Box sx={rowContent}>
               <Typography sx={labelText}>
-                The score for each question <span style={{ color: 'red' }}>*</span>
+                Questions <span style={{ color: 'red' }}>*</span>
               </Typography>
             </Box>
-            <TextField
-              fullWidth
-              size="small"
-              type="number"
-              value={part.score ?? ''}
-              onChange={(e) => {
-                const scoreValue = parseFloat(e.target.value) || 0;
-                const newQuestions = questions.map((q) => ({
-                  ...q,
-                  score: scoreValue,
-                }));
-                updatePart({ ...part, score: scoreValue, questions: newQuestions });
-              }}
-              sx={textInput}
-            />
-          </Box>
 
-          <Typography sx={labelText}>
-            Audio File <span style={{ color: 'red' }}>*</span>
-          </Typography>
-          <AudioUploader
-            value={part.audio}
-            onChange={(audio) => updatePart({ ...part, audio })}
-            accept="audio/mp3,audio/m4a"
-          />
+            {questions.length === 0 ? (
+              <Box sx={emptyStateBox}>
+                No questions yet
+                <br />
+                <Button
+                  startIcon={<AddRoundedIcon />}
+                  sx={{ mt: 1, ...actionTextButton, textTransform: 'none' }}
+                  onClick={addQuestion}
+                >
+                  Add your first question
+                </Button>
+              </Box>
+            ) : (
+              <Stack spacing={2}>
+                {questions.map((q, qIdx) => (
+                  <Paper key={q.id} variant="outlined" sx={outlinedCard}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0, mb: 1 }}>
+                      <Box sx={numberIndicator}>{qIdx + 1}</Box>
+                      <Box sx={{ flexGrow: 1 }} />
+                      <IconButton onClick={() => removeQuestion(qIdx)} sx={trashIconButton}>
+                        <DeleteRoundedIcon sx={{ fontSize: '1.2rem' }} />
+                      </IconButton>
+                      <IconButton onClick={() => toggleQuestionCollapse(q.id)}>
+                        <ExpandLessRoundedIcon
+                          sx={{
+                            fontSize: '1.4rem',
+                            transition: 'transform 0.3s ease',
+                            transform: collapsedQuestions[q.id] ? 'rotate(180deg)' : 'rotate(0deg)',
+                          }}
+                        />
+                      </IconButton>
+                    </Box>
 
-          <Box sx={{ mb: 3 }}>
-            <Box sx={rowContent}>
-              <Typography sx={labelText}>
-                Description <span style={{ color: 'red' }}>*</span>
-              </Typography>
-            </Box>
-            <TextField
-              fullWidth
-              multiline
-              minRows={2}
-              placeholder="e.g., Listen to the audio between Alice and Sam and choose the correct picture..."
-              value={part.description ?? ''}
-              onChange={(e) => updatePart({ ...part, description: e.target.value })}
-              sx={textInput}
-            />
-          </Box>
+                    <Collapse in={!collapsedQuestions[q.id]} sx={{ width: '100%' }}>
+                      <Box sx={{ mt: 1 }}>
+                        <TextField
+                          size="small"
+                          fullWidth
+                          placeholder="Enter question text"
+                          value={q.text}
+                          onChange={(e) => setQuestionText(qIdx, e.target.value)}
+                          sx={{ ...textInput, mb: 2 }}
+                        />
 
-          <Box sx={rowContent}>
-            <Typography sx={labelText}>
-              Questions <span style={{ color: 'red' }}>*</span>
-            </Typography>
-            <Button
-              startIcon={<AddIcon />}
-              size="small"
-              onClick={addQuestion}
-              sx={{ ...actionTextButton, textTransform: 'none' }}
-            >
-              Add question
-            </Button>
-          </Box>
+                        <TextField
+                          size="small"
+                          fullWidth
+                          placeholder="Enter explanation"
+                          value={q.explanation || ''}
+                          onChange={(e) => {
+                            const newQs = questions.map((question, i) =>
+                              i === qIdx ? { ...question, explanation: e.target.value } : question,
+                            );
+                            updatePart({ ...part, questions: newQs });
+                          }}
+                          sx={{ ...textInput, mb: 2 }}
+                        />
+                        <Typography variant="body2" color="text.secondary">
+                          Image answers (click to set correct):
+                        </Typography>
 
-          {questions.length === 0 ? (
-            <Box sx={emptyStateBox}>
-              No questions yet
-              <br />
-              <Button
-                startIcon={<AddIcon />}
-                sx={{ mt: 1, ...actionTextButton, textTransform: 'none' }}
-                onClick={addQuestion}
-              >
-                Add your first question
-              </Button>
-            </Box>
-          ) : (
-            <Stack spacing={2}>
-              {questions.map((q, qIdx) => (
-                <Paper key={q.id} variant="outlined" sx={outlinedCard}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                    <Box sx={numberIndicator}>{qIdx + 1}</Box>
+                        <Grid container spacing={2} sx={{ display: 'flex', mt: 1 }}>
+                          {q.answers.map((ans, aIdx) => {
+                            const isCorrect = q.correctIndex === aIdx;
 
-                    <TextField
-                      size="small"
-                      fullWidth
-                      placeholder="Enter question text"
-                      value={q.text}
-                      onChange={(e) => setQuestionText(qIdx, e.target.value)}
-                      sx={textInput}
-                    />
+                            return (
+                              <Grid item xs={4} key={ans.id} sx={{ flex: 1, minWidth: 0 }}>
+                                <Box onClick={() => setCorrect(qIdx, aIdx)} sx={answerImageBox}>
+                                  <Box sx={imageContainer}>
+                                    <Box sx={{ width: '100%', height: '100%' }}>
+                                      <ImageUploader
+                                        value={ans.image}
+                                        onChange={(img) => handleImageChange(qIdx, aIdx, img)}
+                                        height={120}
+                                      />
+                                    </Box>
+                                  </Box>
 
-                    <IconButton onClick={() => removeQuestion(qIdx)} sx={trashIconButton}>
-                      <DeleteOutlineIcon />
-                    </IconButton>
-                  </Box>
+                                  <Button
+                                    size="small"
+                                    sx={{
+                                      ...answerLabelButton,
+                                      bgcolor: isCorrect ? 'yellow.main' : 'transparent',
+                                      color: isCorrect ? 'common.white' : 'text.primary',
+                                      borderColor: isCorrect ? 'yellow.main' : 'divider',
+                                    }}
+                                  >
+                                    {ans.label}
+                                  </Button>
 
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                    <Box sx={{ width: 28 }} />
-                    <TextField
-                      size="small"
-                      fullWidth
-                      placeholder="Enter explanation"
-                      value={q.explanation || ''}
-                      onChange={(e) => {
-                        const newQs = questions.map((question, i) =>
-                          i === qIdx ? { ...question, explanation: e.target.value } : question,
-                        );
-                        updatePart({ ...part, questions: newQs });
-                      }}
-                      sx={textInput}
-                    />
-                  </Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Image answers (click to set correct):
-                  </Typography>
-
-                  <Grid container spacing={2} sx={{ display: 'flex' }}>
-                    {q.answers.map((ans, aIdx) => {
-                      const isCorrect = q.correctIndex === aIdx;
-
-                      return (
-                        <Grid item xs={4} key={ans.id} sx={{ flex: 1, minWidth: 0 }}>
-                          <Box onClick={() => setCorrect(qIdx, aIdx)} sx={answerImageBox}>
-                            <Box sx={imageContainer}>
-                              <Box sx={{ width: '100%', height: '100%' }}>
-                                <ImageUploader
-                                  value={ans.image}
-                                  onChange={(img) => handleImageChange(qIdx, aIdx, img)}
-                                  height={120}
-                                />
-                              </Box>
-                            </Box>
-
-                            <Button
-                              size="small"
-                              sx={{
-                                ...answerLabelButton,
-                                bgcolor: isCorrect ? 'yellow.main' : 'transparent',
-                                color: isCorrect ? 'common.white' : 'text.primary',
-                                borderColor: isCorrect ? 'yellow.main' : 'divider',
-                              }}
-                            >
-                              {ans.label}
-                            </Button>
-
-                            <IconButton
-                              size="small"
-                              sx={{
-                                ...trashIconButton,
-                                mt: 0.5,
-                                alignSelf: 'center',
-                              }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeAnswer(qIdx, aIdx);
-                              }}
-                            >
-                              <DeleteOutlineIcon />
-                            </IconButton>
-                          </Box>
+                                  <IconButton
+                                    size="small"
+                                    sx={{
+                                      ...trashIconButton,
+                                      mt: 0.5,
+                                      alignSelf: 'center',
+                                    }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      removeAnswer(qIdx, aIdx);
+                                    }}
+                                  >
+                                    <DeleteRoundedIcon />
+                                  </IconButton>
+                                </Box>
+                              </Grid>
+                            );
+                          })}
                         </Grid>
-                      );
-                    })}
-                  </Grid>
 
-                  <Box mt={1}>
-                    <Button
-                      startIcon={<AddCircleOutlineIcon />}
-                      size="small"
-                      onClick={() => addAnswer(qIdx)}
-                      sx={{ ...actionTextButton, textTransform: 'none' }}
-                    >
-                      Add Answer
-                    </Button>
-                  </Box>
-                </Paper>
-              ))}
-            </Stack>
-          )}
-        </>
+                        <Box mt={2}>
+                          <Button
+                            startIcon={<AddCircleRoundedIcon />}
+                            size="small"
+                            onClick={() => addAnswer(qIdx)}
+                            sx={{ ...actionTextButton, textTransform: 'none' }}
+                          >
+                            Add option
+                          </Button>
+                        </Box>
+                      </Box>
+                    </Collapse>
+                  </Paper>
+                ))}
+                <Box onClick={addQuestion} sx={addQuestionBox}>
+                  <AddRoundedIcon sx={{ fontSize: '1.2rem' }} />
+                  Add question
+                </Box>
+              </Stack>
+            )}
+          </Box>
+        </Box>
       )}
     </>
   );

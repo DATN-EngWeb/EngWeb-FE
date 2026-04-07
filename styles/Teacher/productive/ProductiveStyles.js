@@ -1,7 +1,7 @@
 export const container = {
-  backgroundColor: 'background.default',
+  background: 'linear-gradient(to bottom, #FFF4E9 0%, #FFFFFF 100%)',
   minHeight: '100vh',
-  px: { xs: 2, md: 4, lg: 6 },
+  px: { xs: 2, md: 3, lg: 4 },
   py: 2,
 };
 
@@ -9,6 +9,7 @@ export const INNER_CONTAINER_STYLE = (showPreview) => ({
   px: { xs: 2, md: 5, lg: 8 },
   mt: -4,
   bgcolor: 'primary.contrastText',
+  borderRadius: '2rem',
   display: 'flex',
   gap: 4,
   flexDirection: { xs: 'column', lg: 'row' },
@@ -26,21 +27,20 @@ export const SECTION_TITLE_STYLE = {
 };
 
 export const panelPaper = {
-  p: 3,
+  p: 2.5,
   mb: 3,
-  border: '0.5px solid',
-  borderColor: 'secondary.main',
-  borderRadius: '12px',
+  border: '2px solid',
+  borderColor: 'yellow.main',
+  borderRadius: '1.5rem',
   backgroundColor: 'primary.contrastText',
-  boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.03)',
-  //minWidth: { lg: '400px', md: '350px' },
+  boxShadow: 'none',
 };
 
 export const sectionHeader = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  mb: 3,
+  mb: 1,
 };
 
 export const accentBar = {
@@ -48,12 +48,13 @@ export const accentBar = {
   height: '24px',
   borderRadius: '4px',
   mr: 1.5,
+  backgroundColor: 'yellow.main',
 };
 
 export const twoColRow = {
   display: 'flex',
   gap: 2,
-  mb: 3,
+  mb: 1,
   flexDirection: { xs: 'column', sm: 'row' },
   '& > *': {
     flex: 1,
@@ -86,12 +87,12 @@ export const STICKY_PREVIEW_WRAPPER = {
 
 export const PREVIEW_PAPER_STYLE = {
   p: 4,
-  borderRadius: '12px',
+  borderRadius: '1rem',
   backgroundColor: 'primary.contrastText',
   minHeight: '600px',
-  boxShadow: '0px 10px 30px rgba(0, 0, 0, 0.05)',
-  border: `0.5px solid `,
-  borderColor: `darkGrey.light`,
+  boxShadow: 'none',
+  border: '2px solid',
+  borderColor: 'yellow.main',
   backgroundImage: 'linear-gradient(#fff 0%, #fdfdfd 100%)',
 };
 
@@ -106,12 +107,27 @@ export const SUGGESTION_BOX_STYLE = {
 export const scrollEditorBox = {
   height: 300,
   overflowY: 'auto',
-  border: `1px solid ${'info.pastel'}`,
-  borderRadius: '8px',
+  border: '1px solid',
+  borderColor: 'gray.main',
+  borderRadius: '1rem',
   position: 'relative',
   zIndex: 1,
   overflow: 'visible',
 };
+
+export const textInput = {
+  borderRadius: '1rem',
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '1rem',
+  },
+  '& .MuiOutlinedInput-notchedOutline': {
+    borderRadius: '1rem',
+  },
+  '& fieldset': {
+    borderRadius: '1rem',
+  },
+};
+
 export const rowContent = {
   display: 'flex',
   justifyContent: 'space-between',

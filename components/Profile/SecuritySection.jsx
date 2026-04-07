@@ -14,6 +14,9 @@ import { useState } from 'react';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ShieldIcon from '@mui/icons-material/Shield';
+import EmailIcon from '@mui/icons-material/Email';
+import LockIcon from '@mui/icons-material/Lock';
 import { forgotPassword, verifyForgotPasswordOtp, resetPassword } from '../../api/accounts';
 import { securitySectionStyles } from '../../styles/Profile/ProfileStyles';
 
@@ -170,7 +173,9 @@ export default function SecuritySection({ username, email, onSave, isSaving, onE
           {passwordStep === 1 && (
             <Box>
               <Box display="flex" alignItems="center" gap={2} mb={3}>
-                <Box sx={securitySectionStyles.iconBox}>🛡️</Box>
+                <Box sx={securitySectionStyles.iconBox}>
+                  <ShieldIcon sx={{ color: '#1B9CFC' }} />
+                </Box>
                 <Typography variant="h5" fontWeight={600}>
                   Verify Your Identity
                 </Typography>
@@ -190,7 +195,7 @@ export default function SecuritySection({ username, email, onSave, isSaving, onE
                   gap: 1,
                 }}
               >
-                <Typography sx={{ fontSize: 20 }}>✉️</Typography>
+                <EmailIcon sx={{ color: '#C9B1FF', fontSize: 24 }} />
                 <Typography>Do you want to continue resetting password?</Typography>
               </Box>
 
@@ -219,7 +224,9 @@ export default function SecuritySection({ username, email, onSave, isSaving, onE
               </Box>
 
               <Box display="flex" alignItems="center" gap={2} mb={3}>
-                <Box sx={securitySectionStyles.iconBox}>🔐</Box>
+                <Box sx={securitySectionStyles.iconBox}>
+                  <LockIcon sx={{ color: '#F8B600' }} />
+                </Box>
                 <Typography variant="h5" fontWeight={600}>
                   Enter Verification Code
                 </Typography>

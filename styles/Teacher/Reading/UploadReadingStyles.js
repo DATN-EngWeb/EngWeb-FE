@@ -1,7 +1,7 @@
 export const uploadReadingStyles = {
   mainContainer: {
     pb: { xs: 1, md: 2 },
-    backgroundColor: 'background.default',
+    background: 'linear-gradient(to bottom, #FFF4E9 0%, #FFFFFF 100%)',
   },
   // -------- Card Title Section ---------
   cardTitle: {
@@ -82,7 +82,7 @@ export const uploadReadingStyles = {
     flexDirection: 'row',
     alignItems: 'center',
     px: 2.5,
-    boxShadow: '0 4px 3px 1px rgba(97, 97, 97, 0.2)',
+    boxShadow: 'none',
     '&:hover': {
       backgroundColor: 'background.default',
       boxShadow: 'none',
@@ -99,7 +99,7 @@ export const uploadReadingStyles = {
       boxShadow: 'none',
     },
     px: 2.5,
-    boxShadow: '0 4px 3px 1px rgba(97, 97, 97, 0.2)',
+    boxShadow: 'none',
   },
   // -------- Upload Reading Test Form Section ---------
   nameTestAndTime: {
@@ -111,7 +111,7 @@ export const uploadReadingStyles = {
   uploadReadingFormSection: {
     width: '100%',
     height: 'auto',
-    maxWidth: '800px',
+    maxWidth: '100%',
     margin: '0 auto',
     display: 'flex',
     flexDirection: 'column',
@@ -183,8 +183,9 @@ export const uploadReadingStyles = {
     gap: { xs: 0, md: 1 },
     width: '100%',
     py: 1,
-    border: '2px dashed',
-    borderColor: 'gray.main',
+    backgroundColor: '#fff',
+    border: '2px solid',
+    borderColor: 'yellow.main',
     borderRadius: '1rem',
     fontSize: { xs: '0.8rem', md: '1rem' },
     color: 'text.primary',

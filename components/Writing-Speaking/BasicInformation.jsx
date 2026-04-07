@@ -20,6 +20,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Collapse,
 } from '@mui/material';
 import { InfoOutlined, ExpandLess, ExpandMore } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
@@ -28,6 +29,7 @@ import {
   sectionHeader,
   accentBar,
   twoColRow,
+  textInput,
 } from '../../styles/Teacher/productive/ProductiveStyles';
 import { getCriteria } from '../../api/test';
 
@@ -71,6 +73,7 @@ export default function BasicInformation({
 
         setCriteriaData(Array.isArray(data) ? data : []);
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Fetch Error:', error);
         setCriteriaData([]);
       } finally {
@@ -86,155 +89,146 @@ export default function BasicInformation({
     }
   }, [skill]);
 
-  if (collapsed) {
-    return (
-      <Button
-        size="small"
-        variant="outlined"
-        onClick={() => setCollapsed(false)}
-        sx={{
-          mb: 2,
-          alignSelf: 'flex-start',
-          textTransform: 'none',
-          mr: 2,
-        }}
-      >
-        Edit Basic Information
-      </Button>
-    );
-  }
-
   return (
     <Paper sx={panelPaper}>
       {/* ===== HEADER ===== */}
-      <Box sx={sectionHeader}>
+      <Box
+        sx={{ ...sectionHeader, cursor: 'pointer' }}
+        onClick={() => setCollapsed((prev) => !prev)}
+      >
         <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-          <Box sx={{ ...accentBar, backgroundColor: 'warning.dark' }} />
+          <Box sx={accentBar} />
           <Typography fontWeight={600} sx={{ color: 'primary.main' }}>
             Basic information
           </Typography>
         </Box>
 
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={() => setCollapsed((prev) => !prev)}
-            startIcon={collapsed ? <ExpandMore /> : <ExpandLess />}
-            sx={{ textTransform: 'none' }}
-          >
-            {collapsed ? 'Expand' : 'Collapse'}
-          </Button>
+          {collapsed ? (
+            <ExpandMore sx={{ color: 'primary.main' }} />
+          ) : (
+            <ExpandLess sx={{ color: 'primary.main' }} />
+          )}
         </Box>
       </Box>
 
-      <Box>
-        <Box sx={twoColRow}>
-          <Box sx={{ flex: 1 }}>
+      <Collapse in={!collapsed}>
+        <Box sx={{ pt: 1 }}>
+          <Box sx={twoColRow}>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="body2" mb={1}>
+                Title <span style={{ color: 'red' }}>*</span>
+              </Typography>
+              <TextField
+                fullWidth
+                size="small"
+                sx={textInput}
+                placeholder="Enter title"
+                value={testName}
+                onChange={(e) => onChange('testName', e.target.value)}
+                error={errors?.testName}
+              />
+            </Box>
+          </Box>
+
+          <Box sx={twoColRow}>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="body2" mb={1}>
+                Format <span style={{ color: 'red' }}>*</span>
+              </Typography>
+              <FormControl fullWidth size="small" error={errors?.format} sx={textInput}>
+                <Select
+                  value={format || ''}
+                  onChange={(e) => onChange('format', e.target.value)}
+                  displayEmpty
+                  sx={textInput}
+                  renderValue={(selected) => {
+                    if (selected === '' || !selected) {
+                      return <span style={{ color: '#a0a0a0' }}>Choose format</span>;
+                    }
+                    return selected;
+                  }}
+                >
+                  <MenuItem value="" disabled placeholder="Enter title">
+                    Choose format
+                  </MenuItem>
+                  {(skill === 'W' ? writingFormats : skill === 'S' ? speakingFormats : []).map(
+                    (item) => (
+                      <MenuItem key={item.value} value={item.value}>
+                        {item.label}
+                      </MenuItem>
+                    ),
+                  )}
+                </Select>
+              </FormControl>
+            </Box>
+
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="body2" mb={1}>
+                Level <span style={{ color: 'red' }}>*</span>
+              </Typography>
+              <FormControl fullWidth size="small" error={errors?.level} sx={textInput}>
+                <Select
+                  value={level || ''}
+                  sx={textInput}
+                  onChange={(e) => onChange('level', e.target.value)}
+                  displayEmpty
+                  renderValue={(selected) => {
+                    if (!selected) {
+                      return <span style={{ color: '#a0a0a0' }}>Choose level</span>;
+                    }
+                    return selected;
+                  }}
+                >
+                  <MenuItem value="" disabled>
+                    Choose level
+                  </MenuItem>
+                  <MenuItem value="A1">A1</MenuItem>
+                  <MenuItem value="A2">A2</MenuItem>
+                  <MenuItem value="B1">B1</MenuItem>
+                  <MenuItem value="B2">B2</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+          </Box>
+
+          <Box>
             <Typography variant="body2" mb={1}>
-              Title <span style={{ color: 'red' }}>*</span>
+              Topics <span style={{ color: 'red' }}>*</span>
             </Typography>
             <TextField
               fullWidth
               size="small"
-              placeholder="Enter title"
-              value={testName}
-              onChange={(e) => onChange('testName', e.target.value)}
-              error={errors?.testName}
+              placeholder="e.g., Films"
+              value={topics || ''}
+              onChange={(e) => onChange('topics', e.target.value)}
+              error={errors?.topics}
+              sx={{ mb: 2, ...textInput }}
             />
           </Box>
-        </Box>
 
-        <Box sx={twoColRow}>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" mb={1}>
-              Format <span style={{ color: 'red' }}>*</span>
-            </Typography>
-            <FormControl fullWidth size="small" error={errors?.format}>
-              <Select
-                value={format || ''}
-                onChange={(e) => onChange('format', e.target.value)}
-                displayEmpty
-                renderValue={(selected) => {
-                  if (selected === '' || !selected) {
-                    return <span style={{ color: '#a0a0a0' }}>Choose format</span>;
-                  }
-                  return selected;
+          {level && skill === 'W' && (
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <Button
+                size="small"
+                variant="contained"
+                color="warning"
+                startIcon={
+                  loading ? <CircularProgress size={20} color="inherit" /> : <InfoOutlined />
+                }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenCriteria(true);
                 }}
+                disabled={loading}
+                sx={{ textTransform: 'none', borderRadius: '8px', mt: 2 }}
               >
-                <MenuItem value="" disabled placeholder="Enter title">
-                  Choose format
-                </MenuItem>
-                {(skill === 'W' ? writingFormats : skill === 'S' ? speakingFormats : []).map(
-                  (item) => (
-                    <MenuItem key={item.value} value={item.value}>
-                      {item.label}
-                    </MenuItem>
-                  ),
-                )}
-              </Select>
-            </FormControl>
-          </Box>
-
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" mb={1}>
-              Level <span style={{ color: 'red' }}>*</span>
-            </Typography>
-            <FormControl fullWidth size="small" error={errors?.level}>
-              <Select
-                value={level || ''}
-                onChange={(e) => onChange('level', e.target.value)}
-                displayEmpty
-                renderValue={(selected) => {
-                  if (!selected) {
-                    return <span style={{ color: '#a0a0a0' }}>Choose level</span>;
-                  }
-                  return selected;
-                }}
-              >
-                <MenuItem value="" disabled>
-                  Choose level
-                </MenuItem>
-                <MenuItem value="A1">A1</MenuItem>
-                <MenuItem value="A2">A2</MenuItem>
-                <MenuItem value="B1">B1</MenuItem>
-                <MenuItem value="B2">B2</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
+                {loading ? 'Loading...' : 'View Criteria'}
+              </Button>
+            </Box>
+          )}
         </Box>
-
-        <Box>
-          <Typography variant="body2" mb={1}>
-            Topics <span style={{ color: 'red' }}>*</span>
-          </Typography>
-          <TextField
-            fullWidth
-            size="small"
-            placeholder="e.g., Films"
-            value={topics || ''}
-            onChange={(e) => onChange('topics', e.target.value)}
-            error={errors?.topics}
-            sx={{ mb: 2 }}
-          />
-        </Box>
-      </Box>
-
-      {level && skill === 'W' && (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Button
-            size="small"
-            variant="contained"
-            color="warning"
-            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <InfoOutlined />}
-            onClick={() => setOpenCriteria(true)}
-            disabled={loading}
-            sx={{ textTransform: 'none', borderRadius: '8px', mt: 2 }}
-          >
-            {loading ? 'Loading...' : 'View Criteria'}
-          </Button>
-        </Box>
-      )}
+      </Collapse>
 
       {/* ===== CRITERIA MODAL ===== */}
       {skill === 'W' && (
