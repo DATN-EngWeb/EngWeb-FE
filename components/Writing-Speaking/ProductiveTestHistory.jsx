@@ -13,7 +13,6 @@ import { getProductiveTest, getProductiveTestDetails } from '../../api/test';
 import { SidebarForum } from './SidebarForum';
 import { StudyTip } from './StudyTip';
 import Edit from '@mui/icons-material/Edit';
-import ProgressTrackingCard from './ProgressTrackingCard';
 import {
   Box,
   Alert,
@@ -246,8 +245,6 @@ export default function ProductiveTestHistory() {
 
         <Grid item sx={{ width: '30%' }}>
           <Stack spacing={3}>
-            <ProgressTrackingCard historyData={historyData} />
-
             <SidebarForum />
 
             <StudyTip level={testData.level} />

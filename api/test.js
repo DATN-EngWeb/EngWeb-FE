@@ -232,6 +232,18 @@ export const getAIFeedback = async ({ id }) => {
     }),
   });
 };
+
+export const getSpeakingAIFeedback = async ({ id }) => {
+  return apiFetch(`${TEST_AI_FEEDBACK_URL}/speaking`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      productive_test_history_id: id,
+    }),
+  });
+};
 export const submitReceptiveTest = async (data, token) => {
   return apiFetch(`${TEST_HISTORIES_BASE_URL}/receptive`, {
     method: 'POST',

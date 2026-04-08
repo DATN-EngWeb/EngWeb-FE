@@ -14,8 +14,13 @@ export default function HistoryItem({ data }) {
   const router = useRouter();
   const [openModal, setOpenModal] = useState(false);
   const handleViewDetail = (item) => {
-    if (item.ai_feedback) {
-      localStorage.setItem('category', JSON.stringify(item.ai_feedback));
+    if (item.type === 'S') {
+      if (item.ai_feedback) {
+        localStorage.setItem('category', JSON.stringify(item.ai_feedback));
+      } else {
+        localStorage.removeItem('category');
+      }
+
       if (item.remaining_turns) {
         localStorage.setItem('remainAIturns', JSON.stringify(item.remaining_turns));
       }
@@ -25,10 +30,13 @@ export default function HistoryItem({ data }) {
       localStorage.setItem(
         'aiFeedbackContext',
         JSON.stringify({
+          historyId: item.id,
           text: item.user_answer_text,
           wordCount: wordCount,
           title: item.title || 'Writing Task',
           type: item.format || (item.skill === 'W' ? 'A' : 'S'),
+          audio: item.audio_path,
+          duration: item.total_time,
         }),
       );
       router.push(
@@ -42,7 +50,7 @@ export default function HistoryItem({ data }) {
     const dataToSave = {
       answer: item.user_answer_text,
       note: item.user_note_text,
-      isReadOnly: item.type === 'S',
+      isReadOnly: false,
       startTime: item.start_time,
       totalTime: item.total_time,
       audio: item.audio_path,

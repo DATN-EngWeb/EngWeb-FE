@@ -10,9 +10,9 @@ import {
   CircularProgress,
   Dialog,
   IconButton,
-  Paper,
-  Chip,
-  alpha,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 import { LightbulbOutlined, CheckCircleOutline } from '@mui/icons-material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -22,9 +22,8 @@ import FlashOnIcon from '@mui/icons-material/FlashOn';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
-import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
-import { getProductiveTestDetails } from '@/api/test';
-import ProductivePreview from '../Writing-Speaking/ProductivePreview';
+import { getProductiveTestDetails, getAIFeedback, getSpeakingAIFeedback } from '@/api/test';
+import ProductivePreview from './ProductivePreview';
 import {
   Tooltip,
   Radar,
@@ -82,6 +81,10 @@ function CustomTick(props) {
   if (payload.value === 'CONTENT') shortName = 'CONTENT';
   else if (payload.value === 'ORGANISATION') shortName = 'ORGANISATION';
   else if (payload.value === 'LANGUAGE') shortName = 'LANGUAGE';
+  else if (payload.value === 'GRAMMAR AND VOCABULARY') shortName = 'GRAMMAR';
+  else if (payload.value === 'DISCOURSE MANAGEMENT') shortName = 'DISCOURSE';
+  else if (payload.value === 'PRONUNCIATION') shortName = 'PRONUNCIATION';
+  else if (payload.value === 'TASK ACHIEVEMENT') shortName = 'TASK ACHIEVEMENT';
   else shortName = 'COMMUNICATIVE ACHIEVEMENT';
 
   // Push labels radially outwards from the center evenly
@@ -115,29 +118,60 @@ function CustomTick(props) {
 
 export default function AIFeedback() {
   const [categories, setCategories] = useState([]);
-  const [openFeedback, setOpenFeedback] = useState(true);
+  const [openFeedback, setOpenFeedback] = useState(false);
   const [overall, setOverall] = useState({ summary: '', next_actions: '' });
   const [context, setContext] = useState({ text: '', wordCount: 0, title: '', type: '' });
   const [testData, setTestData] = useState(null);
   const [revised_text, setRevisedText] = useState('');
-  // const [turns, setTurns] = useState({ weekly: 0, bonus: 0 });
+  const [isFetchingFeedback, setIsFetchingFeedback] = useState(false);
+  const [turns, setTurns] = useState({ weekly_ai_turn: 0, bonus_ai_turn: 0 });
 
   const params = useParams();
   const testId = params.test_id;
   const attempt = params.attempt;
   const router = useRouter();
-  useEffect(() => {
-    const data = JSON.parse(localStorage.getItem('category') || '{}');
 
-    const ctx = JSON.parse(localStorage.getItem('aiFeedbackContext') || '{}');
+  const formatTime = (totalSeconds) => {
+    if (!totalSeconds) return '00:00';
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = Math.floor(totalSeconds % 60);
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  useEffect(() => {
+    setOpenFeedback(true);
+  }, []);
+
+  useEffect(() => {
+    let data = {};
+    let ctx = {};
+    let remainAIturns = { weekly_ai_turn: 0, bonus_ai_turn: 0 };
+
+    try {
+      const rawData = localStorage.getItem('category');
+      if (rawData && rawData !== '[object Object]') data = JSON.parse(rawData);
+    } catch (e) {
+      console.warn('Failed to parse category', e);
+    }
+
+    try {
+      const rawCtx = localStorage.getItem('aiFeedbackContext');
+      if (rawCtx && rawCtx !== '[object Object]') ctx = JSON.parse(rawCtx);
+    } catch (e) {
+      console.warn('Failed to parse aiFeedbackContext', e);
+    }
+
+    try {
+      const rawTurns = localStorage.getItem('remainAIturns');
+      if (rawTurns && rawTurns !== '[object Object]') remainAIturns = JSON.parse(rawTurns);
+    } catch (e) {
+      console.warn('Failed to parse remainAIturns', e);
+    }
+
     setContext(ctx);
-    // 1. Extract specific non-category items first
+    setTurns(remainAIturns);
+
     const { revised_text, overall: overallData, ...categoriesOnly } = data;
-    // 2. Set the non-category states
-    // setContext({
-    //   ...ctx, // Keep existing title, type, wordCount, etc.
-    //   text: revised_text || ctx.text // Use revised_text if available
-    // });
 
     if (revised_text) {
       setRevisedText(revised_text);
@@ -149,7 +183,6 @@ export default function AIFeedback() {
       });
     }
 
-    // 3. Map only the remaining category objects
     const catArray = Object.entries(categoriesOnly).map(([key, value]) => {
       const score = value.band ?? 0;
       return {
@@ -190,11 +223,6 @@ export default function AIFeedback() {
 
   const overallScore = categories.reduce((acc, cat) => acc + cat.score, 0) / categories.length || 0;
 
-  // Determine color for the big score ring
-  const strokeColor = overallScore >= 4 ? '#2e7d32' : overallScore >= 3 ? '#ed6c02' : '#d32f2f';
-
-  console.log('revised_text:', revised_text);
-  console.log('original_text:', context.text);
   return (
     <Box sx={styles.mainWrapper}>
       <Box sx={styles.layoutContainer}>
@@ -238,7 +266,9 @@ export default function AIFeedback() {
             >
               <Box>
                 <Typography variant="h4" fontWeight="800" color="#3e2723" mb={0.5}>
-                  AI Corrected
+                  {categories.length > 0 && context.type !== 'S'
+                    ? 'AI Corrected'
+                    : 'Your Submission'}
                 </Typography>
               </Box>
               <Box sx={styles.metricsDisplay}>
@@ -251,37 +281,107 @@ export default function AIFeedback() {
                   METRICS
                 </Typography>
                 <Typography variant="body1" color="text.primary">
-                  {context.wordCount} words
+                  {context.type !== 'S' && `${context.wordCount} words`}
+                  {context.type !== 'S' && context.duration ? ' - ' : ''}
+                  {context.duration ? formatTime(context.duration) : ''}
                 </Typography>
               </Box>
             </Stack>
 
             <Box>
-              <DiffViewer originalText={context.text} revisedText={revised_text} />
+              {context.type === 'S' ? (
+                <>
+                  <Typography variant="body1" color="text.secondary">
+                    Your speaking response has been recorded. You can play your submission below.
+                  </Typography>
+                  {context.audio && (
+                    <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+                      <audio
+                        controls
+                        src={context.audio}
+                        style={{ width: '100%', maxWidth: '500px', borderRadius: '8px' }}
+                      />
+                    </Box>
+                  )}
+                </>
+              ) : (
+                <DiffViewer originalText={context.text} revisedText={revised_text} />
+              )}
             </Box>
 
-            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
-              <Button
-                variant="contained"
-                onClick={() => setOpenFeedback(true)}
-                startIcon={<AutoAwesomeIcon sx={{ color: '#fbc02d' }} />}
-                sx={{
-                  bgcolor: '#4e342e',
-                  '&:hover': { bgcolor: '#3e2723' },
-                  borderRadius: 2,
-                  px: 4,
-                  py: 1.5,
-                  fontWeight: 'bold',
-                }}
-              >
-                View AI Feedback
-              </Button>
+            <Box
+              sx={{ mt: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}
+            >
+              {categories.length > 0 ? (
+                <Button
+                  variant="contained"
+                  onClick={() => setOpenFeedback(true)}
+                  startIcon={<AutoAwesomeIcon sx={{ color: '#fbc02d' }} />}
+                  sx={{
+                    bgcolor: '#4e342e',
+                    '&:hover': { bgcolor: '#3e2723' },
+                    borderRadius: 2,
+                    px: 4,
+                    py: 1.5,
+                    fontWeight: 'bold',
+                  }}
+                >
+                  View AI Feedback
+                </Button>
+              ) : (
+                <>
+                  <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                    Remaining AI Turns: {turns.weekly_ai_turn + turns.bonus_ai_turn}
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    onClick={async () => {
+                      if (!context.historyId) return;
+                      setIsFetchingFeedback(true);
+                      try {
+                        const feedbackRes =
+                          context.type === 'S'
+                            ? await getSpeakingAIFeedback({ id: context.historyId })
+                            : await getAIFeedback({ id: context.historyId });
+                        localStorage.setItem('category', JSON.stringify(feedbackRes.ai_feedback));
+                        localStorage.setItem(
+                          'remainAIturns',
+                          JSON.stringify(feedbackRes.remaining_turns),
+                        );
+                        window.location.reload();
+                      } catch (error) {
+                        console.error('Fetch feedback failed', error);
+                      } finally {
+                        setIsFetchingFeedback(false);
+                      }
+                    }}
+                    disabled={isFetchingFeedback}
+                    startIcon={
+                      isFetchingFeedback ? (
+                        <CircularProgress size={20} color="inherit" />
+                      ) : (
+                        <AutoAwesomeIcon sx={{ color: '#fbc02d' }} />
+                      )
+                    }
+                    sx={{
+                      bgcolor: '#f57c00',
+                      '&:hover': { bgcolor: '#ef6c00' },
+                      borderRadius: 2,
+                      px: 4,
+                      py: 1.5,
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    {isFetchingFeedback ? 'Evaluating...' : 'Request AI Feedback'}
+                  </Button>
+                </>
+              )}
             </Box>
           </Box>
 
           {/* RIGHT COLUMN: Feedback & Score */}
           <Dialog
-            open={openFeedback}
+            open={openFeedback && categories.length > 0}
             onClose={() => setOpenFeedback(false)}
             maxWidth="md"
             fullWidth
@@ -377,7 +477,6 @@ export default function AIFeedback() {
 
               {/* AI REVIEW DETAILS ACCORDIONS */}
               <Box sx={{ mt: 3 }}>
-                {/* EDITORIAL SUMMARY */}
                 <Accordion sx={styles.accordionStyle} defaultExpanded={false}>
                   <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={styles.accordionSummary}>
                     <Stack direction="row" spacing={1.5} alignItems="center">
@@ -398,7 +497,6 @@ export default function AIFeedback() {
                   </AccordionDetails>
                 </Accordion>
 
-                {/* NEXT ACTIONS */}
                 {overall.next_actions && (
                   <Accordion sx={styles.accordionStyle}>
                     <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={styles.accordionSummary}>
@@ -427,7 +525,6 @@ export default function AIFeedback() {
                   </Accordion>
                 )}
 
-                {/* DETAILED ASSESSMENT */}
                 <Accordion sx={styles.accordionStyle} defaultExpanded={false}>
                   <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={styles.accordionSummary}>
                     <Stack direction="row" spacing={1.5} alignItems="center">
@@ -534,7 +631,11 @@ export default function AIFeedback() {
                 <Button
                   variant="contained"
                   sx={styles.tryAgainButton}
-                  onClick={() => router.push(`/student/writing/${testId}/${parseInt(attempt) + 1}`)}
+                  onClick={() =>
+                    router.push(
+                      `/student/${context.type === 'S' ? 'speaking' : 'writing'}/${testId}/${parseInt(attempt) + 1}`,
+                    )
+                  }
                   startIcon={<ReplayIcon />}
                 >
                   Try Again

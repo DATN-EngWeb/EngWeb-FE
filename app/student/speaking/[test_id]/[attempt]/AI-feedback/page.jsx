@@ -1,5 +1,5 @@
 import AIFeedback from '../../../../../../components/Writing-Speaking/AIFeedback';
 
-export default function AIFeedbackPage() {
+export default function AIFeedbackSpeakingPage() {
   return <AIFeedback />;
 }
