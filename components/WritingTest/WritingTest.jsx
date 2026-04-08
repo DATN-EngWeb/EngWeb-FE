@@ -178,10 +178,9 @@ export default function WritingTest() {
     setIsSaving(true);
     setOpenShareModal(false);
 
-    let newHistoryID = null; // Biến tạm để lưu ID vừa tạo
+    let newHistoryID = null;
 
     try {
-      // step1: submit test
       const response = await createProductiveTest({
         productive_test: testId,
         total_time: secondsElapsed,
