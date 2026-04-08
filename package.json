@@ -46,7 +46,8 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.2.3",
     "prettier": "^3.6.2",
-    "tailwindcss": "^4"
+    "tailwindcss": "^4",
+    "typescript": "^6.0.2"
   },
   "lint-staged": {
     "*.{js,jsx,json,css,md}": [

@@ -3,6 +3,8 @@
 import { Button, Box } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import SendIcon from '@mui/icons-material/Send';
 import SaveIcon from '@mui/icons-material/Save';
 import PublishIcon from '@mui/icons-material/Publish';
@@ -11,6 +13,8 @@ import CancelIcon from '@mui/icons-material/Cancel';
 export default function TestEditorActions({
   onPreview,
   isPreviewActive,
+  onFeedback,
+  isFeedbackActive,
   onSendReview,
   onSaveDraft,
   onPublish,
@@ -28,16 +32,29 @@ export default function TestEditorActions({
         ...sx,
       }}
     >
-      {onPreview && (
-        <Button
-          startIcon={isPreviewActive ? <VisibilityOffIcon /> : <VisibilityIcon />}
-          variant="text"
-          onClick={onPreview}
-          disabled={isLoading}
-        >
-          {isPreviewActive ? 'Hide Preview' : 'Show Preview'}
-        </Button>
-      )}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        {onPreview && (
+          <Button
+            startIcon={isPreviewActive ? <VisibilityOffIcon /> : <VisibilityIcon />}
+            variant="outlined"
+            onClick={onPreview}
+            disabled={isLoading}
+          >
+            {isPreviewActive ? 'Hide Preview' : 'Show Preview'}
+          </Button>
+        )}
+
+        {onFeedback && (
+          <Button
+            startIcon={isFeedbackActive ? <ChatBubbleIcon /> : <ChatBubbleOutlineIcon />}
+            variant="outlined"
+            onClick={onFeedback}
+            disabled={isLoading}
+          >
+            {isFeedbackActive ? 'Hide Feedback' : 'Show Feedback'}
+          </Button>
+        )}
+      </Box>
 
       <Box sx={{ display: 'flex', gap: 2 }}>
         {onCancelClick && (

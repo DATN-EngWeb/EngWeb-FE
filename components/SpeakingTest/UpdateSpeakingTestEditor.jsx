@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import ProductiveTestEditor from './../Writing-Speaking/ProductiveTestEditor';
 import ProductiveEditor from './../Writing-Speaking/ProductiveEditor';
 import ProductivePreview from './../Writing-Speaking/ProductivePreview';
+import FeedbackPanel from '../Teacher/Feedback/FeedbackPanel';
 import { updateProductiveTest, getProductiveTestDetails } from '../../api/test';
 import { uploadHtmlContent, uploadMediaFile } from '../../utils/uploadHelpers';
 
@@ -46,6 +47,8 @@ export default function UpdateSpeakingTestEditor() {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [testStatus, setTestStatus] = useState('');
   const [basicOpen, setBasicOpen] = useState(true);
   const [settingOpen, setSettingOpen] = useState(true);
   const [snackbar, setSnackbar] = useState({
@@ -60,6 +63,7 @@ export default function UpdateSpeakingTestEditor() {
   const loadTestData = useCallback(async () => {
     try {
       const response = await getProductiveTestDetails(testId);
+      setTestStatus(response.status || '');
 
       setTestData({
         skill: 'S',
@@ -110,6 +114,29 @@ export default function UpdateSpeakingTestEditor() {
 
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
+
+  const canShowFeedback = !!testId;
+
+  const handlePreviewToggle = () => {
+    setShowPreview((prev) => {
+      const next = !prev;
+      if (next) {
+        setShowFeedback(false);
+      }
+      return next;
+    });
+  };
+
+  const handleFeedbackToggle = () => {
+    if (!canShowFeedback) return;
+    setShowFeedback((prev) => {
+      const next = !prev;
+      if (next) {
+        setShowPreview(false);
+      }
+      return next;
+    });
+  };
 
   const handleSubmit = async (status) => {
     setIsSaving(true);
@@ -195,6 +222,10 @@ export default function UpdateSpeakingTestEditor() {
       handleSubmit={handleSubmit}
       showPreview={showPreview}
       setShowPreview={setShowPreview}
+      onPreview={handlePreviewToggle}
+      onFeedback={canShowFeedback ? handleFeedbackToggle : undefined}
+      isFeedbackActive={showFeedback}
+      feedbackContent={<FeedbackPanel testId={testId} compact readOnly />}
       basicOpen={basicOpen}
       setBasicOpen={setBasicOpen}
       settingOpen={settingOpen}

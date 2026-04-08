@@ -27,6 +27,7 @@ import MatchingPart from './MatchingPart';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import ScrollToTopButton from '../CreateTest/ScrollToTopButton';
 import ListeningPreview from '../Teacher/ListeningPreview';
+import FeedbackPanel from '../Teacher/Feedback/FeedbackPanel';
 
 import { validateTest, getValidationErrorMessage } from '../../utils/testValidation';
 import {
@@ -112,6 +113,8 @@ export default function ListeningTestEditor({ testId: propTestId }) {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(isEditMode);
   const [isPreviewActive, setIsPreviewActive] = useState(false);
+  const [isFeedbackActive, setIsFeedbackActive] = useState(false);
+  const [testStatus, setTestStatus] = useState('');
   const [editingTestId, setEditingTestId] = useState(testId || null);
 
   useEffect(() => {
@@ -123,6 +126,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
       try {
         const data = await getReceptiveTestDetails(testId);
         setEditingTestId(data.id);
+        setTestStatus(data.status || '');
 
         const loadedBasicInfo = {
           testName: data.title || '',
@@ -266,7 +270,26 @@ export default function ListeningTestEditor({ testId: propTestId }) {
       setSnackbar({ open: true, message: errorMessage, severity: 'error' });
       return;
     }
-    setIsPreviewActive((prev) => !prev);
+    setIsPreviewActive((prev) => {
+      const next = !prev;
+      if (next) {
+        setIsFeedbackActive(false);
+      }
+      return next;
+    });
+  };
+
+  const canShowFeedback = isEditMode && !!editingTestId;
+
+  const handleFeedbackToggle = () => {
+    if (!canShowFeedback) return;
+    setIsFeedbackActive((prev) => {
+      const next = !prev;
+      if (next) {
+        setIsPreviewActive(false);
+      }
+      return next;
+    });
   };
 
   const handleSubmit = async (status) => {
@@ -394,6 +417,8 @@ export default function ListeningTestEditor({ testId: propTestId }) {
       />
       <TestEditorActions
         onPreview={() => handlePreview()}
+        onFeedback={canShowFeedback ? handleFeedbackToggle : undefined}
+        isFeedbackActive={isFeedbackActive}
         onSendReview={() => handleSubmit('In review')}
         onSaveDraft={() => handleSubmit('Draft')}
         onPublish={() => handleSubmit('Published')}
@@ -413,8 +438,16 @@ export default function ListeningTestEditor({ testId: propTestId }) {
         </Box>
       ) : (
         <Box sx={{ filter: isSaving ? 'blur' : 'none' }}>
-          <Box sx={contentWrap}>
-            <Box sx={{ px: 0 }}>
+          <Box
+            sx={{
+              ...contentWrap,
+              display: 'flex',
+              flexDirection: { xs: 'column', lg: 'row' },
+              gap: 2,
+              alignItems: 'flex-start',
+            }}
+          >
+            <Box sx={{ px: 0, flex: 1, minWidth: 0 }}>
               <Typography
                 sx={{
                   color: 'primary.main',
@@ -514,6 +547,20 @@ export default function ListeningTestEditor({ testId: propTestId }) {
                 <AddRoundedIcon sx={{ fontSize: '1.4rem' }} /> Add new part
               </Box>
             </Box>
+
+            {canShowFeedback && isFeedbackActive && (
+              <Box
+                sx={{
+                  width: { xs: '100%', lg: '320px' },
+                  flexShrink: 0,
+                  position: { lg: 'sticky' },
+                  top: { lg: 16 },
+                  height: { lg: 'calc(100vh - 140px)' },
+                }}
+              >
+                <FeedbackPanel testId={editingTestId} compact readOnly />
+              </Box>
+            )}
           </Box>
         </Box>
       )}
