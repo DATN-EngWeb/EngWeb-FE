@@ -6,7 +6,7 @@ import ShareIcon from '@mui/icons-material/Share';
 import StarIcon from '@mui/icons-material/Star';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import DescriptionIcon from '@mui/icons-material/Description';
-import * as styles from './../../styles/student/HistoryTestStyles';
+import * as styles from '../../styles/student/HistoryTestStyles';
 import { useRouter } from 'next/navigation';
 import HistoryAIFeedbackModal from '../WritingTest/HistoryAIFeedbackModal';
 
@@ -103,17 +103,32 @@ export default function HistoryItem({ data }) {
               )}
             </Stack>
             <Stack direction="row" spacing={3}>
-              <Typography variant="caption" fontWeight={700} color="#ffb300">
-                ⭐ {data.earned_bonus_point} XP
+              <Typography
+                variant="caption"
+                fontWeight={700}
+                color="#ffb300"
+                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+              >
+                <StarIcon sx={{ fontSize: '1rem' }} /> {data.earned_bonus_point} XP
               </Typography>
               {data.skill === 'W' && (
-                <Typography variant="caption" fontWeight={700} color="text.secondary">
-                  📄 {data.min_words} words
+                <Typography
+                  variant="caption"
+                  fontWeight={700}
+                  color="text.secondary"
+                  sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                >
+                  <DescriptionIcon sx={{ fontSize: '1rem' }} /> {data.min_words} words
                 </Typography>
               )}
 
-              <Typography variant="caption" fontWeight={700} color="text.secondary">
-                ⏱️ {formatTime(data.total_time)} mins
+              <Typography
+                variant="caption"
+                fontWeight={700}
+                color="text.secondary"
+                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+              >
+                <AccessTimeIcon sx={{ fontSize: '1rem' }} /> {formatTime(data.total_time)} mins
               </Typography>
             </Stack>
           </Box>
@@ -129,71 +144,24 @@ export default function HistoryItem({ data }) {
                 fontWeight: 700,
                 borderRadius: '8px',
               }}
-            />
-          </Stack>
-          <Stack direction="row" spacing={3}>
-            <Typography
-              variant="caption"
-              fontWeight={700}
-              color="#ffb300"
-              sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+              onClick={() => handleViewDetail(data)}
             >
-              <StarIcon sx={{ fontSize: '1rem' }} /> 100 XP
-            </Typography>
-            {data.skill === 'W' && (
-              <Typography
-                variant="caption"
-                fontWeight={700}
-                color="text.secondary"
-                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-              >
-                <DescriptionIcon sx={{ fontSize: '1rem' }} /> {data.min_words} words
-              </Typography>
-            )}
-
-            <Typography
-              variant="caption"
-              fontWeight={700}
-              color="text.secondary"
-              sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-            >
-              <AccessTimeIcon sx={{ fontSize: '1rem' }} /> {formatTime(data.total_time)} mins
-            </Typography>
-          </Stack>
-        </Box>
-        <Stack direction="row" spacing={1}>
-          <Button
-            variant="contained"
-            size="small"
-            sx={{
-              bgcolor: '#f5f5f5',
-              color: '#4e342e',
-              boxShadow: 'none',
-              textTransform: 'none',
-              fontWeight: 700,
-              borderRadius: '8px',
-            }}
-            onClick={() => handleViewDetail(data)}
-          >
-            View Detail
-          </Button>
-          <IconButton
-            size="small"
-            sx={{ bgcolor: '#f5f5f5' }}
-            onClick={() => {
-              if (data.is_shared) {
-                if (data.skill === 'W') {
-                  router.push(
-                    `/student/writing/${data.productive_test}/forum?open_post=${data.post_id}`,
-                  );
-                } else {
-                  router.push(
-                    `/student/speaking/${data.productive_test}/forum?open_post=${data.post_id}`,
-                  );
-                }
-              } else {
-                if (data.skill === 'W') {
-                  router.push(`/student/writing/${data.productive_test}/share/${data.id}`);
+              View Detail
+            </Button>
+            <IconButton
+              size="small"
+              sx={{ bgcolor: '#f5f5f5' }}
+              onClick={() => {
+                if (data.is_shared) {
+                  if (data.skill === 'W') {
+                    router.push(
+                      `/student/writing/${data.productive_test}/forum?open_post=${data.post_id}`,
+                    );
+                  } else {
+                    router.push(
+                      `/student/speaking/${data.productive_test}/forum?open_post=${data.post_id}`,
+                    );
+                  }
                 } else {
                   if (data.skill === 'W') {
                     router.push(`/student/writing/${data.productive_test}/share/${data.id}`);
