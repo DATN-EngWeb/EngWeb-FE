@@ -11,7 +11,7 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
-import StarsIcon from '@mui/icons-material/Stars';
+
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import * as styles from '../../styles/student/HistoryTestStyles';
 export default function ProgressTrackingCard({ historyData, type }) {
