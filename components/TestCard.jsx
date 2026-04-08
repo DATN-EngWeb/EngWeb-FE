@@ -185,12 +185,6 @@ const TestCard = ({
           color: 'success.main',
           icon: <SuccessIcon sx={{ fontSize: '1rem', color: 'success.main' }} />,
         };
-      case 'I': // In Review
-        return {
-          label: 'In review',
-          color: 'secondary.dark',
-          icon: <PendingIcon sx={{ fontSize: '1rem', color: 'secondary.dark' }} />,
-        };
       case 'D': // Draft
       case 'I': // In Review
       default:
