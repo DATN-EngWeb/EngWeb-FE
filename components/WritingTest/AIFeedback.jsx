@@ -238,15 +238,7 @@ export default function AIFeedback() {
             >
               <Box>
                 <Typography variant="h4" fontWeight="800" color="#3e2723" mb={0.5}>
-                  {context.type === 'A' ? 'Write an email' : 'Student Submission'}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  fontWeight="700"
-                  color="text.secondary"
-                  sx={{ letterSpacing: 1 }}
-                >
-                  STUDENT SUBMISSION
+                  AI Corrected
                 </Typography>
               </Box>
               <Box sx={styles.metricsDisplay}>

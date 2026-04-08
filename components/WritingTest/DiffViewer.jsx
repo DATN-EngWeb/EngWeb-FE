@@ -95,7 +95,7 @@ const DiffViewer = ({ originalText, revisedText }) => {
                     py: 0.25,
                     mx: 0.2,
                     borderRadius: 1.5,
-                    borderBottom: `2px solid ${alpha(colors.success.main, 0.3)}`,
+                    //borderBottom: `2px solid ${alpha(colors.success.main, 0.3)}`,
                   }}
                 >
                   {chunk.value}
@@ -114,11 +114,11 @@ const DiffViewer = ({ originalText, revisedText }) => {
                   alignItems: 'center',
                   mx: 0.5,
                   verticalAlign: 'middle',
-                  border: '1px solid',
-                  borderColor: 'divider',
+                  //border: '1px solid',
+                  // borderColor: 'divider',
                   borderRadius: 2,
                   overflow: 'hidden',
-                  boxShadow: `0 1px 2px ${alpha('#000', 0.05)}`,
+                  //boxShadow: `0 1px 2px ${alpha('#000', 0.05)}`,
                 }}
               >
                 <Tooltip title="Old word" arrow placement="top">
