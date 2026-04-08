@@ -1,10 +1,17 @@
 import React from 'react';
-import { Box, Typography, FormControl, FormLabel, OutlinedInput, Checkbox } from '@mui/material';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import {
+  Box,
+  Typography,
+  FormControl,
+  FormLabel,
+  OutlinedInput,
+  Checkbox,
+  Collapse,
+} from '@mui/material';
+import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
 import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined';
-import AddIcon from '@mui/icons-material/Add';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CircleIcon from '@mui/icons-material/Circle';
 import { uploadReadingStyles } from '../../../styles/Teacher/Reading/UploadReadingStyles';
@@ -30,6 +37,14 @@ export default function FillBlankForm({
   handleEditorError,
 }) {
   const [isOpen, setIsOpen] = React.useState(true);
+  const [collapsedQuestions, setCollapsedQuestions] = React.useState({});
+
+  const toggleQuestionCollapse = (questionId) => {
+    setCollapsedQuestions((prev) => ({
+      ...prev,
+      [questionId]: !prev[questionId],
+    }));
+  };
 
   const handleAddQuestion = () => {
     const currentFormat = part.format;
@@ -200,11 +215,6 @@ export default function FillBlankForm({
               borderRadius: '1rem',
             }}
           ></Box>
-          <DragIndicatorIcon
-            sx={{
-              transform: 'scale(1.8)',
-            }}
-          />
           <Box sx={multipleChoiceStyles.headingContainer}>
             <Typography sx={multipleChoiceStyles.headingCard}>Part {index + 1}</Typography>
             <Typography sx={multipleChoiceStyles.descriptionCard}>
@@ -220,19 +230,19 @@ export default function FillBlankForm({
             justifyContent: 'flex-start',
           }}
         >
-          <DeleteOutlineIcon
+          <DeleteRoundedIcon
             onClick={() => handleDeletePart(partId)}
             sx={{
               cursor: 'pointer',
-              fontSize: { xs: '1.8rem', md: '2rem' },
+              fontSize: { xs: '1.2rem', md: '1.4rem' },
               color: 'primary.main',
             }}
           />
-          <ExpandLessIcon
+          <ExpandLessRoundedIcon
             onClick={() => setIsOpen(!isOpen)}
             sx={{
               cursor: 'pointer',
-              fontSize: { xs: '2.2rem', md: '2.4rem' },
+              fontSize: { xs: '1.4rem', md: '1.6rem' },
               color: 'primary.main',
               transition: 'transform 0.3s ease',
               transform: isOpen ? 'rotate(0deg)' : 'rotate(180deg)',
@@ -242,258 +252,313 @@ export default function FillBlankForm({
       </Box>
       {/* ------------- Config Section ------------- */}
       {isOpen && (
-        <>
-          {/* -------------- Total Each Score and Answer Type -------------- */}
-          <Box sx={fillBlankStyles.scoreAndCheckbox}>
-            {/* -------------- CỘT TRÁI: Nhập điểm -------------- */}
-            <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-              <FormLabel sx={uploadReadingStyles.labelInput}>The score for each question</FormLabel>
-              <OutlinedInput
-                placeholder="Enter the score for each question here"
-                defaultValue={part.scoreForEachQuestion}
-                sx={uploadReadingStyles.input}
-                onBlur={(e) => handleUpdateScoreForEachQuestionPart(part.id, e.target.value)}
-              />
-            </FormControl>
-            {/* -------------- Chọn loại format (H hoặc I) -------------- */}
-            <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-              <FormLabel sx={uploadReadingStyles.labelInput}>Answer Type</FormLabel>
-              <Box
-                sx={{
-                  display: 'flex',
-                  gap: { xs: 0, md: 2 },
-                  alignItems: 'center',
-                  height: '100%',
-                }}
-              >
-                {/* Lựa chọn 1: Multiple Choice (Format H) */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', lg: 'row' },
+            gap: 4,
+            width: '100%',
+            mt: 2,
+          }}
+        >
+          {/* -------------- Left Column: Config & Passage -------------- */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            {/* -------------- Total Each Score and Answer Type -------------- */}
+            <Box sx={{ ...fillBlankStyles.scoreAndCheckbox, gridTemplateColumns: '1fr', gap: 2 }}>
+              {/* -------------- CỘT TRÁI: Nhập điểm -------------- */}
+              <FormControl fullWidth sx={uploadReadingStyles.formControl}>
+                <FormLabel sx={uploadReadingStyles.labelInput}>
+                  The score for each question
+                </FormLabel>
+                <OutlinedInput
+                  placeholder="Enter the score for each question here"
+                  defaultValue={part.scoreForEachQuestion}
+                  sx={uploadReadingStyles.input}
+                  onBlur={(e) => handleUpdateScoreForEachQuestionPart(part.id, e.target.value)}
+                />
+              </FormControl>
+              {/* -------------- Chọn loại format (H hoặc I) -------------- */}
+              <FormControl fullWidth sx={uploadReadingStyles.formControl}>
+                <FormLabel sx={uploadReadingStyles.labelInput}>Answer Type</FormLabel>
                 <Box
-                  sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-                  onClick={() => setFormat('H')}
-                >
-                  <Checkbox
-                    checked={part.format === 'H'}
-                    onChange={() => setFormat('H')}
-                    icon={<RadioButtonUncheckedIcon sx={multipleChoiceStyles.uncheckIcon} />}
-                    checkedIcon={
-                      <Box sx={multipleChoiceStyles.checkedIconWrapper}>
-                        <RadioButtonUncheckedIcon sx={multipleChoiceStyles.outerCircle} />
-                        <CircleIcon sx={multipleChoiceStyles.innerCircle} />
-                      </Box>
-                    }
-                    sx={multipleChoiceStyles.checkboxRoot}
-                  />
-                  <Typography sx={{ fontSize: { xs: '0.7rem', md: '0.9rem' }, ml: 1 }}>
-                    Multiple Choice
-                  </Typography>
-                </Box>
-                {/* Lựa chọn 2: Text (Format I) */}
-                <Box
-                  sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-                  onClick={() => setFormat('I')}
-                >
-                  <Checkbox
-                    checked={part.format === 'I'}
-                    onChange={() => setFormat('I')}
-                    icon={<RadioButtonUncheckedIcon sx={multipleChoiceStyles.uncheckIcon} />}
-                    checkedIcon={
-                      <Box sx={multipleChoiceStyles.checkedIconWrapper}>
-                        <RadioButtonUncheckedIcon sx={multipleChoiceStyles.outerCircle} />
-                        <CircleIcon sx={multipleChoiceStyles.innerCircle} />
-                      </Box>
-                    }
-                    sx={multipleChoiceStyles.checkboxRoot}
-                  />
-                  <Typography sx={{ fontSize: { xs: '0.7rem', md: '0.9rem' }, ml: 1 }}>
-                    Text
-                  </Typography>
-                </Box>
-              </Box>
-            </FormControl>
-          </Box>
-          {/* -------------- Passage Section -------------- */}
-          <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-              <FormLabel sx={uploadReadingStyles.labelInput}>Passage</FormLabel>
-              <Typography sx={multipleChoiceStyles.buttonAndIconContainer}>
-                <OpenInNewOutlinedIcon sx={{ fontSize: '1.1rem' }} />
-                Edit in editor
-              </Typography>
-            </Box>
-            <ClientSideCustomEditor
-              data={part.content || ''}
-              onChange={(content) => handleUpdateContentPart(part.id, content)}
-              onError={(msg) => handleEditorError(part.id, msg)}
-              startingBlankId={1}
-            />
-          </FormControl>
-          <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
-            {/* --------- Heading of Question Section --------- */}
-            <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-              <FormLabel sx={uploadReadingStyles.labelInput}>Questions</FormLabel>
-              <Typography
-                onClick={handleAddQuestion}
-                sx={multipleChoiceStyles.buttonAndIconContainer}
-              >
-                <AddIcon sx={{ fontSize: '1.4rem' }} />
-                Add question
-              </Typography>
-            </Box>
-            {/* ----------- Questions Section --------- */}
-            {questions.filter((q) => q.action !== 'delete').length === 0 ? (
-              <Box sx={multipleChoiceStyles.questionsContainer}>
-                <Typography
-                  onClick={handleAddQuestion}
                   sx={{
-                    width: '100%',
-                    display: 'inline-flex',
-                    fontSize: { xs: '0.8rem', md: '1rem' },
+                    display: 'flex',
+                    gap: { xs: 0, md: 2 },
                     alignItems: 'center',
-                    gap: 0.5,
-                    color: 'text.gray',
-                    cursor: 'pointer',
-                    justifyContent: 'center',
+                    height: '100%',
                   }}
                 >
-                  <AddIcon sx={{ fontSize: { xs: '1rem', md: '1.4rem' } }} />
-                  Add your first question
-                </Typography>
-              </Box>
-            ) : (
-              <>
-                <Box sx={multipleChoiceStyles.listOptionContainer}>
-                  {questions
-                    .filter((question) => question.action !== 'delete')
-                    .sort((a, b) => (a.question_number || 0) - (b.question_number || 0))
-                    .map((question, qIndex) => (
-                      <Box
-                        key={`${part.format}-${question.id}`}
-                        sx={multipleChoiceStyles.questionsContainer}
-                      >
-                        <Box sx={multipleChoiceStyles.labelQuestionsContainer}>
-                          <Box sx={multipleChoiceStyles.questionLabel}>{qIndex + 1}</Box>
-                          {/* ------------- Question and Explanation Section ------------- */}
-                          <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
-                            <OutlinedInput
-                              key={`${part.format}-${question.id}`}
-                              multiline
-                              placeholder={
-                                part.format === 'H' ? 'Enter question' : 'Enter correct answer'
-                              }
-                              defaultValue={
-                                part.format === 'H'
-                                  ? question.content
-                                  : question.answers[0].answer_text
-                              }
-                              sx={uploadReadingStyles.inputMultiline}
-                              onBlur={(e) => handleUpdateQuestion(question.id, e.target.value)}
-                            />
-                            <OutlinedInput
-                              multiline
-                              placeholder="Enter explaination here"
-                              defaultValue={question.explanation}
-                              sx={uploadReadingStyles.inputMultiline}
-                              onBlur={(e) => handleUpdateExplanation(question.id, e.target.value)}
-                            />
-                          </Box>
-                          {/* ---------------- Delete Icon ---------------- */}
-                          <DeleteOutlineIcon
-                            onClick={() => handleDeleteQuestion(partId, question.id)}
-                            sx={multipleChoiceStyles.trashIconQuestion}
-                          />
+                  {/* Lựa chọn 1: Multiple Choice (Format H) */}
+                  <Box
+                    sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+                    onClick={() => setFormat('H')}
+                  >
+                    <Checkbox
+                      checked={part.format === 'H'}
+                      onChange={() => setFormat('H')}
+                      icon={<RadioButtonUncheckedIcon sx={multipleChoiceStyles.uncheckIcon} />}
+                      checkedIcon={
+                        <Box sx={multipleChoiceStyles.checkedIconWrapper}>
+                          <RadioButtonUncheckedIcon sx={multipleChoiceStyles.outerCircle} />
+                          <CircleIcon sx={multipleChoiceStyles.innerCircle} />
                         </Box>
-                        {part.format === 'H' && (
-                          <Box
-                            sx={{
-                              width: '100%',
-                              pl: 4,
-                              display: 'flex',
-                              flexDirection: 'column',
-                              gap: 1,
-                            }}
-                          >
-                            <Typography
-                              sx={{ color: 'text.gray', fontSize: { xs: '0.7rem', md: '0.9rem' } }}
-                            >
-                              Text answers (Click to set correct answer)
-                            </Typography>
-                            {/* ---------- Option Section ----------- */}
-                            <Box sx={multipleChoiceStyles.listOptionContainer}>
-                              {question.answers
-                                .filter((option) => option.action !== 'delete')
-                                .sort((a, b) => {
-                                  const labelA = a.option_label || '';
-                                  const labelB = b.option_label || '';
-                                  return labelA.localeCompare(labelB);
-                                })
-                                .map((option, oIndex) => (
-                                  <Box
-                                    key={`${question.id}-${option.id}`}
-                                    sx={multipleChoiceStyles.optionContainer}
-                                  >
-                                    <Checkbox
-                                      checked={option.is_correct}
-                                      onChange={() =>
-                                        handleSetCorrectOption(question.id, option.option_label)
-                                      }
-                                      icon={
-                                        <RadioButtonUncheckedIcon
-                                          sx={multipleChoiceStyles.uncheckIcon}
-                                        />
-                                      }
-                                      checkedIcon={
-                                        <Box sx={multipleChoiceStyles.checkedIconWrapper}>
-                                          <RadioButtonUncheckedIcon
-                                            sx={multipleChoiceStyles.outerCircle}
-                                          />
-                                          <CircleIcon sx={multipleChoiceStyles.innerCircle} />
-                                        </Box>
-                                      }
-                                      sx={multipleChoiceStyles.checkboxRoot}
-                                    />
-                                    <Typography sx={multipleChoiceStyles.optionLabel}>
-                                      {option.option_label}.
-                                    </Typography>
-                                    <OutlinedInput
-                                      multiline
-                                      placeholder="Enter option here"
-                                      sx={multipleChoiceStyles.optionInput}
-                                      defaultValue={option.answer_text}
-                                      onBlur={(e) =>
-                                        handleUpdateOption(
-                                          question.id,
-                                          option.option_label,
-                                          e.target.value,
-                                        )
-                                      }
-                                    />
-                                    {/* ---------------- Delete Icon ---------------- */}
-                                    <DeleteOutlineIcon
-                                      onClick={() =>
-                                        handleDeleteOption(partId, question.id, option.option_label)
-                                      }
-                                      sx={multipleChoiceStyles.trashIcon}
-                                    />
-                                  </Box>
-                                ))}
-                            </Box>
-                            {/* --------------- Add Option --------------- */}
-                            <Typography
-                              onClick={() => handleAddOption(question.id)}
-                              sx={multipleChoiceStyles.buttonAndIconContainer}
-                            >
-                              <AddIcon sx={{ fontSize: '1.4rem' }} />
-                              Add option
-                            </Typography>
-                          </Box>
-                        )}
-                      </Box>
-                    ))}
+                      }
+                      sx={multipleChoiceStyles.checkboxRoot}
+                    />
+                    <Typography sx={{ fontSize: { xs: '0.7rem', md: '0.9rem' }, ml: 1 }}>
+                      Multiple Choice
+                    </Typography>
+                  </Box>
+                  {/* Lựa chọn 2: Text (Format I) */}
+                  <Box
+                    sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+                    onClick={() => setFormat('I')}
+                  >
+                    <Checkbox
+                      checked={part.format === 'I'}
+                      onChange={() => setFormat('I')}
+                      icon={<RadioButtonUncheckedIcon sx={multipleChoiceStyles.uncheckIcon} />}
+                      checkedIcon={
+                        <Box sx={multipleChoiceStyles.checkedIconWrapper}>
+                          <RadioButtonUncheckedIcon sx={multipleChoiceStyles.outerCircle} />
+                          <CircleIcon sx={multipleChoiceStyles.innerCircle} />
+                        </Box>
+                      }
+                      sx={multipleChoiceStyles.checkboxRoot}
+                    />
+                    <Typography sx={{ fontSize: { xs: '0.7rem', md: '0.9rem' }, ml: 1 }}>
+                      Text
+                    </Typography>
+                  </Box>
                 </Box>
-              </>
-            )}
+              </FormControl>
+            </Box>
+            {/* -------------- Passage Section -------------- */}
+            <FormControl fullWidth sx={{ ...uploadReadingStyles.formControl, mt: 3 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+                <FormLabel sx={uploadReadingStyles.labelInput}>Passage</FormLabel>
+              </Box>
+              <ClientSideCustomEditor
+                data={part.content || ''}
+                onChange={(content) => handleUpdateContentPart(part.id, content)}
+                onError={(msg) => handleEditorError(part.id, msg)}
+                startingBlankId={1}
+              />
+            </FormControl>
           </Box>
-        </>
+
+          {/* -------------- Right Column: Questions -------------- */}
+          <Box sx={{ flex: 1.2, minWidth: 0 }}>
+            <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
+              {/* --------- Heading of Question Section --------- */}
+              <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+                <FormLabel sx={uploadReadingStyles.labelInput}>Questions</FormLabel>
+              </Box>
+              {/* ----------- Questions Section --------- */}
+              {questions.filter((q) => q.action !== 'delete').length === 0 ? (
+                <Box sx={multipleChoiceStyles.questionsContainer}>
+                  <Typography
+                    onClick={handleAddQuestion}
+                    sx={{
+                      width: '100%',
+                      display: 'inline-flex',
+                      fontSize: { xs: '0.8rem', md: '1rem' },
+                      alignItems: 'center',
+                      gap: 0.5,
+                      color: 'text.gray',
+                      cursor: 'pointer',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <AddRoundedIcon sx={{ fontSize: { xs: '1rem', md: '1.4rem' } }} />
+                    Add your first question
+                  </Typography>
+                </Box>
+              ) : (
+                <>
+                  <Box sx={multipleChoiceStyles.listOptionContainer}>
+                    {questions
+                      .filter((question) => question.action !== 'delete')
+                      .sort((a, b) => (a.question_number || 0) - (b.question_number || 0))
+                      .map((question, qIndex) => (
+                        <Box
+                          key={`${part.format}-${question.id}`}
+                          sx={multipleChoiceStyles.questionsContainer}
+                        >
+                          <Box sx={multipleChoiceStyles.labelQuestionsContainer}>
+                            <Box sx={multipleChoiceStyles.questionLabel}>{qIndex + 1}</Box>
+                            <Box sx={{ flexGrow: 1 }} />
+                            {/* ---------------- Question Controls ---------------- */}
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                gap: 1,
+                                alignItems: 'center',
+                                mt: 0.2,
+                              }}
+                            >
+                              <DeleteRoundedIcon
+                                onClick={() => handleDeleteQuestion(partId, question.id)}
+                                sx={multipleChoiceStyles.trashIconQuestion}
+                              />
+                              <ExpandLessRoundedIcon
+                                onClick={() => toggleQuestionCollapse(question.id)}
+                                sx={{
+                                  cursor: 'pointer',
+                                  fontSize: { xs: '1.1rem', md: '1.3rem' },
+                                  color: 'text.gray',
+                                  transition: 'transform 0.3s ease',
+                                  transform: collapsedQuestions[question.id]
+                                    ? 'rotate(180deg)'
+                                    : 'rotate(0deg)',
+                                }}
+                              />
+                            </Box>
+                          </Box>
+
+                          <Collapse in={!collapsedQuestions[question.id]} sx={{ width: '100%' }}>
+                            <Box sx={{ pl: 4, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                              {/* ------------- Question and Explanation Section ------------- */}
+                              <Box
+                                sx={{ ...uploadReadingStyles.formControl, width: '100%', mt: 0 }}
+                              >
+                                <OutlinedInput
+                                  key={`${part.format}-${question.id}`}
+                                  multiline
+                                  placeholder={
+                                    part.format === 'H' ? 'Enter question' : 'Enter correct answer'
+                                  }
+                                  defaultValue={
+                                    part.format === 'H'
+                                      ? question.content
+                                      : question.answers[0].answer_text
+                                  }
+                                  sx={uploadReadingStyles.inputMultiline}
+                                  onBlur={(e) => handleUpdateQuestion(question.id, e.target.value)}
+                                />
+                                <OutlinedInput
+                                  multiline
+                                  placeholder="Enter explanation here"
+                                  defaultValue={question.explanation}
+                                  sx={uploadReadingStyles.inputMultiline}
+                                  onBlur={(e) =>
+                                    handleUpdateExplanation(question.id, e.target.value)
+                                  }
+                                />
+                              </Box>
+                              {part.format === 'H' && (
+                                <Box
+                                  sx={{
+                                    width: '100%',
+                                    pl: 4,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: 1,
+                                  }}
+                                >
+                                  <Typography
+                                    sx={{
+                                      color: 'text.gray',
+                                      fontSize: { xs: '0.7rem', md: '0.9rem' },
+                                    }}
+                                  >
+                                    Text answers (Click to set correct answer)
+                                  </Typography>
+                                  {/* ---------- Option Section ----------- */}
+                                  <Box sx={multipleChoiceStyles.listOptionContainer}>
+                                    {question.answers &&
+                                      question.answers
+                                        .filter((option) => option.action !== 'delete')
+                                        .sort((a, b) => {
+                                          const labelA = a.option_label || '';
+                                          const labelB = b.option_label || '';
+                                          return labelA.localeCompare(labelB);
+                                        })
+                                        .map((option, oIndex) => (
+                                          <Box
+                                            key={`${question.id}-${option.id}`}
+                                            sx={multipleChoiceStyles.optionContainer}
+                                          >
+                                            <Checkbox
+                                              checked={option.is_correct}
+                                              onChange={() =>
+                                                handleSetCorrectOption(
+                                                  question.id,
+                                                  option.option_label,
+                                                )
+                                              }
+                                              icon={
+                                                <RadioButtonUncheckedIcon
+                                                  sx={multipleChoiceStyles.uncheckIcon}
+                                                />
+                                              }
+                                              checkedIcon={
+                                                <Box sx={multipleChoiceStyles.checkedIconWrapper}>
+                                                  <RadioButtonUncheckedIcon
+                                                    sx={multipleChoiceStyles.outerCircle}
+                                                  />
+                                                  <CircleIcon
+                                                    sx={multipleChoiceStyles.innerCircle}
+                                                  />
+                                                </Box>
+                                              }
+                                              sx={multipleChoiceStyles.checkboxRoot}
+                                            />
+                                            <Typography sx={multipleChoiceStyles.optionLabel}>
+                                              {option.option_label}
+                                            </Typography>
+                                            <OutlinedInput
+                                              multiline
+                                              placeholder="Enter option here"
+                                              sx={multipleChoiceStyles.optionInput}
+                                              defaultValue={option.answer_text}
+                                              onBlur={(e) =>
+                                                handleUpdateOption(
+                                                  question.id,
+                                                  option.option_label,
+                                                  e.target.value,
+                                                )
+                                              }
+                                            />
+                                            {/* ---------------- Delete Icon ---------------- */}
+                                            <DeleteRoundedIcon
+                                              onClick={() =>
+                                                handleDeleteOption(
+                                                  partId,
+                                                  question.id,
+                                                  option.option_label,
+                                                )
+                                              }
+                                              sx={multipleChoiceStyles.trashIcon}
+                                            />
+                                          </Box>
+                                        ))}
+                                  </Box>
+                                  {/* --------------- Add Option --------------- */}
+                                  <Typography
+                                    onClick={() => handleAddOption(question.id)}
+                                    sx={multipleChoiceStyles.buttonAndIconContainer}
+                                  >
+                                    <AddRoundedIcon sx={{ fontSize: '1.4rem' }} />
+                                    Add option
+                                  </Typography>
+                                </Box>
+                              )}
+                            </Box>
+                          </Collapse>
+                        </Box>
+                      ))}
+                  </Box>
+                  <Box onClick={handleAddQuestion} sx={multipleChoiceStyles.addQuestionBox}>
+                    <AddRoundedIcon sx={{ fontSize: '1.2rem' }} />
+                    Add question
+                  </Box>
+                </>
+              )}
+            </Box>
+          </Box>
+        </Box>
       )}
     </>
   );

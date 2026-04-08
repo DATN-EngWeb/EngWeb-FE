@@ -80,6 +80,8 @@ export default function ViewReadingTestPage({ params }) {
 
         const parts = await transformReadingData(data);
         setTestData({
+          id: data.id,
+          status: data.status,
           title: data.title || '',
           level: data.level || '',
           time: data.time?.toString() || '',
@@ -145,7 +147,13 @@ export default function ViewReadingTestPage({ params }) {
         showEdit={status === 'D' || status === 'I'}
         onEdit={() => router.push(`/teacher/update-test/reading/${test_id}`)}
       />
-      <ReadingPreview inline open={false} onClose={() => router.back()} testData={testData} />
+      <ReadingPreview
+        inline
+        open={false}
+        onClose={() => router.back()}
+        testData={testData}
+        showBackButton={false}
+      />
       <DeleteConfirmSnackbar
         open={confirmDeleteOpen}
         onClose={() => setConfirmDeleteOpen(false)}

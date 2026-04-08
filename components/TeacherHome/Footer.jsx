@@ -12,7 +12,14 @@ const aboutLinks = ['Company', 'Achievements', 'Our Clients'];
 
 export default function Footer() {
   return (
-    <Box sx={footerStyles.mainContainer}>
+    <Box
+      sx={{
+        ...footerStyles.mainContainer,
+        '@media print': {
+          display: 'none',
+        },
+      }}
+    >
       <Container maxWidth="lg">
         <Box sx={footerStyles.columnsWrapper}>
           <Box sx={footerStyles.columnWide}>

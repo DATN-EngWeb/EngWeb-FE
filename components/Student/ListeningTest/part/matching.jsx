@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import {
   Container,
   Box,
@@ -13,46 +13,27 @@ import {
 import CustomAudioPlayer from '../../../Test/customAudioPlayer';
 import InstructionIcon from '../../../Test/instructionIcon';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
-import { listeningPartStyles } from '../../../../styles/Student/Listening/listeningTestStyles';
+import { listeningPartStyles } from '../../../../styles/student/Listening/listeningTestStyles';
 import {
   multipleChoiceStyles,
   matchingStyles,
 } from '../../../../styles/Teacher/Reading/QuesitonTypeStyles';
 import { uploadReadingStyles } from '../../../../styles/Teacher/Reading/UploadReadingStyles';
-import { loadAudioSource } from '../../../../api/teacher/upload-reading';
 
-export default function Matching({ dataPart, isActive, userAnswers, onUpdateAnswers, disabled }) {
-  const [audioSrc, setAudioSrc] = useState(null);
+export default function Matching({
+  dataPart,
+  isActive,
+  userAnswers,
+  onUpdateAnswers,
+  disabled,
+  media,
+}) {
+  const { audioSrc } = media;
   const answers = dataPart.receptive_questions.map((question) => ({
     id: question.receptive_answers[0]?.id || null,
     option_label: question.receptive_answers[0]?.option_label || '',
     answer_text: question.receptive_answers[0]?.answer_text || '',
   }));
-
-  useEffect(() => {
-    const getAudio = async () => {
-      const source = dataPart?.audio?.url || dataPart?.resources?.audio;
-
-      if (!source) return;
-
-      if (typeof source === 'string' && source.startsWith('blob:')) {
-        setAudioSrc(source);
-      } else {
-        const url = await loadAudioSource(source);
-        setAudioSrc(url);
-      }
-    };
-
-    getAudio();
-
-    return () => {
-      const originalSource = dataPart?.audio?.url || dataPart?.resources?.audio;
-
-      if (audioSrc && audioSrc.startsWith('blob:') && audioSrc !== originalSource) {
-        URL.revokeObjectURL(audioSrc);
-      }
-    };
-  }, [dataPart?.audio?.url, dataPart?.resources?.audio]);
 
   useEffect(() => {
     if (!isActive) {

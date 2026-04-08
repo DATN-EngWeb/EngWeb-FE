@@ -29,7 +29,7 @@ export default function WritingTestEditor() {
     audio: null,
   });
   const [isSaving, setIsSaving] = useState(false);
-  const [showPreview, setShowPreview] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
   const [basicOpen, setBasicOpen] = useState(true);
   const [settingOpen, setSettingOpen] = useState(true);
   const [snackbar, setSnackbar] = useState({
@@ -122,6 +122,7 @@ export default function WritingTestEditor() {
           description={question.description}
           suggestion={question.suggestion}
           audio={question.audio}
+          preview={false}
         />
       }
       errors={errors}

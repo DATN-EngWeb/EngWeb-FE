@@ -11,15 +11,15 @@ import {
   Radio,
   Snackbar,
   Alert,
+  Collapse,
 } from '@mui/material';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import AddIcon from '@mui/icons-material/Add';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
+import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
+import HeadsetMicRoundedIcon from '@mui/icons-material/HeadsetMicRounded';
+import MusicNoteRoundedIcon from '@mui/icons-material/MusicNoteRounded';
 import AudioUploader from '../Upload/AudioUploader';
 import ClientSideCustomEditor from '../Editor/ClientSideCustomEditor';
 import { useState, useEffect } from 'react';
@@ -38,6 +38,7 @@ import {
   outlinedCard,
   answerOptionRow,
   trashIconButton,
+  addQuestionBox,
 } from '../../styles/Teacher/Listening/ListeningStyles';
 
 const options = [
@@ -45,13 +46,13 @@ const options = [
     id: 'onetoone',
     title: '1 audio - 1 question',
     description: 'Each question has each audio',
-    icon: <HeadsetMicIcon sx={{ fontSize: 40, color: '#000' }} />,
+    icon: <HeadsetMicRoundedIcon sx={{ fontSize: 40, color: '#000' }} />,
   },
   {
     id: 'onetomany',
     title: '1 audio - many question',
     description: 'One audio for all questions',
-    icon: <MusicNoteIcon sx={{ fontSize: 40, color: '#000' }} />,
+    icon: <MusicNoteRoundedIcon sx={{ fontSize: 40, color: '#000' }} />,
   },
 ];
 
@@ -59,6 +60,14 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
   const questions = Array.isArray(part.questions) ? part.questions : [];
   const [audioFormat, setAudioFormat] = useState(part.audioFormat || 'onetoone');
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [collapsedQuestions, setCollapsedQuestions] = useState({});
+
+  const toggleQuestionCollapse = (questionId) => {
+    setCollapsedQuestions((prev) => ({
+      ...prev,
+      [questionId]: !prev[questionId],
+    }));
+  };
   const [snackbar, setSnackbar] = useState({ open: false, message: '' });
   const [content, setContent] = useState(part.content || '');
 
@@ -203,7 +212,6 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
       <Box sx={partHeader}>
         <Box sx={sectionHeader}>
           <Box sx={accentBar} />
-          <DragIndicatorIcon color="disabled" />
           <Box>
             <Typography fontWeight={600} sx={{ color: 'primary.main' }}>
               Part {index + 1}
@@ -215,279 +223,295 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
         </Box>
         <Box>
           <IconButton onClick={onDelete} sx={trashIconButton}>
-            <DeleteOutlineIcon />
+            <DeleteRoundedIcon sx={{ fontSize: '1.4rem' }} />
           </IconButton>
           <IconButton onClick={() => setIsCollapsed(!isCollapsed)}>
-            {isCollapsed ? <KeyboardArrowDownIcon /> : <KeyboardArrowUpIcon />}
+            {isCollapsed ? (
+              <ExpandMoreRoundedIcon sx={{ fontSize: '1.6rem' }} />
+            ) : (
+              <ExpandLessRoundedIcon sx={{ fontSize: '1.6rem' }} />
+            )}
           </IconButton>
         </Box>
       </Box>
 
       {!isCollapsed && (
-        <>
-          <Box sx={{ mb: 3 }}>
-            <Box sx={rowContent}>
-              <Typography sx={labelText}>
-                The score for each question <span style={{ color: 'red' }}>*</span>
-              </Typography>
-            </Box>
-            <TextField
-              fullWidth
-              size="small"
-              type="number"
-              value={part.score ?? ''}
-              onChange={(e) => {
-                const scoreValue = parseFloat(e.target.value) || 0;
-                const newQuestions = questions.map((q) => ({
-                  ...q,
-                  score: scoreValue,
-                }));
-                updatePart({ ...part, score: scoreValue, questions: newQuestions });
-              }}
-              sx={textInput}
-            />
-          </Box>
-
-          <Typography sx={labelText}>
-            Audio Format <span style={{ color: 'red' }}>*</span>
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-            {options.map((option) => {
-              const isActive = audioFormat === option.id;
-              return (
-                <Paper
-                  key={option.id}
-                  onClick={() => handleAudioFormatChange(option.id)}
-                  sx={{
-                    p: 2,
-                    cursor: 'pointer',
-                    borderRadius: '16px',
-                    border: '2px solid',
-                    borderColor: isActive ? 'yellow.main' : '#E0E0E0',
-                    backgroundColor: isActive ? 'natural.main' : 'background.paper',
-                    flex: 1,
-                    '&:hover': {
-                      borderColor: 'yellow.main',
-                    },
-                  }}
-                >
-                  <Stack direction="row" spacing={3} alignItems="center">
-                    {option.icon}
-                    <Box>
-                      <Typography
-                        sx={{
-                          color: 'primary.main',
-                          fontWeight: 600,
-                          fontSize: '16px',
-                        }}
-                      >
-                        {option.title}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: 'text.gray', fontSize: '14px', mt: 0.5 }}
-                      >
-                        {option.description}
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </Paper>
-              );
-            })}
-          </Box>
-
-          <Box sx={{ mb: 3 }}>
-            <Box sx={rowContent}>
-              <Typography sx={labelText}>
-                Description <span style={{ color: 'red' }}>*</span>
-              </Typography>
-            </Box>
-            <TextField
-              fullWidth
-              multiline
-              minRows={2}
-              placeholder="e.g., Listen to the audio between Alice and Sam and choose the correct picture..."
-              value={part.description ?? ''}
-              onChange={(e) => updatePart({ ...part, description: e.target.value })}
-              sx={textInput}
-            />
-          </Box>
-
-          {audioFormat === 'onetomany' && (
-            <>
-              <Typography sx={labelText}>
-                Audio File <span style={{ color: 'red' }}>*</span>
-              </Typography>
-              <AudioUploader
-                value={part.audio}
-                onChange={(audio) => updatePart({ ...part, audio })}
-                accept="audio/mp3,audio/m4a"
-              />
-
-              <Box sx={{ mb: 3 }}>
-                <Box sx={rowContent}>
-                  <Typography sx={labelText}>Content</Typography>
-                </Box>
-                <Box sx={scrollEditorBox}>
-                  <ClientSideCustomEditor
-                    data={content}
-                    onChange={(newContent) => {
-                      setContent(newContent);
-                      updatePart({ ...part, content: newContent });
-                    }}
-                    onError={(message) => setSnackbar({ open: true, message })}
-                    startingBlankId={1}
-                  />
-                </Box>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 4, mt: 2 }}>
+          {/* -------------- Left Column: Config & Audio -------------- */}
+          <Box sx={{ flex: 1.2, minWidth: 0 }}>
+            <Box sx={{ mb: 3 }}>
+              <Box sx={rowContent}>
+                <Typography sx={labelText}>
+                  The score for each question <span style={{ color: 'red' }}>*</span>
+                </Typography>
               </Box>
-            </>
-          )}
+              <TextField
+                fullWidth
+                size="small"
+                type="number"
+                value={part.score ?? ''}
+                onChange={(e) => {
+                  const scoreValue = parseFloat(e.target.value) || 0;
+                  const newQuestions = questions.map((q) => ({
+                    ...q,
+                    score: scoreValue,
+                  }));
+                  updatePart({ ...part, score: scoreValue, questions: newQuestions });
+                }}
+                sx={textInput}
+              />
+            </Box>
 
-          <Box sx={rowContent}>
             <Typography sx={labelText}>
-              Questions <span style={{ color: 'red' }}>*</span>
+              Audio Format <span style={{ color: 'red' }}>*</span>
             </Typography>
-            <Button
-              startIcon={<AddIcon />}
-              size="small"
-              onClick={addQuestion}
-              sx={{ ...actionTextButton, textTransform: 'none' }}
-            >
-              Add question
-            </Button>
+            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+              {options.map((option) => {
+                const isActive = audioFormat === option.id;
+                return (
+                  <Paper
+                    key={option.id}
+                    onClick={() => handleAudioFormatChange(option.id)}
+                    sx={{
+                      p: 2,
+                      cursor: 'pointer',
+                      borderRadius: '16px',
+                      border: '2px solid',
+                      borderColor: isActive ? 'yellow.main' : '#E0E0E0',
+                      backgroundColor: isActive ? 'natural.main' : 'background.paper',
+                      flex: 1,
+                      '&:hover': {
+                        borderColor: 'yellow.main',
+                      },
+                    }}
+                  >
+                    <Stack direction="row" spacing={3} alignItems="center">
+                      {option.icon}
+                      <Box>
+                        <Typography
+                          sx={{
+                            color: 'primary.main',
+                            fontWeight: 600,
+                            fontSize: '16px',
+                          }}
+                        >
+                          {option.title}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: 'text.gray', fontSize: '14px', mt: 0.5 }}
+                        >
+                          {option.description}
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Paper>
+                );
+              })}
+            </Box>
+
+            <Box sx={{ mb: 3 }}>
+              <Box sx={rowContent}>
+                <Typography sx={labelText}>
+                  Description <span style={{ color: 'red' }}>*</span>
+                </Typography>
+              </Box>
+              <TextField
+                fullWidth
+                multiline
+                minRows={4}
+                placeholder="e.g., Listen to the audio between Alice and Sam and choose the correct picture..."
+                value={part.description ?? ''}
+                onChange={(e) => updatePart({ ...part, description: e.target.value })}
+                sx={textInput}
+              />
+            </Box>
+
+            {audioFormat === 'onetomany' && (
+              <>
+                <Typography sx={labelText}>
+                  Audio File <span style={{ color: 'red' }}>*</span>
+                </Typography>
+                <AudioUploader
+                  value={part.audio}
+                  onChange={(audio) => updatePart({ ...part, audio })}
+                  accept="audio/mp3,audio/m4a"
+                />
+
+                <Box sx={{ mb: 3 }}>
+                  <Box sx={rowContent}>
+                    <Typography sx={labelText}>Content</Typography>
+                  </Box>
+                  <Box sx={scrollEditorBox}>
+                    <ClientSideCustomEditor
+                      data={content}
+                      onChange={(newContent) => {
+                        setContent(newContent);
+                        updatePart({ ...part, content: newContent });
+                      }}
+                      onError={(message) => setSnackbar({ open: true, message })}
+                      startingBlankId={1}
+                    />
+                  </Box>
+                </Box>
+              </>
+            )}
           </Box>
 
-          {questions.length === 0 ? (
-            <Box sx={emptyStateBox}>
-              No questions yet
-              <br />
-              <Button
-                startIcon={<AddIcon />}
-                sx={{ mt: 1, ...actionTextButton, textTransform: 'none' }}
-                onClick={addQuestion}
-              >
-                Add your first question
-              </Button>
+          {/* -------------- Right Column: Questions -------------- */}
+          <Box sx={{ flex: 1.5, minWidth: 0 }}>
+            <Box sx={rowContent}>
+              <Typography sx={labelText}>
+                Questions <span style={{ color: 'red' }}>*</span>
+              </Typography>
             </Box>
-          ) : (
-            <Stack spacing={2}>
-              {questions.map((q, qIdx) => (
-                <Paper key={q.id} variant="outlined" sx={outlinedCard}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                    <Box sx={numberIndicator}>{qIdx + 1}</Box>
 
-                    <TextField
-                      size="small"
-                      fullWidth
-                      placeholder="Enter question text"
-                      value={q.text}
-                      onChange={(e) => setQuestionText(qIdx, e.target.value)}
-                      sx={textInput}
-                    />
+            {questions.length === 0 ? (
+              <Box sx={emptyStateBox}>
+                No questions yet
+                <br />
+                <Button
+                  startIcon={<AddRoundedIcon />}
+                  sx={{ mt: 1, ...actionTextButton, textTransform: 'none' }}
+                  onClick={addQuestion}
+                >
+                  Add your first question
+                </Button>
+              </Box>
+            ) : (
+              <Stack spacing={2}>
+                {questions.map((q, qIdx) => (
+                  <Paper key={q.id} variant="outlined" sx={outlinedCard}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0, mb: 1 }}>
+                      <Box sx={numberIndicator}>{qIdx + 1}</Box>
+                      <Box sx={{ flexGrow: 1 }} />
+                      <IconButton onClick={() => removeQuestion(qIdx)} sx={trashIconButton}>
+                        <DeleteRoundedIcon sx={{ fontSize: '1.2rem' }} />
+                      </IconButton>
+                      <IconButton onClick={() => toggleQuestionCollapse(q.id)}>
+                        <ExpandLessRoundedIcon
+                          sx={{
+                            fontSize: '1.4rem',
+                            transition: 'transform 0.3s ease',
+                            transform: collapsedQuestions[q.id] ? 'rotate(180deg)' : 'rotate(0deg)',
+                          }}
+                        />
+                      </IconButton>
+                    </Box>
 
-                    <IconButton onClick={() => removeQuestion(qIdx)} sx={trashIconButton}>
-                      <DeleteOutlineIcon />
-                    </IconButton>
-                  </Box>
+                    <Collapse in={!collapsedQuestions[q.id]} sx={{ width: '100%' }}>
+                      <Box sx={{ mt: 1 }}>
+                        <TextField
+                          size="small"
+                          fullWidth
+                          placeholder="Enter question text"
+                          value={q.text}
+                          onChange={(e) => setQuestionText(qIdx, e.target.value)}
+                          sx={{ ...textInput, mb: 2 }}
+                        />
 
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                    <Box sx={{ width: 28 }} />
-                    <TextField
-                      size="small"
-                      fullWidth
-                      placeholder="Enter explanation"
-                      value={q.explanation || ''}
-                      onChange={(e) => {
-                        const newQs = questions.map((question, i) =>
-                          i === qIdx ? { ...question, explanation: e.target.value } : question,
-                        );
-                        updatePart({ ...part, questions: newQs });
-                      }}
-                      sx={textInput}
-                    />
-                  </Box>
+                        <TextField
+                          size="small"
+                          fullWidth
+                          placeholder="Enter explanation"
+                          value={q.explanation || ''}
+                          onChange={(e) => {
+                            const newQs = questions.map((question, i) =>
+                              i === qIdx ? { ...question, explanation: e.target.value } : question,
+                            );
+                            updatePart({ ...part, questions: newQs });
+                          }}
+                          sx={{ ...textInput, mb: 2 }}
+                        />
 
-                  {audioFormat === 'onetoone' && (
-                    <>
-                      <Typography sx={labelText}>
-                        Audio File <span style={{ color: 'red' }}>*</span>
-                      </Typography>
-                      <AudioUploader
-                        value={q.audio}
-                        onChange={(audio) => handleAudioChange(qIdx, audio)}
-                        accept="audio/mp3,audio/m4a"
-                      />
-                    </>
-                  )}
+                        {audioFormat === 'onetoone' && (
+                          <Box sx={{ mb: 2 }}>
+                            <Typography sx={labelText}>
+                              Audio File <span style={{ color: 'red' }}>*</span>
+                            </Typography>
+                            <AudioUploader
+                              value={q.audio}
+                              onChange={(audio) => handleAudioChange(qIdx, audio)}
+                              accept="audio/mp3,audio/m4a"
+                            />
+                          </Box>
+                        )}
 
-                  <Typography sx={{ ...labelText, color: 'text.gray' }}>
-                    Text answers (click to set correct):
-                  </Typography>
+                        <Typography sx={{ ...labelText, color: 'text.gray', mb: 1 }}>
+                          Text answers (click to set correct):
+                        </Typography>
 
-                  <Stack spacing={1}>
-                    {q.answers.map((ans, aIdx) => {
-                      const isCorrect = q.correctIndex === aIdx;
+                        <Stack spacing={1}>
+                          {q.answers.map((ans, aIdx) => {
+                            const isCorrect = q.correctIndex === aIdx;
 
-                      return (
-                        <Box key={ans.id || aIdx} sx={answerOptionRow}>
-                          <Radio
-                            checked={isCorrect}
-                            onChange={() => setCorrect(qIdx, aIdx)}
-                            sx={{
-                              color: 'text.gray',
-                              '&.Mui-checked': { color: 'primary.main' },
-                              p: 1,
-                              mr: 1,
-                            }}
-                          />
+                            return (
+                              <Box key={ans.id || aIdx} sx={answerOptionRow}>
+                                <Radio
+                                  checked={isCorrect}
+                                  onChange={() => setCorrect(qIdx, aIdx)}
+                                  sx={{
+                                    color: 'text.gray',
+                                    '&.Mui-checked': { color: 'primary.main' },
+                                    p: 1,
+                                    mr: 1,
+                                  }}
+                                />
 
-                          <Typography
-                            sx={{
-                              fontWeight: 'bold',
-                              mr: 2,
-                              minWidth: '20px',
-                              color: 'text.primary',
-                            }}
-                          >
-                            {String.fromCharCode(65 + aIdx)}.
-                          </Typography>
+                                <Typography
+                                  sx={{
+                                    fontWeight: 'bold',
+                                    mr: 2,
+                                    minWidth: '20px',
+                                    color: 'text.primary',
+                                  }}
+                                >
+                                  {String.fromCharCode(65 + aIdx)}
+                                </Typography>
 
-                          <TextField
-                            size="small"
-                            placeholder={`Answer ${String.fromCharCode(65 + aIdx)}...`}
-                            value={ans.text || ''}
-                            onChange={(e) => setAnswerText(qIdx, aIdx, e.target.value)}
-                            sx={{ ...answerTextInput, flex: 1, minWidth: 0 }}
-                          />
+                                <TextField
+                                  size="small"
+                                  placeholder={`Answer ${String.fromCharCode(65 + aIdx)}...`}
+                                  value={ans.text || ''}
+                                  onChange={(e) => setAnswerText(qIdx, aIdx, e.target.value)}
+                                  sx={{ ...answerTextInput, flex: 1, minWidth: 0 }}
+                                />
 
-                          <IconButton
-                            size="small"
-                            onClick={() => removeAnswer(qIdx, aIdx)}
-                            sx={{
-                              ...trashIconButton,
-                              ml: 1,
-                            }}
-                          >
-                            <DeleteOutlineIcon />
-                          </IconButton>
-                        </Box>
-                      );
-                    })}
-                  </Stack>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => removeAnswer(qIdx, aIdx)}
+                                  sx={{
+                                    ...trashIconButton,
+                                    ml: 1,
+                                  }}
+                                >
+                                  <DeleteRoundedIcon />
+                                </IconButton>
+                              </Box>
+                            );
+                          })}
+                        </Stack>
 
-                  <Button
-                    startIcon={<AddCircleOutlineIcon />}
-                    size="small"
-                    onClick={() => addAnswer(qIdx)}
-                    sx={{ mt: 1, ...actionTextButton, textTransform: 'none' }}
-                  >
-                    Add Answer
-                  </Button>
-                </Paper>
-              ))}
-            </Stack>
-          )}
-        </>
+                        <Button
+                          startIcon={<AddCircleRoundedIcon />}
+                          size="small"
+                          onClick={() => addAnswer(qIdx)}
+                          sx={{ mt: 2, ...actionTextButton, textTransform: 'none' }}
+                        >
+                          Add option
+                        </Button>
+                      </Box>
+                    </Collapse>
+                  </Paper>
+                ))}
+                <Box onClick={addQuestion} sx={addQuestionBox}>
+                  <AddRoundedIcon sx={{ fontSize: '1.2rem' }} />
+                  Add question
+                </Box>
+              </Stack>
+            )}
+          </Box>
+        </Box>
       )}
     </Box>
   );

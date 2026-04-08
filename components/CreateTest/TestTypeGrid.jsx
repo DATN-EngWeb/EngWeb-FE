@@ -26,18 +26,18 @@ export default function TestTypeGrid() {
       path: '/teacher/upload-test/listening',
     },
     {
-      title: 'Speaking',
-      description: 'Speaking and pronunciation tests',
-      icon: <MicIcon sx={{ color: '#7DD3A8' }} />,
-      bgColor: '#DCFCE7',
-      path: '/teacher/upload-test/speaking',
-    },
-    {
       title: 'Writing',
       description: 'Essay and writing tests',
       icon: <EditIcon sx={{ color: '#FFD469' }} />,
       bgColor: '#FFF4E9',
       path: '/teacher/upload-test/writing',
+    },
+    {
+      title: 'Speaking',
+      description: 'Speaking and pronunciation tests',
+      icon: <MicIcon sx={{ color: '#7DD3A8' }} />,
+      bgColor: '#DCFCE7',
+      path: '/teacher/upload-test/speaking',
     },
   ];
 
@@ -74,8 +74,7 @@ export default function TestTypeGrid() {
               cursor: 'pointer',
               transition: '0.2s',
               '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: 3,
+                opacity: 0.9,
               },
             }}
           >

@@ -23,8 +23,11 @@ import {
   Typography,
   Stack,
   Paper,
+  Pagination,
 } from '@mui/material';
 import HistoryEduIcon from '@mui/icons-material/HistoryEdu';
+
+const PAGE_SIZE = 10;
 
 export default function ProductiveTestHistory() {
   const params = useParams();
@@ -32,6 +35,8 @@ export default function ProductiveTestHistory() {
   const router = useRouter();
   const [testData, setTestData] = useState(null);
   const [historyData, setHistoryData] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,11 +46,13 @@ export default function ProductiveTestHistory() {
         setLoading(true);
         //sessionStorage.removeItem('current_writing_attempt');
         const [listAttempt, details] = await Promise.all([
-          getProductiveTest(test_id),
+          getProductiveTest(test_id, { page, page_size: PAGE_SIZE }),
           getProductiveTestDetails(test_id),
         ]);
         setHistoryData(listAttempt?.results || []);
         setTestData(details);
+        setHistoryData(Array.isArray(listAttempt) ? listAttempt : (listAttempt?.results ?? []));
+        setTotalCount(Array.isArray(listAttempt) ? listAttempt.length : (listAttempt?.count ?? 0));
       } catch (error) {
         console.error('Error fetching data:', error);
         setHistoryData([]);
@@ -55,9 +62,15 @@ export default function ProductiveTestHistory() {
     };
 
     if (test_id) fetchData();
+  }, [test_id, page]);
+
+  useEffect(() => {
+    setPage(1);
   }, [test_id]);
+
   const draft = historyData?.find((h) => h.type === 'D');
   const submissions = historyData?.filter((h) => h.type === 'S') || [];
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   if (loading)
     return (
@@ -96,6 +109,7 @@ export default function ProductiveTestHistory() {
       ? router.push(`/student/speaking/${test_id}/${submissions.length + 1}`)
       : router.push(`/student/writing/${test_id}/${submissions.length + 1}`);
   };
+
   return (
     <Box sx={styles.mainWrapper}>
       <Grid container spacing={4}>
@@ -204,9 +218,6 @@ export default function ProductiveTestHistory() {
                   bgcolor: 'white',
                 }}
               >
-                <Box sx={{ mb: 2, opacity: 0.3 }}>
-                  <HistoryEduIcon sx={{ fontSize: 64 }} />
-                </Box>
                 <Typography variant="body1" fontWeight={700}>
                   You haven't submitted any responses yet.
                 </Typography>
@@ -216,6 +227,19 @@ export default function ProductiveTestHistory() {
               </Paper>
             )}
           </Stack>
+
+          {totalPages > 1 && (
+            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={(e, value) => setPage(value)}
+                color="primary"
+                shape="rounded"
+                size="large"
+              />
+            </Box>
+          )}
         </Grid>
 
         {/* column right (Sidebar) */}

@@ -2,9 +2,9 @@
 
 import { use, useEffect, useState } from 'react';
 import { Box, CircularProgress, Alert } from '@mui/material';
-import PreviewReadingTest from '../../../../../components/Teacher/previewReadingTest';
+import ListeningPreview from '../../../../../components/Teacher/ListeningPreview';
 import FeedbackTestLayout from '../../../../../components/Teacher/Feedback/FeedbackTestLayout';
-import { getRecepiveTestDetails, fetchHtmlContent } from '../../../../../api/test';
+import { getReceptiveTestDetails, fetchHtmlContent } from '../../../../../api/test';
 import { transformApiResponseToParts } from '../../../../../utils/testTransformers';
 
 export default function FeedbackListeningTestPage({ params }) {
@@ -18,7 +18,7 @@ export default function FeedbackListeningTestPage({ params }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await getRecepiveTestDetails(test_id);
+        const data = await getReceptiveTestDetails(test_id);
         const currentUserId = localStorage.getItem('userId');
         const isOwner =
           String(data.created_by_id ?? data.teacher_id ?? '') === String(currentUserId);
@@ -75,7 +75,7 @@ export default function FeedbackListeningTestPage({ params }) {
 
   return (
     <FeedbackTestLayout testId={test_id}>
-      <PreviewReadingTest
+      <ListeningPreview
         basicInfo={basicInfo}
         parts={parts}
         onPreview={() => {}}

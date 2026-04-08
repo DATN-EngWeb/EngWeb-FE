@@ -103,6 +103,7 @@ const TestCard = ({
   role = 'teacher',
   created_by,
   progress_status,
+  onDelete,
 }) => {
   const [randomDelay, setRandomDelay] = useState('0s');
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
@@ -156,7 +157,11 @@ const TestCard = ({
       } else {
         await deleteProductiveTest(id);
       }
-      router.refresh();
+      if (onDelete) {
+        onDelete();
+      } else {
+        router.refresh();
+      }
     } catch (err) {
       setDeleteError(`Failed to delete test: ${err.message}`);
     } finally {
@@ -180,6 +185,12 @@ const TestCard = ({
           color: 'success.main',
           icon: <SuccessIcon sx={{ fontSize: '1rem', color: 'success.main' }} />,
         };
+      case 'I': // In Review
+        return {
+          label: 'In review',
+          color: 'secondary.dark',
+          icon: <PendingIcon sx={{ fontSize: '1rem', color: 'secondary.dark' }} />,
+        };
       case 'D': // Draft
       case 'I': // In Review
       default:
@@ -200,19 +211,7 @@ const TestCard = ({
       case 'draft': // In Review
         return {
           color: 'secondary.dark',
-          icon: (
-            <PendingIcon
-              sx={{
-                fontSize: 'large',
-                color: 'secondary.dark',
-                animation: 'spin 2s linear infinite',
-                '@keyframes spin': {
-                  '0%': { transform: 'rotate(0deg)' },
-                  '100%': { transform: 'rotate(360deg)' },
-                },
-              }}
-            />
-          ),
+          icon: <PendingIcon sx={{ fontSize: 'large', color: 'secondary.dark' }} />,
         };
       case 'none': // Draft
       default:
@@ -431,10 +430,19 @@ const TestCard = ({
           size="small"
           variant="outlined"
           onClick={() => {
-            {
-              role === 'student' ? handleStudentViewTest() : handleViewTest();
-            }
+            role === 'student' ? handleStudentViewTest() : handleViewTest();
           }}
+          startIcon={
+            role === 'student' ? (
+              progress_status === 'completed' ? (
+                <ReplayIcon />
+              ) : (
+                <Edit fontSize="small" />
+              )
+            ) : (
+              <EyeIcon fontSize="small" />
+            )
+          }
           sx={{
             bgcolor: 'background.paper',
             color: currentLevelTheme.badge,
@@ -449,28 +457,13 @@ const TestCard = ({
             },
           }}
         >
-          {role === 'student' ? (
-            progress_status === 'completed' ? (
-              <>
-                <ReplayIcon /> Try Again
-              </>
-            ) : progress_status === 'draft' ? (
-              <>
-                <Edit fontSize="small" />
-                Continue
-              </>
-            ) : (
-              <>
-                <Edit fontSize="small" />
-                Practice
-              </>
-            )
-          ) : (
-            <>
-              <EyeIcon fontSize="small" />
-              View
-            </>
-          )}
+          {role === 'student'
+            ? progress_status === 'completed'
+              ? 'Try Again'
+              : progress_status === 'draft'
+                ? 'Continue'
+                : 'Practice'
+            : 'View'}
         </Button>
 
         {role !== 'student' && (

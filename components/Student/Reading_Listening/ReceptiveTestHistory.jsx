@@ -7,13 +7,13 @@ import EditNoteIcon from '@mui/icons-material/EditNote';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import Edit from '@mui/icons-material/Edit';
 import InfoIcon from '@mui/icons-material/Info';
-import * as styles from '../../../styles/student/HistoryTestStyles';
+import * as styles from '@/styles/student/HistoryTestStyles';
 import HistoryItem from './HistoryItem';
 import { levelTheme } from '../../TestCard';
 import { SidebarForum } from '../../Writing-Speaking/SidebarForum';
 import { StudyTip } from '../../Writing-Speaking/StudyTip';
 import ProgressTrackingCard from '../../Writing-Speaking/ProgressTrackingCard';
-import { getReceptivetTest, getReceptiveTestDetails } from '../../../api/test';
+import { getReceptiveTestHistoryByTestId, getReceptiveTestDetails } from '@/api/test';
 import {
   Box,
   Alert,
@@ -41,11 +41,11 @@ export default function ReceptiveTestHistory() {
         setLoading(true);
         //sessionStorage.removeItem('current_writing_attempt');
         const [listAttempt, details] = await Promise.all([
-          getReceptivetTest(test_id),
+          getReceptiveTestHistoryByTestId(test_id),
           getReceptiveTestDetails(test_id),
         ]);
         setTestData(details);
-        setHistoryData(listAttempt);
+        setHistoryData(listAttempt?.results || []);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -215,9 +215,6 @@ export default function ReceptiveTestHistory() {
                   bgcolor: 'white',
                 }}
               >
-                <Box sx={{ mb: 2, opacity: 0.3 }}>
-                  <HistoryEduIcon sx={{ fontSize: 64 }} />
-                </Box>
                 <Typography variant="body1" fontWeight={700}>
                   You haven't submitted any responses yet.
                 </Typography>

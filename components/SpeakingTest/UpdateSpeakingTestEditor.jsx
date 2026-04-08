@@ -45,7 +45,7 @@ export default function UpdateSpeakingTestEditor() {
     audio: null,
   });
   const [isSaving, setIsSaving] = useState(false);
-  const [showPreview, setShowPreview] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
   const [basicOpen, setBasicOpen] = useState(true);
   const [settingOpen, setSettingOpen] = useState(true);
   const [snackbar, setSnackbar] = useState({
@@ -74,9 +74,6 @@ export default function UpdateSpeakingTestEditor() {
         score: response.completed_bonus,
       });
 
-      console.log('cc', testData.format);
-      console.log('Fetched test data:', response.productive_test.format);
-
       // Fetch HTML content từ link Google Storage
       const desResponse = await fetch(response.productive_test.description);
       const htmlText = await desResponse.text();
@@ -101,6 +98,7 @@ export default function UpdateSpeakingTestEditor() {
         audioUrl: audioUrlFromServer,
       };
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Fetch error:', error);
       setSnackbar({ open: true, message: 'Failed to load test data', severity: 'error' });
     }
@@ -178,6 +176,7 @@ export default function UpdateSpeakingTestEditor() {
         setSnackbar({ open: true, message: 'No changes detected', severity: 'info' });
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Update error:', error);
       setSnackbar({ open: true, message: 'Failed to update test', severity: 'error' });
     } finally {
@@ -212,8 +211,7 @@ export default function UpdateSpeakingTestEditor() {
           suggestion={question.suggestion}
           isReadOnly={isReadOnly}
           audio={question.audio?.url}
-          onEditClick={undefined}
-          onCancelClick={undefined}
+          preview={false}
           handleSubmit={async (status) => {
             await handleSubmit(status);
           }}

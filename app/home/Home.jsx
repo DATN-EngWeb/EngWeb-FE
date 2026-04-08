@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import Header from '../../components/Home/Header';
 import HeroSection from '../../components/Home/HeroSection';
 //import TestReleases from '../../components/Home/TestReleases';
@@ -11,13 +11,17 @@ import Footer from '../../components/Home/Footer';
 export default function Home() {
   return (
     <>
-      <Header />
+      <Suspense fallback={null}>
+        <Header />
+      </Suspense>
       <HeroSection />
       <Statistics />
       <WhatMakesUsDifferent />
       <Testimonials />
       <ContactForm />
-      <Footer />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
     </>
   );
 }

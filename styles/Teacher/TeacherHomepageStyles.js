@@ -32,18 +32,7 @@ export const TeacherHomepageStyles = {
     marginLeft: { xs: '0px', sm: '10px' },
     fontSize: { xs: '1rem', sm: '1.1rem', md: '1.2rem' },
   },
-  statBadge: (variant) => ({
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 1.5,
-    padding: { xs: '6px 16px', md: '8px 20px' },
-    borderRadius: '25px',
-    backgroundColor: variant === 'yellow' ? 'natural.main' : 'success.pastel',
-    border: `1px solid ${variant === 'yellow' ? 'warning.main' : 'success.main'}`,
-    color: variant === 'yellow' ? 'warning.dark' : 'success.dark',
-    fontWeight: 500,
-    marginLeft: { xs: '0px', sm: '10px' },
-  }),
+
   filterSection: {
     mt: 4,
     display: 'flex',
@@ -56,11 +45,10 @@ export const TeacherHomepageStyles = {
     flex: { xs: 'none', lg: 1 },
     maxWidth: '1200px',
     backgroundColor: 'background.paper',
-    '& .MuiOutlinedInput-root': {
-      borderRadius: '12px',
-      '& fieldset': { borderColor: 'background.paper' },
-    },
-    borderRadius: '12px',
+    borderRadius: '25px',
+    border: '1px solid',
+    borderColor: 'divider',
+    '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
   },
   selectFilter: {
     flex: {
@@ -70,8 +58,15 @@ export const TeacherHomepageStyles = {
     },
     minWidth: { xs: '100%', sm: '150px', lg: '150px' },
     backgroundColor: 'background.paper',
-    borderRadius: '12px',
-    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'background.paper' },
+    borderRadius: '25px',
+    border: '1px solid',
+    borderColor: 'divider',
+    '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+    '& .MuiSelect-select': {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 1,
+    },
   },
   createBtn: {
     backgroundColor: 'yellow.main',
@@ -80,7 +75,11 @@ export const TeacherHomepageStyles = {
     borderRadius: '12px',
     padding: '10px 24px',
     textTransform: 'none',
-    '&:hover': { backgroundColor: 'warning.main' },
+    boxShadow: 'none',
+    '&:hover': {
+      backgroundColor: 'warning.main',
+      boxShadow: 'none',
+    },
     minWidth: { xs: '100%', sm: '140px' },
   },
   testGrid: {

@@ -11,6 +11,7 @@ const STORAGE_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/storage`;
 const TESTS_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/tests`;
 const TEST_HISTORIES_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/test-histories`;
 const TEST_AI_FEEDBACK_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/feedback/ai-feedback`;
+const TEST_STATISTICS_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/statistic`;
 
 export const createTest = async (basicInfo) => {
   return apiFetch(`${TESTS_BASE_URL}/overview`, {
@@ -151,7 +152,7 @@ export const deleteReceptiveTest = async (testId) => {
   });
 };
 
-export async function getRecepiveTestDetails(testId) {
+export async function getReceptiveTestDetails(testId) {
   return apiFetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
     method: 'GET',
     headers: {
@@ -184,19 +185,22 @@ export const createProductiveTest = async (data) => {
   });
 };
 
-export const getProductiveTest = async (test_id) => {
-  return apiFetch(
-    `${TEST_HISTORIES_BASE_URL}/productive?productive_test=${test_id}&is_shared=true`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+export const getProductiveTest = async (test_id, params = {}) => {
+  const query = new URLSearchParams({
+    productive_test: test_id,
+    is_shared: true,
+    ...params,
+  }).toString();
+
+  return apiFetch(`${TEST_HISTORIES_BASE_URL}/productive?${query}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
     },
-  );
+  });
 };
 
-export const getReceptivetTest = async (test_id) => {
+export const getReceptiveTestHistoryByTestId = async (test_id) => {
   return apiFetch(`${TEST_HISTORIES_BASE_URL}/receptive?receptive_test=${test_id}`, {
     method: 'GET',
     headers: {
@@ -205,14 +209,7 @@ export const getReceptivetTest = async (test_id) => {
   });
 };
 
-export const getReceptiveTestDetails = async (testId) => {
-  return apiFetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-};
+// Duplicate function removed
 
 export const createReceptiveTest = async (data) => {
   return apiFetch(`${TEST_HISTORIES_BASE_URL}/receptive`, {
@@ -246,12 +243,53 @@ export const submitReceptiveTest = async (data, token) => {
   });
 };
 
-export const getReceptiveTestHistory = async (history_id, token) => {
+export const getReceptiveTestHistory = async (history_id) => {
   return apiFetch(`${TEST_HISTORIES_BASE_URL}/receptive/${history_id}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const getListReceptiveTestHistory = async (type, skill, page, page_size, level) => {
+  return apiFetch(
+    `${TEST_HISTORIES_BASE_URL}/receptive?type=${type}&skill=${skill}&page=${page}&page_size=${page_size}&level=${level}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+};
+
+export const getListProductiveTestHistory = async (type, skill, page, page_size, level) => {
+  return apiFetch(
+    `${TEST_HISTORIES_BASE_URL}/productive?type=${type}&skill=${skill}&page=${page}&page_size=${page_size}&level=${level}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+};
+
+export const getStatisticsForSkill = async (skill, level) => {
+  return apiFetch(`${TEST_STATISTICS_BASE_URL}/summary/${skill}/${level}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+};
+
+export const getProductiveTestHistory = async (history_id) => {
+  return apiFetch(`${TEST_HISTORIES_BASE_URL}/productive/${history_id}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
     },
   });
 };

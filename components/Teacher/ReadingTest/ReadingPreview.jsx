@@ -1,17 +1,26 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { Box, Dialog, DialogContent, IconButton, Typography, Button } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import React, { useRef, useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  Box,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+} from '@mui/material';
 import FillBlanksContent from '../../Reading/FillBlanks/FillBlanksContent';
 import MatchingContent from '../../Reading/Matching/MatchingContent';
 import MultiChoiceContent from '../../Reading/MultiChoice/MultiChoiceContent';
 
-const ReadingPreview = ({ open, onClose, testData, inline = false }) => {
+const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButton = true }) => {
+  const router = useRouter();
   const [currentPartIndex, setCurrentPartIndex] = useState(0);
 
   const parts = testData?.parts || [];
-  const partTitles = parts.map((p, index) => `Part ${index + 1}`);
+  const partTitles = parts.map((_part, index) => `Part ${index + 1}`);
 
   const currentPart = parts[currentPartIndex];
 
@@ -25,7 +34,7 @@ const ReadingPreview = ({ open, onClose, testData, inline = false }) => {
     if (!currentPart) return null;
 
     const commonProps = {
-      testName: testData.title || 'Preview Test',
+      testName: testData?.test?.title || testData?.title || 'Preview Test',
       parts: partTitles,
       currentPart: currentPartIndex + 1,
       passage: currentPart.content || '',
@@ -36,6 +45,7 @@ const ReadingPreview = ({ open, onClose, testData, inline = false }) => {
       onNext: () => handlePartChange(currentPartIndex + 1),
       currentSection: currentPartIndex + 1,
       totalSections: parts.length,
+      onExit: showBackButton ? onClose : undefined,
       embedded: inline,
     };
 
@@ -48,7 +58,7 @@ const ReadingPreview = ({ open, onClose, testData, inline = false }) => {
             ...commonProps,
             questions: currentPart.questions.map((q) => ({
               id: q.id,
-              question: q.content || `Question ${q.question_number}`, // Fallback if content is missing in editor
+              question: q.content || `Question ${q.question_number}`,
               options: q.answers.map((a) => ({
                 value: String(a.id || a.option_label),
                 label: `${a.option_label}. ${a.answer_text}`,
@@ -64,6 +74,15 @@ const ReadingPreview = ({ open, onClose, testData, inline = false }) => {
           props: {
             ...commonProps,
             blanks: currentPart.questions.map((q) => q.question_number).sort((a, b) => a - b),
+            questions: currentPart.questions.map((q) => ({
+              id: q.id,
+              question_number: q.question_number,
+              question: q.content || `Question ${q.question_number}`,
+              options: q.answers.map((a) => ({
+                value: String(a.id || a.option_label),
+                label: `${a.option_label}. ${a.answer_text}`,
+              })),
+            })),
           },
         };
 
@@ -100,7 +119,7 @@ const ReadingPreview = ({ open, onClose, testData, inline = false }) => {
       default:
         return null;
     }
-  }, [currentPart, currentPartIndex, parts, partTitles, testData.title]);
+  }, [currentPart, currentPartIndex, onClose, parts, partTitles, showBackButton, testData]);
 
   if (!open && !inline) return null;
 
@@ -125,50 +144,37 @@ const ReadingPreview = ({ open, onClose, testData, inline = false }) => {
   }
 
   return (
-    <Dialog
-      fullScreen
-      open={open}
-      onClose={onClose}
-      sx={{ '& .MuiDialog-paper': { bgcolor: 'background.default' } }}
+    <Box
+      sx={{
+        position: 'relative',
+        height: '100%',
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
     >
-      <Box sx={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            px: 3,
-            py: 1,
-            bgcolor: 'white',
-            borderBottom: 1,
-            borderColor: 'divider',
-          }}
-        >
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Test Preview
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button onClick={onClose} startIcon={<CloseIcon />} color="inherit">
-              Close Preview
-            </Button>
+      <Box
+        sx={{
+          flex: 1,
+          overflow: 'hidden',
+          '@media print': {
+            display: 'none', // Hide on-screen preview when printing
+          },
+        }}
+      >
+        {ContentComponent ? (
+          <ContentComponent {...transformedData.props} />
+        ) : (
+          <Box sx={{ p: 4, textAlign: 'center' }}>
+            <Typography color="text.secondary">
+              {parts.length === 0
+                ? 'No parts added yet.'
+                : 'This part type is not supported for preview yet or is invalid.'}
+            </Typography>
           </Box>
-        </Box>
-
-        <Box sx={{ flex: 1, overflow: 'auto', bgcolor: '#f5f5f5' }}>
-          {ContentComponent ? (
-            <ContentComponent {...transformedData.props} />
-          ) : (
-            <Box sx={{ p: 4, textAlign: 'center' }}>
-              <Typography color="text.secondary">
-                {parts.length === 0
-                  ? 'No parts added yet.'
-                  : 'This part type is not supported for preview yet or is invalid.'}
-              </Typography>
-            </Box>
-          )}
-        </Box>
+        )}
       </Box>
-    </Dialog>
+    </Box>
   );
 };
 

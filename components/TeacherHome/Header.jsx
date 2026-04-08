@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   AppBar,
   Toolbar,
@@ -30,6 +30,7 @@ import { logout as logoutAPI } from '../../api/accounts';
 
 export default function TeacherHeader() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, logout: logoutHook } = useAuth(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [userAvatar, setUserAvatar] = useState(null);
@@ -64,29 +65,58 @@ export default function TeacherHeader() {
     }
   };
 
+  const menuItems = [
+    { label: 'My List Test', href: '/teacher' },
+    { label: 'List Review Test', href: '/teacher/review-test' },
+    { label: 'Upload Test', href: '/teacher/upload-test' },
+  ];
+
   return (
-    <AppBar position="static" sx={appBarStyles}>
+    <AppBar
+      position="static"
+      sx={{
+        ...appBarStyles,
+        '@media print': {
+          display: 'none',
+        },
+      }}
+    >
       <Container maxWidth="lg">
         <Toolbar sx={toolbarStyles}>
           <Box sx={navBoxStyles}>
             <Link href="/teacher" style={logoLinkStyles}>
               <Image src={Logo} alt="NENS" width={32} height={24} />
             </Link>
-            <Link href="/teacher" style={navLinkStyles}>
-              <Button color="inherit" sx={navButtonStyles}>
-                My List Test
-              </Button>
-            </Link>
-            <Link href="/teacher/review-test" style={navLinkStyles}>
-              <Button color="inherit" sx={navButtonStyles}>
-                List Review Test
-              </Button>
-            </Link>
-            <Link href="/teacher/upload-test" style={navLinkStyles}>
-              <Button color="inherit" sx={navButtonStyles}>
-                Upload Test
-              </Button>
-            </Link>
+            {menuItems.map((item) => {
+              const isActive =
+                item.href === '/teacher' ? pathname === '/teacher' : pathname?.includes(item.href);
+              return (
+                <Link key={item.href} href={item.href} style={navLinkStyles}>
+                  <Button
+                    color="inherit"
+                    disableRipple
+                    sx={{
+                      ...navButtonStyles,
+                      backgroundColor: 'transparent',
+                      color: isActive ? 'secondary.main' : 'primary.main',
+                      borderRadius: 0,
+                      borderBottom: isActive ? '3px solid' : 'none',
+                      borderColor: isActive ? 'secondary.main' : 'transparent',
+                      padding: '8px 4px',
+                      marginRight: '50px',
+                      fontWeight: isActive ? 700 : 500,
+                      '&:hover': {
+                        backgroundColor: 'transparent',
+                        color: 'secondary.main',
+                        borderColor: 'secondary.main',
+                      },
+                    }}
+                  >
+                    {item.label}
+                  </Button>
+                </Link>
+              );
+            })}
           </Box>
 
           <Box sx={actionBoxStyles}>

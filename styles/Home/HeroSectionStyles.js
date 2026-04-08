@@ -83,7 +83,7 @@ export const heroSectionStyles = {
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    backgroundColor: 'background.default',
+    backgroundColor: 'yellow.main',
     overflow: 'hidden',
   },
 

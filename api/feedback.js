@@ -35,3 +35,11 @@ export const deleteTestFeedback = async (feedback_id) => {
     method: 'DELETE',
   });
 };
+
+export const generateAIReadingFeedback = async ({ test_id, pdf_gcs_uri }) => {
+  return apiFetch(`${FEEDBACK_BASE_URL}/ai-feedback/reading`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ test_id, pdf_gcs_uri }),
+  });
+};

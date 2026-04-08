@@ -18,7 +18,13 @@ import {
   MenuItem,
   Snackbar,
   Alert,
+  IconButton,
 } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import FileUploadIcon from '@mui/icons-material/FileUpload';
+import SendRounded from '@mui/icons-material/SendRounded';
+import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import AddIcon from '@mui/icons-material/Add';
 import ArticleOutlined from '@mui/icons-material/ArticleOutlined';
@@ -33,16 +39,19 @@ import ReadingPreview from '../../../../components/Teacher/ReadingTest/ReadingPr
 import ScrollToTopButton from '../../../../components/CreateTest/ScrollToTopButton';
 import TestEditorHeader from '../../../../components/UploadTest/TestEditorHeader';
 import TestEditorActions from '../../../../components/UploadTest/TestEditorActions';
-import { createNewTest, uploadReadingTestContent } from '../../../../api/teacher/upload-reading';
+import { uploadReadingTestContent } from '../../../../api/teacher/upload-reading';
+import { createTest } from '../../../../api/test';
 import {
   collectFilesReading,
   transformReadingPartsWithUrls,
   transformFormatData,
 } from '../../../../utils/testTransformers';
 import { getPresignedUrl, uploadToObjectStorage, confirmUpload } from '../../../../api/test';
+import { validateReadingPartPayload } from '../../../../utils/testValidation';
 
 export default function Page() {
   const router = useRouter();
+  const [showInlinePreview, setShowInlinePreview] = useState(false);
   const [test, setTest] = useState({
     title: '',
     type: 'R',
@@ -50,10 +59,9 @@ export default function Page() {
     skill: 'R',
     time: 60,
     description: '',
-    status: 'P',
+    status: 'D',
   });
   const [parts, setParts] = useState([]);
-  const [showPreview, setShowPreview] = useState(false);
 
   const lastPartRef = useRef(null);
   const prevPartsLengthRef = useRef(parts.length);
@@ -79,7 +87,7 @@ export default function Page() {
     if (!test.title || !test.description) {
       setSnackbar({
         open: true,
-        message: 'Please fill in all required fields!',
+        message: 'Please fill title and description of test!',
         severity: 'error',
       });
       return null;
@@ -103,10 +111,11 @@ export default function Page() {
     };
 
     try {
-      const response = await createNewTest(payload);
+      const response = await createTest(payload);
 
       if (response && response.id) {
         const newTestId = response.id;
+        setTest((prev) => ({ ...prev, status }));
         return newTestId;
       } else {
         return null;
@@ -119,7 +128,7 @@ export default function Page() {
         if (status === 400) {
           setSnackbar({
             open: true,
-            message: 'All fields are required.',
+            message: error.message || 'Please check all required fields.',
             severity: 'error',
           });
         } else if (status === 401) {
@@ -144,13 +153,24 @@ export default function Page() {
   const handleUploadParts = async (status) => {
     setIsLoading(true);
     try {
+      const transformedParts = transformFormatData(parts);
+      const errorMessage = validateReadingPartPayload(transformedParts);
+      if (errorMessage) {
+        setSnackbar({
+          open: true,
+          message: errorMessage,
+          severity: 'error',
+        });
+        return;
+      }
+
+      console.log('Transformed Parts:', transformedParts);
+
       const newTestId = await handleUploadTest(status);
       if (!newTestId) {
         setIsLoading(false);
         return;
       }
-
-      const transformedParts = transformFormatData(parts);
 
       const files = collectFilesReading(transformedParts);
       const filenameToUrl = {};
@@ -193,10 +213,9 @@ export default function Page() {
 
       const preparedParts = transformReadingPartsWithUrls(transformedParts, filenameToUrl);
 
-      // console.log('Prepared Parts for Upload:', preparedParts);
-
       await uploadReadingTestContent(newTestId, preparedParts);
       setSnackbar({ open: true, message: 'Upload test successfully!', severity: 'success' });
+
       setTimeout(() => {
         router.push('/teacher');
       }, 1000);
@@ -343,6 +362,32 @@ export default function Page() {
           if (format === 'G' || format === 'H' || format === 'I' || format === 'J') {
             updatedPart.content = '';
           }
+
+          // Tự động thêm câu hỏi đầu tiên
+          const newQuestion = {
+            id: Date.now(),
+            question_number: 1,
+            explanation: '',
+            score: p.scoreForEachQuestion || 10,
+          };
+
+          if (format === 'G' || format === 'F') {
+            newQuestion.content = '';
+            newQuestion.answers = [
+              { id: 0, option_label: 'A', is_correct: true, answer_text: '' },
+              { id: 1, option_label: 'B', is_correct: false, answer_text: '' },
+              { id: 2, option_label: 'C', is_correct: false, answer_text: '' },
+            ];
+          } else if (format === 'H') {
+            newQuestion.content = '';
+            newQuestion.answers = [{ id: 0, option_label: 'A', is_correct: true, answer_text: '' }];
+          } else if (format === 'I') {
+            newQuestion.answers = [{ id: 0, is_correct: true, answer_text: '' }];
+          } else if (format === 'J') {
+            newQuestion.answers = [{ id: 0, option_label: '', is_correct: true, answer_text: '' }];
+          }
+
+          updatedPart.questions = [newQuestion];
           return updatedPart;
         }
         return p;
@@ -376,6 +421,11 @@ export default function Page() {
   };
 
   const renderPartEditor = (part, index) => {
+    // 'F': Multiple choice (short text)
+    // 'G': Multiple choice (long text)
+    // 'H': Fill in the blank (multiple choice)
+    // 'I': Fill in the blank (text)
+    // 'J': Matching
     const partQuestions = part.questions || [];
 
     switch (part.format) {
@@ -436,7 +486,7 @@ export default function Page() {
   };
 
   return (
-    <Box sx={uploadReadingStyles.mainContainer}>
+    <Box sx={{ ...uploadReadingStyles.mainContainer, minHeight: '100vh' }}>
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
@@ -451,226 +501,285 @@ export default function Page() {
         </Alert>
       </Snackbar>
       <ScrollToTopButton />
-      <Container maxWidth="lg">
-        <TestEditorHeader
-          title="Create New Reading Test"
-          description="Fill in the details below to create a new reading test for your students"
-        />
-        <TestEditorActions
-          onPreview={() => setShowPreview((prev) => !prev)}
-          isPreviewActive={showPreview}
-          onSendReview={() => handleUploadParts('I')}
-          onSaveDraft={() => handleUploadParts('D')}
-          onPublish={() => handleUploadParts('P')}
-          isLoading={isLoading}
-        />
-        {/* -------- Upload Reading Test Form Section --------- */}
-        <Box sx={uploadReadingStyles.uploadReadingFormSection}>
-          <Typography
-            variant="h3"
-            sx={{ ...uploadReadingStyles.mainTitleHeading, alignSelf: 'flex-start' }}
-          >
-            Test Editor
-          </Typography>
-          {/* -------------------- Basic Information -------------------- */}
-          <Box sx={uploadReadingStyles.basicInfoContainer}>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Box
-                sx={{
-                  width: '4px',
-                  height: '36px',
-                  backgroundColor: 'yellow.main',
-                  borderRadius: '1rem',
-                }}
-              ></Box>
-              <Typography sx={uploadReadingStyles.basicInfoHeading}>Basic infomation</Typography>
-            </Stack>
-            <Box sx={uploadReadingStyles.nameTestAndTime}>
-              <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-                <FormLabel sx={uploadReadingStyles.labelInput}>Test title</FormLabel>
-                <OutlinedInput
-                  placeholder="Enter test title here"
-                  defaultValue={test.title}
-                  onBlur={(e) => setTest({ ...test, title: e.target.value })}
-                  sx={uploadReadingStyles.input}
-                />
-              </FormControl>
-              <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-                <FormLabel sx={uploadReadingStyles.labelInput}>Time</FormLabel>
-                <OutlinedInput
-                  placeholder="Enter time here"
-                  defaultValue={test.time}
-                  sx={uploadReadingStyles.input}
-                  onBlur={(e) => setTest({ ...test, time: Number(e.target.value) })}
-                />
-              </FormControl>
-            </Box>
-            <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-              <FormLabel sx={uploadReadingStyles.labelInput}>Description</FormLabel>
-              <OutlinedInput
-                multiline
-                placeholder="Enter description here"
-                defaultValue={test.description}
-                onBlur={(e) => setTest({ ...test, description: e.target.value })}
-                sx={uploadReadingStyles.inputMultiline}
-              />
-            </FormControl>
-            <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-              <FormLabel sx={uploadReadingStyles.labelInput}>Level</FormLabel>
-              <Select
-                displayEmpty
-                defaultValue=""
-                sx={{
-                  ...uploadReadingStyles.input,
-                  '& .MuiSelect-icon': {
-                    color: 'primary.main',
-                    fontSize: '1.8rem',
-                    right: '12px',
-                    transition: 'transform 0.2s',
-                  },
-                  '& .MuiSelect-iconOpen': {
-                    transform: 'rotate(180deg)',
-                  },
-                }}
-                IconComponent={KeyboardArrowDownIcon}
-                MenuProps={{
-                  PaperProps: {
-                    sx: {
-                      '& .MuiMenuItem-root': {
-                        fontFamily: 'inherit',
-                        fontSize: { xs: '0.7rem', md: '0.9rem' },
-                      },
-                    },
-                  },
-                }}
-                onChange={(e) => {
-                  setTest({ ...test, level: e.target.value });
-                }}
-              >
-                <MenuItem value="" disabled>
-                  <span>Choose level</span>
-                </MenuItem>
-                <MenuItem value="A1">A1</MenuItem>
-                <MenuItem value="A2">A2</MenuItem>
-                <MenuItem value="B1">B1</MenuItem>
-                <MenuItem value="B2">B2</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-          {/* ------------ Parts Section ------------- */}
-          {parts.map((part, index) => (
-            <Box
-              key={part.id}
-              ref={index === parts.length - 1 ? lastPartRef : null}
-              sx={uploadReadingStyles.basicInfoContainer}
+      <Container maxWidth={false}>
+        {/* -------- Title Section --------- */}
+        <Box sx={uploadReadingStyles.cardTitle}>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+            <IconButton
+              onClick={() => router.push('/teacher/upload-test')}
+              sx={{ color: 'primary.main', p: 0 }}
             >
-              {!part.format ? (
-                <>
-                  <Stack direction="row" spacing={2} alignItems="center">
-                    <Box
-                      sx={{
-                        width: '4px',
-                        height: '36px',
-                        backgroundColor: 'yellow.main',
-                        borderRadius: '1rem',
-                      }}
-                    ></Box>
-                    <Typography sx={uploadReadingStyles.basicInfoHeading}>
-                      Select Part Type
-                    </Typography>
-                  </Stack>
-                  <Box sx={uploadReadingStyles.partContentContainer}>
-                    {/* Multiple Choice Long Text */}
-                    <Button
-                      sx={uploadReadingStyles.selectedPart}
-                      onClick={() => handleSelectType(part.id, 'G')}
-                    >
-                      <ArticleOutlined sx={uploadReadingStyles.iconSelectedPart} />
-                      <Box sx={uploadReadingStyles.partTextContainer}>
-                        <Typography sx={uploadReadingStyles.partTitle}>
-                          Multiple Choice Long Text
-                        </Typography>
-                        <Typography sx={uploadReadingStyles.partDescription}>
-                          Students select the correct answer.
-                        </Typography>
-                      </Box>
-                    </Button>
-                    {/* Multiple Choice Short Text */}
-                    <Button
-                      sx={uploadReadingStyles.selectedPart}
-                      onClick={() => handleSelectType(part.id, 'F')}
-                    >
-                      <EditNoteOutlined sx={uploadReadingStyles.iconSelectedPart} />
-                      <Box sx={uploadReadingStyles.partTextContainer}>
-                        <Typography sx={uploadReadingStyles.partTitle}>
-                          Multiple Choice Short Text
-                        </Typography>
-                        <Typography sx={uploadReadingStyles.partDescription}>
-                          Students select the correct answer.
-                        </Typography>
-                      </Box>
-                    </Button>
-                    {/* Fill in The Blanks */}
-                    <Button
-                      sx={uploadReadingStyles.selectedPart}
-                      onClick={() => handleSelectType(part.id, 'I')}
-                    >
-                      <BorderColorOutlined sx={uploadReadingStyles.iconSelectedPart} />
-                      <Box sx={uploadReadingStyles.partTextContainer}>
-                        <Typography sx={uploadReadingStyles.partTitle}>
-                          Fill In The Blanks
-                        </Typography>
-                        <Typography sx={uploadReadingStyles.partDescription}>
-                          Students complete the missing words.
-                        </Typography>
-                      </Box>
-                    </Button>
-                    {/* Matching */}
-                    <Button
-                      sx={uploadReadingStyles.selectedPart}
-                      onClick={() => handleSelectType(part.id, 'J')}
-                    >
-                      <Link sx={uploadReadingStyles.iconSelectedPart} />
-                      <Box sx={uploadReadingStyles.partTextContainer}>
-                        <Typography sx={uploadReadingStyles.partTitle}>Matching</Typography>
-                        <Typography sx={uploadReadingStyles.partDescription}>
-                          Students match items together.
-                        </Typography>
-                      </Box>
-                    </Button>
-                  </Box>
-                  <Button
-                    sx={{
-                      color: 'text.gray',
-                      fontSize: { xs: '0.7rem', md: '0.9rem' },
-                      textTransform: 'none',
-                      px: 2,
-                    }}
-                    onClick={() => handleDeletePart(part.id)}
-                  >
-                    Cancel
-                  </Button>
-                </>
-              ) : (
-                renderPartEditor(part, index)
-              )}
-            </Box>
-          ))}
-          {/* -------- Add New Part Button --------- */}
+              <ArrowBackIcon />
+            </IconButton>
+            <Typography variant="h3" sx={uploadReadingStyles.mainTitleHeading}>
+              Create New Reading Test
+            </Typography>
+          </Stack>
+          <Typography variant="body1" sx={uploadReadingStyles.description}>
+            Fill in details below to create a new reading test for your students.
+          </Typography>
+        </Box>
+        {/* -------- Function Buttons Section --------- */}
+        <Box sx={uploadReadingStyles.functionButtonsWrapper}>
           <Button
-            startIcon={<AddIcon />}
-            sx={uploadReadingStyles.addPartButton}
-            onClick={() => handleAddPart()}
+            startIcon={
+              <VisibilityOutlinedIcon
+                sx={{ transform: { xs: 'translateY(0px)', md: 'translateY(3px)' } }}
+              />
+            }
+            sx={{ ...uploadReadingStyles.previewButton, gridArea: 'item1' }}
+            onClick={() => setShowInlinePreview((prev) => !prev)}
           >
-            Add New Part
+            {showInlinePreview ? 'Hide Preview' : 'Show Preview'}
+          </Button>
+          <Button
+            startIcon={
+              <SendRounded sx={{ transform: 'rotate(-45deg) translateY(2px) translateX(7px)' }} />
+            }
+            sx={{ ...uploadReadingStyles.rightButton, gridArea: 'item2' }}
+            onClick={() => handleUploadParts('I')}
+            disabled={isLoading}
+          >
+            Send For Review
+          </Button>
+          <Button
+            startIcon={<DescriptionOutlined sx={{ fontSize: 20, transform: 'translateY(0px)' }} />}
+            sx={{ ...uploadReadingStyles.rightButton, gridArea: 'item3' }}
+            onClick={() => handleUploadParts('D')}
+            disabled={isLoading}
+          >
+            Save Draft
+          </Button>
+          <Button
+            startIcon={<FileUploadIcon sx={{ fontSize: 20, transform: 'translateY(0px)' }} />}
+            sx={{ ...uploadReadingStyles.publicButton, gridArea: 'item4' }}
+            onClick={() => handleUploadParts('P')}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Uploading...' : 'Public'}
           </Button>
         </Box>
+
+        {showInlinePreview && (
+          <Box sx={{ mt: 2, mb: 3 }}>
+            <ReadingPreview
+              inline
+              open={false}
+              onClose={() => setShowInlinePreview(false)}
+              testData={{
+                id: test.id,
+                status: test.status,
+                title: test.title,
+                parts,
+              }}
+              showBackButton={false}
+            />
+          </Box>
+        )}
+        {/* -------- Upload Reading Test Form Section --------- */}
+        {!showInlinePreview && (
+          <Box sx={uploadReadingStyles.uploadReadingFormSection}>
+            <Typography
+              variant="h3"
+              sx={{ ...uploadReadingStyles.mainTitleHeading, alignSelf: 'flex-start' }}
+            >
+              Test Editor
+            </Typography>
+            {/* -------------------- Basic Information -------------------- */}
+            <Box sx={uploadReadingStyles.basicInfoContainer}>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Box
+                  sx={{
+                    width: '4px',
+                    height: '36px',
+                    backgroundColor: 'yellow.main',
+                    borderRadius: '1rem',
+                  }}
+                ></Box>
+                <Typography sx={uploadReadingStyles.basicInfoHeading}>Basic infomation</Typography>
+              </Stack>
+              <Box sx={uploadReadingStyles.nameTestAndTime}>
+                <FormControl fullWidth sx={uploadReadingStyles.formControl}>
+                  <FormLabel sx={uploadReadingStyles.labelInput}>Test title</FormLabel>
+                  <OutlinedInput
+                    placeholder="Enter test title here"
+                    value={test.title}
+                    onChange={(e) => setTest({ ...test, title: e.target.value })}
+                    sx={uploadReadingStyles.input}
+                  />
+                </FormControl>
+                <FormControl fullWidth sx={uploadReadingStyles.formControl}>
+                  <FormLabel sx={uploadReadingStyles.labelInput}>Time</FormLabel>
+                  <OutlinedInput
+                    placeholder="Enter time here"
+                    value={test.time}
+                    sx={uploadReadingStyles.input}
+                    onChange={(e) => setTest({ ...test, time: Number(e.target.value) || '' })}
+                  />
+                </FormControl>
+              </Box>
+              <FormControl fullWidth sx={uploadReadingStyles.formControl}>
+                <FormLabel sx={uploadReadingStyles.labelInput}>Description</FormLabel>
+                <OutlinedInput
+                  multiline
+                  placeholder="Enter description here"
+                  value={test.description}
+                  onChange={(e) => setTest({ ...test, description: e.target.value })}
+                  sx={uploadReadingStyles.inputMultiline}
+                />
+              </FormControl>
+              <FormControl fullWidth sx={uploadReadingStyles.formControl}>
+                <FormLabel sx={uploadReadingStyles.labelInput}>Level</FormLabel>
+                <Select
+                  displayEmpty
+                  value={test.level}
+                  sx={{
+                    ...uploadReadingStyles.input,
+                    '& .MuiSelect-icon': {
+                      color: 'primary.main',
+                      fontSize: '1.8rem',
+                      right: '12px',
+                      transition: 'transform 0.2s',
+                    },
+                    '& .MuiSelect-iconOpen': {
+                      transform: 'rotate(180deg)',
+                    },
+                  }}
+                  IconComponent={KeyboardArrowDownIcon}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        '& .MuiMenuItem-root': {
+                          fontFamily: 'inherit',
+                          fontSize: { xs: '0.7rem', md: '0.9rem' },
+                        },
+                      },
+                    },
+                  }}
+                  onChange={(e) => {
+                    setTest({ ...test, level: e.target.value });
+                  }}
+                >
+                  <MenuItem value="" disabled>
+                    <span>Choose level</span>
+                  </MenuItem>
+                  <MenuItem value="A1">A1</MenuItem>
+                  <MenuItem value="A2">A2</MenuItem>
+                  <MenuItem value="B1">B1</MenuItem>
+                  <MenuItem value="B2">B2</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+            {/* ------------ Parts Section ------------- */}
+            {parts.map((part, index) => (
+              <Box
+                key={part.id}
+                ref={index === parts.length - 1 ? lastPartRef : null}
+                sx={uploadReadingStyles.basicInfoContainer}
+              >
+                {!part.format ? (
+                  <>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                      <Box
+                        sx={{
+                          width: '4px',
+                          height: '36px',
+                          backgroundColor: 'yellow.main',
+                          borderRadius: '1rem',
+                        }}
+                      ></Box>
+                      <Typography sx={uploadReadingStyles.basicInfoHeading}>
+                        Select Part Type
+                      </Typography>
+                    </Stack>
+                    <Box sx={uploadReadingStyles.partContentContainer}>
+                      {/* Multiple Choice Long Text */}
+                      <Button
+                        sx={uploadReadingStyles.selectedPart}
+                        onClick={() => handleSelectType(part.id, 'G')}
+                      >
+                        <ArticleOutlined sx={uploadReadingStyles.iconSelectedPart} />
+                        <Box sx={uploadReadingStyles.partTextContainer}>
+                          <Typography sx={uploadReadingStyles.partTitle}>
+                            Multiple Choice Long Text
+                          </Typography>
+                          <Typography sx={uploadReadingStyles.partDescription}>
+                            Students select the correct answer.
+                          </Typography>
+                        </Box>
+                      </Button>
+                      {/* Multiple Choice Short Text */}
+                      <Button
+                        sx={uploadReadingStyles.selectedPart}
+                        onClick={() => handleSelectType(part.id, 'F')}
+                      >
+                        <EditNoteOutlined sx={uploadReadingStyles.iconSelectedPart} />
+                        <Box sx={uploadReadingStyles.partTextContainer}>
+                          <Typography sx={uploadReadingStyles.partTitle}>
+                            Multiple Choice Short Text
+                          </Typography>
+                          <Typography sx={uploadReadingStyles.partDescription}>
+                            Students select the correct answer.
+                          </Typography>
+                        </Box>
+                      </Button>
+                      {/* Fill in The Blanks */}
+                      <Button
+                        sx={uploadReadingStyles.selectedPart}
+                        onClick={() => handleSelectType(part.id, 'I')}
+                      >
+                        <BorderColorOutlined sx={uploadReadingStyles.iconSelectedPart} />
+                        <Box sx={uploadReadingStyles.partTextContainer}>
+                          <Typography sx={uploadReadingStyles.partTitle}>
+                            Fill In The Blanks
+                          </Typography>
+                          <Typography sx={uploadReadingStyles.partDescription}>
+                            Students complete the missing words.
+                          </Typography>
+                        </Box>
+                      </Button>
+                      {/* Matching */}
+                      <Button
+                        sx={uploadReadingStyles.selectedPart}
+                        onClick={() => handleSelectType(part.id, 'J')}
+                      >
+                        <Link sx={uploadReadingStyles.iconSelectedPart} />
+                        <Box sx={uploadReadingStyles.partTextContainer}>
+                          <Typography sx={uploadReadingStyles.partTitle}>Matching</Typography>
+                          <Typography sx={uploadReadingStyles.partDescription}>
+                            Students match items together.
+                          </Typography>
+                        </Box>
+                      </Button>
+                    </Box>
+                    <Button
+                      sx={{
+                        color: 'text.gray',
+                        fontSize: { xs: '0.7rem', md: '0.9rem' },
+                        textTransform: 'none',
+                        px: 2,
+                      }}
+                      onClick={() => handleDeletePart(part.id)}
+                    >
+                      Cancel
+                    </Button>
+                  </>
+                ) : (
+                  renderPartEditor(part, index)
+                )}
+              </Box>
+            ))}
+            {/* -------- Add New Part Button --------- */}
+            <Button
+              startIcon={<AddIcon />}
+              sx={uploadReadingStyles.addPartButton}
+              onClick={() => handleAddPart()}
+            >
+              Add New Part
+            </Button>
+          </Box>
+        )}
       </Container>
-      <ReadingPreview
-        open={showPreview}
-        onClose={() => setShowPreview(false)}
-        testData={{ ...test, parts }}
-      />
     </Box>
   );
 }

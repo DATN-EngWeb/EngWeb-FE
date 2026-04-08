@@ -1,8 +1,25 @@
 import React from 'react';
-import { Box, Paper, Typography, Stack, Grid, Button, Alert } from '@mui/material';
-import Edit from '@mui/icons-material/Edit';
-import InfoIcon from '@mui/icons-material/Info';
-import HistoryEduIcon from '@mui/icons-material/HistoryEdu';
+import {
+  Box,
+  Paper,
+  Typography,
+  Stack,
+  Grid,
+  Button,
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  Chip,
+} from '@mui/material';
+import Edit from '@mui/icons-material/EditRounded';
+import AccessTimeIcon from '@mui/icons-material/AccessTimeRounded';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutlineRounded';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutlineRounded';
+import VisibilityIcon from '@mui/icons-material/VisibilityRounded';
+import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import { levelTheme } from '../TestCard';
 import * as styles from '../../styles/student/HistoryTestStyles';
 import ProgressTrackingCard from '../Writing-Speaking/ProgressTrackingCard';
@@ -11,6 +28,9 @@ import { StudyTip } from '../Writing-Speaking/StudyTip';
 
 export default function ReceptiveTestHistory({ testData, onPracticeNow }) {
   const submissions = [];
+  const totalQuestions =
+    testData?.parts?.reduce((sum, p) => sum + (p.rawPart?.receptive_questions?.length || 0), 0) ||
+    0;
 
   return (
     <Box sx={styles.mainWrapper}>
@@ -75,7 +95,143 @@ export default function ReceptiveTestHistory({ testData, onPracticeNow }) {
 
           <Stack spacing={2}>
             {submissions.length > 0 ? (
-              <></>
+              <TableContainer
+                component={Paper}
+                elevation={0}
+                sx={{
+                  borderRadius: '24px',
+                  border: '1px solid #f0f0f0',
+                  bgcolor: 'white',
+                  boxShadow: 'none',
+                }}
+              >
+                <Table sx={{ minWidth: 650 }} aria-label="submission history table">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell
+                        sx={{
+                          color: '#94a3b8',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        Date
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          color: '#94a3b8',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        Status
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          color: '#94a3b8',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        Score
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          color: '#94a3b8',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        XP
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          color: '#94a3b8',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        Time Spent
+                      </TableCell>
+                      <TableCell
+                        align="right"
+                        sx={{
+                          color: '#94a3b8',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        Actions
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {submissions.map((sub, index) => (
+                      <TableRow
+                        key={index}
+                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                      >
+                        <TableCell sx={{ color: 'text.primary', fontWeight: 500 }}>
+                          {sub.end_time || sub.created_at
+                            ? new Date(sub.end_time || sub.created_at).toLocaleDateString()
+                            : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" color="success.main">
+                            {sub.type === 'S' ? 'Completed' : 'Draft'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" color="primary.main">
+                            {sub.score || '0'}/{totalQuestions}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Stack direction="row" alignItems="center" spacing={0.5}>
+                            <Box component="span" sx={{ color: 'warning.main', display: 'flex' }}>
+                              <StarRoundedIcon sx={{ fontSize: '1rem' }} />
+                            </Box>
+                            <Typography variant="body2" color="warning.main">
+                              {sub.total_score || 0} XP
+                            </Typography>
+                          </Stack>
+                        </TableCell>
+                        <TableCell sx={{ color: 'text.secondary' }}>
+                          {sub.total_time
+                            ? `${Math.floor(sub.total_time / 60)}:${(sub.total_time % 60).toString().padStart(2, '0')}`
+                            : 'N/A'}
+                        </TableCell>
+                        <TableCell align="right">
+                          <Button
+                            variant="contained"
+                            size="small"
+                            endIcon={<VisibilityIcon />}
+                            sx={{
+                              bgcolor: '#6366f1',
+                              borderRadius: '12px',
+                              textTransform: 'none',
+                              fontWeight: 600,
+                              boxShadow: 'none',
+                              '&:hover': { bgcolor: '#4f46e5', boxShadow: 'none' },
+                            }}
+                            onClick={() => {
+                              window.location.href = `/student/reading/${testData?.id}/results/${sub.id}`;
+                            }}
+                          >
+                            View
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             ) : (
               <Paper
                 elevation={0}
@@ -89,9 +245,6 @@ export default function ReceptiveTestHistory({ testData, onPracticeNow }) {
                   boxShadow: 'none',
                 }}
               >
-                <Box sx={{ mb: 2, opacity: 0.3 }}>
-                  <HistoryEduIcon sx={{ fontSize: 64 }} />
-                </Box>
                 <Typography variant="body1" fontWeight={700}>
                   You haven't submitted any responses yet.
                 </Typography>
@@ -106,7 +259,7 @@ export default function ReceptiveTestHistory({ testData, onPracticeNow }) {
         {/* column right (Sidebar) */}
         <Grid item sx={{ width: '30%' }}>
           <Stack spacing={3}>
-            <ProgressTrackingCard historyData={[]} />
+            <ProgressTrackingCard historyData={submissions} />
             <SidebarForum count={128} />
             <StudyTip level={testData?.level} />
           </Stack>
