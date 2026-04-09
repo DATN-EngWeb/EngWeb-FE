@@ -16,6 +16,7 @@ import {
   Alert,
 } from '@mui/material';
 import Edit from '@mui/icons-material/EditRounded';
+import InfoIcon from '@mui/icons-material/InfoRounded';
 import AccessTimeIcon from '@mui/icons-material/AccessTimeRounded';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutlineRounded';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutlineRounded';

@@ -28,11 +28,11 @@ import {
   transformFillBlanksTest,
   transformMatchingTest,
 } from '@/utils/testDataTransform';
-import ReceptiveTestHistory from '@/components/Reading/ReceptiveTestHistory';
+import ReceptiveTestHistory from '@/components/Student/Reading_Listening/ReceptiveTestHistory';
 
 export default function ReadingTestPage() {
   const params = useParams();
-  const testId = params?.testId;
+  const testId = params?.test_id;
   const router = useRouter();
 
   const [testData, setTestData] = useState(null);
@@ -357,8 +357,14 @@ export default function ReadingTestPage() {
 
   if (!isPracticing) {
     return (
+      // <ReceptiveTestHistory
+      //   testData={testData}
+      //   onPracticeNow={() => {
+      //     setIsPracticing(true);
+      //     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      //   }}
+      // />
       <ReceptiveTestHistory
-        testData={testData}
         onPracticeNow={() => {
           setIsPracticing(true);
           window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
