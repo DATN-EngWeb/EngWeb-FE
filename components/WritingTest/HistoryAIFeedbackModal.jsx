@@ -18,7 +18,7 @@ import {
   FlashOn,
   Close as CloseIcon,
 } from '@mui/icons-material';
-import * as styles from '@/styles/student/Writing/AIFeedbackStyles';
+import * as styles from '../../styles/student/Writing/AIFeedbackStyles';
 
 export default function HistoryAIFeedbackModal({ open, onClose, data }) {
   const [categories, setCategories] = useState([]);
