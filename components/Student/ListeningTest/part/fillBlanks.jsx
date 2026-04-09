@@ -12,7 +12,6 @@ export default function FillBlankPart({
   isActive,
   userAnswers,
   onUpdateAnswers,
-  disabled,
   media = {},
 }) {
   const { audioSrc = '', passageSrc = '' } = media;
@@ -219,7 +218,6 @@ export default function FillBlankPart({
                       {index + 1}
                     </Typography>
                     <TextField
-                      disabled={disabled}
                       variant="standard"
                       multiline
                       placeholder="Type answer ..."
@@ -235,7 +233,6 @@ export default function FillBlankPart({
                       {index + 1}
                     </Typography>
                     <TextField
-                      disabled={disabled}
                       variant="standard"
                       multiline
                       placeholder="Type answer ..."

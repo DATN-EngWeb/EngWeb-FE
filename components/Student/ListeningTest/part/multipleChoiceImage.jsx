@@ -11,7 +11,6 @@ export default function MultipleChoiceImagePart({
   isActive,
   userAnswers,
   onUpdateAnswers,
-  disabled,
   media,
 }) {
   const { audioSrc, imageSrcs } = media;
@@ -104,7 +103,6 @@ export default function MultipleChoiceImagePart({
                       }),
                     }}
                     onClick={() => handleSetCorrectOption(question.id, option.id)}
-                    disabled={disabled}
                   >
                     {option.option_label || option.label}
                   </Button>
