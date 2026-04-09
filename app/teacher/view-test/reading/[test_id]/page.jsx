@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Box, CircularProgress, Alert, Container } from '@mui/material';
+import { Box, CircularProgress, Alert, Container, Snackbar } from '@mui/material';
 import ReadingPreview from '../../../../../components/Teacher/ReadingTest/ReadingPreview';
 import ViewTestHeader from '../../../../../components/Teacher/ViewTestHeader';
 import DeleteConfirmSnackbar from '../../../../../components/Teacher/DeleteConfirmSnackbar';
@@ -10,6 +10,7 @@ import {
   getReceptiveTestDetails,
   fetchHtmlContent,
   deleteReceptiveTest,
+  updateTestParts,
 } from '../../../../../api/test';
 
 async function transformReadingData(data) {
@@ -70,7 +71,9 @@ export default function ViewReadingTestPage({ params }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -132,6 +135,29 @@ export default function ViewReadingTestPage({ params }) {
     }
   };
 
+  const handleUpdateStatus = async (status) => {
+    if (updatingStatus) return;
+    try {
+      setUpdatingStatus(true);
+      await updateTestParts({ testId: test_id, basicInfo: { status: status } });
+      setStatus(status);
+      setTestData((prev) => (prev ? { ...prev, status: status } : prev));
+      setSnackbar({
+        open: true,
+        message: `Status updated to ${status === 'I' ? 'In Review' : 'Published'}`,
+        severity: 'success',
+      });
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: `Failed to update status: ${err.message}`,
+        severity: 'error',
+      });
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
   return (
     <Container maxWidth="lg" sx={{ mt: 3, mb: 4 }}>
       <ViewTestHeader
@@ -144,6 +170,9 @@ export default function ViewReadingTestPage({ params }) {
         showDelete
         deleting={deleting}
         onDelete={handleDelete}
+        onInReview={() => handleUpdateStatus('I')}
+        onPublished={() => handleUpdateStatus('P')}
+        updatingStatus={updatingStatus}
         showEdit={status === 'D' || status === 'I'}
         onEdit={() => router.push(`/teacher/update-test/reading/${test_id}`)}
       />
@@ -160,6 +189,19 @@ export default function ViewReadingTestPage({ params }) {
         onConfirm={handleConfirmDelete}
         loading={deleting}
       />
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          severity={snackbar.severity}
+          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 }

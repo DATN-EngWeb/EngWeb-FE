@@ -13,6 +13,9 @@ import {
   CircularProgress,
   IconButton,
   Tooltip,
+  FormControl,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
@@ -27,23 +30,32 @@ import {
   deleteTestFeedback,
 } from '../../../api/feedback';
 
-export default function FeedbackPanel({ testId }) {
+export default function FeedbackPanel({
+  testId,
+  feedbackFilter = 'all',
+  compact = false,
+  readOnly = false,
+}) {
   const [feedbacks, setFeedbacks] = useState([]);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [loadingFeedbacks, setLoadingFeedbacks] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [nextPage, setNextPage] = useState(null);
+  const [ordering, setOrdering] = useState('-created_at');
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
   const [savingId, setSavingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
   const currentUserId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
+  const allowCreate = !readOnly && feedbackFilter !== 'ai';
+  const allowManage = !readOnly;
 
   const fetchFeedbacks = useCallback(async () => {
+    setLoadingFeedbacks(true);
     try {
-      const data = await getTestFeedbacks({ test_id: testId });
+      const data = await getTestFeedbacks({ test_id: testId, ordering });
       setFeedbacks(data?.results ?? data ?? []);
       setNextPage(data?.next ?? null);
     } catch (err) {
@@ -51,7 +63,7 @@ export default function FeedbackPanel({ testId }) {
     } finally {
       setLoadingFeedbacks(false);
     }
-  }, [testId]);
+  }, [testId, ordering]);
 
   useEffect(() => {
     fetchFeedbacks();
@@ -63,7 +75,7 @@ export default function FeedbackPanel({ testId }) {
     try {
       const url = new URL(nextPage);
       const page = url.searchParams.get('page');
-      const data = await getTestFeedbacks({ test_id: testId, page });
+      const data = await getTestFeedbacks({ test_id: testId, page, ordering });
       setFeedbacks((prev) => [...prev, ...(data?.results ?? [])]);
       setNextPage(data?.next ?? null);
     } catch (err) {
@@ -73,8 +85,13 @@ export default function FeedbackPanel({ testId }) {
     }
   };
 
+  const handleOrderingChange = (event) => {
+    setOrdering(event.target.value);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!allowCreate) return;
     const text = comment.trim();
     if (!text || submitting) return;
     setSubmitting(true);
@@ -100,6 +117,7 @@ export default function FeedbackPanel({ testId }) {
   };
 
   const handleEditSave = async (feedbackId) => {
+    if (readOnly) return;
     const text = editText.trim();
     if (!text || savingId) return;
     setSavingId(feedbackId);
@@ -118,7 +136,7 @@ export default function FeedbackPanel({ testId }) {
   };
 
   const handleDelete = async (feedbackId) => {
-    if (deletingId) return;
+    if (readOnly || deletingId) return;
     setDeletingId(feedbackId);
     try {
       await deleteTestFeedback(feedbackId);
@@ -131,51 +149,71 @@ export default function FeedbackPanel({ testId }) {
   };
 
   const isOwn = (fb) => fb.created_by !== 'A' && String(fb.author_id) === String(currentUserId);
+  const filteredFeedbacks = feedbacks.filter((fb) => {
+    if (feedbackFilter === 'ai') return fb.created_by === 'A';
+    if (feedbackFilter === 'teacher') return fb.created_by !== 'A';
+    return true;
+  });
+
+  const cardPadding = compact ? 1.5 : 2.5;
+  const titleFontSize = compact ? 13 : 15;
+  const commentRows = compact ? 3 : 4;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Paper
-        elevation={0}
-        sx={{ p: 2.5, borderRadius: 3, mb: 2.5, border: '1px solid #f0f0f0', flexShrink: 0 }}
-      >
-        <Box display="flex" alignItems="center" gap={1} mb={1.5}>
-          <SmartToyIcon sx={{ color: 'primary.main' }} />
-          <Typography fontWeight={700} fontSize={15}>
-            Write your comment
-          </Typography>
-        </Box>
-        <Box component="form" onSubmit={handleSubmit}>
-          <TextField
-            multiline
-            rows={4}
-            fullWidth
-            placeholder="Add your feedback for this test..."
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            sx={{
-              mb: 1.5,
-              '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: '#fafafa' },
-            }}
-          />
-          <Box display="flex" justifyContent="flex-end">
-            <Button
-              type="submit"
-              variant="contained"
-              size="small"
-              endIcon={<SendIcon />}
-              disabled={submitting || !comment.trim()}
-              sx={{ textTransform: 'none', fontWeight: 600, borderRadius: 2 }}
-            >
-              {submitting ? 'Sending...' : 'Send'}
-            </Button>
+      {!readOnly && (
+        <Paper
+          elevation={0}
+          sx={{
+            p: cardPadding,
+            borderRadius: 3,
+            mb: compact ? 1.5 : 2.5,
+            border: '1px solid #f0f0f0',
+            flexShrink: 0,
+          }}
+        >
+          <Box display="flex" alignItems="center" gap={1} mb={1.5}>
+            <SmartToyIcon sx={{ color: 'primary.main' }} />
+            <Typography fontWeight={700} fontSize={titleFontSize}>
+              Write your comment
+            </Typography>
           </Box>
-        </Box>
-      </Paper>
+          <Box component="form" onSubmit={handleSubmit}>
+            <TextField
+              multiline
+              rows={commentRows}
+              fullWidth
+              placeholder={
+                allowCreate ? 'Add your feedback for this test...' : 'AI feedback is read-only'
+              }
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              disabled={!allowCreate}
+              sx={{
+                mb: 1.5,
+                '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: '#fafafa' },
+              }}
+            />
+            <Box display="flex" justifyContent="flex-end">
+              <Button
+                type="submit"
+                variant="contained"
+                size="small"
+                endIcon={<SendIcon />}
+                disabled={!allowCreate || submitting || !comment.trim()}
+                sx={{ textTransform: 'none', fontWeight: 600, borderRadius: 2 }}
+              >
+                {submitting ? 'Sending...' : 'Send'}
+              </Button>
+            </Box>
+          </Box>
+        </Paper>
+      )}
 
       <Paper
         elevation={0}
         sx={{
-          p: 2.5,
+          p: cardPadding,
           borderRadius: 3,
           border: '1px solid #f0f0f0',
           flex: 1,
@@ -183,19 +221,40 @@ export default function FeedbackPanel({ testId }) {
           overflowY: 'auto',
         }}
       >
-        <Typography fontWeight={700} fontSize={15} mb={2}>
-          Comments
-        </Typography>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          gap={1}
+          mb={2}
+          flexWrap="wrap"
+        >
+          <Typography fontWeight={700} fontSize={titleFontSize}>
+            Comments
+          </Typography>
+          {feedbackFilter !== 'ai' && (
+            <FormControl size="small" sx={{ minWidth: compact ? 130 : 150 }}>
+              <Select
+                value={ordering}
+                onChange={handleOrderingChange}
+                sx={{ borderRadius: 2, fontSize: 13, height: compact ? 32 : 36 }}
+              >
+                <MenuItem value="-created_at">Newest</MenuItem>
+                <MenuItem value="created_at">Oldest</MenuItem>
+              </Select>
+            </FormControl>
+          )}
+        </Box>
         {loadingFeedbacks ? (
           <Box display="flex" justifyContent="center" py={3}>
             <CircularProgress size={24} />
           </Box>
-        ) : feedbacks.length === 0 ? (
+        ) : filteredFeedbacks.length === 0 ? (
           <Typography color="text.secondary" fontSize={14} textAlign="center" py={2}>
             No comments yet.
           </Typography>
         ) : (
-          feedbacks.map((fb, idx) => (
+          filteredFeedbacks.map((fb, idx) => (
             <Box key={fb.id}>
               {idx > 0 && <Divider sx={{ my: 1.5 }} />}
               <Box display="flex" gap={1.5} alignItems="flex-start">
@@ -232,7 +291,7 @@ export default function FeedbackPanel({ testId }) {
                         day: '2-digit',
                       })}
                     </Typography>
-                    {isOwn(fb) && editingId !== fb.id && (
+                    {allowManage && isOwn(fb) && editingId !== fb.id && (
                       <Box display="flex" gap={0.25} flexShrink={0}>
                         <Tooltip title="Edit">
                           <IconButton
@@ -262,7 +321,7 @@ export default function FeedbackPanel({ testId }) {
                     )}
                   </Box>
 
-                  {editingId === fb.id ? (
+                  {allowManage && editingId === fb.id ? (
                     <Box>
                       <TextField
                         multiline
@@ -297,6 +356,59 @@ export default function FeedbackPanel({ testId }) {
                         </Button>
                       </Box>
                     </Box>
+                  ) : fb.created_by === 'A' ? (
+                    <Box
+                      sx={{
+                        color: 'text.primary',
+                        fontSize: '0.82rem',
+                        lineHeight: 1.65,
+                        '& h3': {
+                          fontSize: '0.95rem',
+                          fontWeight: 700,
+                          color: 'text.primary',
+                          mt: 1.25,
+                          mb: 0.5,
+                          backgroundColor: 'rgba(25, 118, 210, 0.05)',
+                          padding: '6px 10px',
+                          borderRadius: 1,
+                          borderLeft: '3px solid',
+                          borderLeftColor: 'primary.main',
+                        },
+                        '& h3:first-of-type': {
+                          mt: 0,
+                        },
+                        '& p': {
+                          m: 0,
+                          mb: 0.75,
+                          lineHeight: 1.65,
+                        },
+                        '& ul': {
+                          m: 0,
+                          mb: 0.75,
+                          pl: 2,
+                          listStyleType: 'disc',
+                        },
+                        '& ol': {
+                          m: 0,
+                          mb: 0.75,
+                          pl: 2,
+                          listStyleType: 'decimal',
+                        },
+                        '& ul li, & ol li': {
+                          mb: 0.5,
+                          lineHeight: 1.55,
+                        },
+                        '& strong': {
+                          fontWeight: 700,
+                        },
+                        '& em': {
+                          fontStyle: 'italic',
+                        },
+                      }}
+                      dangerouslySetInnerHTML={{
+                        __html: fb.comment || '<p>No comment content.</p>',
+                      }}
+                    />
                   ) : (
                     <Typography fontSize={13} color="text.secondary" sx={{ lineHeight: 1.6 }}>
                       {fb.comment}

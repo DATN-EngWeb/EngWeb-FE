@@ -30,16 +30,18 @@ import HistoryEduIcon from '@mui/icons-material/HistoryEdu';
 import TimerIcon from '@mui/icons-material/Timer';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
-import { getProductiveTestDetails, createProductiveTest } from '@/api/test';
+import { getProductiveTestDetails, createProductiveTest, getSpeakingAIFeedback } from '@/api/test';
 import ProductivePreview from '../Writing-Speaking/ProductivePreview';
 import { levelTheme } from '../TestCard';
 import * as styles from '../../styles/student/Writing/WritingTestStyles';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { uploadMediaFile } from '../../utils/uploadHelpers';
 
-export default function WritingTest() {
+export default function SpeakingTest() {
   const params = useParams();
   const testId = params.test_id;
+  const attempt = params.attempt;
   const router = useRouter();
 
   // States
@@ -197,6 +199,75 @@ export default function WritingTest() {
     }
   };
 
+  const handleAIFeedback = async () => {
+    setOpenShareModal(false);
+    setIsSaving(true);
+    let newHistoryID = null;
+
+    try {
+      if (!audioBlob) return null;
+
+      const audioFile = new File([audioBlob], `recording_${testId}.webm`, {
+        type: 'audio/mpeg',
+        lastModified: Date.now(),
+      });
+      const uploadedAudioUrl = await uploadMediaFile(audioFile, testId);
+
+      const response = await createProductiveTest({
+        productive_test: testId,
+        total_time: secondsElapsed,
+        type: 'S',
+        start_time: startTime,
+        end_time: new Date().toISOString(),
+        audio_path: uploadedAudioUrl,
+        is_shared: true,
+      });
+
+      newHistoryID = response.id;
+
+      localStorage.setItem(
+        'aiFeedbackContext',
+        JSON.stringify({
+          duration: recordingTime,
+          title: testData.title,
+          type: testData.type,
+          audio: uploadedAudioUrl,
+        }),
+      );
+
+      setIsDraftSaved(true);
+      setAudioBlob(null);
+      setRecordingTime(0);
+      setSecondsElapsed(0);
+      setStartTime(new Date().toISOString());
+      sessionStorage.removeItem('current_productive_attempt');
+
+      setSnackbar({
+        open: true,
+        message: 'Test submitted! Fetching AI Feedback...',
+        severity: 'success',
+      });
+    } catch (error) {
+      console.error('Submission error:', error);
+      setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
+      setIsSaving(false);
+      return;
+    }
+
+    try {
+      if (!newHistoryID) throw new Error('No History ID found');
+      const category = await getSpeakingAIFeedback({ id: newHistoryID });
+      localStorage.setItem('category', JSON.stringify(category.ai_feedback));
+      localStorage.setItem('remainAIturns', category.remaining_turns);
+      router.push(`/student/speaking/${testId}/${attempt}/AI-feedback`);
+    } catch (error) {
+      console.error('Error fetching AI feedback:', error);
+      setSnackbar({ open: true, message: 'Failed to get AI feedback', severity: 'error' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const FormatMapper = {
     G: 'Narrative Speaking Task',
     H: 'Picture Description Task',
@@ -331,13 +402,13 @@ export default function WritingTest() {
               sx={{ mt: 1 }}
               divider={<Box sx={styles.divider} />}
             >
-              <Box sx={{ ...styles.groupIcon, color: levelTheme[testData.level]?.text }}>
+              <Box sx={{ ...styles.groupIcon }}>
                 <HistoryEduIcon />
                 <Typography variant="body2">
                   {FormatMapper[testData.type] || 'General Speaking Task'}
                 </Typography>
               </Box>
-              <Box sx={{ ...styles.groupIcon, color: levelTheme[testData.level]?.text }}>
+              <Box sx={{ ...styles.groupIcon }}>
                 <TimerIcon />
                 <Typography variant="body2">{testData.time} mins</Typography>
               </Box>
@@ -488,24 +559,44 @@ export default function WritingTest() {
                     {formatTime(recordingTime)}
                   </Typography>
 
-                  {/* submit */}
-                  <Button
-                    variant="contained"
-                    fullWidth
-                    disabled={!hasRecorded || isRecording || isReadOnly}
-                    sx={{
-                      py: 1.5,
-                      borderRadius: '12px',
-                      bgcolor: 'warning.main',
-                      color: 'primary.main',
-                      textTransform: 'none',
-                      fontWeight: 700,
-                      '&.Mui-disabled': { bgcolor: '#eceff1' },
-                    }}
-                    onClick={handleFinalSubmit}
-                  >
-                    Submit test
-                  </Button>
+                  <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      disabled={!hasRecorded || isRecording || isReadOnly}
+                      onClick={() => handleAIFeedback('AI Feedback')}
+                      startIcon={<AutoAwesomeIcon />}
+                      sx={{
+                        py: 1.5,
+                        borderRadius: '12px',
+                        bgcolor: 'secondary.main',
+                        color: 'white',
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        '&:hover': { bgcolor: 'secondary.dark' },
+                        '&.Mui-disabled': { bgcolor: '#eceff1' },
+                      }}
+                    >
+                      AI Feedback
+                    </Button>
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      disabled={!hasRecorded || isRecording || isReadOnly}
+                      sx={{
+                        py: 1.5,
+                        borderRadius: '12px',
+                        bgcolor: 'warning.main',
+                        color: 'primary.main',
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        '&.Mui-disabled': { bgcolor: '#eceff1' },
+                      }}
+                      onClick={handleFinalSubmit}
+                    >
+                      Submit test
+                    </Button>
+                  </Stack>
                 </Box>
               </Box>
             </Panel>

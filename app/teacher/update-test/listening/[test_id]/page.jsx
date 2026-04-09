@@ -17,7 +17,7 @@ export default function EditListeningTestPage({ params }) {
       try {
         const data = await getReceptiveTestDetails(test_id);
 
-        if (data.status !== 'D') {
+        if (data.status !== 'D' && data.status !== 'I') {
           setError('Only draft tests can be edited');
           setTimeout(() => router.push('/teacher/upload-test/listening'), 1500);
           return;

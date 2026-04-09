@@ -83,6 +83,10 @@ export default function ProductiveTestEditor({
   isReadOnly,
   onEditClick,
   onCancelClick,
+  onPreview,
+  onFeedback,
+  isFeedbackActive,
+  feedbackContent,
 }) {
   return (
     <Box sx={{ ...styles.container, display: 'flex', flexDirection: 'column' }}>
@@ -105,8 +109,10 @@ export default function ProductiveTestEditor({
             {/* If editing, show the old Actions bar or Save/Cancel buttons */}
             <TestEditorActions
               onCancelClick={onCancelClick}
-              onPreview={() => setShowPreview(!showPreview)}
+              onPreview={onPreview || (() => setShowPreview(!showPreview))}
               isPreviewActive={showPreview}
+              onFeedback={onFeedback}
+              isFeedbackActive={isFeedbackActive}
               onSaveDraft={() => handleSubmit('Draft')}
               onSendReview={() => handleSubmit('In review')}
               onPublish={() => handleSubmit('Published')}
@@ -130,7 +136,7 @@ export default function ProductiveTestEditor({
         <Box sx={{ display: 'flex', gap: 2, height: '100%' }}>
           <Box
             sx={{
-              width: '40%',
+              width: feedbackContent && isFeedbackActive ? '35%' : '40%',
               height: '100%',
               overflowY: 'auto',
               pr: 2,
@@ -196,7 +202,7 @@ export default function ProductiveTestEditor({
           <Panel defaultSize={60} minSize={30}> */}
           <Box
             sx={{
-              width: '60%',
+              width: feedbackContent && isFeedbackActive ? '45%' : '60%',
               height: '100%',
               overflowY: 'auto',
               pl: 1,
@@ -208,6 +214,19 @@ export default function ProductiveTestEditor({
           >
             {children}
           </Box>
+
+          {feedbackContent && isFeedbackActive && (
+            <Box
+              sx={{
+                width: '320px',
+                height: '100%',
+                minWidth: '280px',
+                overflow: 'hidden',
+              }}
+            >
+              {feedbackContent}
+            </Box>
+          )}
         </Box>
         {/* </Panel>
         </PanelGroup> */}

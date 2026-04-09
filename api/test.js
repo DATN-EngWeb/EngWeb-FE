@@ -10,6 +10,7 @@ if (!API_BASE_URL) {
 const STORAGE_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/storage`;
 const TESTS_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/tests`;
 const TEST_HISTORIES_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/test-histories`;
+const TEST_AI_FEEDBACK_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/feedback/ai-feedback`;
 const TEST_STATISTICS_BASE_URL = `${API_BASE_URL.replace(/\/$/, '')}/api/statistic`;
 
 export const createTest = async (basicInfo) => {
@@ -220,6 +221,29 @@ export const createReceptiveTest = async (data) => {
   });
 };
 
+export const getAIFeedback = async ({ id }) => {
+  return apiFetch(`${TEST_AI_FEEDBACK_URL}/writing`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      productive_test_history_id: id,
+    }),
+  });
+};
+
+export const getSpeakingAIFeedback = async ({ id }) => {
+  return apiFetch(`${TEST_AI_FEEDBACK_URL}/speaking`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      productive_test_history_id: id,
+    }),
+  });
+};
 export const submitReceptiveTest = async (data, token) => {
   return apiFetch(`${TEST_HISTORIES_BASE_URL}/receptive`, {
     method: 'POST',

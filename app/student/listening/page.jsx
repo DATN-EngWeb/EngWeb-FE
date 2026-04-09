@@ -9,26 +9,19 @@ import {
   TextField,
   MenuItem,
   Select,
-  FormControl,
-  InputLabel,
   Checkbox,
   FormControlLabel,
   Button,
-  Card,
   Pagination,
   InputAdornment,
   Chip,
   Stack,
   CircularProgress,
-  Alert,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import PersonIcon from '@mui/icons-material/Person';
-import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import UpdateIcon from '@mui/icons-material/Update';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getTestOverview } from '../../../api/tests';
 import TestCard from '../../../components/TestCard';
@@ -146,31 +139,7 @@ export default function ListeningHub() {
 
   return (
     <Box sx={pageContainerStyles}>
-      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 8, lg: 15 }, mx: 'auto', mt: 4, mb: 4 }}>
-        <Box sx={headerSectionStyles}>
-          <Typography variant="h3" sx={{ fontWeight: 700, color: 'primary.main', mb: 1 }}>
-            Listening Hub
-          </Typography>
-          <Typography variant="subtitle1" sx={{ color: 'text.secondary', mb: 3 }}>
-            Improve your English listening skills with carefully prepared tests.
-          </Typography>
-
-          <Stack direction="row" spacing={2}>
-            <Chip
-              icon={<MenuBookIcon sx={{ fontSize: 18, color: 'inherit !important' }} />}
-              label="120+ tests"
-              sx={{ bgcolor: 'warning.pastel', color: 'orange.main', fontWeight: 600 }}
-            />
-            <Chip
-              icon={<UpdateIcon sx={{ fontSize: 18, color: 'inherit !important' }} />}
-              label="Update daily"
-              sx={{ bgcolor: 'success.pastel', color: 'success.dark', fontWeight: 600 }}
-            />
-          </Stack>
-        </Box>
-      </Container>
-
-      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 8, lg: 15 }, mx: 'auto' }}>
+      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 8, lg: 15 }, mx: 'auto', pt: 4 }}>
         <Grid container spacing={2} sx={{ flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
           <Grid
             item
@@ -381,15 +350,14 @@ export default function ListeningHub() {
             }}
           >
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-              <Typography variant="h5" sx={{ fontWeight: 700, color: 'primary.main' }}>
-                List Reading Test
-              </Typography>
               <Select
                 value={filters.ordering}
                 onChange={(e) => handleFilterChange('ordering', e.target.value)}
                 size="small"
                 sx={{
                   minWidth: 160,
+                  display: 'flex',
+                  ml: 'auto',
                   bgcolor: 'background.paper',
                   border: '1px solid',
                   borderColor: 'divider',

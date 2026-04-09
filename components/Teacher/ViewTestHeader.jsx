@@ -1,9 +1,11 @@
 'use client';
 
 import { Box, Button, Chip, Stack, Typography } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import RateReviewIcon from '@mui/icons-material/RateReview';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import SendRounded from '@mui/icons-material/SendRounded';
+import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
+import FileUploadIcon from '@mui/icons-material/FileUpload';
+import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 
 const STATUS_LABELS = {
   D: 'Draft',
@@ -23,8 +25,24 @@ export default function ViewTestHeader({
   showDelete,
   onDelete,
   deleting,
+  onInReview,
+  onPublished,
+  updatingStatus,
 }) {
   const statusLabel = STATUS_LABELS[status] || status || 'Unknown';
+
+  const whiteButtonSx = {
+    textTransform: 'none',
+    fontWeight: 700,
+    borderRadius: 2,
+    backgroundColor: '#fff',
+    border: '1px solid',
+    boxShadow: 'none',
+    '&:hover': {
+      backgroundColor: '#fafafa',
+      boxShadow: 'none',
+    },
+  };
 
   return (
     <Box
@@ -71,20 +89,54 @@ export default function ViewTestHeader({
         </Stack>
 
         <Stack direction="row" spacing={1}>
-          {showViewFeedback && (
+          {status === 'D' && onInReview && (
             <Button
               variant="outlined"
-              startIcon={<RateReviewIcon />}
-              onClick={onViewFeedback}
+              startIcon={<SendRounded sx={{ fontSize: 20 }} />}
+              onClick={onInReview}
+              disabled={updatingStatus}
               sx={{
-                textTransform: 'none',
-                fontWeight: 700,
-                borderRadius: 2,
+                ...whiteButtonSx,
+                borderColor: 'primary.main',
+                color: 'primary.main',
+              }}
+            >
+              In Review
+            </Button>
+          )}
+
+          {(status === 'D' || status === 'I') && onPublished && (
+            <Button
+              variant="outlined"
+              startIcon={<FileUploadIcon sx={{ fontSize: 20 }} />}
+              onClick={onPublished}
+              disabled={updatingStatus}
+              sx={{
+                ...whiteButtonSx,
                 borderColor: 'primary.main',
                 color: 'primary.main',
                 '&:hover': {
                   borderColor: 'primary.dark',
-                  backgroundColor: 'rgba(107, 72, 53, 0.06)',
+                  backgroundColor: '#fafafa',
+                },
+              }}
+            >
+              Public
+            </Button>
+          )}
+
+          {showViewFeedback && (
+            <Button
+              variant="outlined"
+              startIcon={<VisibilityOutlinedIcon sx={{ fontSize: 20 }} />}
+              onClick={onViewFeedback}
+              sx={{
+                ...whiteButtonSx,
+                borderColor: 'primary.main',
+                color: 'primary.main',
+                '&:hover': {
+                  borderColor: 'primary.dark',
+                  backgroundColor: '#fafafa',
                 },
               }}
             >
@@ -94,17 +146,16 @@ export default function ViewTestHeader({
 
           {showEdit && (
             <Button
-              variant="contained"
-              startIcon={<EditIcon />}
+              variant="outlined"
+              startIcon={<DescriptionOutlined sx={{ fontSize: 20 }} />}
               onClick={onEdit}
               sx={{
-                textTransform: 'none',
-                fontWeight: 700,
-                borderRadius: 2,
-                backgroundColor: 'primary.main',
-                color: 'primary.contrastText',
+                ...whiteButtonSx,
+                borderColor: 'primary.main',
+                color: 'primary.main',
                 '&:hover': {
-                  backgroundColor: 'primary.dark',
+                  borderColor: 'primary.dark',
+                  backgroundColor: '#fafafa',
                 },
               }}
             >
@@ -115,18 +166,16 @@ export default function ViewTestHeader({
           {showDelete && (
             <Button
               variant="outlined"
-              startIcon={<DeleteOutlineIcon />}
+              startIcon={<DeleteRoundedIcon sx={{ fontSize: 20 }} />}
               onClick={onDelete}
               disabled={deleting}
               sx={{
-                textTransform: 'none',
-                fontWeight: 700,
-                borderRadius: 2,
+                ...whiteButtonSx,
                 borderColor: 'error.main',
                 color: 'error.main',
                 '&:hover': {
                   borderColor: 'error.dark',
-                  backgroundColor: 'rgba(211, 47, 47, 0.06)',
+                  backgroundColor: '#fafafa',
                 },
               }}
             >

@@ -13,7 +13,6 @@ import { getProductiveTest, getProductiveTestDetails } from '../../api/test';
 import { SidebarForum } from './SidebarForum';
 import { StudyTip } from './StudyTip';
 import Edit from '@mui/icons-material/Edit';
-import ProgressTrackingCard from './ProgressTrackingCard';
 import {
   Box,
   Alert,
@@ -49,11 +48,13 @@ export default function ProductiveTestHistory() {
           getProductiveTest(test_id, { page, page_size: PAGE_SIZE }),
           getProductiveTestDetails(test_id),
         ]);
+        setHistoryData(listAttempt?.results || []);
         setTestData(details);
         setHistoryData(Array.isArray(listAttempt) ? listAttempt : (listAttempt?.results ?? []));
         setTotalCount(Array.isArray(listAttempt) ? listAttempt.length : (listAttempt?.count ?? 0));
       } catch (error) {
         console.error('Error fetching data:', error);
+        setHistoryData([]);
       } finally {
         setLoading(false);
       }
@@ -244,8 +245,6 @@ export default function ProductiveTestHistory() {
 
         <Grid item sx={{ width: '30%' }}>
           <Stack spacing={3}>
-            <ProgressTrackingCard historyData={historyData} />
-
             <SidebarForum />
 
             <StudyTip level={testData.level} />

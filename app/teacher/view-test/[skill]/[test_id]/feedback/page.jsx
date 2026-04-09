@@ -14,7 +14,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
+  MenuItem,
   Pagination,
+  Select,
   Snackbar,
   Stack,
   Typography,
@@ -201,6 +204,7 @@ export default function ViewTestFeedbackPage({ params }) {
   const [teacherFeedbacks, setTeacherFeedbacks] = useState([]);
   const [teacherPage, setTeacherPage] = useState(1);
   const [teacherTotalCount, setTeacherTotalCount] = useState(0);
+  const [teacherOrdering, setTeacherOrdering] = useState('-created_at');
   const [loadingFeedbacks, setLoadingFeedbacks] = useState(true);
   const [feedbackError, setFeedbackError] = useState(null);
   const [loadingTeacherPage, setLoadingTeacherPage] = useState(false);
@@ -225,7 +229,12 @@ export default function ViewTestFeedbackPage({ params }) {
     try {
       const [aiFeedbackData, teacherFeedbackData] = await Promise.all([
         getTestFeedbacks({ test_id, created_by: 'A', page_size: FEEDBACK_PAGE_SIZE }),
-        getTestFeedbacks({ test_id, created_by: 'T', page_size: FEEDBACK_PAGE_SIZE }),
+        getTestFeedbacks({
+          test_id,
+          created_by: 'T',
+          page_size: FEEDBACK_PAGE_SIZE,
+          ordering: teacherOrdering,
+        }),
       ]);
 
       const aiPayload = normalizeFeedbackResponse(aiFeedbackData);
@@ -240,7 +249,7 @@ export default function ViewTestFeedbackPage({ params }) {
     } finally {
       setLoadingFeedbacks(false);
     }
-  }, [test_id]);
+  }, [test_id, teacherOrdering]);
 
   useEffect(() => {
     const fetchPageData = async () => {
@@ -392,6 +401,7 @@ export default function ViewTestFeedbackPage({ params }) {
         created_by: 'T',
         page,
         page_size: FEEDBACK_PAGE_SIZE,
+        ordering: teacherOrdering,
       });
       const payload = normalizeFeedbackResponse(data);
 
@@ -403,6 +413,11 @@ export default function ViewTestFeedbackPage({ params }) {
     } finally {
       setLoadingTeacherPage(false);
     }
+  };
+
+  const handleTeacherOrderingChange = (event) => {
+    setTeacherOrdering(event.target.value);
+    setTeacherPage(1);
   };
 
   if (pageLoading) {
@@ -489,11 +504,32 @@ export default function ViewTestFeedbackPage({ params }) {
 
         <Card variant="outlined" sx={{ borderRadius: 3 }}>
           <CardContent>
-            <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
-              <ForumIcon color="primary" />
-              <Typography variant="h6" fontWeight={700}>
-                Teacher Feedback
-              </Typography>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              alignItems={{ xs: 'stretch', sm: 'center' }}
+              justifyContent="space-between"
+              spacing={1.5}
+              mb={1.5}
+            >
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <ForumIcon color="primary" />
+                <Typography variant="h6" fontWeight={700}>
+                  Teacher Feedback
+                </Typography>
+              </Stack>
+              <FormControl
+                size="small"
+                sx={{ minWidth: 145, alignSelf: { xs: 'flex-end', sm: 'auto' } }}
+              >
+                <Select
+                  value={teacherOrdering}
+                  onChange={handleTeacherOrderingChange}
+                  sx={{ borderRadius: 2, fontSize: 13, height: 36 }}
+                >
+                  <MenuItem value="-created_at">Newest</MenuItem>
+                  <MenuItem value="created_at">Oldest</MenuItem>
+                </Select>
+              </FormControl>
             </Stack>
 
             {loadingFeedbacks || loadingTeacherPage ? (
@@ -567,7 +603,7 @@ export default function ViewTestFeedbackPage({ params }) {
         open={toast.open}
         autoHideDuration={4000}
         onClose={() => setToast((prev) => ({ ...prev, open: false }))}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
         <Alert
           severity={toast.severity}
