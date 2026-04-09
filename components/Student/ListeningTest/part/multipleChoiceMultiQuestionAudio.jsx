@@ -15,7 +15,6 @@ export default function MultipleChoiceQuestionAudio({
   isActive,
   userAnswers,
   onUpdateAnswers,
-  disabled,
   media,
 }) {
   const { audioSrc, passageSrc } = media;
@@ -227,10 +226,9 @@ export default function MultipleChoiceQuestionAudio({
                   <Box
                     key={`${option.id}`}
                     sx={{ ...multipleChoiceStyles.optionContainer, cursor: 'pointer' }}
-                    onClick={() => !disabled && handleSetCorrectOption(question.id, option.id)}
+                    onClick={() => handleSetCorrectOption(question.id, option.id)}
                   >
                     <Checkbox
-                      disabled={disabled}
                       checked={userAnswers[question.id] === option.id}
                       icon={<RadioButtonUncheckedIcon sx={multipleChoiceStyles.uncheckIcon} />}
                       checkedIcon={

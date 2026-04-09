@@ -12,6 +12,7 @@ export default function HistoryItem({ data }) {
   const router = useRouter();
   const handleViewDetail = (item) => {
     const dataToSave = {
+      history_id: item.id,
       answer_histories: item.answer_histories,
       isReadOnly: item.type === 'S',
       startTime: item.start_time,
@@ -21,14 +22,16 @@ export default function HistoryItem({ data }) {
     {
       item.skill === 'L'
         ? router.push(`/student/listening/${item.receptive_test}/${item.attempt}`)
-        : router.push(`/student/writing/${item.receptive_test}/${item.attempt}`);
+        : router.push(`/student/reading/${item.receptive_test}/${item.attempt}`);
     }
   };
+
   const formatTime = (totalSeconds) => {
     const mins = Math.floor(totalSeconds / 60);
     const secs = totalSeconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+
   return (
     <Paper sx={styles.historyItemPaper}>
       <Stack direction="row" justifyContent="space-between" alignItems="center">
