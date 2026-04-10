@@ -35,6 +35,7 @@ import MultipleChoiceSingleAudio from './part/multipleChoiceSingleAudio';
 import MultipleChoiceQuestionAudio from './part/multipleChoiceMultiQuestionAudio';
 import Matching from './part/matching';
 import Skeleton from './skeleton';
+import ReceptiveTestResult from '../ReceptiveTestResult/ReceptiveTestResult';
 
 export default function ListeningTestContent({ test_id, initialData }) {
   const router = useRouter();
@@ -58,6 +59,8 @@ export default function ListeningTestContent({ test_id, initialData }) {
     end_time: null,
     answer_histories: [],
   });
+
+  const [submittedHistoryId, setSubmittedHistoryId] = useState(null);
 
   const transformAnswers = (answersObj) => {
     const result = [];
@@ -129,7 +132,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
         answer_histories: formattedHistories,
       };
 
-      await createReceptiveTest(payload);
+      const response = await createReceptiveTest(payload);
 
       setSnackbar({
         open: true,
@@ -138,9 +141,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
       });
 
       if (submitType === 'S') {
-        setTimeout(() => {
-          router.push(`/student/listening/${test_id}`);
-        }, 1000);
+        setSubmittedHistoryId(response.id);
       } else {
         setTimeout(() => {
           if (typeof window !== 'undefined') {
@@ -315,10 +316,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
-  if (isInitial) {
-    return <Skeleton />;
-  }
-
   const goNextPart = () => {
     if (indexPart < receptiveParts.length - 1) {
       window.scrollTo({ top: 64, behavior: 'smooth' });
@@ -339,13 +336,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
       ...prev,
       [partId]: answers,
     }));
-  };
-
-  const handleFireworkComplete = () => {
-    if (typeof window !== 'undefined') {
-      window.sessionStorage.removeItem('current_receptive_attempt');
-    }
-    router.push(`/student/listening/${test_id}`);
   };
 
   const renderPart = (part, index) => {
@@ -380,6 +370,14 @@ export default function ListeningTestContent({ test_id, initialData }) {
         return null;
     }
   };
+
+  if (submittedHistoryId) {
+    return <ReceptiveTestResult historyId={submittedHistoryId} />;
+  }
+
+  if (isInitial) {
+    return <Skeleton />;
+  }
 
   return (
     <Box sx={{ ...listeningtestStyles.mainContainer, position: 'relative' }}>

@@ -13,8 +13,6 @@ import {
   Chip,
   Divider,
   Stack,
-  IconButton,
-  Tooltip,
 } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
@@ -23,6 +21,12 @@ import TimerIcon from '@mui/icons-material/Timer';
 import StarIcon from '@mui/icons-material/Star';
 import { getReceptiveTestHistory } from '@/api/test';
 import { getFullReceptiveTest } from '@/api/tests';
+import {
+  loadAudioSource,
+  loadImageSource,
+  fetchHtmlContent,
+} from '../../../api/teacher/upload-reading';
+import CustomAudioPlayer from '@/components/Test/customAudioPlayer';
 
 export default function ReceptiveTestResult({ historyId }) {
   const params = useParams();
@@ -30,50 +34,129 @@ export default function ReceptiveTestResult({ historyId }) {
   const testId = params?.test_id;
   const router = useRouter();
 
+  console.log('Received historyId:', historyId);
+
   const [history, setHistory] = useState(null);
   const [testData, setTestData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Force cleanup of any lingering scroll locks from test page or MUI modals
+    // 1. Dọn dẹp scroll locks (giữ nguyên logic của bạn)
     const clearScrollLock = () => {
-      document.body.style.overflow = 'auto'; // Force auto just in case
+      document.body.style.overflow = 'auto';
       document.body.style.paddingRight = '0px';
       document.body.style.userSelect = 'auto';
       document.documentElement.style.overflow = 'auto';
-      document.body.removeAttribute('style'); // Clear inline styles completely if possible
+      document.body.removeAttribute('style');
     };
 
     clearScrollLock();
-    // Clear again after a delay to ensure it outlasts any MUI Dialog exit transitions restoring old state
     const timer = setTimeout(clearScrollLock, 500);
     const timer2 = setTimeout(clearScrollLock, 1000);
 
+    const blobUrlsToRevoke = [];
+
     async function fetchData() {
       if (!historyId || !testId) return;
+
       try {
         setLoading(true);
         const token = localStorage.getItem('accessToken');
+
+        // 2. Fetch dữ liệu thô từ API
         const [historyRes, testRes] = await Promise.all([
           getReceptiveTestHistory(historyId, token),
           getFullReceptiveTest(testId, token),
         ]);
+
+        const parts = testRes.receptive_test?.receptive_parts || [];
+
+        // 3. Xử lý tài nguyên theo từng Format
+        const preloadPromises = parts.map(async (part) => {
+          if (part.format === 'A') {
+            // Tải mảng hình ảnh cho các đáp án
+            const imgPromises = [];
+            part.receptive_questions?.forEach((q) => {
+              q.receptive_answers?.forEach((opt) => {
+                const imgUrl = opt.image?.url || opt.resources?.image;
+                if (imgUrl) {
+                  imgPromises.push(async () => {
+                    const loadedUrl = imgUrl.startsWith('blob:')
+                      ? imgUrl
+                      : await loadImageSource(imgUrl);
+
+                    if (opt.image?.url) opt.image.url = loadedUrl;
+                    else if (opt.resources?.image) opt.resources.image = loadedUrl;
+
+                    if (loadedUrl.startsWith('blob:')) blobUrlsToRevoke.push(loadedUrl);
+                  });
+                }
+              });
+            });
+            await Promise.all(imgPromises.map((p) => p()));
+          } else if (part.format === 'B') {
+            // Tải mảng audio cho từng câu hỏi
+            const audioPromises = [];
+            part.receptive_questions?.forEach((q) => {
+              const qAudioUrl = q.audio?.url || q.resources?.audio;
+              if (qAudioUrl) {
+                audioPromises.push(async () => {
+                  const loadedUrl = qAudioUrl.startsWith('blob:')
+                    ? qAudioUrl
+                    : await loadAudioSource(qAudioUrl);
+
+                  if (q.audio?.url) q.audio.url = loadedUrl;
+                  else if (q.resources?.audio) q.resources.audio = loadedUrl;
+
+                  if (loadedUrl.startsWith('blob:')) blobUrlsToRevoke.push(loadedUrl);
+                });
+              }
+            });
+            await Promise.all(audioPromises.map((p) => p()));
+          } else if (part.format === 'F') {
+            // --- TRƯỜNG HỢP MỚI: Format F - Tải HTML ở cấp Question ---
+            const qHtmlPromises = [];
+            part.receptive_questions?.forEach((q) => {
+              // Nếu content chứa link storage (thường kết thúc bằng .html)
+              if (q.content && q.content.includes('http')) {
+                qHtmlPromises.push(async () => {
+                  q.content = await fetchHtmlContent(q.content);
+                });
+              }
+            });
+            await Promise.all(qHtmlPromises.map((p) => p()));
+          }
+        });
+
+        await Promise.all(preloadPromises);
+
+        // 4. Set data vào state
         setHistory(historyRes);
         setTestData(testRes);
       } catch (err) {
+        console.error('Lỗi tải dữ liệu hoặc tài nguyên:', err);
         setError('Failed to load results.');
       } finally {
         setLoading(false);
       }
     }
+
     fetchData();
 
     return () => {
       clearTimeout(timer);
       clearTimeout(timer2);
+      blobUrlsToRevoke.forEach((blobUrl) => {
+        URL.revokeObjectURL(blobUrl);
+      });
     };
   }, [historyId, testId]);
+
+  useEffect(() => {
+    console.log('Fetched history:', history);
+    console.log('Fetched test data:', testData);
+  }, [history, testData]);
 
   const { stats, maxScore } = useMemo(() => {
     if (!history || !testData) return { stats: null, maxScore: 0 };
@@ -485,6 +568,7 @@ export default function ReceptiveTestResult({ historyId }) {
                                   >
                                     Question {q.question_number}
                                   </Typography>
+                                  {/* Question Content */}
                                   <Typography
                                     variant="body1"
                                     sx={{
@@ -494,7 +578,11 @@ export default function ReceptiveTestResult({ historyId }) {
                                     }}
                                     dangerouslySetInnerHTML={{ __html: q.content }}
                                   />
-
+                                  {/* Audio Player */}
+                                  {q.resources.audio && (
+                                    <CustomAudioPlayer src={q.resources.audio} />
+                                  )}
+                                  {/* Answer Options */}
                                   <Grid container spacing={2}>
                                     <Grid item xs={6}>
                                       <Box
@@ -522,13 +610,56 @@ export default function ReceptiveTestResult({ historyId }) {
                                           sx={{ fontFamily: '"Outfit", sans-serif' }}
                                         >
                                           {userAns?.selected_answer_id
-                                            ? q.receptive_answers.find(
-                                                (a) => a.id === userAns.selected_answer_id,
-                                              )?.option_label +
-                                              '. ' +
-                                              (q.receptive_answers.find(
-                                                (a) => a.id === userAns.selected_answer_id,
-                                              )?.answer_text || '')
+                                            ? // Xử lí đặc biệt cho format E do cấu trúc matching
+                                              (part.format === 'E'
+                                                ? part.receptive_questions.flatMap(
+                                                    (qu) => qu.receptive_answers,
+                                                  )
+                                                : q.receptive_answers
+                                              ).find((a) => a.id === userAns.selected_answer_id)
+                                              ? (() => {
+                                                  const a = (
+                                                    part.format === 'E'
+                                                      ? part.receptive_questions.flatMap(
+                                                          (qu) => qu.receptive_answers,
+                                                        )
+                                                      : q.receptive_answers
+                                                  ).find(
+                                                    (ans) => ans.id === userAns.selected_answer_id,
+                                                  );
+                                                  // Xử lý đặc biệt cho format A do có hình ảnh đi kèm
+                                                  if (part.format === 'A') {
+                                                    const imgUrl = a.resources?.image;
+                                                    return (
+                                                      <span
+                                                        style={{
+                                                          display: 'inline-flex',
+                                                          alignItems: 'flex-start',
+                                                          gap: '8px',
+                                                          lineHeight: '1.2',
+                                                        }}
+                                                      >
+                                                        <span style={{ marginTop: '2px' }}>
+                                                          {correctAns.option_label}.
+                                                        </span>
+                                                        {imgUrl && (
+                                                          <img
+                                                            src={imgUrl}
+                                                            alt={`Correct Option ${correctAns.option_label}`}
+                                                            style={{
+                                                              maxWidth: '100px',
+                                                              borderRadius: '4px',
+                                                              objectFit: 'contain',
+                                                              display: 'block',
+                                                            }}
+                                                          />
+                                                        )}
+                                                      </span>
+                                                    );
+                                                  }
+                                                  return `${a.option_label}. ${a.answer_text || ''}`;
+                                                })()
+                                              : 'N/A'
                                             : userAns?.user_answer_text || 'No answer'}
                                         </Typography>
                                       </Box>
@@ -559,9 +690,45 @@ export default function ReceptiveTestResult({ historyId }) {
                                             sx={{ fontFamily: '"Outfit", sans-serif' }}
                                           >
                                             {correctAns
-                                              ? correctAns.option_label +
-                                                '. ' +
-                                                (correctAns.answer_text || '')
+                                              ? (() => {
+                                                  const imgUrl = correctAns.resources?.image;
+                                                  // Format A: Hiển thị Label + Ảnh
+                                                  if (part.format === 'A') {
+                                                    return (
+                                                      <span
+                                                        style={{
+                                                          display: 'inline-flex',
+                                                          alignItems: 'flex-start',
+                                                          gap: '8px',
+                                                          lineHeight: '1.2',
+                                                        }}
+                                                      >
+                                                        <span style={{ marginTop: '2px' }}>
+                                                          {correctAns.option_label}.
+                                                        </span>
+
+                                                        {imgUrl && (
+                                                          <img
+                                                            src={imgUrl}
+                                                            alt={`Correct Option ${correctAns.option_label}`}
+                                                            style={{
+                                                              maxWidth: '100px',
+                                                              borderRadius: '4px',
+                                                              objectFit: 'contain',
+                                                              display: 'block',
+                                                            }}
+                                                          />
+                                                        )}
+                                                      </span>
+                                                    );
+                                                  }
+                                                  // Format D thì không hiện label, các format khác hiện "A. Text"
+                                                  const label =
+                                                    part.format !== 'D'
+                                                      ? `${correctAns.option_label}. `
+                                                      : '';
+                                                  return `${label}${correctAns.answer_text || ''}`;
+                                                })()
                                               : 'N/A'}
                                           </Typography>
                                         </Box>
