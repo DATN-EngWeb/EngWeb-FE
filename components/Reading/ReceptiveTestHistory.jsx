@@ -17,11 +17,7 @@ import {
 } from '@mui/material';
 import Edit from '@mui/icons-material/EditRounded';
 import InfoIcon from '@mui/icons-material/InfoRounded';
-import AccessTimeIcon from '@mui/icons-material/AccessTimeRounded';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutlineRounded';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutlineRounded';
 import VisibilityIcon from '@mui/icons-material/VisibilityRounded';
-import InfoIcon from '@mui/icons-material/InfoRounded';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import { levelTheme } from '../TestCard';
 import * as styles from '../../styles/student/HistoryTestStyles';
