@@ -2,6 +2,7 @@
 
 import {
   Box,
+  Container,
   Typography,
   Snackbar,
   Alert,
@@ -89,37 +90,62 @@ export default function ProductiveTestEditor({
   feedbackContent,
 }) {
   return (
-    <Box sx={{ ...styles.container, display: 'flex', flexDirection: 'column' }}>
-      <Box sx={{ filter: isSaving ? 'blur(2px)' : 'none' }}>
+    <Container
+      maxWidth="lg"
+      sx={{ ...styles.container, display: 'flex', flexDirection: 'column', px: 0 }}
+    >
+      <Box sx={{ ...(isSaving && { filter: 'blur(2px)' }), mb: 2 }}>
         <TestEditorHeader title={title} description="Fill in the details below" />
-
-        {isReadOnly ? (
-          <Box sx={{ px: 3, pb: 2, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={onEditClick}
-              sx={{ borderRadius: '12px', textTransform: 'none', px: 4 }}
-            >
-              Edit Test Content
-            </Button>
-          </Box>
-        ) : (
-          <>
-            {/* If editing, show the old Actions bar or Save/Cancel buttons */}
-            <TestEditorActions
-              onCancelClick={onCancelClick}
-              onPreview={onPreview || (() => setShowPreview(!showPreview))}
-              isPreviewActive={showPreview}
-              onFeedback={onFeedback}
-              isFeedbackActive={isFeedbackActive}
-              onSaveDraft={() => handleSubmit('Draft')}
-              onSendReview={() => handleSubmit('In review')}
-              onPublish={() => handleSubmit('Published')}
-            />
-          </>
-        )}
       </Box>
+
+      {isReadOnly ? (
+        <Box
+          sx={{
+            px: 3,
+            pb: 0.5,
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: 2,
+            position: 'sticky',
+            top: 0,
+            zIndex: 1100,
+            backgroundColor: '#FFF4E9',
+            pt: 0.5,
+          }}
+        >
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={onEditClick}
+            sx={{ borderRadius: '12px', textTransform: 'none', px: 4 }}
+          >
+            Edit Test Content
+          </Button>
+        </Box>
+      ) : (
+        <Box
+          sx={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 1100,
+            backgroundColor: '#FFF4E9',
+            pt: 0.5,
+            pb: 0.5,
+            px: 2,
+          }}
+        >
+          <TestEditorActions
+            onCancelClick={onCancelClick}
+            onPreview={onPreview || (() => setShowPreview(!showPreview))}
+            isPreviewActive={showPreview}
+            onFeedback={onFeedback}
+            isFeedbackActive={isFeedbackActive}
+            onSaveDraft={() => handleSubmit('Draft')}
+            onSendReview={() => handleSubmit('In review')}
+            onPublish={() => handleSubmit('Published')}
+          />
+        </Box>
+      )}
       <Box
         sx={{
           flexGrow: 1,
@@ -530,6 +556,6 @@ export default function ProductiveTestEditor({
           </Box>
         </Box>
       </Dialog>
-    </Box>
+    </Container>
   );
 }

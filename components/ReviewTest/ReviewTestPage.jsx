@@ -24,14 +24,12 @@ import {
   IconButton,
 } from '@mui/material';
 import {
-  RateReview as RateReviewIcon,
   Search as SearchIcon,
-  HourglassBottom as WaitingIcon,
+  FilterList as FilterIcon,
   AssignmentInd as AssignmentIndIcon,
-  CheckCircle as CheckCircleIcon,
-  Send as SendIcon,
   ChevronLeft,
   ChevronRight,
+  RateReview as RateReviewIcon,
 } from '@mui/icons-material';
 
 // --- Constants ---
@@ -40,15 +38,12 @@ const STATUS_MAP = {
   I: { label: 'In Review', color: 'warning.main' },
 };
 
-const StatCard = ({ icon, count, value, variant }) => (
-  <Box sx={styles.statBadge(variant)}>
-    <Box sx={styles.iconWrapper(variant)}>{icon}</Box>
-    <Box sx={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-      <Typography sx={styles.statValue}>{count}</Typography>
-      <Typography sx={styles.statLabel}>{value}</Typography>
-    </Box>
-  </Box>
-);
+const SKILL_LABELS = {
+  R: 'Reading',
+  L: 'Listening',
+  S: 'Speaking',
+  W: 'Writing',
+};
 
 export default function ReviewTestPage() {
   const router = useRouter();
@@ -174,91 +169,10 @@ export default function ReviewTestPage() {
             ? 'Manage and track the status of your created exam questions.'
             : 'Review exam questions from colleagues to ensure quality.'}
         </Typography>
-
-        <Stack direction="row" spacing={4}>
-          <StatCard
-            icon={<WaitingIcon sx={{ color: 'warning.dark' }} />}
-            count="2"
-            value="Waiting Review"
-            variant="purple"
-          />
-          <StatCard
-            icon={<SendIcon sx={{ color: 'warning.dark' }} />}
-            count="3"
-            value="My Feedbacks"
-            variant="yellow"
-          />
-          <StatCard
-            icon={<CheckCircleIcon sx={{ color: 'success.dark' }} />}
-            count="5"
-            value="Reviewed"
-            variant="green"
-          />
-        </Stack>
-      </Box>
-
-      {/* Filter Section */}
-      <Box sx={styles.filterSection}>
-        <TextField
-          placeholder="Search by title..."
-          size="small"
-          sx={styles.searchInput}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-        />
-
-        <Stack direction="row" spacing={2}>
-          <Select
-            size="small"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            sx={styles.selectFilter}
-          >
-            {['Newest List', 'Oldest List'].map((opt) => (
-              <MenuItem key={opt} value={opt}>
-                {opt}
-              </MenuItem>
-            ))}
-          </Select>
-
-          <Select
-            size="small"
-            value={skillFilter}
-            onChange={(e) => setSkillFilter(e.target.value)}
-            sx={styles.selectFilter}
-          >
-            {['All Skills', 'Writing', 'Speaking', 'Reading', 'Listening'].map((s) => (
-              <MenuItem key={s} value={s}>
-                {s}
-              </MenuItem>
-            ))}
-          </Select>
-
-          <Select
-            size="small"
-            value={levelFilter}
-            onChange={(e) => setLevelFilter(e.target.value)}
-            sx={styles.selectFilter}
-          >
-            <MenuItem value="All Levels">All Levels</MenuItem>
-            {['A1', 'A2', 'B1', 'B2'].map((l) => (
-              <MenuItem key={l} value={l}>
-                Level {l}
-              </MenuItem>
-            ))}
-          </Select>
-        </Stack>
       </Box>
 
       {/* Switcher */}
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', my: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: -1, mb: 3 }}>
         <Box sx={styles.switcherWrapper}>
           <Stack direction="row" sx={styles.switcher}>
             <Button
@@ -285,6 +199,84 @@ export default function ReviewTestPage() {
         </Box>
       </Box>
 
+      {/* Filter Section */}
+      <Box sx={styles.filterSection}>
+        <TextField
+          placeholder="Search by name or topic"
+          size="small"
+          sx={styles.searchInput}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: 'darkGrey.light' }} />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+
+        <Stack direction="row" spacing={1.5}>
+          <Select
+            size="small"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            sx={styles.selectFilter}
+            displayEmpty
+            renderValue={(value) => value}
+          >
+            {['Newest List', 'Oldest List'].map((opt) => (
+              <MenuItem key={opt} value={opt}>
+                {opt}
+              </MenuItem>
+            ))}
+          </Select>
+
+          <Select
+            size="small"
+            value={skillFilter}
+            onChange={(e) => setSkillFilter(e.target.value)}
+            sx={styles.selectFilter}
+            displayEmpty
+            renderValue={(value) => (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <FilterIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                {value}
+              </Box>
+            )}
+          >
+            {['All Skills', 'Writing', 'Speaking', 'Reading', 'Listening'].map((s) => (
+              <MenuItem key={s} value={s}>
+                {s}
+              </MenuItem>
+            ))}
+          </Select>
+
+          <Select
+            size="small"
+            value={levelFilter}
+            onChange={(e) => setLevelFilter(e.target.value)}
+            sx={styles.selectFilter}
+            displayEmpty
+            renderValue={(value) => (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <FilterIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                {value === 'All Levels' ? value : `Level ${value}`}
+              </Box>
+            )}
+          >
+            <MenuItem value="All Levels">All Levels</MenuItem>
+            {['A1', 'A2', 'B1', 'B2'].map((l) => (
+              <MenuItem key={l} value={l}>
+                Level {l}
+              </MenuItem>
+            ))}
+          </Select>
+        </Stack>
+      </Box>
+
       {/* Table Section */}
       <TableContainer component={Paper} sx={{ mt: 2, maxHeight: 600 }}>
         {loading ? (
@@ -309,37 +301,51 @@ export default function ReviewTestPage() {
                 tests.map((item) => (
                   <TableRow key={item.id} hover>
                     {!isMine && (
-                      <TableCell>
-                        <Stack direction="row" alignItems="center" spacing={1}>
-                          <Avatar src={item.created_by?.avatar} sx={{ width: 24, height: 24 }} />
-                          <Typography variant="body2">{item.created_by?.full_name}</Typography>
+                      <TableCell sx={styles.tableBodyCell}>
+                        <Stack direction="row" alignItems="center" spacing={1.5}>
+                          <Avatar src={item.created_by?.avatar} sx={{ width: 28, height: 28 }} />
+                          <Typography variant="body2" fontWeight={500}>
+                            {item.created_by?.full_name}
+                          </Typography>
                         </Stack>
                       </TableCell>
                     )}
-                    <TableCell>{item.title}</TableCell>
-                    <TableCell>{item.skill}</TableCell>
-                    <TableCell>{item.level}</TableCell>
-                    <TableCell>
+                    <TableCell sx={styles.tableBodyCell}>
+                      <Typography fontWeight={500}>{item.title}</Typography>
+                    </TableCell>
+                    <TableCell sx={styles.tableBodyCell}>
+                      {SKILL_LABELS[item.skill] || item.skill}
+                    </TableCell>
+                    <TableCell sx={styles.tableBodyCell}>{item.level}</TableCell>
+                    <TableCell sx={styles.tableBodyCell}>
                       {item.created_at
-                        ? new Date(item.created_at).toLocaleDateString('vi-VN')
+                        ? new Date(item.created_at).toLocaleDateString('en-GB')
                         : 'N/A'}
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={styles.tableBodyCell}>
                       <Typography
                         variant="body2"
-                        sx={{ color: STATUS_MAP[item.status]?.color, fontWeight: 'bold' }}
+                        sx={{
+                          color: STATUS_MAP[item.status]?.color,
+                          fontWeight: 700,
+                          backgroundColor: `${STATUS_MAP[item.status]?.color}15`,
+                          px: 1.5,
+                          py: 0.5,
+                          borderRadius: '6px',
+                          display: 'inline-block',
+                        }}
                       >
                         {STATUS_MAP[item.status]?.label || item.status}
                       </Typography>
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={styles.tableBodyCell}>
                       {isMine ? (
-                        // case 1: (My List Tests)
                         <Stack direction="row" spacing={1}>
                           <Button
                             size="small"
                             variant="contained"
                             color="warning"
+                            sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600 }}
                             onClick={() =>
                               router.push(
                                 `/teacher/view-test/${getSkillPath(item.skill)}/${item.id}/feedback`,
@@ -350,15 +356,15 @@ export default function ReviewTestPage() {
                           </Button>
                         </Stack>
                       ) : (
-                        // case 2: (Tests I Need to Review)
                         <Button
                           size="small"
                           variant="contained"
                           color={item.status === 'I' ? 'primary' : 'inherit'}
+                          sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600 }}
                           onClick={() => {
                             router.push(
                               `/teacher/review-test/${getSkillPath(item.skill)}/${item.id}`,
-                            ); // Review Page
+                            );
                           }}
                         >
                           {item.status === 'I' ? 'Review Now' : 'Detail'}

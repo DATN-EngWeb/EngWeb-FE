@@ -17,7 +17,6 @@ import {
   Card,
   Pagination,
   InputAdornment,
-  Chip,
   Stack,
   CircularProgress,
   Alert,
@@ -26,8 +25,6 @@ import SearchIcon from '@mui/icons-material/Search';
 import PersonIcon from '@mui/icons-material/Person';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
-import UpdateIcon from '@mui/icons-material/Update';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getTestOverview } from '../../../api/tests';
@@ -42,7 +39,8 @@ const pageContainerStyles = {
 
 const headerSectionStyles = {
   bgcolor: 'background.paper',
-  p: 4,
+  px: 4,
+  py: 3,
   borderRadius: 4,
 };
 
@@ -327,6 +325,31 @@ export default function ReadingHub() {
                     </Select>
                   </Box>
                 )}
+
+                <Box>
+                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                    Sort by
+                  </Typography>
+                  <Select
+                    fullWidth
+                    size="small"
+                    value={filters.ordering}
+                    onChange={(e) => handleFilterChange('ordering', e.target.value)}
+                    sx={{
+                      bgcolor: 'background.paper',
+                      borderRadius: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      '& fieldset': { border: 'none' },
+                    }}
+                  >
+                    <MenuItem value="-created_at">Newest First</MenuItem>
+                    <MenuItem value="created_at">Oldest First</MenuItem>
+                    <MenuItem value="-updated_at">Recently Updated</MenuItem>
+                    <MenuItem value="title">Title (A-Z)</MenuItem>
+                    <MenuItem value="-title">Title (Z-A)</MenuItem>
+                  </Select>
+                </Box>
 
                 <Button
                   variant="contained"

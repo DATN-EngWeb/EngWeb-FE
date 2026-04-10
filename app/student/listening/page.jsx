@@ -14,14 +14,11 @@ import {
   Button,
   Pagination,
   InputAdornment,
-  Chip,
   Stack,
   CircularProgress,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import PersonIcon from '@mui/icons-material/Person';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
-import UpdateIcon from '@mui/icons-material/Update';
 import { useRouter } from 'next/navigation';
 import { getTestOverview } from '../../../api/tests';
 import TestCard from '../../../components/TestCard';
@@ -35,7 +32,8 @@ const pageContainerStyles = {
 
 const headerSectionStyles = {
   bgcolor: 'background.paper',
-  p: 4,
+  px: 4,
+  py: 3,
   borderRadius: 4,
 };
 
@@ -139,7 +137,18 @@ export default function ListeningHub() {
 
   return (
     <Box sx={pageContainerStyles}>
-      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 8, lg: 15 }, mx: 'auto', pt: 4 }}>
+      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 8, lg: 15 }, mx: 'auto', mt: 4, mb: 4 }}>
+        <Box sx={headerSectionStyles}>
+          <Typography variant="h3" sx={{ fontWeight: 700, color: 'primary.main', mb: 1 }}>
+            Listening Hub
+          </Typography>
+          <Typography variant="subtitle1" sx={{ color: 'text.secondary', mb: 3 }}>
+            Improve your English listening skills with carefully prepared tests.
+          </Typography>
+        </Box>
+      </Container>
+
+      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 8, lg: 15 }, mx: 'auto' }}>
         <Grid container spacing={2} sx={{ flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
           <Grid
             item

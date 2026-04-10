@@ -11,6 +11,7 @@ export const toolbarStyles = {
 
 export const navBoxStyles = {
   display: { xs: 'none', md: 'flex' },
+  alignItems: 'center',
 };
 
 export const navButtonStyles = {
@@ -65,6 +66,9 @@ export const logoLinkStyles = {
   textDecoration: 'none',
   color: 'inherit',
   paddingRight: '40px',
+  display: 'flex',
+  alignItems: 'center',
+  paddingTop: '6px', // Align with text baseline
 };
 
 export const navLinkStyles = {

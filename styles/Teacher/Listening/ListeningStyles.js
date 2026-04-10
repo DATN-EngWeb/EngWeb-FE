@@ -1,7 +1,6 @@
 export const container = {
-  background: 'linear-gradient(to bottom, #FFF4E9 0%, #FFFFFF 100%)',
+  backgroundColor: '#FFF4E9',
   minHeight: 'calc(100vh - 200px)',
-  px: { xs: 2, sm: 3, md: 4, lg: 5 },
   py: { xs: 1, md: 2 },
 };
 
@@ -9,22 +8,28 @@ export const contentWrap = {
   maxWidth: '100%',
   width: '100%',
   mx: 'auto',
+  backgroundColor: 'transparent',
+  border: 'none',
+  borderRadius: 0,
+  p: 0,
+  mb: 4,
 };
 
 export const panelPaper = {
-  p: { xs: 2, md: 3 },
-  mb: 3,
-  border: '2px solid',
+  p: { xs: 2.5, md: 3 },
+  mb: 2,
+  border: '1px solid',
   borderColor: 'yellow.main',
-  borderRadius: '1rem',
+  borderRadius: '1.5rem',
   boxShadow: 'none',
+  backgroundColor: '#fff',
 };
 
 export const sectionHeader = {
   display: 'flex',
   alignItems: 'center',
   gap: 1,
-  mb: 2,
+  mb: 1,
 };
 
 export const accentBar = {
@@ -35,25 +40,30 @@ export const accentBar = {
 };
 
 export const twoColRow = {
-  display: 'flex',
   gap: 2,
-  mb: 3,
+  mb: 2,
   flexDirection: { xs: 'column', md: 'row' },
 };
 
 export const addPartBox = {
+  width: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 1.5,
+  py: { xs: 1, md: 1.5 },
+  mb: 3,
+  cursor: 'pointer',
   border: '1px solid',
   borderColor: 'yellow.main',
-  bgcolor: 'primary.contrastText',
-  borderRadius: '1.5rem',
-  p: { xs: 2, sm: 3 },
-  mb: 3,
-  textAlign: 'center',
+  borderRadius: '999px',
+  backgroundColor: '#fff',
   color: 'primary.main',
   fontWeight: 600,
-  cursor: 'pointer',
+  fontSize: { xs: '0.8rem', md: '1rem' },
   '&:hover': {
-    backgroundColor: 'action.hover',
+    backgroundColor: '#fffbeb',
+    borderColor: 'yellow.main',
   },
 };
 
@@ -116,10 +126,11 @@ export const numberIndicator = {
 };
 
 export const partHeader = {
+  width: '100%',
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  mb: 2,
+  mb: 0.5,
   gap: 2,
 };
 
@@ -128,17 +139,6 @@ export const rowContent = {
   justifyContent: 'space-between',
   alignItems: 'center',
   mb: 0.5,
-};
-
-export const partTypeCard = {
-  p: { xs: 1.5, md: 2 },
-  cursor: 'pointer',
-  transition: 'all 0.2s',
-  display: 'flex',
-  alignItems: 'center',
-  gap: 2,
-  borderRadius: '1rem',
-  boxShadow: 'none',
 };
 
 export const answerImageBox = {
@@ -213,6 +213,29 @@ export const actionTextButton = {
   userSelect: 'none',
   color: 'text.primary',
   '&:hover': {
+    color: 'primary.main',
+  },
+};
+
+export const addOptionButton = {
+  width: '100%',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 1,
+  py: { xs: 0.5, md: 1 },
+  mt: 2,
+  fontSize: { xs: '0.8rem', md: '1rem' },
+  cursor: 'pointer',
+  border: '1px solid',
+  borderColor: 'gray.main',
+  borderRadius: '1rem',
+  color: 'text.primary',
+  fontWeight: 500,
+  textTransform: 'none',
+  '&:hover': {
+    backgroundColor: 'action.hover',
+    borderColor: 'primary.main',
     color: 'primary.main',
   },
 };

@@ -191,63 +191,72 @@ export default function FillBlankForm({
 
   return (
     <>
-      <Box
-        sx={{
-          ...multipleChoiceStyles.simpleBoxFlexRow,
-          width: '100%',
-          gap: 2,
-          justifyContent: 'space-between',
-        }}
-      >
-        {/* ------------ Title Section ------------ */}
+      <Box sx={uploadReadingStyles.partEditorHeader}>
         <Box
           sx={{
-            ...multipleChoiceStyles.simpleBoxFlexRow,
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            width: '100%',
+            minWidth: 0,
             gap: 2,
-            justifyContent: 'flex-start',
           }}
         >
+          {/* ------------ Title Section ------------ */}
           <Box
             sx={{
-              width: '4px',
-              height: { xs: '36px', md: '40px' },
-              backgroundColor: 'yellow.main',
-              borderRadius: '1rem',
+              ...multipleChoiceStyles.simpleBoxFlexRow,
+              gap: 2,
+              justifyContent: 'flex-start',
+              minWidth: 0,
+              flex: 1,
             }}
-          ></Box>
-          <Box sx={multipleChoiceStyles.headingContainer}>
-            <Typography sx={multipleChoiceStyles.headingCard}>Part {index + 1}</Typography>
-            <Typography sx={multipleChoiceStyles.descriptionCard}>
-              Fill in the blanks - {questions.filter((q) => q.action !== 'delete').length} questions
-            </Typography>
+          >
+            <Box
+              sx={{
+                width: '4px',
+                height: { xs: '36px', md: '40px' },
+                backgroundColor: 'yellow.main',
+                borderRadius: '1rem',
+                flexShrink: 0,
+              }}
+            ></Box>
+            <Box sx={multipleChoiceStyles.headingContainer}>
+              <Typography sx={multipleChoiceStyles.headingCard}>Part {index + 1}</Typography>
+              <Typography sx={multipleChoiceStyles.descriptionCard}>
+                Fill in the blanks - {questions.filter((q) => q.action !== 'delete').length}{' '}
+                questions
+              </Typography>
+            </Box>
           </Box>
-        </Box>
-        {/* ------------ Delete and Chev Icons Section ------------ */}
-        <Box
-          sx={{
-            ...multipleChoiceStyles.simpleBoxFlexRow,
-            gap: 0,
-            justifyContent: 'flex-start',
-          }}
-        >
-          <DeleteRoundedIcon
-            onClick={() => handleDeletePart(partId)}
+          {/* ------------ Delete and Chev Icons Section ------------ */}
+          <Box
             sx={{
-              cursor: 'pointer',
-              fontSize: { xs: '1.2rem', md: '1.4rem' },
-              color: 'primary.main',
+              ...multipleChoiceStyles.simpleBoxFlexRow,
+              gap: 0.5,
+              flexShrink: 0,
+              ml: 'auto',
             }}
-          />
-          <ExpandLessRoundedIcon
-            onClick={() => setIsOpen(!isOpen)}
-            sx={{
-              cursor: 'pointer',
-              fontSize: { xs: '1.4rem', md: '1.6rem' },
-              color: 'primary.main',
-              transition: 'transform 0.3s ease',
-              transform: isOpen ? 'rotate(0deg)' : 'rotate(180deg)',
-            }}
-          />
+          >
+            <DeleteRoundedIcon
+              onClick={() => handleDeletePart(partId)}
+              sx={{
+                cursor: 'pointer',
+                fontSize: { xs: '1.2rem', md: '1.4rem' },
+                color: 'primary.main',
+              }}
+            />
+            <ExpandLessRoundedIcon
+              onClick={() => setIsOpen(!isOpen)}
+              sx={{
+                cursor: 'pointer',
+                fontSize: { xs: '1.4rem', md: '1.6rem' },
+                color: 'primary.main',
+                transition: 'transform 0.3s ease',
+                transform: isOpen ? 'rotate(0deg)' : 'rotate(180deg)',
+              }}
+            />
+          </Box>
         </Box>
       </Box>
       {/* ------------- Config Section ------------- */}
@@ -258,17 +267,22 @@ export default function FillBlankForm({
             flexDirection: { xs: 'column', lg: 'row' },
             gap: 4,
             width: '100%',
-            mt: 2,
+            maxWidth: '100%',
+            alignSelf: 'stretch',
+            mt: 0,
           }}
         >
           {/* -------------- Left Column: Config & Passage -------------- */}
-          <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Box sx={{ ...uploadReadingStyles.partEditorColumn, flex: 1, minWidth: 0, mb: 0 }}>
             {/* -------------- Total Each Score and Answer Type -------------- */}
             <Box sx={{ ...fillBlankStyles.scoreAndCheckbox, gridTemplateColumns: '1fr', gap: 2 }}>
               {/* -------------- CỘT TRÁI: Nhập điểm -------------- */}
               <FormControl fullWidth sx={uploadReadingStyles.formControl}>
                 <FormLabel sx={uploadReadingStyles.labelInput}>
                   The score for each question
+                  <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
+                    *
+                  </Box>
                 </FormLabel>
                 <OutlinedInput
                   placeholder="Enter the score for each question here"
@@ -279,7 +293,12 @@ export default function FillBlankForm({
               </FormControl>
               {/* -------------- Chọn loại format (H hoặc I) -------------- */}
               <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-                <FormLabel sx={uploadReadingStyles.labelInput}>Answer Type</FormLabel>
+                <FormLabel sx={uploadReadingStyles.labelInput}>
+                  Answer Type
+                  <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
+                    *
+                  </Box>
+                </FormLabel>
                 <Box
                   sx={{
                     display: 'flex',
@@ -336,7 +355,12 @@ export default function FillBlankForm({
             {/* -------------- Passage Section -------------- */}
             <FormControl fullWidth sx={{ ...uploadReadingStyles.formControl, mt: 3 }}>
               <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                <FormLabel sx={uploadReadingStyles.labelInput}>Passage</FormLabel>
+                <FormLabel sx={uploadReadingStyles.labelInput}>
+                  Passage
+                  <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
+                    *
+                  </Box>
+                </FormLabel>
               </Box>
               <ClientSideCustomEditor
                 data={part.content || ''}
@@ -348,11 +372,16 @@ export default function FillBlankForm({
           </Box>
 
           {/* -------------- Right Column: Questions -------------- */}
-          <Box sx={{ flex: 1.2, minWidth: 0 }}>
+          <Box sx={{ ...uploadReadingStyles.partEditorColumn, flex: 1.2, minWidth: 0, mb: 0 }}>
             <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
               {/* --------- Heading of Question Section --------- */}
               <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                <FormLabel sx={uploadReadingStyles.labelInput}>Questions</FormLabel>
+                <FormLabel sx={uploadReadingStyles.labelInput}>
+                  Questions
+                  <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
+                    *
+                  </Box>
+                </FormLabel>
               </Box>
               {/* ----------- Questions Section --------- */}
               {questions.filter((q) => q.action !== 'delete').length === 0 ? (
@@ -451,7 +480,7 @@ export default function FillBlankForm({
                                 <Box
                                   sx={{
                                     width: '100%',
-                                    pl: 4,
+                                    pl: 0,
                                     display: 'flex',
                                     flexDirection: 'column',
                                     gap: 1,

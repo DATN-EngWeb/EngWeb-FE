@@ -1,5 +1,5 @@
 export const container = {
-  background: 'linear-gradient(to bottom, #FFF4E9 0%, #FFFFFF 100%)',
+  backgroundColor: '#FFF4E9',
   minHeight: '100vh',
   px: { xs: 2, md: 3, lg: 4 },
   py: 2,
@@ -8,7 +8,6 @@ export const container = {
 export const INNER_CONTAINER_STYLE = (showPreview) => ({
   px: { xs: 2, md: 5, lg: 8 },
   mt: -4,
-  bgcolor: 'primary.contrastText',
   borderRadius: '2rem',
   display: 'flex',
   gap: 4,
@@ -34,6 +33,7 @@ export const panelPaper = {
   borderRadius: '1.5rem',
   backgroundColor: 'primary.contrastText',
   boxShadow: 'none',
+  outline: 'none',
 };
 
 export const sectionHeader = {
@@ -94,6 +94,7 @@ export const PREVIEW_PAPER_STYLE = {
   border: '2px solid',
   borderColor: 'yellow.main',
   backgroundImage: 'linear-gradient(#fff 0%, #fdfdfd 100%)',
+  outline: 'none',
 };
 
 export const SUGGESTION_BOX_STYLE = {

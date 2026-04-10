@@ -86,7 +86,7 @@ export default function BasicInformation({ testName, level, time, description, o
         </FormControl>
       </Box>
 
-      <Box sx={{ mt: 3, mb: 3 }}>
+      <Box sx={{ mt: 2, mb: 2 }}>
         <Typography sx={{ ...labelText, mb: 0.5 }}>
           Description <span style={{ color: 'red' }}>*</span>
         </Typography>

@@ -28,7 +28,7 @@ export const TeacherHomepageStyles = {
   },
   welcomeSub: {
     color: 'darkGrey.light',
-    marginBottom: '24px',
+    marginBottom: '0px',
     marginLeft: { xs: '0px', sm: '10px' },
     fontSize: { xs: '1rem', sm: '1.1rem', md: '1.2rem' },
   },

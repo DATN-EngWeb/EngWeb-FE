@@ -285,11 +285,7 @@ export default function FeedbackPanel({
                       noWrap
                       flexShrink={0}
                     >
-                      {new Date(fb.created_at).toLocaleDateString('vi-VN', {
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                      })}
+                      {new Date(fb.created_at).toLocaleDateString('en-GB')}
                     </Typography>
                     {allowManage && isOwn(fb) && editingId !== fb.id && (
                       <Box display="flex" gap={0.25} flexShrink={0}>

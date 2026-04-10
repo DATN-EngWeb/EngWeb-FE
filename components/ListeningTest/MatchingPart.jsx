@@ -95,25 +95,6 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
     updatePart({ ...part, questions: newQuestions });
   };
 
-  const addAnswer = () => {
-    const newAnswer = {
-      id: Date.now().toString(),
-      text: '',
-    };
-    let newQuestions = questions;
-
-    if (answers.length >= questions.length) {
-      const newQuestion = {
-        id: Date.now().toString() + '-q',
-        text: '',
-        selectedAnswerId: null,
-      };
-      newQuestions = [...questions, newQuestion];
-    }
-    const newPart = { ...part, answers: [...answers, newAnswer], questions: newQuestions };
-    updatePart(newPart);
-  };
-
   const removeAnswer = (aIdx) => {
     const removedAnswer = answers[aIdx];
     const newAnswers = answers.filter((_, i) => i !== aIdx);
@@ -162,7 +143,15 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
       </Box>
 
       {!isCollapsed && (
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 4, mt: 2 }}>
+        <Box
+          sx={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            gap: 3,
+            mt: 1,
+          }}
+        >
           {/* -------------- Left Column: Config & Audio -------------- */}
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Box sx={{ mb: 3 }}>
@@ -218,7 +207,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
           </Box>
 
           {/* -------------- Right Column: Questions & Answers -------------- */}
-          <Box sx={{ flex: 1.5, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
             {/* -------------- Questions Section -------------- */}
             <Box>
               <Box sx={rowContent}>
@@ -240,7 +229,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                   </Button>
                 </Box>
               ) : (
-                <Stack spacing={2} sx={{ mb: 3 }}>
+                <Stack spacing={2} sx={{ mb: 2 }}>
                   {' '}
                   {questions.map((question, qIdx) => (
                     <Paper key={question.id} variant="outlined" sx={outlinedCard}>
@@ -333,28 +322,10 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                 <Typography sx={labelText}>
                   Answers <span style={{ color: 'red' }}>*</span>
                 </Typography>
-                <Button
-                  startIcon={<AddRoundedIcon />}
-                  size="small"
-                  onClick={addAnswer}
-                  sx={{ ...actionTextButton, textTransform: 'none' }}
-                >
-                  Add option
-                </Button>
               </Box>
 
               {answers.length === 0 ? (
-                <Box sx={emptyStateBox}>
-                  No answers yet
-                  <br />
-                  <Button
-                    startIcon={<AddRoundedIcon />}
-                    sx={{ mt: 1, ...actionTextButton, textTransform: 'none' }}
-                    onClick={addAnswer}
-                  >
-                    Add your first option
-                  </Button>
-                </Box>
+                <Box sx={emptyStateBox}>Answers are generated automatically from questions.</Box>
               ) : (
                 <Box
                   sx={{
