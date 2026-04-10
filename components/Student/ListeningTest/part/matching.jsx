@@ -20,14 +20,7 @@ import {
 } from '../../../../styles/Teacher/Reading/QuesitonTypeStyles';
 import { uploadReadingStyles } from '../../../../styles/Teacher/Reading/UploadReadingStyles';
 
-export default function Matching({
-  dataPart,
-  isActive,
-  userAnswers,
-  onUpdateAnswers,
-  disabled,
-  media,
-}) {
+export default function Matching({ dataPart, isActive, userAnswers, onUpdateAnswers, media }) {
   const { audioSrc } = media;
   const answers = dataPart.receptive_questions.map((question) => ({
     id: question.receptive_answers[0]?.id || null,
@@ -129,13 +122,12 @@ export default function Matching({
                   }}
                 >
                   <Select
-                    disabled={disabled}
                     value={userAnswers[question.id] || ''}
                     onChange={(e) => handleUpdateCorrectAnswer(question.id, e.target.value)}
                     displayEmpty
                     sx={matchingStyles.selectAnswer}
                   >
-                    <MenuItem value="" disabled>
+                    <MenuItem value="">
                       <em>Select</em>
                     </MenuItem>
                     {/* Hiện đầy đủ danh sách, không cần vô hiệu hóa */}

@@ -13,8 +13,6 @@ import {
   Chip,
   Divider,
   Stack,
-  IconButton,
-  Tooltip,
 } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
@@ -23,12 +21,20 @@ import TimerIcon from '@mui/icons-material/Timer';
 import StarIcon from '@mui/icons-material/Star';
 import { getReceptiveTestHistory } from '@/api/test';
 import { getFullReceptiveTest } from '@/api/tests';
+import {
+  loadAudioSource,
+  loadImageSource,
+  fetchHtmlContent,
+} from '../../../api/teacher/upload-reading';
+import CustomAudioPlayer from '@/components/Test/customAudioPlayer';
 
-export default function ReceptiveTestResult() {
+export default function ReceptiveTestResult({ historyId }) {
   const params = useParams();
-  const historyId = params?.historyId;
-  const testId = params?.testId;
+  // const historyId = params?.historyId;
+  const testId = params?.test_id;
   const router = useRouter();
+
+  console.log('Received historyId:', historyId);
 
   const [history, setHistory] = useState(null);
   const [testData, setTestData] = useState(null);
@@ -36,44 +42,121 @@ export default function ReceptiveTestResult() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Force cleanup of any lingering scroll locks from test page or MUI modals
+    // 1. Dọn dẹp scroll locks (giữ nguyên logic của bạn)
     const clearScrollLock = () => {
-      document.body.style.overflow = 'auto'; // Force auto just in case
+      document.body.style.overflow = 'auto';
       document.body.style.paddingRight = '0px';
       document.body.style.userSelect = 'auto';
       document.documentElement.style.overflow = 'auto';
-      document.body.removeAttribute('style'); // Clear inline styles completely if possible
+      document.body.removeAttribute('style');
     };
 
     clearScrollLock();
-    // Clear again after a delay to ensure it outlasts any MUI Dialog exit transitions restoring old state
     const timer = setTimeout(clearScrollLock, 500);
     const timer2 = setTimeout(clearScrollLock, 1000);
 
+    const blobUrlsToRevoke = [];
+
     async function fetchData() {
       if (!historyId || !testId) return;
+
       try {
         setLoading(true);
         const token = localStorage.getItem('accessToken');
+
+        // 2. Fetch dữ liệu thô từ API
         const [historyRes, testRes] = await Promise.all([
           getReceptiveTestHistory(historyId, token),
           getFullReceptiveTest(testId, token),
         ]);
+
+        const parts = testRes.receptive_test?.receptive_parts || [];
+
+        // 3. Xử lý tài nguyên theo từng Format
+        const preloadPromises = parts.map(async (part) => {
+          if (part.format === 'A') {
+            // Tải mảng hình ảnh cho các đáp án
+            const imgPromises = [];
+            part.receptive_questions?.forEach((q) => {
+              q.receptive_answers?.forEach((opt) => {
+                const imgUrl = opt.image?.url || opt.resources?.image;
+                if (imgUrl) {
+                  imgPromises.push(async () => {
+                    const loadedUrl = imgUrl.startsWith('blob:')
+                      ? imgUrl
+                      : await loadImageSource(imgUrl);
+
+                    if (opt.image?.url) opt.image.url = loadedUrl;
+                    else if (opt.resources?.image) opt.resources.image = loadedUrl;
+
+                    if (loadedUrl.startsWith('blob:')) blobUrlsToRevoke.push(loadedUrl);
+                  });
+                }
+              });
+            });
+            await Promise.all(imgPromises.map((p) => p()));
+          } else if (part.format === 'B') {
+            // Tải mảng audio cho từng câu hỏi
+            const audioPromises = [];
+            part.receptive_questions?.forEach((q) => {
+              const qAudioUrl = q.audio?.url || q.resources?.audio;
+              if (qAudioUrl) {
+                audioPromises.push(async () => {
+                  const loadedUrl = qAudioUrl.startsWith('blob:')
+                    ? qAudioUrl
+                    : await loadAudioSource(qAudioUrl);
+
+                  if (q.audio?.url) q.audio.url = loadedUrl;
+                  else if (q.resources?.audio) q.resources.audio = loadedUrl;
+
+                  if (loadedUrl.startsWith('blob:')) blobUrlsToRevoke.push(loadedUrl);
+                });
+              }
+            });
+            await Promise.all(audioPromises.map((p) => p()));
+          } else if (part.format === 'F') {
+            // --- TRƯỜNG HỢP MỚI: Format F - Tải HTML ở cấp Question ---
+            const qHtmlPromises = [];
+            part.receptive_questions?.forEach((q) => {
+              // Nếu content chứa link storage (thường kết thúc bằng .html)
+              if (q.content && q.content.includes('http')) {
+                qHtmlPromises.push(async () => {
+                  q.content = await fetchHtmlContent(q.content);
+                });
+              }
+            });
+            await Promise.all(qHtmlPromises.map((p) => p()));
+          }
+        });
+
+        await Promise.all(preloadPromises);
+
+        // 4. Set data vào state
         setHistory(historyRes);
         setTestData(testRes);
       } catch (err) {
+        console.error('Lỗi tải dữ liệu hoặc tài nguyên:', err);
         setError('Failed to load results.');
       } finally {
         setLoading(false);
       }
     }
+
     fetchData();
 
     return () => {
       clearTimeout(timer);
       clearTimeout(timer2);
+      blobUrlsToRevoke.forEach((blobUrl) => {
+        URL.revokeObjectURL(blobUrl);
+      });
     };
   }, [historyId, testId]);
+
+  useEffect(() => {
+    console.log('Fetched history:', history);
+    console.log('Fetched test data:', testData);
+  }, [history, testData]);
 
   const { stats, maxScore } = useMemo(() => {
     if (!history || !testData) return { stats: null, maxScore: 0 };
@@ -125,7 +208,7 @@ export default function ReceptiveTestResult() {
           {error || 'Results not found'}
         </Typography>
         <Button variant="contained" onClick={() => router.push('/student/reading')} sx={{ mt: 2 }}>
-          Back to Reading Hub
+          {testData.skill === 'L' ? 'Back to Listening Hub' : 'Back to Reading Hub'}
         </Button>
       </Container>
     );
@@ -138,6 +221,7 @@ export default function ReceptiveTestResult() {
       {/* Header / Hero Section */}
       <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', pt: 4, pb: 6 }}>
         <Container maxWidth="lg">
+          {/* Back Button */}
           <Button
             startIcon={<ChevronLeftIcon />}
             onClick={() => router.push('/student/reading')}
@@ -149,9 +233,9 @@ export default function ReceptiveTestResult() {
               fontFamily: '"Outfit", sans-serif',
             }}
           >
-            Back to Hub
+            {testData.skill === 'L' ? 'Back to Listening Hub' : 'Back to Reading Hub'}
           </Button>
-
+          {/* Test Title */}
           <Grid container spacing={3} alignItems="center">
             <Grid item xs={12}>
               <Typography
@@ -189,7 +273,6 @@ export default function ReceptiveTestResult() {
           </Grid>
         </Container>
       </Box>
-
       {/* Main Content */}
       <Container maxWidth="lg" sx={{ mt: 6 }}>
         <Grid container spacing={4}>
@@ -218,6 +301,7 @@ export default function ReceptiveTestResult() {
                 Performance Analysis
               </Typography>
               <Stack spacing={3}>
+                {/* Correct Answers */}
                 <Box>
                   <Stack direction="row" justifyContent="space-between" mb={1}>
                     <Typography
@@ -249,9 +333,9 @@ export default function ReceptiveTestResult() {
                     <Box sx={{ width: `${stats.accuracy}%`, height: '100%', bgcolor: '#16a34a' }} />
                   </Box>
                 </Box>
-
+                {/* Divider */}
                 <Divider />
-
+                {/* Earned Points && Pace */}
                 <Stack spacing={2}>
                   <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                     <Box sx={{ p: 1, bgcolor: '#f0fdf4', borderRadius: '12px' }}>
@@ -271,7 +355,7 @@ export default function ReceptiveTestResult() {
                         fontWeight={800}
                         sx={{ fontFamily: '"Outfit", sans-serif' }}
                       >
-                        +{history.total_score} EXP
+                        +{history.earned_bonus_point} EXP
                       </Typography>
                     </Box>
                   </Box>
@@ -305,11 +389,15 @@ export default function ReceptiveTestResult() {
                     </Box>
                   </Box>
                 </Stack>
-
+                {/* Try Again Button */}
                 <Button
                   fullWidth
                   variant="contained"
-                  onClick={() => router.push(`/student/reading/${testId}`)}
+                  onClick={() => {
+                    testData.skill === 'L'
+                      ? router.push(`/student/listening/${testId}`)
+                      : router.push(`/student/reading/${testId}`);
+                  }}
                   sx={{
                     mt: 2,
                     py: 1.5,
@@ -326,9 +414,9 @@ export default function ReceptiveTestResult() {
               </Stack>
             </Paper>
           </Grid>
-
           {/* Answer Breakdown */}
           <Grid item xs={12} md={8}>
+            {/* Score && Accuracy && Time */}
             <Paper
               elevation={0}
               sx={{
@@ -399,7 +487,7 @@ export default function ReceptiveTestResult() {
                 </Box>
               </Stack>
             </Paper>
-
+            {/* Answer Breakdown */}
             <Typography
               variant="h5"
               sx={{
@@ -418,122 +506,92 @@ export default function ReceptiveTestResult() {
                 sx={{ fontWeight: 700, fontFamily: '"Outfit", sans-serif' }}
               />
             </Typography>
-
+            {/* Part Display */}
             <Stack spacing={3}>
-              {testData.receptive_test.receptive_parts.map((part, pIdx) => (
-                <Box key={part.id}>
-                  <Typography
-                    variant="subtitle1"
-                    sx={{
-                      fontWeight: 700,
-                      mb: 2,
-                      color: '#64748b',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      fontFamily: '"Outfit", sans-serif',
-                    }}
-                  >
-                    Part {part.order}: {part.description}
-                  </Typography>
-                  <Stack spacing={2}>
-                    {part.receptive_questions.map((q) => {
-                      const userAns = history.answer_histories.find(
-                        (ah) => ah.question_id === q.id,
-                      );
-                      const isCorrect = userAns?.is_correct;
-                      const correctAns = q.receptive_answers.find((a) => a.is_correct);
+              {testData.receptive_test.receptive_parts
+                .sort((a, b) => a.order - b.order)
+                .map((part, pIdx) => (
+                  <Box key={part.id}>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        fontWeight: 700,
+                        mb: 2,
+                        color: '#64748b',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        fontFamily: '"Outfit", sans-serif',
+                      }}
+                    >
+                      Part {part.order}: {part.description}
+                    </Typography>
+                    <Stack spacing={2}>
+                      {part.receptive_questions.map((q) => {
+                        const userAns = history.answer_histories.find(
+                          (ah) => ah.question_id === q.id,
+                        );
+                        const isCorrect = userAns?.is_correct;
+                        const correctAns = q.receptive_answers.find((a) => a.is_correct);
 
-                      return (
-                        <Paper
-                          key={q.id}
-                          elevation={0}
-                          sx={{
-                            p: 3,
-                            borderRadius: '16px',
-                            border: '1px solid',
-                            borderColor: isCorrect ? '#dcfce7' : '#fee2e2',
-                            bgcolor: isCorrect ? '#ffffff' : '#fffafb',
-                            transition: 'all 0.2s',
-                            fontFamily: '"Outfit", sans-serif',
-                            '&:hover': { boxShadow: '0 10px 15px -3px rgba(0,0,0,0.05)' },
-                          }}
-                        >
-                          <Grid container spacing={2} alignItems="flex-start">
-                            <Grid item xs={1} sx={{ display: 'flex', justifyContent: 'center' }}>
-                              {isCorrect ? (
-                                <CheckCircleOutlineIcon sx={{ color: '#16a34a', fontSize: 28 }} />
-                              ) : (
-                                <HighlightOffIcon sx={{ color: '#dc2626', fontSize: 28 }} />
-                              )}
-                            </Grid>
-                            <Grid item xs={11}>
-                              <Stack spacing={1}>
-                                <Typography
-                                  variant="subtitle2"
-                                  sx={{
-                                    fontWeight: 700,
-                                    color: '#1e293b',
-                                    fontFamily: '"Outfit", sans-serif',
-                                  }}
-                                >
-                                  Question {q.question_number}
-                                </Typography>
-                                <Typography
-                                  variant="body1"
-                                  sx={{
-                                    color: '#475569',
-                                    mb: 1,
-                                    fontFamily: '"Outfit", sans-serif',
-                                  }}
-                                  dangerouslySetInnerHTML={{ __html: q.content }}
-                                />
-
-                                <Grid container spacing={2}>
-                                  <Grid item xs={6}>
-                                    <Box
-                                      sx={{
-                                        p: 1.5,
-                                        borderRadius: '10px',
-                                        bgcolor: isCorrect ? '#f0fdf4' : '#fef2f2',
-                                        border: '1px solid',
-                                        borderColor: isCorrect ? '#dcfce7' : '#fecaca',
-                                      }}
-                                    >
-                                      <Typography
-                                        variant="caption"
-                                        display="block"
-                                        color="text.secondary"
-                                        fontWeight={700}
-                                        sx={{ fontFamily: '"Outfit", sans-serif' }}
-                                      >
-                                        YOUR ANSWER
-                                      </Typography>
-                                      <Typography
-                                        variant="body2"
-                                        fontWeight={600}
-                                        color={isCorrect ? '#166534' : '#991b1b'}
-                                        sx={{ fontFamily: '"Outfit", sans-serif' }}
-                                      >
-                                        {userAns?.selected_answer_id
-                                          ? q.receptive_answers.find(
-                                              (a) => a.id === userAns.selected_answer_id,
-                                            )?.option_label +
-                                            '. ' +
-                                            (q.receptive_answers.find(
-                                              (a) => a.id === userAns.selected_answer_id,
-                                            )?.answer_text || '')
-                                          : userAns?.user_answer_text || 'No answer'}
-                                      </Typography>
-                                    </Box>
-                                  </Grid>
-                                  {!isCorrect && (
+                        return (
+                          <Paper
+                            key={q.id}
+                            elevation={0}
+                            sx={{
+                              p: 3,
+                              borderRadius: '16px',
+                              border: '1px solid',
+                              borderColor: isCorrect ? '#dcfce7' : '#fee2e2',
+                              bgcolor: isCorrect ? '#ffffff' : '#fffafb',
+                              transition: 'all 0.2s',
+                              fontFamily: '"Outfit", sans-serif',
+                              '&:hover': { boxShadow: '0 10px 15px -3px rgba(0,0,0,0.05)' },
+                            }}
+                          >
+                            <Grid container spacing={2} alignItems="flex-start">
+                              <Grid item xs={1} sx={{ display: 'flex', justifyContent: 'center' }}>
+                                {isCorrect ? (
+                                  <CheckCircleOutlineIcon sx={{ color: '#16a34a', fontSize: 28 }} />
+                                ) : (
+                                  <HighlightOffIcon sx={{ color: '#dc2626', fontSize: 28 }} />
+                                )}
+                              </Grid>
+                              <Grid item xs={11}>
+                                <Stack spacing={1}>
+                                  <Typography
+                                    variant="subtitle2"
+                                    sx={{
+                                      fontWeight: 700,
+                                      color: '#1e293b',
+                                      fontFamily: '"Outfit", sans-serif',
+                                    }}
+                                  >
+                                    Question {q.question_number}
+                                  </Typography>
+                                  {/* Question Content */}
+                                  <Typography
+                                    variant="body1"
+                                    sx={{
+                                      color: '#475569',
+                                      mb: 1,
+                                      fontFamily: '"Outfit", sans-serif',
+                                    }}
+                                    dangerouslySetInnerHTML={{ __html: q.content }}
+                                  />
+                                  {/* Audio Player */}
+                                  {q.resources.audio && (
+                                    <CustomAudioPlayer src={q.resources.audio} />
+                                  )}
+                                  {/* Answer Options */}
+                                  <Grid container spacing={2}>
                                     <Grid item xs={6}>
                                       <Box
                                         sx={{
                                           p: 1.5,
                                           borderRadius: '10px',
-                                          bgcolor: '#f0fdf4',
-                                          border: '1px solid #dcfce7',
+                                          bgcolor: isCorrect ? '#f0fdf4' : '#fef2f2',
+                                          border: '1px solid',
+                                          borderColor: isCorrect ? '#dcfce7' : '#fecaca',
                                         }}
                                       >
                                         <Typography
@@ -543,62 +601,178 @@ export default function ReceptiveTestResult() {
                                           fontWeight={700}
                                           sx={{ fontFamily: '"Outfit", sans-serif' }}
                                         >
-                                          CORRECT ANSWER
+                                          YOUR ANSWER
                                         </Typography>
                                         <Typography
                                           variant="body2"
                                           fontWeight={600}
-                                          color="#166534"
+                                          color={isCorrect ? '#166534' : '#991b1b'}
                                           sx={{ fontFamily: '"Outfit", sans-serif' }}
                                         >
-                                          {correctAns
-                                            ? correctAns.option_label +
-                                              '. ' +
-                                              (correctAns.answer_text || '')
-                                            : 'N/A'}
+                                          {userAns?.selected_answer_id
+                                            ? // Xử lí đặc biệt cho format E do cấu trúc matching
+                                              (part.format === 'E'
+                                                ? part.receptive_questions.flatMap(
+                                                    (qu) => qu.receptive_answers,
+                                                  )
+                                                : q.receptive_answers
+                                              ).find((a) => a.id === userAns.selected_answer_id)
+                                              ? (() => {
+                                                  const a = (
+                                                    part.format === 'E'
+                                                      ? part.receptive_questions.flatMap(
+                                                          (qu) => qu.receptive_answers,
+                                                        )
+                                                      : q.receptive_answers
+                                                  ).find(
+                                                    (ans) => ans.id === userAns.selected_answer_id,
+                                                  );
+                                                  // Xử lý đặc biệt cho format A do có hình ảnh đi kèm
+                                                  if (part.format === 'A') {
+                                                    const imgUrl = a.resources?.image;
+                                                    return (
+                                                      <span
+                                                        style={{
+                                                          display: 'inline-flex',
+                                                          alignItems: 'flex-start',
+                                                          gap: '8px',
+                                                          lineHeight: '1.2',
+                                                        }}
+                                                      >
+                                                        <span style={{ marginTop: '2px' }}>
+                                                          {correctAns.option_label}.
+                                                        </span>
+                                                        {imgUrl && (
+                                                          <img
+                                                            src={imgUrl}
+                                                            alt={`Correct Option ${correctAns.option_label}`}
+                                                            style={{
+                                                              maxWidth: '100px',
+                                                              borderRadius: '4px',
+                                                              objectFit: 'contain',
+                                                              display: 'block',
+                                                            }}
+                                                          />
+                                                        )}
+                                                      </span>
+                                                    );
+                                                  }
+                                                  return `${a.option_label}. ${a.answer_text || ''}`;
+                                                })()
+                                              : 'N/A'
+                                            : userAns?.user_answer_text || 'No answer'}
                                         </Typography>
                                       </Box>
                                     </Grid>
-                                  )}
-                                </Grid>
+                                    {!isCorrect && (
+                                      <Grid item xs={6}>
+                                        <Box
+                                          sx={{
+                                            p: 1.5,
+                                            borderRadius: '10px',
+                                            bgcolor: '#f0fdf4',
+                                            border: '1px solid #dcfce7',
+                                          }}
+                                        >
+                                          <Typography
+                                            variant="caption"
+                                            display="block"
+                                            color="text.secondary"
+                                            fontWeight={700}
+                                            sx={{ fontFamily: '"Outfit", sans-serif' }}
+                                          >
+                                            CORRECT ANSWER
+                                          </Typography>
+                                          <Typography
+                                            variant="body2"
+                                            fontWeight={600}
+                                            color="#166534"
+                                            sx={{ fontFamily: '"Outfit", sans-serif' }}
+                                          >
+                                            {correctAns
+                                              ? (() => {
+                                                  const imgUrl = correctAns.resources?.image;
+                                                  // Format A: Hiển thị Label + Ảnh
+                                                  if (part.format === 'A') {
+                                                    return (
+                                                      <span
+                                                        style={{
+                                                          display: 'inline-flex',
+                                                          alignItems: 'flex-start',
+                                                          gap: '8px',
+                                                          lineHeight: '1.2',
+                                                        }}
+                                                      >
+                                                        <span style={{ marginTop: '2px' }}>
+                                                          {correctAns.option_label}.
+                                                        </span>
 
-                                {q.explanation && (
-                                  <Box
-                                    sx={{
-                                      mt: 2,
-                                      p: 2,
-                                      bgcolor: '#f8fafc',
-                                      borderRadius: '12px',
-                                      borderLeft: '4px solid #cbd5e1',
-                                    }}
-                                  >
-                                    <Typography
-                                      variant="caption"
-                                      display="block"
-                                      color="text.secondary"
-                                      fontWeight={700}
-                                      sx={{ mb: 0.5, fontFamily: '"Outfit", sans-serif' }}
+                                                        {imgUrl && (
+                                                          <img
+                                                            src={imgUrl}
+                                                            alt={`Correct Option ${correctAns.option_label}`}
+                                                            style={{
+                                                              maxWidth: '100px',
+                                                              borderRadius: '4px',
+                                                              objectFit: 'contain',
+                                                              display: 'block',
+                                                            }}
+                                                          />
+                                                        )}
+                                                      </span>
+                                                    );
+                                                  }
+                                                  // Format D thì không hiện label, các format khác hiện "A. Text"
+                                                  const label =
+                                                    part.format !== 'D'
+                                                      ? `${correctAns.option_label}. `
+                                                      : '';
+                                                  return `${label}${correctAns.answer_text || ''}`;
+                                                })()
+                                              : 'N/A'}
+                                          </Typography>
+                                        </Box>
+                                      </Grid>
+                                    )}
+                                  </Grid>
+
+                                  {q.explanation && (
+                                    <Box
+                                      sx={{
+                                        mt: 2,
+                                        p: 2,
+                                        bgcolor: '#f8fafc',
+                                        borderRadius: '12px',
+                                        borderLeft: '4px solid #cbd5e1',
+                                      }}
                                     >
-                                      EXPLANATION
-                                    </Typography>
-                                    <Typography
-                                      variant="body2"
-                                      color="#475569"
-                                      sx={{ fontFamily: '"Outfit", sans-serif' }}
-                                    >
-                                      {q.explanation}
-                                    </Typography>
-                                  </Box>
-                                )}
-                              </Stack>
+                                      <Typography
+                                        variant="caption"
+                                        display="block"
+                                        color="text.secondary"
+                                        fontWeight={700}
+                                        sx={{ mb: 0.5, fontFamily: '"Outfit", sans-serif' }}
+                                      >
+                                        EXPLANATION
+                                      </Typography>
+                                      <Typography
+                                        variant="body2"
+                                        color="#475569"
+                                        sx={{ fontFamily: '"Outfit", sans-serif' }}
+                                      >
+                                        {q.explanation}
+                                      </Typography>
+                                    </Box>
+                                  )}
+                                </Stack>
+                              </Grid>
                             </Grid>
-                          </Grid>
-                        </Paper>
-                      );
-                    })}
-                  </Stack>
-                </Box>
-              ))}
+                          </Paper>
+                        );
+                      })}
+                    </Stack>
+                  </Box>
+                ))}
             </Stack>
           </Grid>
         </Grid>

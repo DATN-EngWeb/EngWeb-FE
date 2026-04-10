@@ -35,7 +35,7 @@ import MultipleChoiceSingleAudio from './part/multipleChoiceSingleAudio';
 import MultipleChoiceQuestionAudio from './part/multipleChoiceMultiQuestionAudio';
 import Matching from './part/matching';
 import Skeleton from './skeleton';
-// import FireWork from '../../Animation/fireWork';
+import ReceptiveTestResult from '../ReceptiveTestResult/ReceptiveTestResult';
 
 export default function ListeningTestContent({ test_id, initialData }) {
   const router = useRouter();
@@ -48,8 +48,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
   const [indexPart, setIndexPart] = useState(0);
   const [timeLeft, setTimeLeft] = useState(testData?.time || 0);
   const [allAnswers, setAllAnswers] = useState({});
-  const [isReadOnly, setIsReadOnly] = useState(false);
-  // const [showFirework, setShowFirework] = useState(false);
 
   const [openConfirm, setOpenConfirm] = useState(false);
   const [submitType, setSubmitType] = useState('D');
@@ -62,24 +60,26 @@ export default function ListeningTestContent({ test_id, initialData }) {
     answer_histories: [],
   });
 
+  const [submittedHistoryId, setSubmittedHistoryId] = useState(null);
+
   const transformAnswers = (answersObj) => {
     const result = [];
 
-    // Duyệt qua từng Part
     Object.values(answersObj).forEach((questions) => {
-      // Duyệt qua từng câu hỏi trong Part đó
       Object.entries(questions).forEach(([questionId, value]) => {
-        const historyItem = {
-          receptive_question: questionId,
-        };
+        if (value !== null && value !== undefined && value !== '') {
+          const historyItem = {
+            receptive_question: questionId,
+          };
 
-        if (typeof value === 'number') {
-          historyItem.receptive_answer = value;
-        } else {
-          historyItem.user_answer_text = value;
+          if (typeof value === 'number') {
+            historyItem.receptive_answer = value;
+          } else {
+            historyItem.user_answer_text = value;
+          }
+
+          result.push(historyItem);
         }
-
-        result.push(historyItem);
       });
     });
 
@@ -132,7 +132,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
         answer_histories: formattedHistories,
       };
 
-      await createReceptiveTest(payload);
+      const response = await createReceptiveTest(payload);
 
       setSnackbar({
         open: true,
@@ -141,7 +141,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
       });
 
       if (submitType === 'S') {
-        // setShowFirework(true);
+        setSubmittedHistoryId(response.id);
       } else {
         setTimeout(() => {
           if (typeof window !== 'undefined') {
@@ -254,9 +254,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
           if (saved) {
             const savedData = JSON.parse(saved);
-
-            setIsReadOnly(!!savedData.isReadOnly);
-
             const restoredAnswers = {};
 
             savedData.answer_histories.forEach((hist) => {
@@ -279,7 +276,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
               receptive_test: svData.id,
               start_time: savedData.startTime || new Date().toISOString(),
               type: savedData.isReadOnly ? 'S' : 'D',
-              answer_histories: transformAnswers(restoredAnswers), // Optional
+              answer_histories: transformAnswers(restoredAnswers),
             });
           } else {
             setTestHistory({
@@ -319,10 +316,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
-  if (isInitial) {
-    return <Skeleton disabled={isReadOnly} />;
-  }
-
   const goNextPart = () => {
     if (indexPart < receptiveParts.length - 1) {
       window.scrollTo({ top: 64, behavior: 'smooth' });
@@ -345,13 +338,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
     }));
   };
 
-  const handleFireworkComplete = () => {
-    if (typeof window !== 'undefined') {
-      window.sessionStorage.removeItem('current_receptive_attempt');
-    }
-    router.push(`/student/listening/${test_id}`);
-  };
-
   const renderPart = (part, index) => {
     // - 'A': Listening - Multiple choice images
     // - 'B': Listening - Multiple choice text (one audio per question)
@@ -365,7 +351,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
       dataPart: part,
       isActive: isActive,
       userAnswers: allAnswers[part.id] || {},
-      disabled: isReadOnly,
       onUpdateAnswers: (answers) => handleUpdateAnswers(part.id, answers),
       media: mediaResources[part.id] || {},
     };
@@ -386,9 +371,16 @@ export default function ListeningTestContent({ test_id, initialData }) {
     }
   };
 
+  if (submittedHistoryId) {
+    return <ReceptiveTestResult historyId={submittedHistoryId} />;
+  }
+
+  if (isInitial) {
+    return <Skeleton />;
+  }
+
   return (
     <Box sx={{ ...listeningtestStyles.mainContainer, position: 'relative' }}>
-      {/* {showFirework && <FireWork onComplete={handleFireworkComplete} />} */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
@@ -462,12 +454,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
       <Container maxWidth="lg">
         {/* -------- Test Heading Section --------- */}
         <Box sx={listeningtestStyles.testHeadingContainer}>
-          <Box
-            sx={{
-              ...listeningtestStyles.timeLeft,
-              ...(isReadOnly === true && { visibility: 'hidden' }),
-            }}
-          >
+          <Box sx={listeningtestStyles.timeLeft}>
             <AccessTimeIcon
               sx={{
                 color: 'secondary.main',
@@ -485,13 +472,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
             </Typography>
           </Box>
           <Box sx={listeningtestStyles.summitButtonWrapper}>
-            <Button
-              sx={{
-                ...listeningtestStyles.submitButton,
-                ...(isReadOnly === true && { visibility: 'hidden' }),
-              }}
-              onClick={handlePreSubmit}
-            >
+            <Button sx={listeningtestStyles.submitButton} onClick={handlePreSubmit}>
               Submit Test
             </Button>
           </Box>
@@ -558,13 +539,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
                 Next
               </Button>
             ) : (
-              <Button
-                sx={{
-                  ...listeningtestStyles.nextButton,
-                  ...(isReadOnly === true && { visibility: 'hidden' }),
-                }}
-                onClick={handlePreSubmit}
-              >
+              <Button sx={listeningtestStyles.nextButton} onClick={handlePreSubmit}>
                 Submit
               </Button>
             )}
