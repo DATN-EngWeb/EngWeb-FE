@@ -32,6 +32,7 @@ export default function ProgressTracking({ historyData, type, activeTab }) {
     let dataToSave;
     if (type === 'R') {
       dataToSave = {
+        history_id: res.id,
         answer_histories: res.answer_histories,
         isReadOnly: res.type === 'S',
         startTime: res.start_time,

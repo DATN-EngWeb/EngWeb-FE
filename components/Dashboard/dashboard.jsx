@@ -162,7 +162,7 @@ export default function StudentDashboard() {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: { xs: 3, md: 5 }, px: { xs: 10, md: 20 } }}>
+    <Container maxWidth="xl" sx={{ py: { xs: 3, md: 5 }, px: { xs: 2, md: 10, lg: 20 } }}>
       <Box
         sx={{
           display: 'grid',
