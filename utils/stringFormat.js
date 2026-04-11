@@ -37,11 +37,27 @@ export const minutesToHour = (minutes) => {
   return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
 };
 
+// Định dạng: 25/12/2023
 export const formatDate = (dateString) => {
   if (!dateString) return '';
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+
   const day = String(date.getDate()).padStart(2, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const year = date.getFullYear();
   return `${day}/${month}/${year}`;
+};
+
+// Định dạng: Dec 25, 2023
+export const formatDateFull = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+  }).format(date);
 };

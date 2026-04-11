@@ -36,11 +36,15 @@ import { getProductiveTestDetails, createProductiveTest, getAIFeedback } from '@
 import ProductivePreview from '../Writing-Speaking/ProductivePreview';
 import { levelTheme } from '../TestCard';
 import * as styles from '../../styles/student/Writing/WritingTestStyles';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { useStreakContext } from '@/context/streakContext';
+
 export default function WritingTest() {
   const params = useParams();
   const testId = params.test_id;
   const attempt = params.attempt;
   const router = useRouter();
+  const { refreshStreak } = useStreakContext();
 
   // States
   const [text, setText] = useState('');
@@ -173,6 +177,7 @@ export default function WritingTest() {
       setIsFinished(false);
       setStartTime(new Date().toISOString());
       setSnackbar({ open: true, message: 'Test submitted successfully!', severity: 'success' });
+      await refreshStreak();
       setTimeout(() => {
         sessionStorage.removeItem('current_productive_attempt');
         router.push(`/student/writing/${testId}`);
