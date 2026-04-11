@@ -356,36 +356,58 @@ export default function WritingTest() {
         {/* Action Buttons on the Right */}
         <Box
           sx={{
-            width: 320,
             display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'flex-end',
-            alignItems: 'center',
-            gap: 1.5,
+            flexDirection: 'column',
+            gap: 1,
+            alignItems: 'flex-end',
           }}
         >
+          {/* Row 1: Save Draft and Submit Test */}
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Button
+              variant="contained"
+              startIcon={<EditNoteIcon />}
+              onClick={handleSaveDraft}
+              sx={{
+                ...styles.aiButton,
+                bgcolor: 'info.pastel',
+                color: 'info.main',
+                py: 1,
+                px: 2,
+                borderRadius: '12px',
+                fontSize: '0.8125rem',
+                minWidth: 'auto',
+                textTransform: 'none',
+                fontWeight: 700,
+                '&:hover': { bgcolor: '#e3f2fd' },
+              }}
+            >
+              Save Draft
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<SendIcon />}
+              onClick={handleSubmit}
+              disabled={wordCount < settings.minWords}
+              sx={{
+                ...styles.submitButton(wordCount < settings.minWords),
+                py: 1,
+                px: 2,
+                borderRadius: '12px',
+                fontSize: '0.8125rem',
+                minWidth: 'auto',
+                textTransform: 'none',
+                fontWeight: 700,
+              }}
+            >
+              Submit Test
+            </Button>
+          </Stack>
+
+          {/* Row 2: AI Feedback */}
           <Button
             variant="contained"
-            startIcon={<EditNoteIcon />}
-            onClick={handleSaveDraft}
-            sx={{
-              ...styles.aiButton,
-              bgcolor: 'info.pastel',
-              color: 'info.main',
-              py: 1,
-              px: 2,
-              borderRadius: '12px',
-              fontSize: '0.8125rem',
-              minWidth: 'auto',
-              textTransform: 'none',
-              fontWeight: 700,
-              '&:hover': { bgcolor: '#e3f2fd' },
-            }}
-          >
-            Save Draft
-          </Button>
-          <Button
-            variant="contained"
+            fullWidth
             startIcon={<AutoAwesomeIcon />}
             onClick={handleAIFeedback}
             sx={{
@@ -401,24 +423,6 @@ export default function WritingTest() {
           >
             AI Feedback
           </Button>
-          <Button
-            variant="contained"
-            startIcon={<SendIcon />}
-            onClick={handleSubmit}
-            disabled={wordCount < settings.minWords}
-            sx={{
-              ...styles.submitButton(wordCount < settings.minWords),
-              py: 1,
-              px: 2,
-              borderRadius: '12px',
-              fontSize: '0.8125rem',
-              minWidth: 'auto',
-              textTransform: 'none',
-              fontWeight: 700,
-            }}
-          >
-            Submit
-          </Button>
         </Box>
       </Box>
 
@@ -427,7 +431,7 @@ export default function WritingTest() {
           <PanelGroup direction="horizontal" id="writing-test-layout">
             {/* test  data */}
             <Panel defaultSize={50} minSize={40}>
-              <Box sx={{ height: '100%', overflowY: 'auto', pr: 1 }}>
+              <Box sx={{ height: '100%', overflowY: 'auto', mr: 2 }}>
                 <ProductivePreview
                   preview={false}
                   title={testData.title}
@@ -482,7 +486,7 @@ export default function WritingTest() {
 
             {/* student test */}
             <Panel defaultSize={50} minSize={40}>
-              <Box sx={{ height: '100%', overflowY: 'auto', pl: 1 }}>
+              <Box sx={{ height: '100%', overflowY: 'auto', ml: 2 }}>
                 <Collapse in={showOutline}>
                   <Paper sx={styles.outlinePaper}>
                     <Box
@@ -604,7 +608,7 @@ export default function WritingTest() {
               textAlign: 'center',
             }}
           >
-            Submit
+            Submit Test
           </DialogTitle>
           <DialogContent>
             <Typography variant="body2" display="block">
@@ -623,7 +627,7 @@ export default function WritingTest() {
                 '&:hover': { bgcolor: '#3e2723' },
               }}
             >
-              Submit
+              Submit Test
             </Button>
           </DialogActions>
         </Dialog>

@@ -37,6 +37,7 @@ import * as styles from '../../styles/student/Writing/WritingTestStyles';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { uploadMediaFile } from '../../utils/uploadHelpers';
+import CustomAudioPlayer from '../Test/customAudioPlayer';
 
 export default function SpeakingTest() {
   const params = useParams();
@@ -485,7 +486,7 @@ export default function SpeakingTest() {
           <PanelGroup direction="horizontal" id="writing-test-layout">
             {/* test  data */}
             <Panel defaultSize={50} minSize={40}>
-              <Box sx={{ height: '100%', overflowY: 'auto', pr: 1 }}>
+              <Box sx={{ height: '100%', overflowY: 'auto', mr: 2 }}>
                 <ProductivePreview
                   preview={false}
                   title={testData.title}
@@ -496,7 +497,47 @@ export default function SpeakingTest() {
               </Box>
             </Panel>
 
-            <PanelResizeHandle id="resize-handle" style={{ width: '8px', cursor: 'col-resize' }} />
+            <PanelResizeHandle
+              id="resize-handle"
+              style={{
+                width: '12px',
+                cursor: 'col-resize',
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {/* Vertical Line */}
+              <Box sx={{ width: '2px', height: '100%', bgcolor: '#e0e0e0' }} />
+              {/* Circular Handle */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: 28,
+                  height: 28,
+                  bgcolor: 'white',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 0 4px rgba(0,0,0,0.15)',
+                  border: '1px solid #eee',
+                  zIndex: 2,
+                  fontSize: 14,
+                  color: 'text.secondary',
+                  userSelect: 'none',
+                  '&:hover': {
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                  },
+                }}
+              >
+                ⇔
+              </Box>
+            </PanelResizeHandle>
 
             {/* student test */}
             <Panel defaultSize={50} minSize={40}>
@@ -574,47 +615,40 @@ export default function SpeakingTest() {
                       </IconButton>
                     ) : (
                       // case: recorded
-                      <Stack
-                        direction="row"
-                        spacing={3}
-                        justifyContent="center"
-                        alignItems="center"
-                      >
-                        {/* replay */}
-                        {!isReadOnly && (
-                          <IconButton
-                            onClick={() => handleReplay()}
-                            sx={{ border: '2px solid #ddd', width: 50, height: 50 }}
-                          >
-                            <ReplayIcon />
-                          </IconButton>
-                        )}
-
-                        {/* play audio */}
-                        <IconButton
-                          onClick={handlePlayAudio}
-                          sx={{
-                            width: 80,
-                            height: 80,
-                            bgcolor: '#ffb300',
-                            color: 'white',
-                            '&:hover': { bgcolor: '#ffa000' },
-                          }}
-                        >
-                          {isPlaying ? (
-                            <PauseIcon sx={{ fontSize: 40 }} />
-                          ) : (
-                            <PlayArrowIcon sx={{ fontSize: 40 }} />
+                      <Box sx={{ width: '100%', mt: 2 }}>
+                        {/* replay button sitting above the bar or integrated */}
+                        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                          {!isReadOnly && (
+                            <IconButton
+                              onClick={() => handleReplay()}
+                              sx={{
+                                border: '1px solid #ddd',
+                                p: 1,
+                                color: 'text.secondary',
+                                '&:hover': { bgcolor: '#f5f5f5', color: 'error.main' },
+                              }}
+                              title="Replay / Delete recording"
+                            >
+                              <ReplayIcon sx={{ fontSize: 20 }} />
+                            </IconButton>
                           )}
-                        </IconButton>
-                      </Stack>
+                        </Box>
+
+                        <CustomAudioPlayer src={audioUrl} isActive={true} />
+                      </Box>
                     )}
                   </Box>
 
-                  {/* timer */}
-                  <Typography variant="h3" fontWeight={500} sx={{ mb: 4, fontFamily: 'monospace' }}>
-                    {formatTime(recordingTime)}
-                  </Typography>
+                  {/* timer - only show when recording */}
+                  {!hasRecorded && (
+                    <Typography
+                      variant="h3"
+                      fontWeight={500}
+                      sx={{ mb: 4, fontFamily: 'monospace' }}
+                    >
+                      {formatTime(recordingTime)}
+                    </Typography>
+                  )}
                 </Box>
               </Box>
             </Panel>

@@ -82,14 +82,14 @@ export const SECTION_LABEL = (color) => ({
 export const STICKY_PREVIEW_WRAPPER = {
   position: 'sticky',
   transition: 'all 0.3s ease',
-  //minWidth: '300px',
+  height: '100%',
 };
 
 export const PREVIEW_PAPER_STYLE = {
   p: 4,
   borderRadius: '1rem',
   backgroundColor: 'primary.contrastText',
-  minHeight: '600px',
+  minHeight: '100%',
   boxShadow: 'none',
   border: '1px solid',
   borderColor: '#f0f0f0',

@@ -506,7 +506,7 @@ const FillBlanksContent = ({
                                     {options.map((option, index) => (
                                       <FormControlLabel
                                         key={index}
-                                        value={option.value}
+                                        value={option.value ?? ''}
                                         control={
                                           <Radio
                                             sx={{

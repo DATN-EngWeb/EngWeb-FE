@@ -142,7 +142,7 @@ export const textFieldStyle = {
 
 export const forumBox = {
   mt: 2,
-  p: 2,
+  p: 3,
   border: '1px solid #ffe0b2',
   borderRadius: '12px',
   bgcolor: '#fffdf9',
@@ -190,9 +190,10 @@ export const aiButton = {
 };
 
 export const speakingTestBox = {
-  height: '75%',
+  height: '100%',
+  p: 3,
+  ml: 2,
   overflowY: 'auto',
-  pl: 1,
   backgroundColor: 'white',
   borderRadius: '16px',
   boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
