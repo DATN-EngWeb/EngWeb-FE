@@ -17,7 +17,6 @@ import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
-import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
 import HeadsetMicRoundedIcon from '@mui/icons-material/HeadsetMicRounded';
 import MusicNoteRoundedIcon from '@mui/icons-material/MusicNoteRounded';
 import AudioUploader from '../Upload/AudioUploader';
@@ -39,6 +38,7 @@ import {
   answerOptionRow,
   trashIconButton,
   addQuestionBox,
+  addOptionButton,
 } from '../../styles/Teacher/Listening/ListeningStyles';
 
 const options = [
@@ -236,9 +236,17 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
       </Box>
 
       {!isCollapsed && (
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 4, mt: 2 }}>
+        <Box
+          sx={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            gap: 3,
+            mt: 1,
+          }}
+        >
           {/* -------------- Left Column: Config & Audio -------------- */}
-          <Box sx={{ flex: 1.2, minWidth: 0 }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
             <Box sx={{ mb: 3 }}>
               <Box sx={rowContent}>
                 <Typography sx={labelText}>
@@ -359,7 +367,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
           </Box>
 
           {/* -------------- Right Column: Questions -------------- */}
-          <Box sx={{ flex: 1.5, minWidth: 0 }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
             <Box sx={rowContent}>
               <Typography sx={labelText}>
                 Questions <span style={{ color: 'red' }}>*</span>
@@ -493,10 +501,9 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
                         </Stack>
 
                         <Button
-                          startIcon={<AddCircleRoundedIcon />}
-                          size="small"
+                          startIcon={<AddRoundedIcon sx={{ fontSize: '1.4rem' }} />}
                           onClick={() => addAnswer(qIdx)}
-                          sx={{ mt: 2, ...actionTextButton, textTransform: 'none' }}
+                          sx={addOptionButton}
                         >
                           Add option
                         </Button>

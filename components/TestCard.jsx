@@ -265,21 +265,22 @@ const TestCard = ({
       {/* Header: Format Badge and Level Badge */}
       <Box sx={{ display: 'flex', mb: 2, alignItems: 'center' }}>
         {formatText && (
-          <Box
+          <Typography
             sx={{
               bgcolor: currentFormatStyle.bg,
               color: currentFormatStyle.text,
               px: 1.5,
               py: 0.5,
               borderRadius: '6px',
-              fontSize: '0.7rem',
+              fontSize: '0.8rem',
               fontWeight: 700,
+              lineHeight: 1,
             }}
           >
             {formatText}
-          </Box>
+          </Typography>
         )}
-        <Box
+        <Typography
           sx={{
             marginLeft: 'auto',
             border: '1px solid',
@@ -288,13 +289,14 @@ const TestCard = ({
             px: 1.2,
             py: 0.4,
             borderRadius: '6px',
-            fontSize: '0.7rem',
+            fontSize: '0.8rem',
             fontWeight: 700,
             bgcolor: 'background.paper',
+            lineHeight: 1,
           }}
         >
           Level {level}
-        </Box>
+        </Typography>
       </Box>
 
       {/* Title & Description */}
@@ -374,7 +376,7 @@ const TestCard = ({
                 boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
               }}
             >
-              <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, letterSpacing: 0.2 }}>
+              <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, letterSpacing: 0.2 }}>
                 {skillLabel}
               </Typography>
             </Box>

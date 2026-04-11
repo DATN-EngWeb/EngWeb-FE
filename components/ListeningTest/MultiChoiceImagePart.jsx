@@ -17,7 +17,6 @@ import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
-import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
 import AudioUploader from '../Upload/AudioUploader';
 import ImageUploader from '../Upload/ImageUploader';
 import { useState } from 'react';
@@ -37,6 +36,7 @@ import {
   outlinedCard,
   trashIconButton,
   addQuestionBox,
+  addOptionButton,
 } from '../../styles/Teacher/Listening/ListeningStyles';
 
 export default function MultiChoiceImagePart({ index, part = {}, onChange, onDelete }) {
@@ -187,10 +187,18 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
       </Box>
 
       {!isCollapsed && (
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 4, mt: 2 }}>
+        <Box
+          sx={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            gap: 3,
+            mt: 1,
+          }}
+        >
           {/* -------------- Left Column: Config & Audio -------------- */}
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Box sx={{ mb: 3 }}>
+            <Box sx={{ mb: 2 }}>
               <Box sx={rowContent}>
                 <Typography sx={labelText}>
                   The score for each question <span style={{ color: 'red' }}>*</span>
@@ -243,7 +251,7 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
           </Box>
 
           {/* -------------- Right Column: Questions -------------- */}
-          <Box sx={{ flex: 1.5, minWidth: 0 }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
             <Box sx={rowContent}>
               <Typography sx={labelText}>
                 Questions <span style={{ color: 'red' }}>*</span>
@@ -360,16 +368,13 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
                           })}
                         </Grid>
 
-                        <Box mt={2}>
-                          <Button
-                            startIcon={<AddCircleRoundedIcon />}
-                            size="small"
-                            onClick={() => addAnswer(qIdx)}
-                            sx={{ ...actionTextButton, textTransform: 'none' }}
-                          >
-                            Add option
-                          </Button>
-                        </Box>
+                        <Button
+                          startIcon={<AddRoundedIcon sx={{ fontSize: '1.4rem' }} />}
+                          onClick={() => addAnswer(qIdx)}
+                          sx={addOptionButton}
+                        >
+                          Add option
+                        </Button>
                       </Box>
                     </Collapse>
                   </Paper>

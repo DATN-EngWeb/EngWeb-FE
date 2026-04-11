@@ -21,10 +21,6 @@ import {
   IconButton,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
-import FileUploadIcon from '@mui/icons-material/FileUpload';
-import SendRounded from '@mui/icons-material/SendRounded';
-import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import AddIcon from '@mui/icons-material/Add';
 import ArticleOutlined from '@mui/icons-material/ArticleOutlined';
@@ -61,7 +57,16 @@ export default function Page() {
     description: '',
     status: 'D',
   });
-  const [parts, setParts] = useState([]);
+  const [parts, setParts] = useState([
+    {
+      id: Date.now(),
+      order: 1,
+      format: null,
+      description: '',
+      scoreForEachQuestion: 10,
+      questions: [],
+    },
+  ]);
 
   const lastPartRef = useRef(null);
   const prevPartsLengthRef = useRef(parts.length);
@@ -501,63 +506,36 @@ export default function Page() {
         </Alert>
       </Snackbar>
       <ScrollToTopButton />
-      <Container maxWidth={false}>
+      <Container maxWidth="lg">
         {/* -------- Title Section --------- */}
         <Box sx={uploadReadingStyles.cardTitle}>
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-            <IconButton
-              onClick={() => router.push('/teacher/upload-test')}
-              sx={{ color: 'primary.main', p: 0 }}
-            >
-              <ArrowBackIcon />
-            </IconButton>
-            <Typography variant="h3" sx={uploadReadingStyles.mainTitleHeading}>
-              Create New Reading Test
-            </Typography>
-          </Stack>
+          <Typography variant="h3" sx={uploadReadingStyles.mainTitleHeading}>
+            Create New Reading Test
+          </Typography>
           <Typography variant="body1" sx={uploadReadingStyles.description}>
             Fill in details below to create a new reading test for your students.
           </Typography>
         </Box>
         {/* -------- Function Buttons Section --------- */}
-        <Box sx={uploadReadingStyles.functionButtonsWrapper}>
-          <Button
-            startIcon={
-              <VisibilityOutlinedIcon
-                sx={{ transform: { xs: 'translateY(0px)', md: 'translateY(3px)' } }}
-              />
-            }
-            sx={{ ...uploadReadingStyles.previewButton, gridArea: 'item1' }}
-            onClick={() => setShowInlinePreview((prev) => !prev)}
-          >
-            {showInlinePreview ? 'Hide Preview' : 'Show Preview'}
-          </Button>
-          <Button
-            startIcon={
-              <SendRounded sx={{ transform: 'rotate(-45deg) translateY(2px) translateX(7px)' }} />
-            }
-            sx={{ ...uploadReadingStyles.rightButton, gridArea: 'item2' }}
-            onClick={() => handleUploadParts('I')}
-            disabled={isLoading}
-          >
-            Send For Review
-          </Button>
-          <Button
-            startIcon={<DescriptionOutlined sx={{ fontSize: 20, transform: 'translateY(0px)' }} />}
-            sx={{ ...uploadReadingStyles.rightButton, gridArea: 'item3' }}
-            onClick={() => handleUploadParts('D')}
-            disabled={isLoading}
-          >
-            Save Draft
-          </Button>
-          <Button
-            startIcon={<FileUploadIcon sx={{ fontSize: 20, transform: 'translateY(0px)' }} />}
-            sx={{ ...uploadReadingStyles.publicButton, gridArea: 'item4' }}
-            onClick={() => handleUploadParts('P')}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Uploading...' : 'Public'}
-          </Button>
+        <Box
+          sx={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 1100,
+            backgroundColor: '#FFF4E9',
+            pt: 0.5,
+            pb: 0.5,
+            px: 2,
+          }}
+        >
+          <TestEditorActions
+            onPreview={() => setShowInlinePreview((prev) => !prev)}
+            isPreviewActive={showInlinePreview}
+            onSendReview={() => handleUploadParts('I')}
+            onSaveDraft={() => handleUploadParts('D')}
+            onPublish={() => handleUploadParts('P')}
+            isLoading={isLoading}
+          />
         </Box>
 
         {showInlinePreview && (
@@ -579,14 +557,8 @@ export default function Page() {
         {/* -------- Upload Reading Test Form Section --------- */}
         {!showInlinePreview && (
           <Box sx={uploadReadingStyles.uploadReadingFormSection}>
-            <Typography
-              variant="h3"
-              sx={{ ...uploadReadingStyles.mainTitleHeading, alignSelf: 'flex-start' }}
-            >
-              Test Editor
-            </Typography>
             {/* -------------------- Basic Information -------------------- */}
-            <Box sx={uploadReadingStyles.basicInfoContainer}>
+            <Box sx={{ ...uploadReadingStyles.basicInfoContainer, mt: 1 }}>
               <Stack direction="row" spacing={2} alignItems="center">
                 <Box
                   sx={{
@@ -600,7 +572,12 @@ export default function Page() {
               </Stack>
               <Box sx={uploadReadingStyles.nameTestAndTime}>
                 <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-                  <FormLabel sx={uploadReadingStyles.labelInput}>Test title</FormLabel>
+                  <FormLabel sx={uploadReadingStyles.labelInput}>
+                    Test title
+                    <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
+                      *
+                    </Box>
+                  </FormLabel>
                   <OutlinedInput
                     placeholder="Enter test title here"
                     value={test.title}
@@ -609,7 +586,12 @@ export default function Page() {
                   />
                 </FormControl>
                 <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-                  <FormLabel sx={uploadReadingStyles.labelInput}>Time</FormLabel>
+                  <FormLabel sx={uploadReadingStyles.labelInput}>
+                    Time
+                    <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
+                      *
+                    </Box>
+                  </FormLabel>
                   <OutlinedInput
                     placeholder="Enter time here"
                     value={test.time}
@@ -619,7 +601,12 @@ export default function Page() {
                 </FormControl>
               </Box>
               <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-                <FormLabel sx={uploadReadingStyles.labelInput}>Description</FormLabel>
+                <FormLabel sx={uploadReadingStyles.labelInput}>
+                  Description
+                  <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
+                    *
+                  </Box>
+                </FormLabel>
                 <OutlinedInput
                   multiline
                   placeholder="Enter description here"
@@ -629,7 +616,12 @@ export default function Page() {
                 />
               </FormControl>
               <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-                <FormLabel sx={uploadReadingStyles.labelInput}>Level</FormLabel>
+                <FormLabel sx={uploadReadingStyles.labelInput}>
+                  Level
+                  <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
+                    *
+                  </Box>
+                </FormLabel>
                 <Select
                   displayEmpty
                   value={test.level}

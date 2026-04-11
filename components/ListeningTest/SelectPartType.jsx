@@ -1,35 +1,49 @@
 'use client';
 
-import { Typography, Button, Box } from '@mui/material';
-import PartTypeCard from './PartTypeCard';
+import React from 'react';
+import { Typography, Button, Box, Stack } from '@mui/material';
+import { uploadReadingStyles } from '../../styles/Teacher/Reading/UploadReadingStyles';
 
 export default function SelectPartType({ partTypes, onSelectType, onCancel }) {
   return (
     <>
-      <Typography fontWeight={600} mb={2} sx={{ color: 'primary.main', fontSize: '1.2rem' }}>
-        Select Part Type
-      </Typography>
-
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-          gap: 2,
-          mb: 2,
-        }}
-      >
+      <Stack direction="row" spacing={2} alignItems="center">
+        <Box
+          sx={{
+            width: '4px',
+            height: '36px',
+            backgroundColor: 'yellow.main',
+            borderRadius: '1rem',
+          }}
+        />
+        <Typography sx={uploadReadingStyles.basicInfoHeading}>Select Part Type</Typography>
+      </Stack>
+      <Box sx={uploadReadingStyles.partContentContainer}>
         {partTypes.map((type) => (
-          <PartTypeCard
+          <Button
             key={type.id}
-            icon={type.icon}
-            title={type.title}
-            description={type.description}
+            sx={uploadReadingStyles.selectedPart}
             onClick={() => onSelectType(type.id)}
-          />
+          >
+            {React.cloneElement(type.icon, {
+              sx: [type.icon.props?.sx, uploadReadingStyles.iconSelectedPart],
+            })}
+            <Box sx={uploadReadingStyles.partTextContainer}>
+              <Typography sx={uploadReadingStyles.partTitle}>{type.title}</Typography>
+              <Typography sx={uploadReadingStyles.partDescription}>{type.description}</Typography>
+            </Box>
+          </Button>
         ))}
       </Box>
-
-      <Button variant="text" onClick={onCancel} sx={{ textTransform: 'none', px: 0 }}>
+      <Button
+        sx={{
+          color: 'text.gray',
+          fontSize: { xs: '0.7rem', md: '0.9rem' },
+          textTransform: 'none',
+          px: 2,
+        }}
+        onClick={onCancel}
+      >
         Cancel
       </Button>
     </>

@@ -123,9 +123,17 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
       </Box>
 
       {!isCollapsed && (
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 4, mt: 2 }}>
+        <Box
+          sx={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            gap: 3,
+            mt: 1,
+          }}
+        >
           {/* -------------- Left Column: Config & Content -------------- */}
-          <Box sx={{ flex: 1.2, minWidth: 0 }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
             <Box sx={{ mb: 3 }}>
               <Box sx={rowContent}>
                 <Typography sx={labelText}>
@@ -176,7 +184,10 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
                 sx={textInput}
               />
             </Box>
+          </Box>
 
+          {/* -------------- Right Column: Answers -------------- */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
             <Box sx={{ mb: 3 }}>
               <Box sx={rowContent}>
                 <Typography sx={labelText}>
@@ -195,10 +206,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
                 />
               </Box>
             </Box>
-          </Box>
 
-          {/* -------------- Right Column: Answers -------------- */}
-          <Box sx={{ flex: 1.5, minWidth: 0 }}>
             <Box sx={rowContent}>
               <Typography sx={labelText}>
                 Answers <span style={{ color: 'red' }}>*</span>

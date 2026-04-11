@@ -166,61 +166,69 @@ export default function MultipleChoiceForm({
   return (
     <>
       {/* ------------- Heading ------------- */}
-      <Box
-        sx={{
-          ...multipleChoiceStyles.simpleBoxFlexRow,
-          width: '100%',
-          gap: 2,
-          justifyContent: 'space-between',
-        }}
-      >
+      <Box sx={uploadReadingStyles.partEditorHeader}>
         <Box
           sx={{
-            ...multipleChoiceStyles.simpleBoxFlexRow,
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            width: '100%',
+            minWidth: 0,
             gap: 2,
-            justifyContent: 'flex-start',
           }}
         >
           <Box
             sx={{
-              width: '4px',
-              height: { xs: '36px', md: '40px' },
-              backgroundColor: 'yellow.main',
-              borderRadius: '1rem',
+              ...multipleChoiceStyles.simpleBoxFlexRow,
+              gap: 2,
+              justifyContent: 'flex-start',
+              minWidth: 0,
+              flex: 1,
             }}
-          ></Box>
-          <Box sx={multipleChoiceStyles.headingContainer}>
-            <Typography sx={multipleChoiceStyles.headingCard}>Part {index + 1}</Typography>
-            <Typography sx={multipleChoiceStyles.descriptionCard}>
-              {`${part.format === 'G' ? 'Multiple choice long text' : 'Multiple choice short text'} - ${questions.filter((q) => q.action !== 'delete').length} questions`}
-            </Typography>
+          >
+            <Box
+              sx={{
+                width: '4px',
+                height: { xs: '36px', md: '40px' },
+                backgroundColor: 'yellow.main',
+                borderRadius: '1rem',
+                flexShrink: 0,
+              }}
+            ></Box>
+            <Box sx={multipleChoiceStyles.headingContainer}>
+              <Typography sx={multipleChoiceStyles.headingCard}>Part {index + 1}</Typography>
+              <Typography sx={multipleChoiceStyles.descriptionCard}>
+                {`${part.format === 'G' ? 'Multiple choice long text' : 'Multiple choice short text'} - ${questions.filter((q) => q.action !== 'delete').length} questions`}
+              </Typography>
+            </Box>
           </Box>
-        </Box>
-        <Box
-          sx={{
-            ...multipleChoiceStyles.simpleBoxFlexRow,
-            gap: 0,
-            justifyContent: 'flex-start',
-          }}
-        >
-          <DeleteRoundedIcon
-            onClick={() => handleDeletePart(partId)}
+          <Box
             sx={{
-              cursor: 'pointer',
-              fontSize: { xs: '1.2rem', md: '1.4rem' },
-              color: 'primary.main',
+              ...multipleChoiceStyles.simpleBoxFlexRow,
+              gap: 0.5,
+              flexShrink: 0,
+              ml: 'auto',
             }}
-          />
-          <ExpandLessRoundedIcon
-            onClick={() => setIsOpen(!isOpen)}
-            sx={{
-              cursor: 'pointer',
-              fontSize: { xs: '1.4rem', md: '1.6rem' },
-              color: 'primary.main',
-              transition: 'transform 0.3s ease',
-              transform: isOpen ? 'rotate(0deg)' : 'rotate(180deg)',
-            }}
-          />
+          >
+            <DeleteRoundedIcon
+              onClick={() => handleDeletePart(partId)}
+              sx={{
+                cursor: 'pointer',
+                fontSize: { xs: '1.2rem', md: '1.4rem' },
+                color: 'primary.main',
+              }}
+            />
+            <ExpandLessRoundedIcon
+              onClick={() => setIsOpen(!isOpen)}
+              sx={{
+                cursor: 'pointer',
+                fontSize: { xs: '1.4rem', md: '1.6rem' },
+                color: 'primary.main',
+                transition: 'transform 0.3s ease',
+                transform: isOpen ? 'rotate(0deg)' : 'rotate(180deg)',
+              }}
+            />
+          </Box>
         </Box>
       </Box>
       {/* ------------- Config Section ------------- */}
@@ -231,14 +239,21 @@ export default function MultipleChoiceForm({
             flexDirection: { xs: 'column', lg: 'row' },
             gap: 4,
             width: '100%',
-            mt: 2,
+            maxWidth: '100%',
+            alignSelf: 'stretch',
+            mt: 0,
           }}
         >
           {/* -------------- Left Column: Score & Passage -------------- */}
-          <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Box sx={{ ...uploadReadingStyles.partEditorColumn, flex: 1, minWidth: 0 }}>
             {/* -------------- Total Each Score -------------- */}
             <FormControl fullWidth sx={{ ...uploadReadingStyles.formControl, mb: 3 }}>
-              <FormLabel sx={uploadReadingStyles.labelInput}>The score for each question</FormLabel>
+              <FormLabel sx={uploadReadingStyles.labelInput}>
+                The score for each question
+                <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
+                  *
+                </Box>
+              </FormLabel>
               <OutlinedInput
                 placeholder="Enter the score for each question here"
                 defaultValue={part.scoreForEachQuestion}
@@ -252,7 +267,12 @@ export default function MultipleChoiceForm({
                 <Box
                   sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}
                 >
-                  <FormLabel sx={uploadReadingStyles.labelInput}>Passage</FormLabel>
+                  <FormLabel sx={uploadReadingStyles.labelInput}>
+                    Passage
+                    <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
+                      *
+                    </Box>
+                  </FormLabel>
                 </Box>
                 <ClientSideCustomEditor
                   data={part.content || ''}
@@ -263,7 +283,12 @@ export default function MultipleChoiceForm({
               </FormControl>
             ) : (
               <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-                <FormLabel sx={uploadReadingStyles.labelInput}>Description</FormLabel>
+                <FormLabel sx={uploadReadingStyles.labelInput}>
+                  Description
+                  <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
+                    *
+                  </Box>
+                </FormLabel>
                 <OutlinedInput
                   multiline
                   placeholder="Enter description here"
@@ -276,10 +301,15 @@ export default function MultipleChoiceForm({
           </Box>
 
           {/* -------------- Right Column: Questions -------------- */}
-          <Box sx={{ flex: 1.2, minWidth: 0 }}>
+          <Box sx={{ ...uploadReadingStyles.partEditorColumn, flex: 1.2, minWidth: 0 }}>
             <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
               <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                <FormLabel sx={uploadReadingStyles.labelInput}>Questions</FormLabel>
+                <FormLabel sx={uploadReadingStyles.labelInput}>
+                  Questions
+                  <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
+                    *
+                  </Box>
+                </FormLabel>
               </Box>
               {questions.filter((q) => q.action !== 'delete').length === 0 ? (
                 <Box sx={multipleChoiceStyles.questionsContainer}>
