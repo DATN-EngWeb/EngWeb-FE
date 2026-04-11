@@ -19,7 +19,6 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material';
-
 import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -37,12 +36,14 @@ import * as styles from '../../styles/student/Writing/WritingTestStyles';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { uploadMediaFile } from '../../utils/uploadHelpers';
+import { useStreakContext } from '../../context/streakContext';
 
 export default function SpeakingTest() {
   const params = useParams();
   const testId = params.test_id;
   const attempt = params.attempt;
   const router = useRouter();
+  const { refreshStreak } = useStreakContext();
 
   // States
   const [isRecording, setIsRecording] = useState(false);
@@ -189,6 +190,7 @@ export default function SpeakingTest() {
       setSecondsElapsed(0);
       setStartTime(new Date().toISOString());
       setSnackbar({ open: true, message: 'Test submitted successfully!', severity: 'success' });
+      await refreshStreak();
       setTimeout(() => {
         sessionStorage.removeItem('current_productive_attempt');
         router.push(`/student/speaking/${testId}`);

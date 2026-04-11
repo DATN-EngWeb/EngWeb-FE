@@ -35,7 +35,7 @@ import MultipleChoiceSingleAudio from './part/multipleChoiceSingleAudio';
 import MultipleChoiceQuestionAudio from './part/multipleChoiceMultiQuestionAudio';
 import Matching from './part/matching';
 import Skeleton from './skeleton';
-// import FireWork from '../../Animation/fireWork';
+import { useStreakContext } from '@/context/streakContext';
 
 export default function ListeningTestContent({ test_id, initialData }) {
   const router = useRouter();
@@ -49,7 +49,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
   const [timeLeft, setTimeLeft] = useState(testData?.time || 0);
   const [allAnswers, setAllAnswers] = useState({});
   const [isReadOnly, setIsReadOnly] = useState(false);
-  // const [showFirework, setShowFirework] = useState(false);
 
   const [openConfirm, setOpenConfirm] = useState(false);
   const [submitType, setSubmitType] = useState('D');
@@ -61,6 +60,8 @@ export default function ListeningTestContent({ test_id, initialData }) {
     end_time: null,
     answer_histories: [],
   });
+
+  const { refreshStreak } = useStreakContext();
 
   const transformAnswers = (answersObj) => {
     const result = [];
@@ -141,6 +142,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
       });
 
       if (submitType === 'S') {
+        await refreshStreak();
         // setShowFirework(true);
       } else {
         setTimeout(() => {
@@ -388,7 +390,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
   return (
     <Box sx={{ ...listeningtestStyles.mainContainer, position: 'relative' }}>
-      {/* {showFirework && <FireWork onComplete={handleFireworkComplete} />} */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
