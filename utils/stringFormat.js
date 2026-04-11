@@ -36,3 +36,17 @@ export const minutesToHour = (minutes) => {
   const mins = Math.floor(minutes % 60);
   return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
 };
+
+export const formatDate = (dateString) => {
+  if (!dateString) return '';
+
+  const date = new Date(dateString);
+
+  if (isNaN(date.getTime())) return dateString;
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+  }).format(date);
+};

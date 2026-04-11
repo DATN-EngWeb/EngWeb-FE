@@ -36,6 +36,7 @@ import MultipleChoiceQuestionAudio from './part/multipleChoiceMultiQuestionAudio
 import Matching from './part/matching';
 import Skeleton from './skeleton';
 import ReceptiveTestResult from '../ReceptiveTestResult/ReceptiveTestResult';
+import { useStreakContext } from '@/context/streakContext';
 
 export default function ListeningTestContent({ test_id, initialData }) {
   const router = useRouter();
@@ -61,6 +62,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
   });
 
   const [submittedHistoryId, setSubmittedHistoryId] = useState(null);
+  const { refreshStreak } = useStreakContext();
 
   const transformAnswers = (answersObj) => {
     const result = [];
@@ -142,6 +144,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
       if (submitType === 'S') {
         setSubmittedHistoryId(response.id);
+        await refreshStreak();
       } else {
         setTimeout(() => {
           if (typeof window !== 'undefined') {
