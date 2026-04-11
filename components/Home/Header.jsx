@@ -88,6 +88,7 @@ export default function Header() {
         await logoutAPI(refreshToken, accessToken);
       }
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Logout API error:', err);
     } finally {
       logoutHook();
@@ -121,9 +122,7 @@ export default function Header() {
                     marginX: '15px',
                     transition: 'all 0.2s',
                     '&:hover': {
-                      backgroundColor: pathname?.includes('/reading')
-                        ? 'secondary.dark'
-                        : 'action.hover',
+                      backgroundColor: 'transparent',
                     },
                   }}
                 >
@@ -135,7 +134,12 @@ export default function Header() {
                   color="inherit"
                   sx={{
                     ...navButtonStyles,
-                    backgroundColor: pathname?.includes('/listening')
+                    borderRadius: 0,
+                    backgroundColor: 'transparent',
+                    color: pathname?.includes('/listening') ? 'secondary.main' : 'primary.main',
+                    fontWeight: pathname?.includes('/listening') ? 700 : 500,
+                    borderBottom: '3px solid',
+                    borderColor: pathname?.includes('/listening')
                       ? 'secondary.main'
                       : 'transparent',
                     px: 1,
@@ -144,9 +148,7 @@ export default function Header() {
                     marginX: '15px',
                     transition: 'all 0.2s',
                     '&:hover': {
-                      backgroundColor: pathname?.includes('/listening')
-                        ? 'secondary.dark'
-                        : 'action.hover',
+                      backgroundColor: 'transparent',
                     },
                   }}
                 >
@@ -170,9 +172,7 @@ export default function Header() {
                     marginX: '15px',
                     transition: 'all 0.2s',
                     '&:hover': {
-                      backgroundColor: pathname?.includes('/writing')
-                        ? 'secondary.dark'
-                        : 'action.hover',
+                      backgroundColor: 'transparent',
                     },
                   }}
                 >
@@ -196,9 +196,7 @@ export default function Header() {
                     marginX: '15px',
                     transition: 'all 0.2s',
                     '&:hover': {
-                      backgroundColor: pathname?.includes('/speaking')
-                        ? 'secondary.dark'
-                        : 'action.hover',
+                      backgroundColor: 'transparent',
                     },
                   }}
                 >

@@ -8,6 +8,7 @@ import { useState, useRef } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { reactToPost } from '../../api/forum';
 import ForumPostModal from './ForumPostModal';
+import { formatDate } from '../../utils/stringFormat';
 
 const DEBOUNCE_MS = 800;
 
@@ -53,6 +54,7 @@ export default function ForumPostCard({ post, initialOpen = false }) {
         pendingLikedRef.current = !nextLiked;
         setLiked(!nextLiked);
         setLikeCount((prev) => (nextLiked ? prev - 1 : prev + 1));
+        // eslint-disable-next-line no-console
         console.error('Failed to react to post:', err);
       }
     }, DEBOUNCE_MS);
@@ -68,7 +70,7 @@ export default function ForumPostCard({ post, initialOpen = false }) {
 
             <Box display="flex" gap={1} alignItems="center">
               <Typography variant="caption" color="text.secondary">
-                {new Date(post.created_at).toLocaleDateString()}
+                {formatDate(post.created_at)}
               </Typography>
 
               <Chip
@@ -110,47 +112,58 @@ export default function ForumPostCard({ post, initialOpen = false }) {
           </Box>
         )}
 
-        <Box mt={2} display="flex" justifyContent="flex-end" gap={2} color="text.secondary">
-          <Box display="flex" alignItems="center" gap={0.5}>
-            <FavoriteBorderIcon fontSize="small" />
-            {likeCount}
+        <Box
+          mt={3}
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ borderTop: '1px solid #f0f0f0', pt: 2 }}
+        >
+          <Box display="flex" gap={1}>
+            <Button
+              size="small"
+              startIcon={liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+              onClick={handleLike}
+              sx={{
+                textTransform: 'none',
+                color: liked ? 'error.main' : 'text.secondary',
+                fontWeight: 700,
+                '&:hover': { bgcolor: 'transparent', color: 'error.light' },
+              }}
+            >
+              {liked ? 'Liked' : 'Like'}
+            </Button>
+
+            <Button
+              size="small"
+              startIcon={<ChatBubbleOutlineIcon />}
+              onClick={() => setModalOpen(true)}
+              sx={{
+                textTransform: 'none',
+                color: 'text.secondary',
+                fontWeight: 700,
+                '&:hover': { bgcolor: 'transparent' },
+              }}
+            >
+              Comment
+            </Button>
           </Box>
 
-          <Box display="flex" alignItems="center" gap={0.5}>
-            <ChatBubbleOutlineIcon fontSize="small" />
-            {commentCount}
+          <Box display="flex" gap={2} color="text.secondary">
+            <Box display="flex" alignItems="center" gap={0.5}>
+              <FavoriteBorderIcon fontSize="small" />
+              <Typography variant="body2" fontWeight={600}>
+                {likeCount}
+              </Typography>
+            </Box>
+
+            <Box display="flex" alignItems="center" gap={0.5}>
+              <ChatBubbleOutlineIcon fontSize="small" />
+              <Typography variant="body2" fontWeight={600}>
+                {commentCount}
+              </Typography>
+            </Box>
           </Box>
-        </Box>
-
-        <Box mt={2} mb={2} sx={{ borderBottom: '1px dashed #ddd' }} />
-
-        <Box display="flex" gap={2}>
-          <Button
-            fullWidth
-            variant={liked ? 'contained' : 'outlined'}
-            startIcon={liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-            onClick={handleLike}
-            sx={
-              liked
-                ? {
-                    bgcolor: 'primary.main',
-                    color: '#fff',
-                    '&:hover': { bgcolor: 'primary.light' },
-                  }
-                : {}
-            }
-          >
-            {liked ? 'Liked' : 'Like'}
-          </Button>
-
-          <Button
-            fullWidth
-            variant="outlined"
-            startIcon={<ChatBubbleOutlineIcon />}
-            onClick={() => setModalOpen(true)}
-          >
-            Comment
-          </Button>
         </Box>
       </CardContent>
 

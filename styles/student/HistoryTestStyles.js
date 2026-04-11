@@ -98,3 +98,33 @@ export const historyItemPaper = {
     boxShadow: 'none',
   },
 };
+
+export const tableContainer = {
+  width: '100%',
+  overflowX: 'auto',
+  borderRadius: '20px',
+  border: '1px solid #f0f0f0',
+  bgcolor: 'white',
+};
+
+export const tableHead = {
+  bgcolor: '#fcfcfc',
+  '& th': {
+    fontWeight: 800,
+    color: '#4e342e',
+    fontSize: '0.85rem',
+    borderBottom: '1px solid #f0f0f0',
+    py: 2,
+  },
+};
+
+export const tableRow = {
+  transition: 'all 0.2s',
+  '&:hover': {
+    bgcolor: '#fffdf9',
+  },
+  '& td': {
+    py: 2,
+    borderBottom: '1px solid #f8f8f8',
+  },
+};

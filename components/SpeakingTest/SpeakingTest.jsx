@@ -128,6 +128,7 @@ export default function SpeakingTest() {
             : null,
         });
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Fetch error:', error);
         setSnackbar({ open: true, message: 'Failed to load test data', severity: 'error' });
       }
@@ -170,6 +171,7 @@ export default function SpeakingTest() {
       });
       const audioUrl = audioFile ? await uploadMediaFile(audioFile, testId) : null;
 
+      // eslint-disable-next-line no-console
       console.log('Uploading audio to URL:', audioUrl);
 
       const response = await createProductiveTest({
@@ -181,6 +183,7 @@ export default function SpeakingTest() {
         audio_path: audioUrl,
         is_shared: true,
       });
+      // eslint-disable-next-line no-console
       console.log('Submission response:', response);
       setIsDraftSaved(true);
       setIsSaving(false);
@@ -194,6 +197,7 @@ export default function SpeakingTest() {
         router.push(`/student/speaking/${testId}`);
       }, 1000);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Submission error:', error);
       setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
     }
@@ -248,6 +252,7 @@ export default function SpeakingTest() {
         severity: 'success',
       });
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Submission error:', error);
       setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
       setIsSaving(false);
@@ -261,6 +266,7 @@ export default function SpeakingTest() {
       localStorage.setItem('remainAIturns', category.remaining_turns);
       router.push(`/student/speaking/${testId}/${attempt}/AI-feedback`);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error fetching AI feedback:', error);
       setSnackbar({ open: true, message: 'Failed to get AI feedback', severity: 'error' });
     } finally {
@@ -304,6 +310,7 @@ export default function SpeakingTest() {
         setHasRecorded(false);
         setRecordingTime(0);
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error('Microphone access denied:', err);
         setSnackbar({ open: true, message: 'Cannot access microphone!', severity: 'error' });
       }
@@ -371,55 +378,105 @@ export default function SpeakingTest() {
   return (
     <Box>
       <Box sx={styles.testHeaderContainer}>
-        {/* Test title and Level */}
-        <Stack direction="row" alignItems="center">
-          <Box>
-            <Stack direction="row" alignItems="center">
-              <Typography variant="h6" sx={{ fontWeight: 800, color: '#4e342e' }}>
-                {testData.title || 'Practice Test Name'}
-              </Typography>
-              <Box
-                sx={{
-                  px: 2,
-                  py: 0.5,
-                  borderRadius: '8px',
-                  border: `1px solid`,
-                  borderColor: levelTheme[testData.level]?.border,
-                  color: levelTheme[testData.level]?.text,
-                  bgcolor: levelTheme[testData.level]?.bg,
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  ml: 2,
-                }}
-              >
-                Level {testData.level || 'Level A1'}
-              </Box>
-            </Stack>
-            <Stack
-              direction="row"
-              spacing={3}
-              alignItems="center"
-              sx={{ mt: 1 }}
-              divider={<Box sx={styles.divider} />}
-            >
-              <Box sx={{ ...styles.groupIcon }}>
-                <HistoryEduIcon />
-                <Typography variant="body2">
-                  {FormatMapper[testData.type] || 'General Speaking Task'}
-                </Typography>
-              </Box>
-              <Box sx={{ ...styles.groupIcon }}>
-                <TimerIcon />
-                <Typography variant="body2">{testData.time} mins</Typography>
-              </Box>
-            </Stack>
+        {/* time counter*/}
+        <Box sx={{ width: 320, display: 'flex', justifyContent: 'flex-start' }}>
+          <Box sx={styles.timerBox}>
+            <AccessTimeIcon sx={{ fontSize: 28 }} />
+            <Typography variant="inherit">
+              {isMounted ? formatTime(secondsElapsed) : '00:00'}
+            </Typography>
           </Box>
-        </Stack>
-        <Box sx={styles.timerBox}>
-          <AccessTimeIcon sx={{ fontSize: 28 }} />
-          <Typography variant="inherit">
-            {isMounted ? formatTime(secondsElapsed) : '00:00'}
-          </Typography>
+        </Box>
+
+        {/* Test title and Level */}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Stack direction="row" alignItems="center">
+            <Typography variant="h6" sx={{ fontWeight: 800, color: '#4e342e' }}>
+              {testData.title || 'Practice Test Name'}
+            </Typography>
+            <Box
+              sx={{
+                px: 2,
+                py: 0.5,
+                borderRadius: '8px',
+                border: `1px solid`,
+                borderColor: levelTheme[testData.level]?.border,
+                color: levelTheme[testData.level]?.text,
+                bgcolor: levelTheme[testData.level]?.bg,
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                ml: 2,
+              }}
+            >
+              Level {testData.level || 'Level A1'}
+            </Box>
+          </Stack>
+          <Stack
+            direction="row"
+            spacing={3}
+            alignItems="center"
+            sx={{ mt: 1 }}
+            divider={<Box sx={styles.divider} />}
+          >
+            <Box sx={{ ...styles.groupIcon }}>
+              <HistoryEduIcon />
+              <Typography variant="body2">
+                {FormatMapper[testData.type] || 'General Speaking Task'}
+              </Typography>
+            </Box>
+            <Box sx={{ ...styles.groupIcon }}>
+              <TimerIcon />
+              <Typography variant="body2">{testData.time} mins</Typography>
+            </Box>
+          </Stack>
+        </Box>
+
+        {/* Action Buttons on the Right, visible but logic-gated */}
+        <Box
+          sx={{
+            width: 320,
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            gap: 1.5,
+          }}
+        >
+          <Button
+            variant="contained"
+            disabled={!hasRecorded || isRecording || isReadOnly}
+            onClick={() => handleAIFeedback()}
+            startIcon={<AutoAwesomeIcon />}
+            sx={{
+              ...styles.aiButton,
+              py: 1,
+              px: 2,
+              borderRadius: '12px',
+              fontSize: '0.8125rem',
+              minWidth: 'auto',
+              textTransform: 'none',
+              fontWeight: 700,
+            }}
+          >
+            AI Feedback
+          </Button>
+          <Button
+            variant="contained"
+            disabled={!hasRecorded || isRecording || isReadOnly}
+            sx={{
+              ...styles.submitButton(!hasRecorded || isRecording || isReadOnly),
+              py: 1,
+              px: 2,
+              borderRadius: '12px',
+              fontSize: '0.8125rem',
+              minWidth: 'auto',
+              textTransform: 'none',
+              fontWeight: 700,
+            }}
+            onClick={handleFinalSubmit}
+          >
+            Submit
+          </Button>
         </Box>
       </Box>
 
@@ -558,45 +615,6 @@ export default function SpeakingTest() {
                   <Typography variant="h3" fontWeight={500} sx={{ mb: 4, fontFamily: 'monospace' }}>
                     {formatTime(recordingTime)}
                   </Typography>
-
-                  <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      disabled={!hasRecorded || isRecording || isReadOnly}
-                      onClick={() => handleAIFeedback('AI Feedback')}
-                      startIcon={<AutoAwesomeIcon />}
-                      sx={{
-                        py: 1.5,
-                        borderRadius: '12px',
-                        bgcolor: 'secondary.main',
-                        color: 'white',
-                        textTransform: 'none',
-                        fontWeight: 700,
-                        '&:hover': { bgcolor: 'secondary.dark' },
-                        '&.Mui-disabled': { bgcolor: '#eceff1' },
-                      }}
-                    >
-                      AI Feedback
-                    </Button>
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      disabled={!hasRecorded || isRecording || isReadOnly}
-                      sx={{
-                        py: 1.5,
-                        borderRadius: '12px',
-                        bgcolor: 'warning.main',
-                        color: 'primary.main',
-                        textTransform: 'none',
-                        fontWeight: 700,
-                        '&.Mui-disabled': { bgcolor: '#eceff1' },
-                      }}
-                      onClick={handleFinalSubmit}
-                    >
-                      Submit test
-                    </Button>
-                  </Stack>
                 </Box>
               </Box>
             </Panel>

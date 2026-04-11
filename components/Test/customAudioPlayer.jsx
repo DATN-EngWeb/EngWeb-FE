@@ -39,6 +39,7 @@ const CustomAudioPlayer = ({
           onPlay();
           setIsPlaying(true);
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.log('Audio playback was interrupted:', error);
         }
       }
@@ -70,6 +71,7 @@ const CustomAudioPlayer = ({
         onPlay();
         setIsPlaying(true);
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.log('Play after seek interrupted');
       }
     }

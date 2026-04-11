@@ -19,7 +19,7 @@ export default function TestHeading({
       <Box sx={{ ...listeningtestStyles.testHeadingContainer, py: { xs: 0.5, md: 1 } }}>
         {/* Left: Timer or Back/Exit */}
         <Box
-          sx={{ width: { xs: 'auto', md: '200px' }, display: 'flex', alignItems: 'center', gap: 1 }}
+          sx={{ width: { xs: 'auto', md: '320px' }, display: 'flex', alignItems: 'center', gap: 1 }}
         >
           {isTeacher && onExit && (
             <Button
@@ -45,18 +45,53 @@ export default function TestHeading({
           {partLabel && <Typography sx={listeningtestStyles.formatName}>{partLabel}</Typography>}
         </Box>
 
-        {/* Right: Submit Test or AI Review */}
-        <Box sx={listeningtestStyles.summitButtonWrapper}>
-          {!isTeacher ? (
-            <Button sx={listeningtestStyles.submitButton} onClick={onSubmit}>
+        {/* Right: Submit Test and/or AI Review */}
+        <Box
+          sx={{
+            width: { xs: 'auto', md: '320px' },
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            gap: 1.5,
+          }}
+        >
+          {onAIReview && (
+            <Button
+              sx={{
+                ...listeningtestStyles.submitButton,
+                backgroundColor: 'info.pastel',
+                color: 'info.main',
+                py: 1,
+                borderRadius: '12px',
+                fontSize: '0.8125rem',
+                minWidth: 'auto',
+                px: 2,
+                textTransform: 'none',
+                fontWeight: 700,
+                '&:hover': { bgcolor: '#e3f2fd' },
+              }}
+              onClick={onAIReview}
+            >
+              AI Feedback
+            </Button>
+          )}
+          {onSubmit && (
+            <Button
+              sx={{
+                ...listeningtestStyles.submitButton,
+                py: 1,
+                borderRadius: '12px',
+                fontSize: '0.8125rem',
+                minWidth: 'auto',
+                px: 2,
+                textTransform: 'none',
+                fontWeight: 700,
+              }}
+              onClick={onSubmit}
+            >
               Submit Test
             </Button>
-          ) : (
-            onAIReview && (
-              <Button sx={listeningtestStyles.submitButton} onClick={onAIReview}>
-                AI Review
-              </Button>
-            )
           )}
         </Box>
       </Box>

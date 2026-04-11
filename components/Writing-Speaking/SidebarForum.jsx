@@ -3,7 +3,6 @@
 import ForumIcon from '@mui/icons-material/Forum';
 import * as styles from './../../styles/student/HistoryTestStyles';
 import { Box, Button, Typography, Stack, Paper } from '@mui/material';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 
 export const SidebarForum = () => {
@@ -34,7 +33,6 @@ export const SidebarForum = () => {
       <Button
         fullWidth
         variant="contained"
-        endIcon={<OpenInNewIcon />}
         sx={{
           bgcolor: '#ffb300',
           color: '#4e342e',

@@ -9,6 +9,7 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import * as styles from '../../styles/student/HistoryTestStyles';
 import { useRouter } from 'next/navigation';
 import HistoryAIFeedbackModal from '../WritingTest/HistoryAIFeedbackModal';
+import { formatDate } from '../../utils/stringFormat';
 
 export default function HistoryItem({ data }) {
   const router = useRouter();
@@ -75,12 +76,7 @@ export default function HistoryItem({ data }) {
           <Box>
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
               <Typography variant="subtitle2" fontWeight={800} color="text.secondary">
-                {data.end_time &&
-                  new Date(data.end_time).toLocaleDateString('vi-VN', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                  })}
+                {data.end_time && formatDate(data.end_time)}
               </Typography>
               {data.is_shared && (
                 <Chip

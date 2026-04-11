@@ -28,8 +28,8 @@ export const SECTION_TITLE_STYLE = {
 export const panelPaper = {
   p: 2.5,
   mb: 3,
-  border: '2px solid',
-  borderColor: 'yellow.main',
+  border: '1px solid',
+  borderColor: '#f0f0f0',
   borderRadius: '1.5rem',
   backgroundColor: 'primary.contrastText',
   boxShadow: 'none',
@@ -91,8 +91,8 @@ export const PREVIEW_PAPER_STYLE = {
   backgroundColor: 'primary.contrastText',
   minHeight: '600px',
   boxShadow: 'none',
-  border: '2px solid',
-  borderColor: 'yellow.main',
+  border: '1px solid',
+  borderColor: '#f0f0f0',
   backgroundImage: 'linear-gradient(#fff 0%, #fdfdfd 100%)',
   outline: 'none',
 };

@@ -27,8 +27,8 @@ export const listeningtestStyles = {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 1,
-    px: { xs: 0, md: 3 },
+    gap: 2,
+    px: { xs: 1, md: 3 },
     py: { xs: 0.5, md: 1 },
   },
   separatorLine: {
@@ -53,10 +53,12 @@ export const listeningtestStyles = {
     transform: 'translateX(-10px)',
   },
   summitButtonWrapper: {
-    width: { xs: 'auto', sm: '200px' },
+    width: { xs: 'auto', sm: '320px' },
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 1.5,
   },
   submitButton: {
     backgroundColor: 'yellow.main',
@@ -162,7 +164,7 @@ export const listeningtestStyles = {
     py: 0.5,
     fontWeight: 600,
     fontSize: { xs: '0.8rem', md: '1.2rem' },
-    minWidth: { xs: '0', sm: '200px' },
+    minWidth: { xs: '0', sm: '320px' },
   },
   timeLeftSkeleton: {
     ...skeletonBase,

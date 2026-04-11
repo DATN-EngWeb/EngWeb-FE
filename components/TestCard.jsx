@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { deleteProductiveTest, deleteReceptiveTest } from '../api/test';
 import DeleteConfirmSnackbar from './Teacher/DeleteConfirmSnackbar';
+import { formatDate } from '../utils/stringFormat';
 
 export const levelTheme = {
   A1: {
@@ -134,11 +135,7 @@ const TestCard = ({
     [],
   );
 
-  const displayDate = new Date(created_at).toLocaleDateString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
+  const displayDate = formatDate(created_at);
 
   const router = useRouter();
 

@@ -489,11 +489,7 @@ export default function ReadingTestPage() {
               },
             }}
           >
-            {isSubmitting ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : (
-              'SUBMIT AND REVIEW ANSWERS'
-            )}
+            {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'SUBMIT'}
           </Button>
         </DialogActions>
       </Dialog>

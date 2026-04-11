@@ -25,6 +25,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import CustomAudioPlayer from '../Test/customAudioPlayer';
 import { useState, useEffect, useRef } from 'react';
 import { getComments, createComment, reactToPost } from '../../api/forum';
+import { formatDate } from '../../utils/stringFormat';
 
 const DEBOUNCE_MS = 800;
 
@@ -63,6 +64,7 @@ export default function ForumPostModal({
       setComments((prev) => (append ? [...prev, ...results] : results));
       setNextPage(data?.next ? page + 1 : null);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Failed to load comments:', err);
     } finally {
       setLoadingComments(false);
@@ -99,6 +101,7 @@ export default function ForumPostModal({
       setCommentText('');
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Failed to post comment:', err);
     } finally {
       setSubmitting(false);
@@ -123,7 +126,7 @@ export default function ForumPostModal({
               <Typography fontWeight={700}>{post.author_name}</Typography>
               <Box display="flex" gap={1} alignItems="center">
                 <Typography variant="caption" color="text.secondary">
-                  {new Date(post.created_at).toLocaleDateString()}
+                  {formatDate(post.created_at)}
                 </Typography>
                 <Chip label={post.skill} size="small" sx={{ bgcolor: '#6B2C1F', color: '#fff' }} />
               </Box>
@@ -154,46 +157,66 @@ export default function ForumPostModal({
             </Box>
           )}
 
-          <Box display="flex" justifyContent="flex-end" gap={2} color="text.secondary" mb={1}>
-            <Box display="flex" alignItems="center" gap={0.5}>
-              <FavoriteBorderIcon fontSize="small" />
-              {likeCount}
-            </Box>
-            <Box display="flex" alignItems="center" gap={0.5}>
-              <ChatBubbleOutlineIcon fontSize="small" />
-              {commentCount}
-            </Box>
-          </Box>
-
-          <Divider sx={{ borderStyle: 'dashed', mb: 1.5 }} />
-
           <Box
-            component="button"
-            onClick={onLikeToggle}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.5,
-              border: 'none',
-              bgcolor: 'transparent',
-              cursor: 'pointer',
-              color: liked ? '#6B2C1F' : 'text.secondary',
-              fontWeight: liked ? 700 : 400,
-              mb: 2,
-              p: 0,
-            }}
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            sx={{ borderTop: '1px solid #f0f0f0', pt: 2, mt: 2, mb: 2 }}
           >
-            {liked ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
-            <Typography variant="body2">{liked ? 'Liked' : 'Like'}</Typography>
+            <Button
+              size="small"
+              startIcon={liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+              onClick={onLikeToggle}
+              sx={{
+                textTransform: 'none',
+                color: liked ? 'error.main' : 'text.secondary',
+                fontWeight: 700,
+                p: 0,
+                minWidth: 'auto',
+                '&:hover': { bgcolor: 'transparent', color: 'error.light' },
+              }}
+            >
+              {liked ? 'Liked' : 'Like'}
+            </Button>
+
+            <Box display="flex" gap={2} color="text.secondary">
+              <Box display="flex" alignItems="center" gap={0.5}>
+                <FavoriteBorderIcon fontSize="small" />
+                <Typography variant="body2" fontWeight={600}>
+                  {likeCount}
+                </Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={0.5}>
+                <ChatBubbleOutlineIcon fontSize="small" />
+                <Typography variant="body2" fontWeight={600}>
+                  {commentCount}
+                </Typography>
+              </Box>
+            </Box>
           </Box>
 
           <Divider sx={{ mb: 2 }} />
-          <FormControl size="small" sx={{ mb: 2, minWidth: 160 }}>
-            <Select value={ordering} label="Sort by" onChange={handleOrderingChange}>
-              <MenuItem value="-created_at">Newest first</MenuItem>
-              <MenuItem value="created_at">Oldest first</MenuItem>
-            </Select>
-          </FormControl>
+          <Box display="flex" justifyContent="flex-end" mb={1}>
+            <FormControl size="small" sx={{ minWidth: 120 }}>
+              <Select
+                value={ordering}
+                onChange={handleOrderingChange}
+                sx={{
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  bgcolor: '#fafafa',
+                  '& .MuiSelect-select': { py: 0.5 },
+                }}
+              >
+                <MenuItem value="-created_at" sx={{ fontSize: '13px' }}>
+                  Newest first
+                </MenuItem>
+                <MenuItem value="created_at" sx={{ fontSize: '13px' }}>
+                  Oldest first
+                </MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
 
           {loadingComments ? (
             <Box display="flex" justifyContent="center" py={3}>
@@ -233,7 +256,7 @@ export default function ForumPostModal({
                         variant="caption"
                         sx={{ position: 'absolute', top: 10, right: 12, color: '#6B2C1F' }}
                       >
-                        {new Date(c.created_at).toLocaleDateString()}
+                        {formatDate(c.created_at)}
                       </Typography>
                     )}
                   </Box>

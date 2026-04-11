@@ -1,10 +1,8 @@
 export const mainContainer = {
   backgroundColor: 'gray.light',
-  px: { xs: 2, md: 4, lg: 6 },
-  // py: 2,
+  px: 0,
   display: 'flex',
   flexDirection: 'column',
-  height: '100vh',
   overflow: 'hidden',
 };
 
@@ -19,7 +17,7 @@ export const testHeaderContainer = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  px: 8,
+  px: 2,
   py: 2,
   bgcolor: 'white',
   borderBottom: '1px solid #eee',
@@ -70,6 +68,8 @@ export const contentWrapper = {
 export const panelScrollBox = (isLeft = true) => ({
   height: '100%',
   overflowY: 'auto',
+  display: 'flex',
+  flexDirection: 'column',
   [isLeft ? 'pr' : 'pl']: 1,
 });
 
@@ -106,6 +106,10 @@ export const writingPaper = {
   borderRadius: '16px',
   border: '1px solid #eee',
   boxShadow: '0px 4px 20px rgba(0,0,0,0.05)',
+  height: '100%', // Stretch to fill panel
+  display: 'flex',
+  flexDirection: 'column',
+  bgcolor: 'white',
 };
 
 export const progressBarWrapper = {
