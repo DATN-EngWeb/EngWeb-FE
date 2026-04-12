@@ -869,7 +869,14 @@ export default function Page() {
                     borderRadius: '1rem',
                   }}
                 ></Box>
-                <Typography sx={uploadReadingStyles.basicInfoHeading}>Basic infomation</Typography>
+                <Typography
+                  sx={{
+                    ...uploadReadingStyles.basicInfoHeading,
+                    fontSize: { xs: '1rem', md: '1.2rem' },
+                  }}
+                >
+                  Basic infomation
+                </Typography>
               </Box>
               <Box sx={uploadReadingStyles.nameTestAndTime}>
                 <FormControl fullWidth sx={uploadReadingStyles.formControl}>
@@ -894,7 +901,7 @@ export default function Page() {
                     </Box>
                   </FormLabel>
                   <OutlinedInput
-                    placeholder="Enter time here"
+                    placeholder="60"
                     defaultValue={test.time}
                     sx={uploadReadingStyles.input}
                     onBlur={(e) => setTest({ ...test, time: Number(e.target.value) })}
@@ -909,11 +916,11 @@ export default function Page() {
                   </Box>
                 </FormLabel>
                 <OutlinedInput
-                  multiline
+                  size="small"
                   placeholder="Enter description here"
                   defaultValue={test.description}
                   onBlur={(e) => setTest({ ...test, description: e.target.value })}
-                  sx={uploadReadingStyles.inputMultiline}
+                  sx={uploadReadingStyles.input}
                 />
               </FormControl>
               <FormControl fullWidth sx={uploadReadingStyles.formControl}>
@@ -924,6 +931,7 @@ export default function Page() {
                   </Box>
                 </FormLabel>
                 <Select
+                  size="small"
                   displayEmpty
                   value={test.level || ''}
                   sx={{
@@ -936,6 +944,10 @@ export default function Page() {
                     },
                     '& .MuiSelect-iconOpen': {
                       transform: 'rotate(180deg)',
+                    },
+                    '& .MuiSelect-select': {
+                      display: 'flex',
+                      alignItems: 'center',
                     },
                   }}
                   IconComponent={KeyboardArrowDownIcon}

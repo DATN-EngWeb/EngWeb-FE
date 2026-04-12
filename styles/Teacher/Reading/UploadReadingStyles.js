@@ -202,7 +202,6 @@ export const uploadReadingStyles = {
     fontWeight: 700,
   },
   input: {
-    height: 44,
     fontSize: { xs: '0.7rem', md: '0.9rem' },
     borderRadius: '1rem',
   },
@@ -227,7 +226,7 @@ export const uploadReadingStyles = {
     textAlign: 'center',
     gap: { xs: 0, md: 1 },
     width: '100%',
-    py: 1,
+    py: 0.75,
     backgroundColor: '#fff',
     border: '2px solid',
     borderColor: 'yellow.main',

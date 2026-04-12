@@ -15,20 +15,23 @@ export default function BasicInformation({ testName, level, time, description, o
     <Paper sx={panelPaper}>
       <Box sx={sectionHeader}>
         <Box sx={accentBar} />
-        <Typography fontWeight={600} sx={{ color: 'primary.main' }}>
-          Basic information
+        <Typography
+          fontWeight={600}
+          sx={{ color: 'primary.main', fontSize: { xs: '1rem', md: '1.2rem' } }}
+        >
+          Basic infomation
         </Typography>
       </Box>
 
       <Box sx={twoColRow}>
-        <Box sx={{ flex: 1 }}>
+        <Box>
           <Typography sx={{ ...labelText, mb: 0.5 }}>
-            Title <span style={{ color: 'red' }}>*</span>
+            Test title <span style={{ color: 'red' }}>*</span>
           </Typography>
           <TextField
             id="testname"
             fullWidth
-            placeholder="Enter title"
+            placeholder="Enter test title here"
             value={testName}
             onChange={(e) => onChange('testName', e.target.value)}
             size="small"
@@ -36,7 +39,7 @@ export default function BasicInformation({ testName, level, time, description, o
             sx={textInput}
           />
         </Box>
-        <Box sx={{ flex: 1 }}>
+        <Box>
           <Typography sx={{ ...labelText, mb: 0.5 }}>
             Time <span style={{ color: 'red' }}>*</span>
           </Typography>
@@ -44,13 +47,28 @@ export default function BasicInformation({ testName, level, time, description, o
             fullWidth
             size="small"
             type="number"
-            placeholder="Enter time"
+            placeholder="60"
             value={time ?? ''}
             onChange={(e) => onChange('time', e.target.value)}
             error={errors?.time}
             sx={textInput}
           />
         </Box>
+      </Box>
+
+      <Box sx={{ mb: 2 }}>
+        <Typography sx={{ ...labelText, mb: 0.5 }}>
+          Description <span style={{ color: 'red' }}>*</span>
+        </Typography>
+        <TextField
+          fullWidth
+          size="small"
+          placeholder="Enter description here"
+          value={description ?? ''}
+          onChange={(e) => onChange('description', e.target.value)}
+          error={errors?.description}
+          sx={textInput}
+        />
       </Box>
 
       <Box>
@@ -63,11 +81,9 @@ export default function BasicInformation({ testName, level, time, description, o
           sx={{
             '& .MuiOutlinedInput-root': {
               borderRadius: '1rem',
-              height: 44,
               fontSize: { xs: '0.7rem', md: '0.9rem' },
             },
             '& .MuiSelect-select': {
-              py: 1,
               display: 'flex',
               alignItems: 'center',
             },
@@ -84,22 +100,6 @@ export default function BasicInformation({ testName, level, time, description, o
             <MenuItem value="B2">B2</MenuItem>
           </Select>
         </FormControl>
-      </Box>
-
-      <Box sx={{ mt: 2, mb: 2 }}>
-        <Typography sx={{ ...labelText, mb: 0.5 }}>
-          Description <span style={{ color: 'red' }}>*</span>
-        </Typography>
-        <TextField
-          fullWidth
-          multiline
-          minRows={2}
-          placeholder="Enter test description"
-          value={description ?? ''}
-          onChange={(e) => onChange('description', e.target.value)}
-          error={errors?.description}
-          sx={textInput}
-        />
       </Box>
     </Paper>
   );

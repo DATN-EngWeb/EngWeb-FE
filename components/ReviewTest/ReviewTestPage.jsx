@@ -160,11 +160,18 @@ export default function ReviewTestPage() {
   return (
     <Box component="main" sx={styles.contentWrapper}>
       {/* Header Section */}
-      <Box sx={styles.welcomeHeader}>
-        <Typography variant="h1" sx={styles.welcomeTitle}>
+      <Box
+        sx={{
+          backgroundColor: '#fff',
+          borderRadius: 3,
+          p: 3,
+          mb: 4,
+        }}
+      >
+        <Typography variant="h3" fontWeight={600} color="primary.main">
           {isMine ? 'My Test Collection' : 'Review Test Center'}
         </Typography>
-        <Typography variant="body1" sx={styles.welcomeSub} mb={3}>
+        <Typography color="text.secondary">
           {isMine
             ? 'Manage and track the status of your created exam questions.'
             : 'Review exam questions from colleagues to ensure quality.'}

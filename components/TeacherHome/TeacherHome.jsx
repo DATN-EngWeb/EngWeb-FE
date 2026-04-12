@@ -153,13 +153,18 @@ export default function TeacherHome() {
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
   return (
     <Box component="main" sx={styles.contentWrapper}>
-      <Box sx={styles.welcomeHeader}>
-        <Typography variant="h1" sx={styles.welcomeTitle}>
+      <Box
+        sx={{
+          backgroundColor: '#fff',
+          borderRadius: 3,
+          p: 3,
+          mb: 4,
+        }}
+      >
+        <Typography variant="h3" fontWeight={600} color="primary.main">
           Welcome to Teacher homepage
         </Typography>
-        <Typography variant="body1" sx={styles.welcomeSub}>
-          Manage and track all your tests in one place
-        </Typography>
+        <Typography color="text.secondary">Manage and track all your tests in one place</Typography>
       </Box>
 
       <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>

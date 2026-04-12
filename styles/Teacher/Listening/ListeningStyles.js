@@ -28,7 +28,7 @@ export const panelPaper = {
 export const sectionHeader = {
   display: 'flex',
   alignItems: 'center',
-  gap: 1,
+  gap: 2,
   mb: 1,
 };
 
@@ -58,7 +58,7 @@ export const addPartBox = {
   alignItems: 'center',
   justifyContent: 'center',
   gap: 1.5,
-  py: { xs: 1, md: 1.5 },
+  py: { xs: 0.5, md: 0.8 },
   mb: 3,
   cursor: 'pointer',
   border: '1px solid',
@@ -92,7 +92,7 @@ export const addQuestionBox = {
   alignItems: 'center',
   justifyContent: 'center',
   gap: 1.5,
-  py: { xs: 1.2, md: 1.5 },
+  py: { xs: 0.5, md: 0.8 },
   mt: 2,
   cursor: 'pointer',
   border: '1px solid',
