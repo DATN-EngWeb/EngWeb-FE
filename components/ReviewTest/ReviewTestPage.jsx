@@ -278,7 +278,7 @@ export default function ReviewTestPage() {
       </Box>
 
       {/* Table Section */}
-      <TableContainer component={Paper} sx={{ mt: 2, maxHeight: 600 }}>
+      <TableContainer component={Paper} elevation={0} sx={styles.tableContainer}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
             <CircularProgress />
@@ -299,7 +299,7 @@ export default function ReviewTestPage() {
             <TableBody>
               {tests.length > 0 ? (
                 tests.map((item) => (
-                  <TableRow key={item.id} hover>
+                  <TableRow key={item.id} hover sx={styles.tableRow}>
                     {!isMine && (
                       <TableCell sx={styles.tableBodyCell}>
                         <Stack direction="row" alignItems="center" spacing={1.5}>

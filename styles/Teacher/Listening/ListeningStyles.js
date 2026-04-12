@@ -40,9 +40,16 @@ export const accentBar = {
 };
 
 export const twoColRow = {
+  display: 'flex',
   gap: 2,
   mb: 2,
   flexDirection: { xs: 'column', md: 'row' },
+  '& > *:first-of-type': {
+    flex: 0.7,
+  },
+  '& > *:last-of-type': {
+    flex: 0.3,
+  },
 };
 
 export const addPartBox = {

@@ -175,8 +175,15 @@ export default function ProductiveTestEditor({
             {basicOpen && (
               <BasicInformation
                 {...testData}
-                onChange={(field, value) => setTestData((prev) => ({ ...prev, [field]: value }))}
-                errors={errors?.testData}
+                timeLimit={settings.timeLimit}
+                onChange={(field, value) => {
+                  if (field === 'timeLimit') {
+                    setSettings((prev) => ({ ...prev, [field]: value }));
+                  } else {
+                    setTestData((prev) => ({ ...prev, [field]: value }));
+                  }
+                }}
+                errors={{ ...errors?.testData, ...errors?.settings }}
               />
             )}
 
