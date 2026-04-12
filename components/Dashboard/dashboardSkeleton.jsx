@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Container, Box, Paper, Stack, Grid } from '@mui/material';
+import { Container, Box, Paper, Stack } from '@mui/material';
 import { keyframes } from '@mui/system';
 
 const shimmer = keyframes`
@@ -29,83 +29,80 @@ const SkeletonBox = ({ width, height, borderRadius = '8px', sx = {} }) => (
 
 export default function SkeletonStudentDashboard() {
   return (
-    <Container maxWidth="lg" sx={{ py: 4, display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Grid
-        container
-        spacing={2}
-        alignItems="start"
-        justifyContent="space-between"
+    <Container maxWidth="xl" sx={{ py: { xs: 3, md: 5 }, px: { xs: 2, md: 10, lg: 20 } }}>
+      <Box
         sx={{
-          flexDirection: { xs: 'column-reverse', sm: 'row' },
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', lg: '300px minmax(0, 1fr)' },
+          gap: 2,
+          alignItems: 'start',
         }}
       >
-        {/* Overall Progress Section */}
-        <Grid size={{ xs: 12, sm: 9 }}>
+        {/* Left Column - Level Points Panel & Streak Progress */}
+        <Stack spacing={2}>
+          {/* Level Points Panel Skeleton */}
           <Paper
             elevation={0}
             sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'start',
-              gap: 2,
               border: '1px solid',
               borderColor: 'divider',
               bgcolor: 'background.paper',
-              p: 2,
-              borderRadius: '1rem',
+              p: 2.25,
+              borderRadius: '1.25rem',
+              boxShadow: 'none',
             }}
           >
-            <SkeletonBox width="180px" height="28px" />
+            <Stack spacing={2}>
+              {/* Header */}
+              <Stack direction="row" spacing={1.2} alignItems="center">
+                <SkeletonBox width="40px" height="40px" borderRadius="14px" />
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <SkeletonBox width="120px" height="20px" sx={{ mb: 0.5 }} />
+                  <SkeletonBox width="180px" height="12px" />
+                </Box>
+              </Stack>
 
-            {/* Tabs Skeleton */}
-            <Box
-              sx={{
-                display: { xs: 'grid', sm: 'flex' },
-                gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'none' },
-                gap: 1,
-                width: '100%',
-              }}
-            >
-              {[1, 2, 3, 4].map((i) => (
-                <SkeletonBox key={i} width={{ xs: '100%', sm: '120px' }} height="40px" />
-              ))}
-            </Box>
-
-            {/* Content Area Skeleton */}
-            <Box
-              sx={{
-                width: '100%',
-                bgcolor: 'background.gray',
-                borderRadius: '1rem',
-                minHeight: 400,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: { xs: 1, md: 2 },
-                p: 2,
-              }}
-            >
-              {/* Chart Placeholder */}
-              <SkeletonBox height="250px" borderRadius="1rem" />
-
-              {/* Stats Grid Skeleton */}
-              <Box
+              {/* Current Level Card */}
+              <Paper
+                variant="outlined"
                 sx={{
-                  display: 'grid',
-                  gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
-                  gap: { xs: 1, md: 2 },
-                  width: '100%',
+                  p: 1.4,
+                  borderRadius: 3,
+                  bgcolor: 'background.default',
+                  borderColor: 'divider',
                 }}
               >
-                {[1, 2, 3, 4].map((i) => (
-                  <SkeletonBox key={i} height="100px" borderRadius="12px" />
-                ))}
-              </Box>
-            </Box>
-          </Paper>
-        </Grid>
+                <Stack spacing={0.9}>
+                  {/* Level Info */}
+                  <Stack direction="row" spacing={0.9} alignItems="center">
+                    <SkeletonBox width="36px" height="36px" borderRadius="9px" />
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                      <SkeletonBox width="80px" height="12px" sx={{ mb: 0.5 }} />
+                      <SkeletonBox width="150px" height="16px" />
+                    </Box>
+                  </Stack>
 
-        {/* Streak Progress Section */}
-        <Grid size={{ xs: 12, sm: 3 }}>
+                  {/* Progress Bar */}
+                  <SkeletonBox height="22px" borderRadius="999px" />
+
+                  {/* XP Info */}
+                  <SkeletonBox width="180px" height="12px" />
+                </Stack>
+              </Paper>
+
+              <Box sx={{ borderTop: '1px solid', borderColor: 'divider' }} />
+
+              {/* All Levels Section */}
+              <Stack spacing={1.2}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
+                  <SkeletonBox width="70px" height="18px" />
+                  <SkeletonBox width="100px" height="32px" borderRadius="999px" />
+                </Stack>
+              </Stack>
+            </Stack>
+          </Paper>
+
+          {/* Streak Progress Skeleton */}
           <Paper
             elevation={0}
             sx={{
@@ -147,12 +144,7 @@ export default function SkeletonStudentDashboard() {
             {/* Footer */}
             <Stack
               spacing={1.5}
-              sx={{
-                pt: 2,
-                borderTop: '1px solid',
-                borderColor: 'divider',
-                width: '100%',
-              }}
+              sx={{ pt: 2, borderTop: '1px solid', borderColor: 'divider', width: '100%' }}
             >
               {/* Best Streak */}
               <Stack direction="row" alignItems="center" spacing={1.5}>
@@ -173,53 +165,127 @@ export default function SkeletonStudentDashboard() {
               </Stack>
             </Stack>
           </Paper>
-        </Grid>
-      </Grid>
-
-      {/* Progress History Section */}
-      <Paper
-        elevation={0}
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'start',
-          gap: 2,
-          border: '1px solid',
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-          p: 2,
-          borderRadius: '1rem',
-        }}
-      >
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          sx={{ width: '100%' }}
-        >
-          <SkeletonBox width="160px" height="28px" />
-          <SkeletonBox width="120px" height="40px" />
         </Stack>
 
-        {/* History Items Grid Skeleton */}
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-            gap: 2,
-            width: '100%',
-          }}
-        >
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <SkeletonBox key={i} height="90px" borderRadius="1rem" />
-          ))}
-        </Box>
+        {/* Right Column - Overall Progress & Progress History */}
+        <Stack spacing={2}>
+          {/* Overall Progress Skeleton */}
+          <Paper
+            elevation={0}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'start',
+              gap: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
+              p: 2,
+              borderRadius: '1rem',
+            }}
+          >
+            <SkeletonBox width="180px" height="28px" />
 
-        {/* Pagination Skeleton */}
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3, width: '100%' }}>
-          <SkeletonBox width="300px" height="40px" />
-        </Box>
-      </Paper>
+            {/* Tabs Skeleton */}
+            <Box
+              sx={{
+                display: { xs: 'grid', md: 'flex' },
+                gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'none' },
+                gap: 1,
+                width: '100%',
+              }}
+            >
+              {[1, 2, 3, 4].map((i) => (
+                <SkeletonBox key={i} width={{ xs: '100%', md: '120px' }} height="40px" />
+              ))}
+            </Box>
+
+            {/* Filter Controls */}
+            <Box sx={{ display: 'flex', gap: 1, width: '100%' }}>
+              <SkeletonBox width="120px" height="40px" borderRadius="8px" />
+            </Box>
+
+            {/* Content Area Skeleton */}
+            <Box
+              sx={{
+                width: '100%',
+                bgcolor: 'background.gray',
+                borderRadius: '1rem',
+                minHeight: 400,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: { xs: 1, md: 2 },
+                p: 2,
+              }}
+            >
+              {/* Chart Placeholder */}
+              <SkeletonBox height="250px" borderRadius="1rem" />
+
+              {/* Stats Grid Skeleton */}
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
+                  gap: { xs: 1, md: 2 },
+                  width: '100%',
+                }}
+              >
+                {[1, 2, 3, 4].map((i) => (
+                  <SkeletonBox key={i} height="100px" borderRadius="12px" />
+                ))}
+              </Box>
+            </Box>
+          </Paper>
+
+          {/* Progress History Skeleton */}
+          <Paper
+            elevation={0}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'start',
+              gap: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
+              p: 2,
+              borderRadius: '1rem',
+            }}
+          >
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              sx={{ width: '100%' }}
+            >
+              <SkeletonBox width="160px" height="28px" />
+              <Stack direction="row" gap={1} alignItems="center">
+                <SkeletonBox width="100px" height="40px" borderRadius="8px" />
+                <SkeletonBox width="120px" height="40px" borderRadius="8px" />
+              </Stack>
+            </Stack>
+
+            {/* History Items Grid Skeleton */}
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+                gap: 2,
+                width: '100%',
+              }}
+            >
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <SkeletonBox key={i} height="90px" borderRadius="1rem" />
+              ))}
+            </Box>
+
+            {/* Pagination Skeleton */}
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3, width: '100%' }}>
+              <SkeletonBox width="300px" height="40px" borderRadius="8px" />
+            </Box>
+          </Paper>
+        </Stack>
+      </Box>
     </Container>
   );
 }
