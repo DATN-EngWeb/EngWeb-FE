@@ -887,6 +887,7 @@ export default function Page() {
                     </Box>
                   </FormLabel>
                   <OutlinedInput
+                    size="small"
                     placeholder="Enter test title here"
                     defaultValue={test.title}
                     onBlur={(e) => setTest({ ...test, title: e.target.value })}
@@ -901,10 +902,11 @@ export default function Page() {
                     </Box>
                   </FormLabel>
                   <OutlinedInput
+                    size="small"
                     placeholder="60"
                     defaultValue={test.time}
                     sx={uploadReadingStyles.input}
-                    onBlur={(e) => setTest({ ...test, time: Number(e.target.value) })}
+                    onBlur={(e) => setTest({ ...test, time: Number(e.target.value) || '' })}
                   />
                 </FormControl>
               </Box>

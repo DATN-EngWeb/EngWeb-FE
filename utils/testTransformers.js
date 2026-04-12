@@ -1024,7 +1024,12 @@ export const transformFormatData = (data) => {
         score: part.scoreForEachQuestion,
       };
     });
-    const { id: _id, scoreForEachQuestion: _scoreForEachQuestion, ...restPart } = part;
+    const {
+      id: _id,
+      scoreForEachQuestion: _scoreForEachQuestion,
+      localAnswers: _localAnswers, // Loại bỏ localAnswers để tránh lỗi 400 từ backend
+      ...restPart
+    } = part;
     return {
       ...restPart,
       questions: updatedQuestions,

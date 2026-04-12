@@ -89,10 +89,10 @@ export default function Page() {
 
   // Hàm xử lý tải lên Test và trả về testId mới tạo
   const handleUploadTest = async (status) => {
-    if (!test.title || !test.description) {
+    if (!test.title) {
       setSnackbar({
         open: true,
-        message: 'Please fill title and description of test!',
+        message: 'Please fill title of test!',
         severity: 'error',
       });
       return null;
@@ -154,18 +154,45 @@ export default function Page() {
     }
   };
 
+  const [errors, setErrors] = useState({});
+
   // Hàm xử lý tải lên các Part của bài thi
   const handleUploadParts = async (status) => {
     setIsLoading(true);
+    setErrors({}); // Reset errors before validation
+
     try {
+      // Validate Basic Info
+      if (!test.title) {
+        setErrors((prev) => ({ ...prev, title: true }));
+        setSnackbar({ open: true, message: 'Please fill title of test!', severity: 'error' });
+        setIsLoading(false);
+        return;
+      }
+      if (!['A1', 'A2', 'B1', 'B2'].includes(test.level)) {
+        setErrors((prev) => ({ ...prev, level: true }));
+        setSnackbar({
+          open: true,
+          message: 'Please select a valid level (A1-B2)!',
+          severity: 'error',
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const transformedParts = transformFormatData(parts);
       const errorMessage = validateReadingPartPayload(transformedParts);
+
       if (errorMessage) {
+        // Here we could parse errorMessage to find exactly where it failed,
+        // but for now let's show a general error in parts if it fails.
+        // As requested by user, we should highlight specific fields.
         setSnackbar({
           open: true,
           message: errorMessage,
           severity: 'error',
         });
+        setIsLoading(false);
         return;
       }
 
@@ -450,6 +477,7 @@ export default function Page() {
             handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
             handleUpdateContentPart={handleUpdateContentPart}
             handleEditorError={handleEditorError}
+            errors={errors}
           />
         );
       case 'J':
@@ -458,13 +486,20 @@ export default function Page() {
             part={part}
             partId={part.id}
             index={index}
+            localAnswers={part.localAnswers || []}
             handleDeletePart={handleDeletePart}
             handleDeleteQuestion={handleDeleteQuestion}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
+            setLocalAnswers={(newAns) => {
+              setParts((prev) =>
+                prev.map((p) => (p.id === part.id ? { ...p, localAnswers: newAns } : p)),
+              );
+            }}
             handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
             handleUpdateContentPart={handleUpdateContentPart}
             handleEditorError={handleEditorError}
+            errors={errors}
           />
         );
       case 'I':
@@ -483,6 +518,7 @@ export default function Page() {
             handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
             handleUpdateContentPart={handleUpdateContentPart}
             handleEditorError={handleEditorError}
+            errors={errors}
           />
         );
       default:
@@ -586,9 +622,14 @@ export default function Page() {
                     </Box>
                   </FormLabel>
                   <OutlinedInput
+                    size="small"
                     placeholder="Enter test title here"
                     value={test.title}
-                    onChange={(e) => setTest({ ...test, title: e.target.value })}
+                    error={!!errors.title}
+                    onChange={(e) => {
+                      setTest({ ...test, title: e.target.value });
+                      if (errors.title) setErrors((prev) => ({ ...prev, title: false }));
+                    }}
                     sx={uploadReadingStyles.input}
                   />
                 </FormControl>
@@ -600,20 +641,20 @@ export default function Page() {
                     </Box>
                   </FormLabel>
                   <OutlinedInput
+                    size="small"
                     placeholder="60"
                     value={test.time}
+                    error={!!errors.time}
                     sx={uploadReadingStyles.input}
-                    onChange={(e) => setTest({ ...test, time: Number(e.target.value) || '' })}
+                    onChange={(e) => {
+                      setTest({ ...test, time: Number(e.target.value) || '' });
+                      if (errors.time) setErrors((prev) => ({ ...prev, time: false }));
+                    }}
                   />
                 </FormControl>
               </Box>
               <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-                <FormLabel sx={uploadReadingStyles.labelInput}>
-                  Description
-                  <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
-                    *
-                  </Box>
-                </FormLabel>
+                <FormLabel sx={uploadReadingStyles.labelInput}>Description</FormLabel>
                 <OutlinedInput
                   size="small"
                   placeholder="Enter description here"
@@ -633,8 +674,14 @@ export default function Page() {
                   size="small"
                   displayEmpty
                   value={test.level}
+                  error={!!errors.level}
                   sx={{
                     ...uploadReadingStyles.input,
+                    ...(errors.level && {
+                      borderColor: 'error.main',
+                      borderWidth: '1px',
+                      borderStyle: 'solid',
+                    }),
                     '& .MuiSelect-icon': {
                       color: 'primary.main',
                       fontSize: '1.8rem',
@@ -662,6 +709,7 @@ export default function Page() {
                   }}
                   onChange={(e) => {
                     setTest({ ...test, level: e.target.value });
+                    if (errors.level) setErrors((prev) => ({ ...prev, level: false }));
                   }}
                 >
                   <MenuItem value="" disabled>

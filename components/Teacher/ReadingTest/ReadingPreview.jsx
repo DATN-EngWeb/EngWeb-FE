@@ -59,9 +59,9 @@ const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButto
             questions: currentPart.questions.map((q) => ({
               id: q.id,
               question: q.content || `Question ${q.question_number}`,
-              options: q.answers.map((a) => ({
+              options: q.answers.map((a, index) => ({
                 value: String(a.id || a.option_label),
-                label: `${a.option_label}. ${a.answer_text}`,
+                label: `${a.option_label && a.option_label !== 'undefined' && a.option_label !== 'null' ? a.option_label : String.fromCharCode(65 + index)}. ${a.answer_text || ''}`,
               })),
             })),
           },
@@ -78,10 +78,13 @@ const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButto
               id: q.id,
               question_number: q.question_number,
               question: q.content || `Question ${q.question_number}`,
-              options: q.answers.map((a) => ({
-                value: String(a.id || a.option_label),
-                label: `${a.option_label}. ${a.answer_text}`,
-              })),
+              options:
+                currentPart.format === 'H'
+                  ? q.answers.map((a, index) => ({
+                      value: String(a.id || a.option_label),
+                      label: `${a.option_label && a.option_label !== 'undefined' && a.option_label !== 'null' ? a.option_label : String.fromCharCode(65 + index)}. ${a.answer_text || ''}`,
+                    }))
+                  : [],
             })),
           },
         };
@@ -91,11 +94,14 @@ const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButto
         const seenOptions = new Set();
 
         currentPart.questions.forEach((q) => {
-          q.answers.forEach((a) => {
+          q.answers.forEach((a, index) => {
             if (!seenOptions.has(a.option_label)) {
               seenOptions.add(a.option_label);
               sentences.push({
-                id: a.option_label,
+                id:
+                  a.option_label && a.option_label !== 'undefined'
+                    ? a.option_label
+                    : String.fromCharCode(65 + index),
                 text: a.answer_text,
               });
             }

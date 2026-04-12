@@ -526,7 +526,7 @@ export default function ReceptiveTestResult({ historyId }) {
                       Part {part.order}: {part.description}
                     </Typography>
                     <Stack spacing={2}>
-                      {part.receptive_questions.map((q) => {
+                      {part.receptive_questions.map((q, index) => {
                         const userAns = history.answer_histories.find(
                           (ah) => ah.question_id === q.id,
                         );
@@ -566,7 +566,7 @@ export default function ReceptiveTestResult({ historyId }) {
                                       fontFamily: '"Outfit", sans-serif',
                                     }}
                                   >
-                                    Question {q.question_number}
+                                    Question {q.question_number || index + 1}
                                   </Typography>
                                   {/* Question Content */}
                                   <Typography

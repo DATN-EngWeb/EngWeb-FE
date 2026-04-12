@@ -82,8 +82,8 @@ export const multipleChoiceStyles = {
     alignItems: 'flex-start',
     justifyContent: 'center',
     gap: 1,
-    px: { xs: 1, md: 2 },
-    py: { xs: 1, md: 2 },
+    px: { xs: 0.75, md: 1.5 },
+    py: { xs: 0.75, md: 1.5 },
     border: '1px solid',
     borderRadius: '1rem',
     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {

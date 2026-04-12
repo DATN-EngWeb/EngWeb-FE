@@ -476,12 +476,14 @@ const FillBlanksContent = ({
                     {questions &&
                     questions.length > 0 &&
                     questions.some((q) => q.options && q.options.length > 0)
-                      ? questions.map((question) => {
+                      ? questions.map((question, index) => {
                           const options = question.options || [];
 
                           return (
                             <Box key={question.id} sx={questionContainerStyles}>
-                              <Box sx={questionNumberStyles}>{question.id}</Box>
+                              <Box sx={questionNumberStyles}>
+                                {question.question_number || index + 1}
+                              </Box>
                               <Box sx={{ flex: 1 }}>
                                 <Typography
                                   sx={questionTextStyles}

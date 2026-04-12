@@ -16,7 +16,7 @@ export const contentWrap = {
 };
 
 export const panelPaper = {
-  p: { xs: 2.5, md: 3 },
+  p: { xs: 2, md: 2.5 },
   mb: 2,
   border: '1px solid',
   borderColor: 'yellow.main',
@@ -28,13 +28,13 @@ export const panelPaper = {
 export const sectionHeader = {
   display: 'flex',
   alignItems: 'center',
-  gap: 2,
-  mb: 1,
+  gap: 1.5,
+  mb: 0.5,
 };
 
 export const accentBar = {
   width: '4px',
-  height: { xs: '32px', sm: '36px' },
+  height: { xs: '28px', sm: '32px' },
   backgroundColor: 'yellow.main',
   borderRadius: '1rem',
 };
@@ -42,10 +42,10 @@ export const accentBar = {
 export const twoColRow = {
   display: 'flex',
   gap: 2,
-  mb: 2,
+  mb: 1.5,
   flexDirection: { xs: 'column', md: 'row' },
   '& > *:first-of-type': {
-    flex: 0.7,
+    flex: 1,
   },
   '& > *:last-of-type': {
     flex: 0.3,
@@ -182,8 +182,8 @@ export const answerLabelButton = {
 
 export const labelText = {
   color: 'text.primary',
-  fontSize: { xs: '0.8rem', md: '1rem' },
-  lineHeight: 1.7,
+  fontSize: { xs: '0.75rem', md: '0.9rem' },
+  lineHeight: 1.4,
   fontWeight: 500,
 };
 

@@ -188,12 +188,12 @@ export const uploadReadingStyles = {
   formControl: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 0.5,
+    gap: 0.25,
   },
   labelInput: {
     color: 'text.primary',
-    fontSize: { xs: '0.8rem', md: '1rem' },
-    lineHeight: 1.7,
+    fontSize: { xs: '0.75rem', md: '0.9rem' },
+    lineHeight: 1.4,
     fontWeight: 500,
   },
   requiredAsterisk: {
@@ -204,6 +204,10 @@ export const uploadReadingStyles = {
   input: {
     fontSize: { xs: '0.7rem', md: '0.9rem' },
     borderRadius: '1rem',
+    '& .MuiOutlinedInput-input': {
+      py: 1,
+      px: 1.5,
+    },
   },
   inputMultiline: {
     fontSize: { xs: '0.7rem', md: '0.9rem' },

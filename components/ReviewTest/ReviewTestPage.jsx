@@ -159,7 +159,6 @@ export default function ReviewTestPage() {
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
   return (
     <Box component="main" sx={styles.contentWrapper}>
-      {/* Header Section */}
       <Box
         sx={{
           backgroundColor: '#fff',

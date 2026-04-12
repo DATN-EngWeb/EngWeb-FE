@@ -35,6 +35,7 @@ export default function FillBlankForm({
   handleUpdateScoreForEachQuestionPart,
   handleUpdateContentPart,
   handleEditorError,
+  errors,
 }) {
   const [isOpen, setIsOpen] = React.useState(true);
   const [collapsedQuestions, setCollapsedQuestions] = React.useState({});
@@ -224,7 +225,7 @@ export default function FillBlankForm({
             <Box sx={multipleChoiceStyles.headingContainer}>
               <Typography sx={multipleChoiceStyles.headingCard}>Part {index + 1}</Typography>
               <Typography sx={multipleChoiceStyles.descriptionCard}>
-                Fill in the blanks - {questions.filter((q) => q.action !== 'delete').length}{' '}
+                Fill in the blanks · {questions.filter((q) => q.action !== 'delete').length}{' '}
                 questions
               </Typography>
             </Box>
@@ -287,6 +288,7 @@ export default function FillBlankForm({
                 <OutlinedInput
                   placeholder="Enter the score for each question here"
                   defaultValue={part.scoreForEachQuestion}
+                  error={!!errors.score}
                   sx={uploadReadingStyles.input}
                   onBlur={(e) => handleUpdateScoreForEachQuestionPart(part.id, e.target.value)}
                 />
@@ -453,6 +455,7 @@ export default function FillBlankForm({
                                 sx={{ ...uploadReadingStyles.formControl, width: '100%', mt: 0 }}
                               >
                                 <OutlinedInput
+                                  size="small"
                                   key={`${part.format}-${question.id}`}
                                   multiline
                                   placeholder={
@@ -467,6 +470,7 @@ export default function FillBlankForm({
                                   onBlur={(e) => handleUpdateQuestion(question.id, e.target.value)}
                                 />
                                 <OutlinedInput
+                                  size="small"
                                   multiline
                                   placeholder="Enter explanation here"
                                   defaultValue={question.explanation}

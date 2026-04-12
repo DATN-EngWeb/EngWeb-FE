@@ -26,6 +26,7 @@ export default function MultipleChoiceForm({
   handleUpdateScoreForEachQuestionPart,
   handleUpdateContentPart,
   handleEditorError,
+  errors,
 }) {
   const [isOpen, setIsOpen] = React.useState(true);
   const [collapsedQuestions, setCollapsedQuestions] = React.useState({});
@@ -198,7 +199,7 @@ export default function MultipleChoiceForm({
             <Box sx={multipleChoiceStyles.headingContainer}>
               <Typography sx={multipleChoiceStyles.headingCard}>Part {index + 1}</Typography>
               <Typography sx={multipleChoiceStyles.descriptionCard}>
-                {`${part.format === 'G' ? 'Multiple choice long text' : 'Multiple choice short text'} - ${questions.filter((q) => q.action !== 'delete').length} questions`}
+                {`${part.format === 'G' ? 'Multiple choice long text' : 'Multiple choice short text'} · ${questions.filter((q) => q.action !== 'delete').length} questions`}
               </Typography>
             </Box>
           </Box>
@@ -257,6 +258,7 @@ export default function MultipleChoiceForm({
               <OutlinedInput
                 placeholder="Enter the score for each question here"
                 defaultValue={part.scoreForEachQuestion}
+                error={!!errors.score}
                 sx={uploadReadingStyles.input}
                 onBlur={(e) => handleUpdateScoreForEachQuestionPart(partId, e.target.value)}
               />
@@ -293,6 +295,7 @@ export default function MultipleChoiceForm({
                   multiline
                   placeholder="Enter description here"
                   defaultValue={part.description}
+                  error={!!errors.description && !part.description}
                   sx={uploadReadingStyles.inputMultiline}
                   onBlur={(e) => handleUpdateDescriptionPart(partId, e.target.value)}
                 />
@@ -394,8 +397,9 @@ export default function MultipleChoiceForm({
                                     />
                                   </FormControl>
                                   <OutlinedInput
+                                    size="small"
                                     multiline
-                                    placeholder="Enter explaination here"
+                                    placeholder="Enter explanation here"
                                     defaultValue={question.explanation}
                                     sx={uploadReadingStyles.inputMultiline}
                                     onBlur={(e) =>
@@ -406,6 +410,7 @@ export default function MultipleChoiceForm({
                               ) : (
                                 <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
                                   <OutlinedInput
+                                    size="small"
                                     multiline
                                     placeholder="Enter question here"
                                     defaultValue={question.content}
@@ -415,8 +420,9 @@ export default function MultipleChoiceForm({
                                     }
                                   />
                                   <OutlinedInput
+                                    size="small"
                                     multiline
-                                    placeholder="Enter explaination here"
+                                    placeholder="Enter explanation here"
                                     defaultValue={question.explanation}
                                     sx={uploadReadingStyles.inputMultiline}
                                     onBlur={(e) =>

@@ -57,9 +57,7 @@ export default function BasicInformation({ testName, level, time, description, o
       </Box>
 
       <Box sx={{ mb: 2 }}>
-        <Typography sx={{ ...labelText, mb: 0.5 }}>
-          Description <span style={{ color: 'red' }}>*</span>
-        </Typography>
+        <Typography sx={{ ...labelText, mb: 0.5 }}>Description</Typography>
         <TextField
           fullWidth
           size="small"
