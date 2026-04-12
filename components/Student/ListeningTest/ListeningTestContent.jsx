@@ -520,8 +520,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
           <Box sx={listeningtestStyles.timeLeft}>
             <AccessTimeIcon
               sx={{
-                color: 'secondary.main',
-                fontSize: { xs: '1rem', md: '1.5rem' },
+                fontSize: 28,
                 mr: 0.5,
               }}
             />

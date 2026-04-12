@@ -148,6 +148,24 @@ export const forumBox = {
   bgcolor: '#fffdf9',
   color: 'primary.main',
 };
+
+export const instructionBoxStyles = {
+  backgroundColor: '#FFF5F5',
+  borderRadius: '8px',
+  p: 2,
+  display: 'flex',
+  gap: 1.5,
+  alignItems: 'flex-start',
+  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+  border: '1px solid #FED7D7',
+};
+
+export const instructionIconStyles = {
+  color: '#FF6B35',
+  display: 'flex',
+  alignItems: 'center',
+  mt: 0.5,
+};
 export const forumCheckbox = {
   '& .MuiFormControlLabel-label': {
     fontSize: '0.9rem',

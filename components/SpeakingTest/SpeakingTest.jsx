@@ -563,17 +563,33 @@ export default function SpeakingTest() {
             <Panel defaultSize={50} minSize={40}>
               <Box sx={styles.speakingTestBox}>
                 {/*Instruction */}
-                <Box sx={{ ...styles.forumBox, mt: 1, mb: 2, fullWidth: true }}>
-                  <Typography variant="body2" fontWeight={700} gutterBottom>
-                    <>
-                      <InfoOutlinedIcon fontSize="medium" sx={{ mr: 0.5 }} /> Instruction
-                    </>
-                  </Typography>
-                  <Typography variant="caption" display="block">
-                    You will have {testData.time} minutes to complete this speaking test. Please
-                    speak clearly into the microphone. Once you start recording, the timer will
-                    begin. You can stop and review your recording before submitting. Good luck!
-                  </Typography>
+                <Box sx={{ ...styles.instructionBoxStyles, mt: 1, mb: 2 }}>
+                  <Box sx={styles.instructionIconStyles}>
+                    <InfoOutlinedIcon fontSize="medium" />
+                  </Box>
+                  <Box>
+                    <Typography
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: '1rem',
+                        color: 'secondary.main',
+                        mb: 0.5,
+                      }}
+                    >
+                      Instruction
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontSize: '0.9rem',
+                        color: 'text.primary',
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      You will have {testData.time} minutes to complete this speaking test. Please
+                      speak clearly into the microphone. Once you start recording, the timer will
+                      begin. You can stop and review your recording before submitting. Good luck!
+                    </Typography>
+                  </Box>
                 </Box>
                 <Box
                   sx={{

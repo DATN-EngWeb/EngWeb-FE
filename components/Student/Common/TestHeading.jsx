@@ -17,7 +17,14 @@ export default function TestHeading({
 }) {
   return (
     <>
-      <Box sx={{ ...listeningtestStyles.testHeadingContainer, py: { xs: 0.5, md: 1 } }}>
+      <Box
+        sx={{
+          ...listeningtestStyles.testHeadingContainer,
+          minHeight: '80px',
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
         {/* Left: Timer or Back/Exit */}
         <Box
           sx={{ width: { xs: 'auto', md: '320px' }, display: 'flex', alignItems: 'center', gap: 1 }}
