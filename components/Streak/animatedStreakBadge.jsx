@@ -1,211 +1,80 @@
 /* eslint-disable no-undef */
 'use client';
 
-import React, { useRef, useEffect, useCallback } from 'react';
-import { Box, Typography, Tooltip, CircularProgress } from '@mui/material';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
+import { Box, Typography } from '@mui/material';
 import { gsap } from 'gsap';
-import { useStreak } from '../../hooks/useStreak';
+import { useStreakContext } from '../../context/streakContext';
 import { useAuth } from '../../hooks/useAuth';
 
-// --- BẠN CÓ THỂ ĐỂ SvgDefs RA MỘT FILE RIÊNG ĐỂ DÙNG CHUNG CHO CẢ 2 COMPONENT ---
-const StreakSvgDefs = () => (
-  <svg
-    width="0"
-    height="0"
-    style={{ display: 'none', position: 'absolute' }}
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <defs>
-      <linearGradient
-        id="G-Center"
-        gradientUnits="userSpaceOnUse"
-        x1="1117.32"
-        y1="807.421"
-        x2="1096.08"
-        y2="1731.73"
-      >
-        <stop offset="0" stopColor="rgb(255,241,1)" />
-        <stop offset="1" stopColor="rgb(249,127,18)" />
-      </linearGradient>
-      <linearGradient
-        id="G-Outer-Normal"
-        gradientUnits="userSpaceOnUse"
-        x1="1094.46"
-        y1="1733.93"
-        x2="1116.71"
-        y2="515.311"
-      >
-        <stop offset="0" stopColor="rgb(176,5,18)" />
-        <stop offset="1" stopColor="rgb(237,116,12)" />
-      </linearGradient>
-      <linearGradient
-        id="G-Outer-Reverse"
-        gradientUnits="userSpaceOnUse"
-        x1="1094.46"
-        y1="515.311"
-        x2="1116.71"
-        y2="1733.93"
-      >
-        <stop offset="0" stopColor="rgb(237,116,12)" />
-        <stop offset="1" stopColor="rgb(176,5,18)" />
-      </linearGradient>
-      <linearGradient
-        id="G-Outer-Level3"
-        gradientUnits="userSpaceOnUse"
-        x1="1101.73"
-        y1="2174.68"
-        x2="1094.74"
-        y2="608.012"
-      >
-        <stop offset="0" stopColor="rgb(241,116,8)" />
-        <stop offset="1" stopColor="rgb(213,0,47)" />
-      </linearGradient>
-      <linearGradient id="G-Outer-Level4" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#ff3385" />
-        <stop offset="40%" stopColor="#e6005c" />
-        <stop offset="100%" stopColor="#330014" />
-      </linearGradient>
-      <linearGradient id="G-Center-Level4" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#ffffff" />
-        <stop offset="30%" stopColor="#ffb3d1" />
-        <stop offset="100%" stopColor="#ff0066" />
-      </linearGradient>
-      <linearGradient id="G-Outer-Level5" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#ff33cc" />
-        <stop offset="40%" stopColor="#9900cc" />
-        <stop offset="100%" stopColor="#1a0033" />
-      </linearGradient>
-      <linearGradient id="G-Center-Level5" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#ffffff" />
-        <stop offset="30%" stopColor="#ffb3ff" />
-        <stop offset="100%" stopColor="#c400ff" />
-      </linearGradient>
-    </defs>
-    <symbol id="f1-out" viewBox="0 0 2202 1952">
-      <path
-        fill="url(#G-Outer-Normal)"
-        d="M 989.174 202.171 C 989.515 202.335... (Rút gọn để tập trung logic, bạn dán full path SVG của bạn vào đây)"
-      />
-    </symbol>
-    <symbol id="f1-in" viewBox="0 0 2202 1952">
-      <path fill="url(#G-Center)" d="M 799.044 1470.03... (Dán full path)" />
-    </symbol>
-    <symbol id="f2-out" viewBox="0 0 2076 2076">
-      <path fill="url(#G-Outer-Reverse)" d="M 880.391... (Dán full path)" />
-    </symbol>
-    <symbol id="f2-in" viewBox="0 0 2076 2076">
-      <path fill="url(#G-Center)" d="M 960.599... (Dán full path)" />
-    </symbol>
-    <symbol id="f3-out" viewBox="0 0 2240 2240">
-      <g transform="translate(176.1, -86) scale(0.8428, 1)">
-        <path fill="url(#G-Outer-Level3)" d="M 1056.19... (Dán full path)" />
-      </g>
-    </symbol>
-    <symbol id="f3-in" viewBox="0 0 2240 2240">
-      <g transform="translate(82, -4)">
-        <path fill="url(#G-Center)" d="M 960.599... (Dán full path)" />
-      </g>
-    </symbol>
-    <symbol id="f4-out" viewBox="0 0 2240 2240">
-      <g transform="translate(176, 28)">
-        <path fill="url(#G-Outer-Level4)" d="M1256.174... (Dán full path)" />
-      </g>
-    </symbol>
-    <symbol id="f4-in" viewBox="0 0 2240 2240">
-      <g transform="translate(82, -4)">
-        <path fill="url(#G-Center-Level4)" d="M 960.599... (Dán full path)" />
-      </g>
-    </symbol>
-    <symbol id="f5-out" viewBox="0 0 2240 2240">
-      <g transform="translate(144, 41)">
-        <path fill="url(#G-Outer-Level5)" d="M1649.678... (Dán full path)" />
-      </g>
-    </symbol>
-    <symbol id="f5-in" viewBox="0 0 2240 2240">
-      <g transform="translate(82, -4)">
-        <path fill="url(#G-Center-Level5)" d="M 960.599... (Dán full path)" />
-      </g>
-    </symbol>
-  </svg>
-);
-
-// Helper function và Config
 const getStreakLevel = (count) => {
   if (count >= 200) return 5;
   if (count >= 100) return 4;
   if (count >= 30) return 3;
   if (count >= 10) return 2;
+  if (count > 3) return 1;
   return 1;
 };
 
 const levelConfigs = {
-  1: {
-    color: '#ff9800',
-    sparkColor: '#f27b0c',
-    shadow: 'drop-shadow(0 0 15px rgba(242, 123, 12, 0.4))',
-  },
-  2: {
-    color: '#ffbb00',
-    sparkColor: '#ffbb00',
-    shadow: 'drop-shadow(0 0 20px rgba(255, 187, 0, 0.5))',
-  },
-  3: {
-    color: '#d5002f',
-    sparkColor: '#ff3333',
-    shadow: 'drop-shadow(0 0 25px rgba(213, 0, 47, 0.6))',
-  },
-  4: {
-    color: '#ff0066',
-    sparkColor: '#ff0066',
-    shadow: 'drop-shadow(0 0 30px rgba(255, 0, 102, 0.6))',
-  },
-  5: {
-    color: '#b400ff',
-    sparkColor: '#d966ff',
-    shadow: 'drop-shadow(0 0 35px rgba(180, 0, 255, 0.6))',
-  },
+  1: { sparkColor: '#f27b0c' },
+  2: { sparkColor: '#ffbb00' },
+  3: { sparkColor: '#ff3333' },
+  4: { sparkColor: '#ff0066' },
+  5: { sparkColor: '#d966ff' },
 };
 
-export default function AnimatedStreakBadge({
-  size = 60, // Hỗ trợ truyền size vào để to/nhỏ tùy màn hình (Header nhỏ, Dashboard to)
-  showText = true, // Có hiển thị con số bên cạnh không
-}) {
+export default function AnimatedStreakBadge({ size = 180 }) {
   const { isAuthenticated, user } = useAuth();
-  const { streakData, isLoading } = useStreak(isAuthenticated, user?.role);
+  const { streakData, isLoading } = useStreakContext();
 
-  // Refs cho GSAP
-  const containerRef = useRef(null);
-  const outerLayerRef = useRef(null);
-  const innerLayerRef = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const hasCelebratedRef = useRef(false);
+
+  const overlayRef = useRef(null);
+  const flameRef = useRef(null);
+  const textRef = useRef(null);
   const sparkContainerRef = useRef(null);
 
-  // Lưu trữ tween lắc lư để tiện kill/restart
+  const outerLayerRef = useRef(null);
+  const innerLayerRef = useRef(null);
+
   const swayTweens = useRef([]);
 
-  if (!isAuthenticated || user?.role !== 'S') return null;
-  if (isLoading) return <CircularProgress size={20} color="inherit" />;
+  const streak_count = streakData?.streak_count || 0;
+  const is_streak_lit_today = streakData?.is_streak_lit_today;
 
-  const { streak_count, is_streak_lit_today } = streakData;
   const currentLevel = getStreakLevel(streak_count);
-  const config = levelConfigs[currentLevel];
+  const config = levelConfigs[currentLevel] || levelConfigs[1];
 
-  // Nếu chưa học hôm nay, làm xám và tắt animation
-  const isActive = is_streak_lit_today;
+  useEffect(() => {
+    if (isLoading || !isAuthenticated || user?.role !== 'S' || !is_streak_lit_today) return;
 
-  // HÀM TẠO TIA LỬA (SPARK)
+    const isMilestone = streak_count === 100 || streak_count === 200;
+    if (!isMilestone) return;
+
+    const storageKey = `celebrated_streak_${streak_count}`;
+    const hasCelebratedStorage = localStorage.getItem(storageKey);
+
+    if (!hasCelebratedRef.current && !hasCelebratedStorage) {
+      hasCelebratedRef.current = true;
+      localStorage.setItem(storageKey, 'true');
+      setIsVisible(true);
+    }
+  }, [streak_count, is_streak_lit_today, isLoading, isAuthenticated, user]);
+
+  // HÀM TẠO TIA LỬA (Dịch từ script JS gốc của bạn)
   const createSpark = useCallback(
     (isBurst = false) => {
-      if (!sparkContainerRef.current || !isActive) return;
+      if (!sparkContainerRef.current) return;
 
       const spark = document.createElement('div');
       sparkContainerRef.current.appendChild(spark);
 
-      const sizePx = isBurst ? Math.random() * 4 + 2 : Math.random() * 3 + 1;
-
-      // Áp dụng style tĩnh inline
+      const sizePx = isBurst ? Math.random() * 8 + 4 : Math.random() * 5 + 2;
       Object.assign(spark.style, {
         position: 'absolute',
-        bottom: '10%',
+        bottom: '15%',
         left: '50%',
         width: `${sizePx}px`,
         height: `${sizePx}px`,
@@ -213,7 +82,7 @@ export default function AnimatedStreakBadge({
         borderRadius: '50%',
         pointerEvents: 'none',
         mixBlendMode: 'screen',
-        boxShadow: `0 0 ${sizePx * 2}px ${config.sparkColor}, 0 0 ${sizePx * 4}px ${config.sparkColor}`,
+        boxShadow: `0 0 ${sizePx * 2}px ${config.sparkColor}, 0 0 ${sizePx * 5}px ${config.sparkColor}`,
         zIndex: 10,
       });
 
@@ -223,9 +92,9 @@ export default function AnimatedStreakBadge({
       gsap.set(spark, { x: startX, y: startY, opacity: 1, scale: 1 });
 
       const flyHeight = isBurst
-        ? -(Math.random() * size * 2 + size)
-        : -(Math.random() * size + size * 0.5);
-      const driftX = startX + (Math.random() - 0.5) * (size * 1.5);
+        ? -(Math.random() * size * 1.5 + size * 0.5)
+        : -(Math.random() * size * 0.8 + size * 0.3);
+      const driftX = startX + (Math.random() - 0.5) * size * 1.5;
 
       gsap.to(spark, {
         y: flyHeight,
@@ -235,25 +104,24 @@ export default function AnimatedStreakBadge({
         duration: Math.random() * 0.8 + (isBurst ? 0.3 : 0.6),
         ease: isBurst ? 'circ.out' : 'power1.out',
         onComplete: () => {
-          if (sparkContainerRef.current?.contains(spark)) {
-            spark.remove();
-          }
+          if (sparkContainerRef.current?.contains(spark)) spark.remove();
         },
       });
     },
-    [config.sparkColor, isActive, size],
+    [config.sparkColor, size],
   );
 
-  // HÀM LẮC LƯ HỮU CƠ (SWAY)
+  // HÀM LẮC LƯ HỮU CƠ (Bê nguyên từ startSway của bạn)
   const startSway = useCallback(() => {
-    if (!isActive || !outerLayerRef.current || !innerLayerRef.current) return;
+    if (!outerLayerRef.current || !innerLayerRef.current) return;
 
-    // Kill các tween cũ nếu có
+    // Xóa các tween cũ nếu có
     swayTweens.current.forEach((t) => t.kill());
     swayTweens.current = [];
 
     const baseDuration = 1.1 + Math.random() * 0.4;
-    const startDir = currentLevel % 2 === 0 ? 1 : -1;
+    const startDir = 1; // Mặc định hướng 1
+    const innerDir = startDir * -1;
 
     // Lớp ngoài
     swayTweens.current.push(
@@ -263,6 +131,7 @@ export default function AnimatedStreakBadge({
         ease: 'sine.inOut',
         yoyo: true,
         repeat: -1,
+        delay: Math.random() * 0.3,
       }),
     );
     swayTweens.current.push(
@@ -279,11 +148,12 @@ export default function AnimatedStreakBadge({
     // Lớp trong
     swayTweens.current.push(
       gsap.to(innerLayerRef.current, {
-        rotation: 2.5 * (startDir * -1),
+        rotation: 2.5 * innerDir,
         duration: baseDuration * 0.9,
         ease: 'sine.inOut',
         yoyo: true,
         repeat: -1,
+        delay: Math.random() * 0.3,
       }),
     );
     swayTweens.current.push(
@@ -296,151 +166,188 @@ export default function AnimatedStreakBadge({
         repeat: -1,
       }),
     );
-  }, [isActive, currentLevel]);
+  }, []);
 
-  // EFFECT KHỞI TẠO GSAP
+  // ĐIỀU PHỐI ANIMATION CHÍNH
   useEffect(() => {
-    if (!isActive) return;
+    if (
+      !isVisible ||
+      !overlayRef.current ||
+      !outerLayerRef.current ||
+      !innerLayerRef.current ||
+      !textRef.current
+    )
+      return;
 
-    // Thiết lập tâm xoay cho SVG
+    // 1. Setup tâm xoay cho lửa
     gsap.set([outerLayerRef.current, innerLayerRef.current], { transformOrigin: 'bottom center' });
 
-    startSway();
-
-    // Vòng lặp bắn tia lửa âm ỉ
-    const interval = setInterval(() => {
-      if (Math.random() > 0.4) createSpark(false);
-    }, 200);
-
-    // Cleanup function: Xóa interval và kill tweens khi component unmount
-    return () => {
-      clearInterval(interval);
-      swayTweens.current.forEach((t) => t.kill());
-    };
-  }, [isActive, startSway, createSpark]);
-
-  // SỰ KIỆN HOVER: BÙNG CHÁY
-  const handleMouseEnter = () => {
-    if (!isActive) return;
-
-    // Tạm dừng lắc lư
-    swayTweens.current.forEach((t) => t.kill());
-    gsap.killTweensOf([outerLayerRef.current, innerLayerRef.current]);
-
-    // Bắn một loạt tia lửa
-    const burstCount = Math.floor(Math.random() * 10) + 15;
-    for (let i = 0; i < burstCount; i++) {
-      setTimeout(() => createSpark(true), Math.random() * 200);
-    }
-
-    // Hoạt ảnh bùng lên lớp ngoài
+    // 2. Fade in nền đen
     gsap.fromTo(
-      outerLayerRef.current,
-      { scaleY: 0.5, scaleX: 0.8, rotation: 0 },
-      { scaleY: 1, scaleX: 1, duration: 0.7, ease: 'elastic.out(1, 0.5)' },
+      overlayRef.current,
+      { opacity: 0 },
+      { opacity: 1, duration: 0.4, ease: 'power2.out' },
     );
 
-    // Hoạt ảnh bùng lên lớp trong
+    // 3. LỚP NGOÀI BÙNG LÊN (Giống hệt hover event của JS)
+    gsap.fromTo(
+      outerLayerRef.current,
+      { scaleY: 0.2, scaleX: 0.6, opacity: 0, rotation: 0 },
+      { scaleY: 1, scaleX: 1, opacity: 1, duration: 0.7, ease: 'expo.out', delay: 0.2 },
+    );
+
+    // 4. LỚP TRONG BÙNG LÊN & GỌI LẮC LƯ (startSway) SAU KHI XONG
     gsap.fromTo(
       innerLayerRef.current,
-      { scaleY: 0.4, scaleX: 0.7, rotation: 0 },
+      { scaleY: 0.1, scaleX: 0.4, opacity: 0, rotation: 0 },
       {
         scaleY: 1,
         scaleX: 1,
+        opacity: 1,
         duration: 0.8,
-        ease: 'elastic.out(1, 0.5)',
-        delay: 0.05,
-        onComplete: startSway,
+        ease: 'expo.out',
+        delay: 0.25,
+        onComplete: startSway, // <--- Điểm mấu chốt: Bùng xong thì bắt đầu lắc
       },
     );
-  };
+
+    // 5. Bắn tia lửa (Burst)
+    for (let i = 0; i < 40; i++) {
+      setTimeout(() => createSpark(true), 200 + Math.random() * 400);
+    }
+
+    // 6. CHỮ NHẢY NHẢY (Bouncing)
+    gsap.fromTo(
+      textRef.current,
+      { y: 0, scale: 1 },
+      {
+        y: -15,
+        scale: 1.05,
+        duration: 0.5,
+        ease: 'sine.inOut',
+        yoyo: true,
+        repeat: -1,
+        delay: 0.6,
+      },
+    );
+
+    // Cháy âm ỉ (Interval tia lửa)
+    const interval = setInterval(() => {
+      if (Math.random() > 0.3) createSpark(false);
+      if (Math.random() > 0.8) createSpark(false);
+    }, 150);
+
+    // Tự động đóng sau 4 giây
+    setTimeout(() => {
+      gsap.to(overlayRef.current, {
+        opacity: 0,
+        duration: 0.6,
+        ease: 'power2.inOut',
+        onComplete: () => setIsVisible(false),
+      });
+    }, 4000);
+
+    // Dọn dẹp RAM khi tắt
+    return () => {
+      clearInterval(interval);
+      gsap.killTweensOf([
+        outerLayerRef.current,
+        innerLayerRef.current,
+        textRef.current,
+        overlayRef.current,
+      ]);
+      swayTweens.current.forEach((t) => t.kill());
+    };
+  }, [isVisible, createSpark, startSway]);
+
+  if (!isVisible) return null;
 
   return (
     <>
-      <StreakSvgDefs />
-
-      <Tooltip
-        title={
-          isActive ? `Level ${currentLevel} - Đã học hôm nay!` : 'Làm bài tập để giữ chuỗi nhé!'
-        }
+      {/* OVERLAY */}
+      <Box
+        ref={overlayRef}
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          backdropFilter: 'blur(8px)',
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          pointerEvents: 'none',
+        }}
       >
-        <Box
-          ref={containerRef}
-          onMouseEnter={handleMouseEnter}
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            cursor: 'pointer',
-            padding: '8px 16px 8px 10px',
-            borderRadius: '30px',
-            background: isActive
-              ? 'linear-gradient(145deg, rgba(42,42,42,0.6), rgba(31,31,31,0.6))'
-              : 'transparent',
-            boxShadow: isActive ? '0 10px 20px rgba(0, 0, 0, 0.2)' : 'none',
-            border: isActive ? '1px solid rgba(255,255,255,0.05)' : 'none',
-            transition: 'transform 0.2s',
-            '&:hover': {
-              transform: isActive ? 'translateY(-2px)' : 'none',
-            },
-          }}
-        >
-          {/* Vùng chứa ngọn lửa và tia lửa */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          {/* SVG */}
           <Box
+            ref={flameRef}
             sx={{
               position: 'relative',
               width: size,
               height: size,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              filter: isActive ? config.shadow : 'grayscale(100%) opacity(50%)',
-              transition: 'filter 0.3s ease',
+              filter: `drop-shadow(0 0 40px ${config.sparkColor})`,
             }}
           >
             {/* Lớp Outer */}
             <Box
-              component="svg"
               ref={outerLayerRef}
+              component="svg"
               sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
             >
               <use href={`#f${currentLevel}-out`} />
             </Box>
-
             {/* Lớp Inner */}
             <Box
-              component="svg"
               ref={innerLayerRef}
+              component="svg"
               sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
             >
               <use href={`#f${currentLevel}-in`} />
             </Box>
-
-            {/* DOM ảo để GSAP render tia lửa không bị React ghi đè */}
+            {/* Chỗ để DOM sinh tia lửa */}
             <Box
               ref={sparkContainerRef}
               sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
             />
           </Box>
-
           {/* Text */}
-          {showText && (
+          <Box ref={textRef}>
             <Typography
               sx={{
-                fontWeight: 800,
-                fontSize: `${size * 0.4}px`, // Chữ tự scale theo size truyền vào
-                background: isActive
-                  ? `linear-gradient(to right, ${config.sparkColor}, #ff4d00)`
-                  : '#9e9e9e',
-                WebkitBackgroundClip: isActive ? 'text' : 'none',
-                WebkitTextFillColor: isActive ? 'transparent' : '#9e9e9e',
+                mt: 4,
+                fontWeight: 900,
+                fontSize: { xs: '2rem', md: '3rem' },
+                textAlign: 'center',
+                textTransform: 'uppercase',
+                letterSpacing: '2px',
+                background: `linear-gradient(to right, #fff, ${config.sparkColor})`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                filter: 'drop-shadow(0px 4px 10px rgba(0,0,0,0.5))',
               }}
             >
-              {streak_count}
+              {streak_count} NGÀY LIÊN TIẾP!
             </Typography>
-          )}
+            <Typography
+              sx={{
+                color: '#aaa',
+                fontSize: '1.2rem',
+                mt: 1,
+                fontWeight: 500,
+                textAlign: 'center',
+              }}
+            >
+              Bạn thật sự là một chiến thần!
+            </Typography>
+          </Box>
         </Box>
-      </Tooltip>
+      </Box>
     </>
   );
 }
