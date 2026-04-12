@@ -82,7 +82,7 @@ export default function WritingSharePage() {
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: 6 }}>
+    <Container maxWidth={false} sx={{ py: 6, px: { xs: 2, md: 6 } }}>
       <Box textAlign="center" mb={2}>
         <Typography
           sx={{
@@ -103,28 +103,43 @@ export default function WritingSharePage() {
           Share your post to get feedback from our community
         </Typography>
       </Box>
-      <Box sx={{ maxWidth: 650, mx: 'auto' }}>
-        {loading ? (
-          <Typography sx={{ color: 'primary.light', mb: 3 }}>Loading your submission...</Typography>
-        ) : attempt ? (
-          <ShareForumCard
-            type="Writing"
-            promptHtml={promptHtml}
-            answer={attempt.user_answer_text}
-            answerType="text"
-          />
-        ) : (
-          <Typography color="error">Submission not found</Typography>
-        )}
+      <Box sx={{ width: '100%' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            gap: 4,
+            alignItems: 'flex-start',
+          }}
+        >
+          <Box sx={{ flex: 1, width: '100%' }}>
+            {loading ? (
+              <Typography sx={{ color: 'primary.light', mb: 3 }}>
+                Loading your submission...
+              </Typography>
+            ) : attempt ? (
+              <ShareForumCard
+                type="Writing"
+                promptHtml={promptHtml}
+                answer={attempt.user_answer_text}
+                answerType="text"
+              />
+            ) : (
+              <Typography color="error">Submission not found</Typography>
+            )}
+          </Box>
 
-        <ShareForumForm
-          title={title}
-          description={description}
-          setTitle={setTitle}
-          setDescription={setDescription}
-          onSubmit={handleShare}
-          loading={loading}
-        />
+          <Box sx={{ flex: 1, width: '100%' }}>
+            <ShareForumForm
+              title={title}
+              description={description}
+              setTitle={setTitle}
+              setDescription={setDescription}
+              onSubmit={handleShare}
+              loading={loading}
+            />
+          </Box>
+        </Box>
 
         <Snackbar
           open={snackbar.open}

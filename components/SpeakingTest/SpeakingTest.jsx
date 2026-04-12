@@ -36,6 +36,7 @@ import { levelTheme } from '../TestCard';
 import * as styles from '../../styles/student/Writing/WritingTestStyles';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import SendIcon from '@mui/icons-material/Send';
 import { uploadMediaFile } from '../../utils/uploadHelpers';
 import CustomAudioPlayer from '../Test/customAudioPlayer';
 
@@ -463,7 +464,6 @@ export default function SpeakingTest() {
           </Button>
           <Button
             variant="contained"
-            disabled={!hasRecorded || isRecording || isReadOnly}
             sx={{
               ...styles.submitButton(!hasRecorded || isRecording || isReadOnly),
               py: 1,
@@ -474,9 +474,29 @@ export default function SpeakingTest() {
               textTransform: 'none',
               fontWeight: 700,
             }}
-            onClick={handleFinalSubmit}
+            startIcon={<SendIcon />}
+            onClick={() => {
+              if (isReadOnly) return;
+              if (isRecording) {
+                setSnackbar({
+                  open: true,
+                  message: 'Please stop recording before submitting.',
+                  severity: 'warning',
+                });
+                return;
+              }
+              if (!hasRecorded) {
+                setSnackbar({
+                  open: true,
+                  message: 'Please record your answer before submitting.',
+                  severity: 'warning',
+                });
+                return;
+              }
+              handleFinalSubmit();
+            }}
           >
-            Submit
+            Submit Test
           </Button>
         </Box>
       </Box>

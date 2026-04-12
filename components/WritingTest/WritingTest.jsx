@@ -142,6 +142,12 @@ export default function WritingTest() {
   const handleSubmit = () => {
     if (wordCount >= settings.minWords) {
       setOpenShareModal(true);
+    } else {
+      setSnackbar({
+        open: true,
+        message: `You need at least ${settings.minWords} words to submit. (Current: ${wordCount} words)`,
+        severity: 'warning',
+      });
     }
   };
   const handleFinalSubmit = async () => {
@@ -388,7 +394,6 @@ export default function WritingTest() {
               variant="contained"
               startIcon={<SendIcon />}
               onClick={handleSubmit}
-              disabled={wordCount < settings.minWords}
               sx={{
                 ...styles.submitButton(wordCount < settings.minWords),
                 py: 1,
@@ -619,13 +624,7 @@ export default function WritingTest() {
             <Button
               variant="contained"
               onClick={handleFinalSubmit}
-              sx={{
-                bgcolor: '#4e342e',
-                borderRadius: '12px',
-                px: 3,
-                textTransform: 'none',
-                '&:hover': { bgcolor: '#3e2723' },
-              }}
+              sx={styles.submitButton(wordCount < 100)}
             >
               Submit Test
             </Button>

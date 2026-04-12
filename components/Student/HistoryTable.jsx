@@ -42,108 +42,126 @@ export default function HistoryTable({ data, skill, onViewDetail, onShare, onOpe
           </TableRow>
         </TableHead>
         <TableBody>
-          {data.map((item, index) => (
-            <TableRow key={index} sx={styles.tableRow}>
-              <TableCell>
-                <Typography variant="subtitle2" fontWeight={800} color="text.secondary">
-                  {item.end_time && formatDate(item.end_time)}
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Stack direction="row" spacing={1}>
-                  {item.is_shared && (
-                    <Chip
-                      label="SHARED"
-                      size="small"
-                      sx={{
-                        height: 20,
-                        fontSize: '0.6rem',
-                        fontWeight: 800,
-                        bgcolor: '#e3f2fd',
-                        color: '#1976d2',
-                      }}
-                    />
-                  )}
-                  {(item.ai_feedback || item.type === 'S') && (
-                    <Chip
-                      label="AI REVIEWED"
-                      size="small"
-                      onClick={onOpenAIReviewed ? () => onOpenAIReviewed(item) : undefined}
-                      sx={{
-                        height: 20,
-                        fontSize: '0.6rem',
-                        fontWeight: 800,
-                        bgcolor: '#f3e5f5',
-                        color: '#9c27b0',
-                        cursor: onOpenAIReviewed ? 'pointer' : 'default',
-                      }}
-                    />
-                  )}
-                </Stack>
-              </TableCell>
-              <TableCell>
-                <Typography
-                  variant="caption"
-                  fontWeight={800}
-                  color="#ffb300"
-                  sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.85rem' }}
-                >
-                  <StarIcon sx={{ fontSize: '1rem' }} /> {item.earned_bonus_point || 100} XP
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Stack direction="row" spacing={2}>
+          {data.length > 0 ? (
+            data.map((item, index) => (
+              <TableRow key={index} sx={styles.tableRow}>
+                <TableCell>
+                  <Typography variant="subtitle2" fontWeight={800} color="text.secondary">
+                    {item.end_time && formatDate(item.end_time)}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Stack direction="row" spacing={1}>
+                    {item.is_shared && (
+                      <Chip
+                        label="SHARED"
+                        size="small"
+                        sx={{
+                          height: 20,
+                          fontSize: '0.6rem',
+                          fontWeight: 800,
+                          bgcolor: '#e3f2fd',
+                          color: '#1976d2',
+                        }}
+                      />
+                    )}
+                    {(item.ai_feedback || item.type === 'S') && (
+                      <Chip
+                        label="AI REVIEWED"
+                        size="small"
+                        onClick={onOpenAIReviewed ? () => onOpenAIReviewed(item) : undefined}
+                        sx={{
+                          height: 20,
+                          fontSize: '0.6rem',
+                          fontWeight: 800,
+                          bgcolor: '#f3e5f5',
+                          color: '#9c27b0',
+                          cursor: onOpenAIReviewed ? 'pointer' : 'default',
+                        }}
+                      />
+                    )}
+                  </Stack>
+                </TableCell>
+                <TableCell>
                   <Typography
                     variant="caption"
-                    fontWeight={700}
-                    color="text.secondary"
-                    sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                    fontWeight={800}
+                    color="#ffb300"
+                    sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.85rem' }}
                   >
-                    <AccessTimeIcon sx={{ fontSize: '1rem' }} /> {formatTime(item.total_time)} mins
+                    <StarIcon sx={{ fontSize: '1rem' }} /> {item.earned_bonus_point || 100} XP
                   </Typography>
-                  {skill === 'W' && (
+                </TableCell>
+                <TableCell>
+                  <Stack direction="row" spacing={2}>
                     <Typography
                       variant="caption"
                       fontWeight={700}
                       color="text.secondary"
                       sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
                     >
-                      <DescriptionIcon sx={{ fontSize: '1rem' }} /> {item.min_words} words
+                      <AccessTimeIcon sx={{ fontSize: '1rem' }} /> {formatTime(item.total_time)}{' '}
+                      mins
                     </Typography>
-                  )}
-                </Stack>
-              </TableCell>
-              <TableCell align="right">
-                <Stack direction="row" spacing={1} justifyContent="flex-end">
-                  <Button
-                    variant="contained"
-                    size="small"
-                    sx={{
-                      bgcolor: '#f5f5f5',
-                      color: '#4e342e',
-                      boxShadow: 'none',
-                      textTransform: 'none',
-                      fontWeight: 700,
-                      borderRadius: '8px',
-                      '&:hover': { bgcolor: '#eeeeee' },
-                    }}
-                    onClick={() => onViewDetail(item)}
-                  >
-                    View Detail
-                  </Button>
-                  {onShare && (
-                    <IconButton
+                    {skill === 'W' && (
+                      <Typography
+                        variant="caption"
+                        fontWeight={700}
+                        color="text.secondary"
+                        sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                      >
+                        <DescriptionIcon sx={{ fontSize: '1rem' }} /> {item.min_words} words
+                      </Typography>
+                    )}
+                  </Stack>
+                </TableCell>
+                <TableCell align="right">
+                  <Stack direction="row" spacing={1} justifyContent="flex-end">
+                    <Button
+                      variant="contained"
                       size="small"
-                      sx={{ bgcolor: '#f5f5f5' }}
-                      onClick={() => onShare(item)}
+                      sx={{
+                        bgcolor: '#f5f5f5',
+                        color: '#4e342e',
+                        boxShadow: 'none',
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        borderRadius: '8px',
+                        '&:hover': { bgcolor: '#eeeeee' },
+                      }}
+                      onClick={() => onViewDetail(item)}
                     >
-                      <ShareIcon fontSize="small" />
-                    </IconButton>
-                  )}
-                </Stack>
+                      View Detail
+                    </Button>
+                    {onShare && (
+                      <IconButton
+                        size="small"
+                        sx={{ bgcolor: '#f5f5f5' }}
+                        onClick={() => onShare(item)}
+                      >
+                        <ShareIcon fontSize="small" />
+                      </IconButton>
+                    )}
+                  </Stack>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                <Typography
+                  variant="body1"
+                  fontWeight={700}
+                  sx={{ color: 'text.secondary', mb: 1 }}
+                >
+                  You haven't submitted any responses yet.
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'text.disabled' }}>
+                  Start your first attempt to track your performance!
+                </Typography>
               </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
     </TableContainer>

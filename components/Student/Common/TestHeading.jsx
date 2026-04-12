@@ -2,6 +2,7 @@
 
 import { Box, Button, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import SendIcon from '@mui/icons-material/Send';
 
 import { listeningtestStyles } from '../../../styles/student/Listening/listeningTestStyles';
 
@@ -63,12 +64,9 @@ export default function TestHeading({
                 backgroundColor: 'info.pastel',
                 color: 'info.main',
                 py: 1,
-                borderRadius: '12px',
                 fontSize: '0.8125rem',
                 minWidth: 'auto',
                 px: 2,
-                textTransform: 'none',
-                fontWeight: 700,
                 '&:hover': { bgcolor: '#e3f2fd' },
               }}
               onClick={onAIReview}
@@ -78,15 +76,13 @@ export default function TestHeading({
           )}
           {onSubmit && (
             <Button
+              startIcon={<SendIcon />}
               sx={{
                 ...listeningtestStyles.submitButton,
                 py: 1,
-                borderRadius: '12px',
+                px: 2,
                 fontSize: '0.8125rem',
                 minWidth: 'auto',
-                px: 2,
-                textTransform: 'none',
-                fontWeight: 700,
               }}
               onClick={onSubmit}
             >

@@ -4,6 +4,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import SendIcon from '@mui/icons-material/Send';
 import { useRouter } from 'next/navigation';
 import {
   Box,
@@ -534,7 +535,11 @@ export default function ListeningTestContent({ test_id, initialData }) {
             </Typography>
           </Box>
           <Box sx={listeningtestStyles.summitButtonWrapper}>
-            <Button sx={listeningtestStyles.submitButton} onClick={handlePreSubmit}>
+            <Button
+              startIcon={<SendIcon />}
+              sx={listeningtestStyles.submitButton}
+              onClick={handlePreSubmit}
+            >
               Submit Test
             </Button>
           </Box>
@@ -601,7 +606,11 @@ export default function ListeningTestContent({ test_id, initialData }) {
                 Next
               </Button>
             ) : (
-              <Button sx={listeningtestStyles.nextButton} onClick={handlePreSubmit}>
+              <Button
+                startIcon={<SendIcon />}
+                sx={{ ...listeningtestStyles.submitButton, px: 3, py: 0.5 }}
+                onClick={handlePreSubmit}
+              >
                 Submit
               </Button>
             )}

@@ -197,17 +197,22 @@ const TestCard = ({
     switch (status) {
       case 'completed':
         return {
-          icon: <SuccessIcon sx={{ fontSize: 'large', color: 'success.main' }} />,
+          label: 'DONE',
+          color: 'success.main',
+          bg: '#e8f5e9',
+          icon: <SuccessIcon sx={{ fontSize: '1rem', color: 'success.main' }} />,
         };
-      case 'draft': // In Review
+      case 'draft':
         return {
+          label: 'DRAFT',
           color: 'secondary.dark',
-          icon: <PendingIcon sx={{ fontSize: 'large', color: 'secondary.dark' }} />,
+          bg: '#e3f2fd',
+          icon: <PendingIcon sx={{ fontSize: '1rem', color: 'secondary.dark' }} />,
         };
-      case 'none': // Draft
       default:
         return {
-          icon: '',
+          label: null,
+          icon: null,
         };
     }
   };
@@ -311,7 +316,6 @@ const TestCard = ({
           WebkitLineClamp: 1,
         }}
       >
-        {submitStyle.icon}
         {title}
       </Typography>
 
@@ -357,8 +361,50 @@ const TestCard = ({
           </Typography>
         )}
 
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          {role === 'teacher' ? (
+        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+          {role === 'student' && submitStyle.label && (
+            <Typography
+              sx={{
+                bgcolor: submitStyle.bg,
+                color: submitStyle.color,
+                px: 1.2,
+                py: 0.4,
+                borderRadius: '8px',
+                fontSize: '0.7rem',
+                fontWeight: 800,
+                letterSpacing: '0.5px',
+                lineHeight: 1,
+              }}
+            >
+              {submitStyle.label}
+            </Typography>
+          )}
+
+          {role === 'student' ? (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                color: currentLevelTheme.text,
+                backgroundColor: 'background.paper',
+                borderRadius: '10px',
+                py: 0.2,
+                px: 1,
+              }}
+            >
+              <UserIcon sx={{ fontSize: 16 }} />
+              {submissions > 0 && (
+                <Typography
+                  sx={{
+                    fontSize: '0.8rem',
+                  }}
+                >
+                  {submissions}
+                </Typography>
+              )}
+            </Box>
+          ) : (
             <Box
               sx={{
                 display: 'flex',
@@ -375,28 +421,6 @@ const TestCard = ({
             >
               <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, letterSpacing: 0.2 }}>
                 {skillLabel}
-              </Typography>
-            </Box>
-          ) : (
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.5,
-                color: currentLevelTheme.text,
-                backgroundColor: 'background.paper',
-                borderRadius: '10px',
-                py: 0.2,
-                px: 1,
-              }}
-            >
-              <UserIcon sx={{ fontSize: 16 }} />
-              <Typography
-                sx={{
-                  fontSize: '0.8rem',
-                }}
-              >
-                {submissions}
               </Typography>
             </Box>
           )}

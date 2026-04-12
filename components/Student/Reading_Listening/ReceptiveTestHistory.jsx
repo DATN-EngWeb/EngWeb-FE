@@ -215,31 +215,11 @@ export default function ReceptiveTestHistory({ onPracticeNow }) {
           </Stack>
 
           <Box>
-            {submissions.length > 0 ? (
-              <HistoryTable
-                data={submissions.map((sub) => ({ ...sub, skill: testData.skill }))}
-                skill={testData.skill}
-                onViewDetail={handleViewDetail}
-              />
-            ) : (
-              <Paper
-                sx={{
-                  color: 'primary.main',
-                  p: 6,
-                  textAlign: 'center',
-                  borderRadius: '24px',
-                  border: '1px solid #f0f0f0',
-                  bgcolor: 'white',
-                }}
-              >
-                <Typography variant="body1" fontWeight={700}>
-                  You haven't submitted any responses yet.
-                </Typography>
-                <Typography variant="body2">
-                  Start your first attempt to track your performance!
-                </Typography>
-              </Paper>
-            )}
+            <HistoryTable
+              data={submissions.map((sub) => ({ ...sub, skill: testData.skill }))}
+              skill={testData.skill}
+              onViewDetail={handleViewDetail}
+            />
           </Box>
         </Grid>
 

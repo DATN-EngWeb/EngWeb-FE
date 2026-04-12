@@ -272,38 +272,17 @@ export default function ProductiveTestHistory() {
           </Stack>
 
           <Box>
-            {submissions.length > 0 ? (
-              <HistoryTable
-                data={submissions.map((sub) => ({
-                  ...sub,
-                  skill: testData.skill,
-                  min_words: testData.productive_test.min_word,
-                }))}
-                skill={testData.skill}
-                onViewDetail={handleViewDetail}
-                onShare={handleShare}
-                onOpenAIReviewed={handleOpenAIReviewed}
-              />
-            ) : (
-              <Paper
-                elevation={0}
-                sx={{
-                  color: 'primary.main',
-                  p: 6,
-                  textAlign: 'center',
-                  borderRadius: '24px',
-                  border: '1px solid #f0f0f0',
-                  bgcolor: 'white',
-                }}
-              >
-                <Typography variant="body1" fontWeight={700}>
-                  You haven't submitted any responses yet.
-                </Typography>
-                <Typography variant="body2">
-                  Start your first attempt to track your performance!
-                </Typography>
-              </Paper>
-            )}
+            <HistoryTable
+              data={submissions.map((sub) => ({
+                ...sub,
+                skill: testData.skill,
+                min_words: testData.productive_test.min_word,
+              }))}
+              skill={testData.skill}
+              onViewDetail={handleViewDetail}
+              onShare={handleShare}
+              onOpenAIReviewed={handleOpenAIReviewed}
+            />
           </Box>
 
           {totalPages > 1 && (

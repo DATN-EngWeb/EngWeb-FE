@@ -165,14 +165,17 @@ export const forumCheckbox = {
 };
 
 export const submitButton = (disabled) => ({
-  fullWidth: true,
-  variant: 'contained',
-  py: 1.5,
   textTransform: 'none',
-  borderRadius: '8px',
-  bgcolor: disabled ? '#e0e0e0' : '#5d4037',
-  color: disabled ? '#616161' : '#fff',
+  borderRadius: '12px',
+  bgcolor: disabled ? '#f5f5f5' : '#4e342e',
+  color: disabled ? '#bdbdbd' : '#fff',
   boxShadow: 'none',
+  fontWeight: 700,
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    bgcolor: disabled ? '#eeeeee' : '#3e2723',
+    color: disabled ? '#bdbdbd' : '#fff',
+  },
 });
 
 export const aiButton = {
