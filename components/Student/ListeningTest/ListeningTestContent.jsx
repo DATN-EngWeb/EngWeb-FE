@@ -16,6 +16,9 @@ import {
   IconButton,
   CircularProgress,
   Stack,
+  Dialog,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';

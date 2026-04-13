@@ -36,7 +36,6 @@ import { getProductiveTestDetails, createProductiveTest, getAIFeedback } from '@
 import ProductivePreview from '../Writing-Speaking/ProductivePreview';
 import { levelTheme } from '../TestCard';
 import * as styles from '../../styles/student/Writing/WritingTestStyles';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { useStreakContext } from '@/context/streakContext';
 
 export default function WritingTest() {
