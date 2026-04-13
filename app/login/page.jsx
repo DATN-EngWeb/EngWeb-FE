@@ -26,6 +26,7 @@ import facebookImage from '../../assets/img/facebook-2.png';
 import { loginStyles } from '../../styles/Login/LoginStyles';
 import { login as loginAPI } from '../../api/accounts';
 import { decodeJwt } from '../../utils/jwt';
+import { useStreakContext } from '../../context/streakContext';
 
 import Header from '../../components/Home/Header';
 
@@ -39,6 +40,8 @@ function LoginContent() {
   const [serverError, setServerError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentRole, setCurrentRole] = useState('student');
+
+  const { refreshStreak } = useStreakContext();
 
   useEffect(() => {
     const roleParam = searchParams.get('role');
@@ -152,6 +155,7 @@ function LoginContent() {
           // Save role to cookie for middleware
           document.cookie = `userRole=${roleFromToken}; path=/; max-age=2592000; SameSite=Lax`;
         }
+        refreshStreak();
 
         // Redirect based on role or explicit redirect param
         const redirectUrl = searchParams.get('redirect');

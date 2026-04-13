@@ -18,6 +18,7 @@ export default function HistoryItem({ data, filterSkill }) {
 
     if (storageKey === 'current_receptive_attempt') {
       dataToSave = {
+        history_id: item.id,
         answer_histories: item.answer_histories,
         isReadOnly: item.type === 'S',
         startTime: item.start_time,
