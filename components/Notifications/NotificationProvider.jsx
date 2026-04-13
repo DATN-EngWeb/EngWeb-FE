@@ -1,7 +1,6 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { Alert, Snackbar } from '@mui/material';
 import { useAuth } from '../../hooks/useAuth';
 import {
   getNotifications,
@@ -13,62 +12,6 @@ import {
 const NotificationContext = createContext(null);
 
 const MAX_NOTIFICATIONS = 20;
-// const RECONNECT_BASE_DELAY = 1000;
-// const MAX_RECONNECT_DELAY = 30000;
-// const RECONNECT_JITTER = 500;
-
-// const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-// const NOTIFICATION_WS_BASE_URL = process.env.NEXT_PUBLIC_NOTIFICATION_WS_URL;
-
-// function toWebSocketBaseUrl(httpUrl) {
-//   if (!httpUrl) {
-//     return null;
-//   }
-//
-//   if (/^wss?:\/\//i.test(httpUrl)) {
-//     return httpUrl;
-//   }
-//
-//   if (/^https?:\/\//i.test(httpUrl)) {
-//     return httpUrl.replace(/^https:\/\//i, 'wss://').replace(/^http:\/\//i, 'ws://');
-//   }
-//
-//   return null;
-// }
-//
-// function resolveWebSocketBaseUrl() {
-//   if (NOTIFICATION_WS_BASE_URL) {
-//     return toWebSocketBaseUrl(NOTIFICATION_WS_BASE_URL);
-//   }
-//
-//   const normalizedApiBase = toWebSocketBaseUrl(API_BASE_URL);
-//
-//   if (!normalizedApiBase) {
-//     return null;
-//   }
-//
-//   return `${normalizedApiBase.replace(/\/$/, '')}/api/notifications/ws`;
-// }
-
-// function buildWebSocketUrl(baseUrl, user, token, scope) {
-//   if (!baseUrl || typeof window === 'undefined') return null;
-//
-//   const url = new URL(baseUrl, window.location.origin);
-//
-//   if (user?.id) {
-//     url.searchParams.set('user_id', String(user.id));
-//   }
-//
-//   if (scope) {
-//     url.searchParams.set('role', scope);
-//   }
-//
-//   if (token) {
-//     url.searchParams.set('token', token);
-//   }
-//
-//   return url.toString();
-// }
 
 function dedupeNotifications(list) {
   const seen = new Set();
@@ -124,7 +67,6 @@ export function NotificationProvider({ children }) {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [nextPage, setNextPage] = useState(null);
   const [activeQuery, setActiveQuery] = useState({});
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
   const userRole = user?.role;
 
   const scopedNotifications = useMemo(() => notifications, [notifications]);
@@ -144,24 +86,6 @@ export function NotificationProvider({ children }) {
       setUnreadCount(0);
     }
   }, [isAuthenticated, user?.id]);
-
-  const upsertNotification = useCallback((incomingNotification, shouldToast = false) => {
-    setNotifications((current) => {
-      const next = [
-        incomingNotification,
-        ...current.filter((item) => item.id !== incomingNotification.id),
-      ];
-      return dedupeNotifications(next).slice(0, MAX_NOTIFICATIONS);
-    });
-
-    if (shouldToast && !incomingNotification.isRead) {
-      setSnackbar({
-        open: true,
-        message: incomingNotification.message || incomingNotification.title,
-        severity: incomingNotification.severity,
-      });
-    }
-  }, []);
 
   const hydrateNotifications = useCallback(
     async (options = {}) => {
@@ -185,7 +109,7 @@ export function NotificationProvider({ children }) {
           message: item.message,
           createdAt: item.created_at,
           isRead: Boolean(item.is_read),
-          testId: item.type === 'C' ? null : item.test_id,
+          testId: item.test_id,
           testName: item.type === 'C' ? null : item.test_name,
           postId: item.type === 'C' ? item.post_id : null,
           postTitle: item.type === 'C' ? item.post_title : null,
@@ -236,13 +160,14 @@ export function NotificationProvider({ children }) {
         dedupeNotifications([...current, ...normalized]).slice(0, MAX_NOTIFICATIONS * 5),
       );
       setNextPage(extractNextPage(response?.next));
+      await refreshUnreadCount();
     } catch (error) {
       console.error('Failed to load more notifications:', error);
       setNextPage(null);
     } finally {
       setIsLoadingMore(false);
     }
-  }, [activeQuery, isAuthenticated, isLoadingMore, nextPage, user?.id]);
+  }, [activeQuery, isAuthenticated, isLoadingMore, nextPage, refreshUnreadCount, user?.id]);
 
   const markNotificationRead = useCallback(
     async (notificationId) => {
@@ -272,7 +197,6 @@ export function NotificationProvider({ children }) {
       setUnreadCount(0);
       setNextPage(null);
       setActiveQuery({});
-      setSnackbar({ open: false, message: '', severity: 'info' });
       setIsLoading(false);
 
       return undefined;
@@ -285,9 +209,7 @@ export function NotificationProvider({ children }) {
 
     hydrateNotifications();
 
-    return () => {
-      // WebSocket/reconnect is intentionally disabled until backend is ready.
-    };
+    return undefined;
   }, [hydrateNotifications, isAuthenticated, user?.id]);
 
   const markAllAsRead = useCallback(async () => {
@@ -342,24 +264,5 @@ export function NotificationProvider({ children }) {
     ],
   );
 
-  return (
-    <NotificationContext.Provider value={value}>
-      {children}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar((current) => ({ ...current, open: false }))}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-      >
-        <Alert
-          onClose={() => setSnackbar((current) => ({ ...current, open: false }))}
-          severity={snackbar.severity}
-          variant="filled"
-          sx={{ alignItems: 'center' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </NotificationContext.Provider>
-  );
+  return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;
 }

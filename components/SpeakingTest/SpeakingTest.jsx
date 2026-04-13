@@ -41,6 +41,7 @@ import CustomAudioPlayer from '../Test/customAudioPlayer';
 import AIGradingLoading from '../Writing-Speaking/AIGradingLoading';
 import SubmitLoadingDialog from '../Writing-Speaking/SubmitLoadingDialog';
 import { useStreakContext } from '../../context/streakContext';
+import AIGradingLoading from '../Writing-Speaking/AIGradingLoading';
 
 export default function SpeakingTest() {
   const params = useParams();

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Avatar,
@@ -104,13 +104,14 @@ export default function NotificationBell() {
     setAnchorEl(null);
   };
 
-  useEffect(() => {
-    if (!anchorEl) {
+  const handleFilterChange = (nextFilter) => {
+    if (nextFilter === filter) {
       return;
     }
 
-    refreshNotifications(filter === 'unread' ? { isRead: false } : {});
-  }, [anchorEl, filter, refreshNotifications]);
+    setFilter(nextFilter);
+    refreshNotifications(nextFilter === 'unread' ? { isRead: false } : {});
+  };
 
   const handleNotificationClick = async (notification) => {
     const route = getNotificationRoute(notification, userRole);
@@ -258,7 +259,7 @@ export default function NotificationBell() {
           <Chip
             label="All"
             clickable
-            onClick={() => setFilter('all')}
+            onClick={() => handleFilterChange('all')}
             variant={filter === 'all' ? 'filled' : 'outlined'}
             color={filter === 'all' ? 'primary' : 'default'}
             sx={{ fontWeight: 700 }}
@@ -266,7 +267,7 @@ export default function NotificationBell() {
           <Chip
             label="Unread"
             clickable
-            onClick={() => setFilter('unread')}
+            onClick={() => handleFilterChange('unread')}
             variant={filter === 'unread' ? 'filled' : 'outlined'}
             color={filter === 'unread' ? 'primary' : 'default'}
             sx={{ fontWeight: 700 }}
