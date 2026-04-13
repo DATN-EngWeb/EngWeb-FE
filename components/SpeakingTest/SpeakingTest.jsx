@@ -39,6 +39,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SendIcon from '@mui/icons-material/Send';
 import { uploadMediaFile } from '../../utils/uploadHelpers';
 import CustomAudioPlayer from '../Test/customAudioPlayer';
+import AIGradingLoading from '../Writing-Speaking/AIGradingLoading';
 
 export default function SpeakingTest() {
   const params = useParams();
@@ -57,6 +58,12 @@ export default function SpeakingTest() {
   const [testData, setTestData] = useState({ title: '', level: '' });
   const [question, setQuestion] = useState({ description: '', suggestion: '', audio: null });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [serverErrorOpen, setServerErrorOpen] = useState(false);
+
+  const handleServerErrorClose = () => {
+    setServerErrorOpen(false);
+    router.push('/student/speaking');
+  };
   const [isMounted, setIsMounted] = useState(false);
   const [openShareModal, setOpenShareModal] = useState(false);
   const [startTime, setStartTime] = useState(new Date().toISOString());
@@ -130,8 +137,6 @@ export default function SpeakingTest() {
             : null,
         });
       } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('Fetch error:', error);
         setSnackbar({ open: true, message: 'Failed to load test data', severity: 'error' });
       }
     };
@@ -199,9 +204,15 @@ export default function SpeakingTest() {
         router.push(`/student/speaking/${testId}`);
       }, 1000);
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Submission error:', error);
-      setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
+      if (
+        error?.status >= 500 ||
+        error?.response?.status >= 500 ||
+        error?.message?.includes('500')
+      ) {
+        setServerErrorOpen(true);
+      } else {
+        setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
+      }
     }
   };
 
@@ -254,9 +265,15 @@ export default function SpeakingTest() {
         severity: 'success',
       });
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Submission error:', error);
-      setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
+      if (
+        error?.status >= 500 ||
+        error?.response?.status >= 500 ||
+        error?.message?.includes('500')
+      ) {
+        setServerErrorOpen(true);
+      } else {
+        setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
+      }
       setIsSaving(false);
       return;
     }
@@ -268,9 +285,15 @@ export default function SpeakingTest() {
       localStorage.setItem('remainAIturns', category.remaining_turns);
       router.push(`/student/speaking/${testId}/${attempt}/AI-feedback`);
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error fetching AI feedback:', error);
-      setSnackbar({ open: true, message: 'Failed to get AI feedback', severity: 'error' });
+      if (
+        error?.status >= 500 ||
+        error?.response?.status >= 500 ||
+        error?.message?.includes('500')
+      ) {
+        setServerErrorOpen(true);
+      } else {
+        setSnackbar({ open: true, message: 'Failed to get AI feedback', severity: 'error' });
+      }
     } finally {
       setIsSaving(false);
     }
@@ -738,6 +761,32 @@ export default function SpeakingTest() {
               }}
             >
               Submit
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Backdrop
+          sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 999 }}
+          open={isSaving}
+        >
+          <AIGradingLoading />
+        </Backdrop>
+
+        <Dialog
+          open={serverErrorOpen}
+          onClose={handleServerErrorClose}
+          PaperProps={{ sx: { borderRadius: 3, p: 2, minWidth: 320 } }}
+        >
+          <DialogTitle sx={{ fontWeight: 'bold', color: 'error.main' }}>Server Error</DialogTitle>
+          <DialogContent>
+            <Typography>The system is experiencing issues. Please try again later.</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={handleServerErrorClose}
+              variant="contained"
+              sx={{ bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' } }}
+            >
+              OK
             </Button>
           </DialogActions>
         </Dialog>

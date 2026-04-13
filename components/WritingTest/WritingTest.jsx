@@ -34,6 +34,7 @@ import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'reac
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import { getProductiveTestDetails, createProductiveTest, getAIFeedback } from '@/api/test';
 import ProductivePreview from '../Writing-Speaking/ProductivePreview';
+import AIGradingLoading from '../Writing-Speaking/AIGradingLoading';
 import { levelTheme } from '../TestCard';
 import * as styles from '../../styles/student/Writing/WritingTestStyles';
 export default function WritingTest() {
@@ -57,6 +58,12 @@ export default function WritingTest() {
   const [isDraftSaved, setIsDraftSaved] = useState(false);
   const [note, setNote] = useState('');
   const [historyID, setHistoryID] = useState(0);
+  const [serverErrorOpen, setServerErrorOpen] = useState(false);
+
+  const handleServerErrorClose = () => {
+    setServerErrorOpen(false);
+    router.push('/student/writing');
+  };
   const [startTime, setStartTime] = useState(new Date().toISOString());
   const [isReadOnly, setIsReadOnly] = useState(false);
   // Word Count Logic
@@ -178,9 +185,15 @@ export default function WritingTest() {
         router.push(`/student/writing/${testId}`);
       }, 1000);
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Submission error:', error);
-      setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
+      if (
+        error?.status >= 500 ||
+        error?.response?.status >= 500 ||
+        error?.message?.includes('500')
+      ) {
+        setServerErrorOpen(true);
+      } else {
+        setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
+      }
     }
   };
   const handleAIFeedback = async () => {
@@ -230,9 +243,15 @@ export default function WritingTest() {
         severity: 'success',
       });
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Submission error:', error);
-      setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
+      if (
+        error?.status >= 500 ||
+        error?.response?.status >= 500 ||
+        error?.message?.includes('500')
+      ) {
+        setServerErrorOpen(true);
+      } else {
+        setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
+      }
       setIsSaving(false);
       return;
     }
@@ -249,9 +268,15 @@ export default function WritingTest() {
       console.log('Fetched AI feedback:', category);
       router.push(`/student/writing/${testId}/${attempt}/AI-feedback`);
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error fetching AI feedback:', error);
-      setSnackbar({ open: true, message: 'Failed to get AI feedback', severity: 'error' });
+      if (
+        error?.status >= 500 ||
+        error?.response?.status >= 500 ||
+        error?.message?.includes('500')
+      ) {
+        setServerErrorOpen(true);
+      } else {
+        setSnackbar({ open: true, message: 'Failed to get AI feedback', severity: 'error' });
+      }
     } finally {
       setIsSaving(false);
     }
@@ -425,6 +450,7 @@ export default function WritingTest() {
               textTransform: 'none',
               fontWeight: 700,
             }}
+            disabled={wordCount < settings.minWords}
           >
             AI Feedback
           </Button>
@@ -627,6 +653,32 @@ export default function WritingTest() {
               sx={styles.submitButton(wordCount < 100)}
             >
               Submit Test
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Backdrop
+          sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 999 }}
+          open={isSaving}
+        >
+          <AIGradingLoading />
+        </Backdrop>
+
+        <Dialog
+          open={serverErrorOpen}
+          onClose={handleServerErrorClose}
+          PaperProps={{ sx: { borderRadius: 3, p: 2, minWidth: 320 } }}
+        >
+          <DialogTitle sx={{ fontWeight: 'bold', color: 'error.main' }}>Server Error</DialogTitle>
+          <DialogContent>
+            <Typography>The system is experiencing issues. Please try again later.</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={handleServerErrorClose}
+              variant="contained"
+              sx={{ bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' } }}
+            >
+              OK
             </Button>
           </DialogActions>
         </Dialog>

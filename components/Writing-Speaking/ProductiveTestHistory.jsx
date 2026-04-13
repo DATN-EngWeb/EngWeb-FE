@@ -5,7 +5,6 @@ import EditNoteIcon from '@mui/icons-material/EditNote';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import InfoIcon from '@mui/icons-material/Info';
 import * as styles from '../../styles/student/HistoryTestStyles';
-import HistoryItem from './HistoryItem';
 import HistoryTable from '../Student/HistoryTable';
 import HistoryAIFeedbackModal from '../WritingTest/HistoryAIFeedbackModal';
 import { levelTheme } from '../TestCard';

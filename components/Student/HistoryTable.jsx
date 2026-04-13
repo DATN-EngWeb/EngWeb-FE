@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -28,6 +28,11 @@ const formatTime = (totalSeconds) => {
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 };
 
+const wordCount = (data) => {
+  const text = data?.user_answer_text ?? '';
+  return text.trim() ? text.trim().split(/\s+/).length : 0;
+};
+
 export default function HistoryTable({ data, skill, onViewDetail, onShare, onOpenAIReviewed }) {
   return (
     <TableContainer sx={styles.tableContainer}>
@@ -36,7 +41,7 @@ export default function HistoryTable({ data, skill, onViewDetail, onShare, onOpe
           <TableRow>
             <TableCell>DATE</TableCell>
             <TableCell>STATUS</TableCell>
-            <TableCell>SCORE</TableCell>
+            <TableCell>BONUS POINT</TableCell>
             <TableCell>DETAILS</TableCell>
             <TableCell align="right">ACTIONS</TableCell>
           </TableRow>
@@ -65,7 +70,7 @@ export default function HistoryTable({ data, skill, onViewDetail, onShare, onOpe
                         }}
                       />
                     )}
-                    {(item.ai_feedback || item.type === 'S') && (
+                    {item.ai_feedback && (
                       <Chip
                         label="AI REVIEWED"
                         size="small"
@@ -89,7 +94,7 @@ export default function HistoryTable({ data, skill, onViewDetail, onShare, onOpe
                     color="#ffb300"
                     sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.85rem' }}
                   >
-                    <StarIcon sx={{ fontSize: '1rem' }} /> {item.earned_bonus_point || 100} XP
+                    <StarIcon sx={{ fontSize: '1rem' }} /> {item.earned_bonus_point} XP
                   </Typography>
                 </TableCell>
                 <TableCell>
@@ -110,7 +115,7 @@ export default function HistoryTable({ data, skill, onViewDetail, onShare, onOpe
                         color="text.secondary"
                         sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
                       >
-                        <DescriptionIcon sx={{ fontSize: '1rem' }} /> {item.min_words} words
+                        <DescriptionIcon sx={{ fontSize: '1rem' }} /> {wordCount(item)} words
                       </Typography>
                     )}
                   </Stack>
