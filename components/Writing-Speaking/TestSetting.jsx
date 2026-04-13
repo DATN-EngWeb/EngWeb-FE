@@ -37,22 +37,6 @@ export default function TestSetting({ skill, timeLimit, minWords, score, onChang
 
       <Collapse in={!collapsed}>
         <Box sx={{ ...twoColRow, pt: 1 }}>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" mb={1}>
-              Time <span style={{ color: 'red' }}>*</span>
-            </Typography>
-            <TextField
-              id="timeLimit"
-              fullWidth
-              sx={textInput}
-              placeholder="30"
-              value={timeLimit ?? 30}
-              type={'number'}
-              onChange={(e) => onChange('timeLimit', e.target.value)}
-              size="small"
-              error={errors?.timeLimit}
-            />
-          </Box>
           {skill === 'W' && (
             <Box sx={{ flex: 1 }}>
               <Typography variant="body2" mb={1}>

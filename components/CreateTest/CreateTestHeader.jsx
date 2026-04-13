@@ -1,6 +1,17 @@
+'use client';
+
 import { Box, Typography } from '@mui/material';
+import { useState, useEffect } from 'react';
 
 export default function CreateTestHeader() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
   return (
     <Box
       sx={{

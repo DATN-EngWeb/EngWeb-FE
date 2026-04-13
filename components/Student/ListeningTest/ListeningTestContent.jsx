@@ -4,6 +4,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import SendIcon from '@mui/icons-material/Send';
 import { useRouter } from 'next/navigation';
 import {
   Box,
@@ -12,12 +13,13 @@ import {
   Button,
   Snackbar,
   Alert,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
   DialogTitle,
+  IconButton,
+  CircularProgress,
+  Stack,
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { getReceptiveTestDetails } from '../../../api/teacher/upload-reading';
@@ -59,6 +61,8 @@ export default function ListeningTestContent({ test_id, initialData }) {
     end_time: null,
     answer_histories: [],
   });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [submittedHistoryId, setSubmittedHistoryId] = useState(null);
 
@@ -120,8 +124,8 @@ export default function ListeningTestContent({ test_id, initialData }) {
   };
 
   const handleSubmit = async () => {
-    setOpenConfirm(false);
     try {
+      setIsSubmitting(true);
       const formattedHistories = transformAnswers(allAnswers);
 
       const payload = {
@@ -134,6 +138,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
       const response = await createReceptiveTest(payload);
 
+      setOpenConfirm(false);
       setSnackbar({
         open: true,
         message: submitType === 'S' ? 'Test submitted successfully!' : 'Draft saved successfully!',
@@ -151,26 +156,14 @@ export default function ListeningTestContent({ test_id, initialData }) {
         }, 1000);
       }
     } catch (error) {
-      console.error('Draft save error:', error);
-      if (error.status === 400) {
-        setSnackbar({
-          open: true,
-          message: 'Invalid data. Please check your request.',
-          severity: 'error',
-        });
-      } else if (error.status === 403) {
-        setSnackbar({
-          open: true,
-          message: 'You do not have permission to perform this action.',
-          severity: 'error',
-        });
-      } else if (error.status === 401) {
-        setSnackbar({
-          open: true,
-          message: 'Authentication required. Please log in again.',
-          severity: 'error',
-        });
-      }
+      console.error('Submission error:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to submit test. Please try again.',
+        severity: 'error',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -396,58 +389,128 @@ export default function ListeningTestContent({ test_id, initialData }) {
       </Snackbar>
       <Dialog
         open={openConfirm}
-        onClose={() => setOpenConfirm(false)}
+        onClose={() => !isSubmitting && setOpenConfirm(false)}
         PaperProps={{
           sx: {
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            textAlign: 'center',
-            padding: '16px',
-            borderRadius: '12px',
+            borderRadius: '20px',
+            padding: '12px',
+            maxWidth: '480px',
+            width: '100%',
+            position: 'relative',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
           },
         }}
       >
-        <DialogTitle sx={listeningtestStyles.nameTest}>
-          {submitType === 'S' ? 'Finish Test?' : 'Submit as Draft?'}
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            {submitType === 'S' ? (
-              <>
-                You have completed all questions. Do you want to{' '}
-                <strong>submit and finish the test</strong>?
-              </>
-            ) : (
-              <>
-                You haven't finished all questions. Do you want to{' '}
-                <strong>save your progress as a draft</strong> and continue later?
-              </>
-            )}
-          </DialogContentText>
+        <IconButton
+          onClick={() => setOpenConfirm(false)}
+          sx={{
+            position: 'absolute',
+            right: 16,
+            top: 16,
+            color: '#64748b',
+            '&:hover': { backgroundColor: '#f1f5f9' },
+          }}
+          disabled={isSubmitting}
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
+
+        <DialogContent sx={{ textAlign: 'center', pt: 6, pb: 2 }}>
+          <Stack spacing={4} alignItems="center">
+            <Box
+              sx={{
+                width: '90px',
+                height: '90px',
+                borderRadius: '50%',
+                backgroundColor: submitType === 'S' ? '#f0fdf4' : '#fffbeb',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: `1px solid ${submitType === 'S' ? '#dcfce7' : '#fef3c7'}`,
+              }}
+            >
+              <InfoOutlinedIcon
+                sx={{ fontSize: 48, color: submitType === 'S' ? '#16a34a' : '#f59e0b' }}
+              />
+            </Box>
+
+            <Typography
+              sx={{
+                fontSize: '1.25rem',
+                fontWeight: 700,
+                color: '#1e293b',
+                lineHeight: 1.2,
+                px: 3,
+                fontFamily: '"Outfit", sans-serif',
+              }}
+            >
+              {submitType === 'S'
+                ? 'Are you sure you want to submit?'
+                : 'Do you want to save your progress as a draft?'}
+            </Typography>
+          </Stack>
         </DialogContent>
-        <DialogActions>
+
+        <DialogActions
+          sx={{ 界面: 'center', gap: 3, pb: 6, pt: 2, px: 4, justifyContent: 'center' }}
+        >
           <Button
             onClick={() => setOpenConfirm(false)}
-            color="inherit"
+            variant="outlined"
+            disabled={isSubmitting}
             sx={{
-              fontSize: { xs: '0.7rem', md: '1rem' },
-              fontWeight: 500,
+              borderRadius: '50px',
+              px: 5,
+              py: 1.5,
               textTransform: 'none',
-              whiteSpace: 'nowrap',
-              px: 2.5,
+              fontWeight: 700,
+              fontSize: '0.875rem',
+              color: '#475569',
+              borderColor: '#e2e8f0',
+              borderWidth: '1.5px',
+              fontFamily: '"Outfit", sans-serif',
+              '&:hover': {
+                backgroundColor: '#f8fafc',
+                borderColor: '#cbd5e1',
+                borderWidth: '1.5px',
+              },
             }}
           >
-            Cancel
+            CANCEL
           </Button>
+
           <Button
             onClick={handleSubmit}
             variant="contained"
-            color="primary"
-            autoFocus
-            sx={listeningtestStyles.submitButton}
+            disabled={isSubmitting}
+            sx={{
+              borderRadius: '50px',
+              px: isSubmitting ? 6 : 4,
+              py: 1.5,
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: '0.875rem',
+              backgroundColor: submitType === 'S' ? '#166534' : '#f59e0b',
+              color: '#ffffff',
+              fontFamily: '"Outfit", sans-serif',
+              boxShadow: `0 4px 14px 0 ${submitType === 'S' ? 'rgba(22, 101, 52, 0.39)' : 'rgba(245, 158, 11, 0.39)'}`,
+              '&:hover': {
+                backgroundColor: submitType === 'S' ? '#14532d' : '#d97706',
+                boxShadow: `0 6px 20px ${submitType === 'S' ? 'rgba(22, 101, 52, 0.23)' : 'rgba(245, 158, 11, 0.23)'}`,
+              },
+              '&.Mui-disabled': {
+                backgroundColor: submitType === 'S' ? '#166534' : '#f59e0b',
+                opacity: 0.7,
+              },
+            }}
           >
-            Confirm
+            {isSubmitting ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : submitType === 'S' ? (
+              'SUBMIT'
+            ) : (
+              'SAVE DRAFT'
+            )}
           </Button>
         </DialogActions>
       </Dialog>
@@ -457,8 +520,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
           <Box sx={listeningtestStyles.timeLeft}>
             <AccessTimeIcon
               sx={{
-                color: 'secondary.main',
-                fontSize: { xs: '1rem', md: '1.5rem' },
+                fontSize: 28,
                 mr: 0.5,
               }}
             />
@@ -472,7 +534,11 @@ export default function ListeningTestContent({ test_id, initialData }) {
             </Typography>
           </Box>
           <Box sx={listeningtestStyles.summitButtonWrapper}>
-            <Button sx={listeningtestStyles.submitButton} onClick={handlePreSubmit}>
+            <Button
+              startIcon={<SendIcon />}
+              sx={listeningtestStyles.submitButton}
+              onClick={handlePreSubmit}
+            >
               Submit Test
             </Button>
           </Box>
@@ -539,7 +605,11 @@ export default function ListeningTestContent({ test_id, initialData }) {
                 Next
               </Button>
             ) : (
-              <Button sx={listeningtestStyles.nextButton} onClick={handlePreSubmit}>
+              <Button
+                startIcon={<SendIcon />}
+                sx={{ ...listeningtestStyles.submitButton, px: 3, py: 0.5 }}
+                onClick={handlePreSubmit}
+              >
                 Submit
               </Button>
             )}

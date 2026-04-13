@@ -72,10 +72,12 @@ export default function Matching({ dataPart, isActive, userAnswers, onUpdateAnsw
         <Box sx={listeningPartStyles.instructionContainer}>
           <InstructionIcon />
           <Box sx={listeningPartStyles.instructionWrapper}>
-            <Typography sx={{ color: 'red.text', fontSize: '1rem', fontWeight: 600 }}>
+            <Typography
+              sx={{ color: 'secondary.main', fontSize: '1rem', fontWeight: 600, mb: 0.5 }}
+            >
               Instruction
             </Typography>
-            <Typography sx={{ color: 'dark.main', fontSize: '0.8rem' }}>
+            <Typography sx={{ color: 'text.primary', fontSize: '0.9rem', lineHeight: 1.5 }}>
               Listen to the audio. For each question, choose the correct answer.
             </Typography>
           </Box>

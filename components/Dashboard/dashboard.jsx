@@ -29,6 +29,7 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import ProgressTracking from '@/components/Dashboard/progressTracking';
 import HistoryItem from '@/components/Dashboard/historyItem';
+import HistoryTable from '@/components/Student/HistoryTable';
 import LevelPointsPanel from '@/components/Dashboard/LevelPointsPanel';
 import { getStudentProfile } from '@/api/accounts';
 import { getUserProgressLevels } from '@/api/userProgress';
@@ -182,6 +183,7 @@ export default function StudentDashboard() {
           setHistoryData(statsResponse?.last_30_attempts || []);
         }
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Error fetching dashboard data:', error);
       } finally {
         setIsLoading(false);
@@ -209,6 +211,7 @@ export default function StudentDashboard() {
         setStudentProfile(profileResponse || null);
         setUserLevels(Array.isArray(levelsResponse) ? levelsResponse : []);
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Error fetching student level data:', error);
         setStudentProfile(null);
         setUserLevels([]);
@@ -257,6 +260,45 @@ export default function StudentDashboard() {
 
     fetchProgressHistory();
   }, [filterSkill, currentPage, filterLevelForHistory]);
+
+  const handleViewDetailHistory = (item) => {
+    let dataToSave = {};
+
+    const storageKey = ['R', 'L'].includes(filterSkill)
+      ? 'current_receptive_attempt'
+      : 'current_productive_attempt';
+
+    if (storageKey === 'current_receptive_attempt') {
+      dataToSave = {
+        answer_histories: item.answer_histories,
+        isReadOnly: item.type === 'S',
+        startTime: item.start_time,
+        totalTime: item.total_time,
+      };
+    } else {
+      dataToSave = {
+        answer: item.user_answer_text,
+        note: item.user_note_text,
+        isReadOnly: item.type === 'S',
+        startTime: item.start_time,
+        totalTime: item.total_time,
+        audio: item.audio_path,
+      };
+    }
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem(storageKey, JSON.stringify(dataToSave));
+    }
+
+    const skillPaths = {
+      R: 'reading',
+      L: 'listening',
+      W: 'writing',
+      S: 'speaking',
+    };
+
+    const path = skillPaths[filterSkill] || 'reading';
+    router.push(`/student/${path}/${item.receptive_test || item.productive_test}/${item.attempt}`);
+  };
 
   if (isInitialMount) {
     return <SkeletonStudentDashboard />;
@@ -588,20 +630,15 @@ export default function StudentDashboard() {
                 </FormControl>
               </Stack>
             </Stack>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-                gap: 2,
-                width: '100%',
-              }}
-            >
+            <Box sx={{ width: '100%' }}>
               {progressHistory.length > 0 ? (
-                progressHistory.map((test, _index) => (
-                  <HistoryItem key={test.id} data={test} filterSkill={filterSkill} />
-                ))
+                <HistoryTable
+                  data={progressHistory}
+                  skill={filterSkill}
+                  onViewDetail={handleViewDetailHistory}
+                />
               ) : (
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                <Typography variant="body2" sx={{ color: 'text.secondary', p: 2 }}>
                   No submissions yet.
                 </Typography>
               )}

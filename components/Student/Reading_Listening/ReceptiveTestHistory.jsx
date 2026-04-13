@@ -9,8 +9,8 @@ import Edit from '@mui/icons-material/Edit';
 import InfoIcon from '@mui/icons-material/Info';
 import * as styles from '@/styles/student/HistoryTestStyles';
 import HistoryItem from './HistoryItem';
+import HistoryTable from '../HistoryTable';
 import { levelTheme } from '../../TestCard';
-import { StudyTip } from '../../Writing-Speaking/StudyTip';
 import ProgressTrackingCard from '../../Writing-Speaking/ProgressTrackingCard';
 import { getReceptiveTestHistoryByTestId, getReceptiveTestDetails } from '@/api/test';
 import {
@@ -45,6 +45,7 @@ export default function ReceptiveTestHistory({ onPracticeNow }) {
         setTestData(details);
         setHistoryData(listAttempt?.results || []);
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
@@ -65,6 +66,7 @@ export default function ReceptiveTestHistory({ onPracticeNow }) {
 
   const handleContinue = () => {
     if (!draft) {
+      // eslint-disable-next-line no-console
       console.error('Biến draft đang bị null hoặc undefined!');
       return;
     }
@@ -84,6 +86,7 @@ export default function ReceptiveTestHistory({ onPracticeNow }) {
 
         // console.log('Đã lưu vào SS:', window.sessionStorage.getItem('current_receptive_attempt'));
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error('Lỗi khi lưu vào sessionStorage:', e);
       }
     }
@@ -94,6 +97,21 @@ export default function ReceptiveTestHistory({ onPracticeNow }) {
         : `/student/reading/${test_id}/${draft.id}`;
 
     router.push(targetPath);
+  };
+  const handleViewDetail = (item) => {
+    const dataToSave = {
+      history_id: item.id,
+      answer_histories: item.answer_histories,
+      isReadOnly: item.type === 'S',
+      startTime: item.start_time,
+      totalTime: item.total_time,
+    };
+    sessionStorage.setItem('current_receptive_attempt', JSON.stringify(dataToSave));
+    if (item.skill === 'L') {
+      router.push(`/student/listening/${item.receptive_test}/${item.attempt}`);
+    } else {
+      router.push(`/student/reading/${item.receptive_test}/${item.attempt}`);
+    }
   };
 
   const handlePracticeNow = () => {
@@ -196,37 +214,13 @@ export default function ReceptiveTestHistory({ onPracticeNow }) {
             </Typography>
           </Stack>
 
-          <Stack spacing={2}>
-            {submissions.length > 0 ? (
-              submissions.map((sub, index) => (
-                <HistoryItem
-                  key={index}
-                  data={{
-                    ...sub,
-                    skill: testData.skill,
-                  }}
-                />
-              ))
-            ) : (
-              <Paper
-                sx={{
-                  color: 'primary.main',
-                  p: 6,
-                  textAlign: 'center',
-                  borderRadius: '24px',
-                  border: '1px solid #f0f0f0',
-                  bgcolor: 'white',
-                }}
-              >
-                <Typography variant="body1" fontWeight={700}>
-                  You haven't submitted any responses yet.
-                </Typography>
-                <Typography variant="body2">
-                  Start your first attempt to track your performance!
-                </Typography>
-              </Paper>
-            )}
-          </Stack>
+          <Box>
+            <HistoryTable
+              data={submissions.map((sub) => ({ ...sub, skill: testData.skill }))}
+              skill={testData.skill}
+              onViewDetail={handleViewDetail}
+            />
+          </Box>
         </Grid>
 
         {/* column right (Sidebar) */}
@@ -234,7 +228,6 @@ export default function ReceptiveTestHistory({ onPracticeNow }) {
         <Grid item sx={{ width: '30%' }}>
           <Stack spacing={3}>
             <ProgressTrackingCard historyData={historyData} type={testData.type} />
-            <StudyTip level={testData.level} />
           </Stack>
         </Grid>
       </Grid>

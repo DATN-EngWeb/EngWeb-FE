@@ -1,10 +1,8 @@
 export const mainContainer = {
   backgroundColor: 'gray.light',
-  px: { xs: 2, md: 4, lg: 6 },
-  // py: 2,
+  px: 0,
   display: 'flex',
   flexDirection: 'column',
-  height: '100vh',
   overflow: 'hidden',
 };
 
@@ -19,7 +17,7 @@ export const testHeaderContainer = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  px: 8,
+  px: 2,
   py: 2,
   bgcolor: 'white',
   borderBottom: '1px solid #eee',
@@ -70,6 +68,8 @@ export const contentWrapper = {
 export const panelScrollBox = (isLeft = true) => ({
   height: '100%',
   overflowY: 'auto',
+  display: 'flex',
+  flexDirection: 'column',
   [isLeft ? 'pr' : 'pl']: 1,
 });
 
@@ -106,6 +106,10 @@ export const writingPaper = {
   borderRadius: '16px',
   border: '1px solid #eee',
   boxShadow: '0px 4px 20px rgba(0,0,0,0.05)',
+  height: '100%', // Stretch to fill panel
+  display: 'flex',
+  flexDirection: 'column',
+  bgcolor: 'white',
 };
 
 export const progressBarWrapper = {
@@ -138,11 +142,29 @@ export const textFieldStyle = {
 
 export const forumBox = {
   mt: 2,
-  p: 2,
+  p: 3,
   border: '1px solid #ffe0b2',
   borderRadius: '12px',
   bgcolor: '#fffdf9',
   color: 'primary.main',
+};
+
+export const instructionBoxStyles = {
+  backgroundColor: '#FFF5F5',
+  borderRadius: '8px',
+  p: 2,
+  display: 'flex',
+  gap: 1.5,
+  alignItems: 'flex-start',
+  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+  border: '1px solid #FED7D7',
+};
+
+export const instructionIconStyles = {
+  color: '#FF6B35',
+  display: 'flex',
+  alignItems: 'center',
+  mt: 0.5,
 };
 export const forumCheckbox = {
   '& .MuiFormControlLabel-label': {
@@ -161,14 +183,17 @@ export const forumCheckbox = {
 };
 
 export const submitButton = (disabled) => ({
-  fullWidth: true,
-  variant: 'contained',
-  py: 1.5,
   textTransform: 'none',
-  borderRadius: '8px',
-  bgcolor: disabled ? '#e0e0e0' : '#5d4037',
-  color: disabled ? '#616161' : '#fff',
+  borderRadius: '12px',
+  bgcolor: disabled ? '#f5f5f5' : '#4e342e',
+  color: disabled ? '#bdbdbd' : '#fff',
   boxShadow: 'none',
+  fontWeight: 700,
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    bgcolor: disabled ? '#eeeeee' : '#3e2723',
+    color: disabled ? '#bdbdbd' : '#fff',
+  },
 });
 
 export const aiButton = {
@@ -186,9 +211,10 @@ export const aiButton = {
 };
 
 export const speakingTestBox = {
-  height: '75%',
+  height: '100%',
+  p: 3,
+  ml: 2,
   overflowY: 'auto',
-  pl: 1,
   backgroundColor: 'white',
   borderRadius: '16px',
   boxShadow: '0 4px 20px rgba(0,0,0,0.05)',

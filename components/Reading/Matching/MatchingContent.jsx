@@ -423,7 +423,7 @@ const MatchingContent = ({
                         sx={{
                           fontWeight: 600,
                           fontSize: '1rem',
-                          color: 'text.primary',
+                          color: 'secondary.main',
                           mb: 0.5,
                         }}
                       >
@@ -432,10 +432,11 @@ const MatchingContent = ({
                       <Typography
                         sx={{
                           fontSize: '0.9rem',
-                          color: 'text.secondary',
+                          color: 'text.primary',
                         }}
                       >
-                        {passageTitle}
+                        Read the passage on the left and match the correct sentences or headings to
+                        each person or category.
                       </Typography>
                     </Box>
                   </Paper>
@@ -463,7 +464,7 @@ const MatchingContent = ({
                       Missing Sentences
                     </Typography>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                      {sentences.map((sentence) => (
+                      {sentences.map((sentence, index) => (
                         <Box
                           key={sentence.id}
                           sx={{
@@ -483,7 +484,7 @@ const MatchingContent = ({
                               minWidth: '24px',
                             }}
                           >
-                            {sentence.id}.
+                            {index + 1}.
                           </Typography>
                           <Typography
                             sx={{
@@ -555,9 +556,9 @@ const MatchingContent = ({
                               <MenuItem value="" disabled>
                                 Select
                               </MenuItem>
-                              {sentences.map((sentence) => (
+                              {sentences.map((sentence, index) => (
                                 <MenuItem key={sentence.id} value={sentence.id}>
-                                  {sentence.id}
+                                  {index + 1}
                                 </MenuItem>
                               ))}
                             </Select>

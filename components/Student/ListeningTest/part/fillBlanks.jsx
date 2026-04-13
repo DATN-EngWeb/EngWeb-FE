@@ -180,13 +180,16 @@ export default function FillBlankPart({
         <Box sx={listeningPartStyles.instructionContainer}>
           <InstructionIcon />
           <Box sx={listeningPartStyles.instructionWrapper}>
-            <Typography sx={{ color: 'red.text', fontSize: '1rem', fontWeight: 600 }}>
+            <Typography
+              sx={{ color: 'secondary.main', fontSize: '1rem', fontWeight: 600, mb: 0.5 }}
+            >
               Instruction
             </Typography>
             <Typography
               sx={{
-                color: 'dark.main',
-                fontSize: '0.8rem',
+                color: 'text.primary',
+                fontSize: '0.9rem',
+                lineHeight: 1.5,
                 display: '-webkit-box',
                 WebkitLineClamp: 2,
                 WebkitBoxOrient: 'vertical',

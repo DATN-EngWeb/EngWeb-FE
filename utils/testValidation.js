@@ -49,7 +49,6 @@ export const validateMultiChoiceImagePart = (part) => {
     const qErrors = {};
 
     if (!q.text?.trim()) qErrors.text = true;
-    if (!q.explanation?.trim()) qErrors.explanation = true;
     if (q.correctIndex === null || q.correctIndex === undefined) qErrors.correctIndex = true;
 
     if (!q.answers || q.answers.length < 2) {
@@ -108,7 +107,6 @@ export const validateMultiChoiceTextPart = (part) => {
     const qErrors = {};
 
     if (!q.text?.trim()) qErrors.text = true;
-    if (!q.explanation?.trim()) qErrors.explanation = true;
 
     // Format B: check question-level audio
     if (part.audioFormat === 'onetoone') {
@@ -165,13 +163,10 @@ export const validateFillInTheBlankPart = (part) => {
     errors.noAnswers = true;
   } else {
     errors.answers = [];
-    errors.answerExplanations = [];
     part.answers.forEach((ans) => {
       errors.answers.push(!ans.text?.trim());
-      errors.answerExplanations.push(!ans.explanation?.trim());
     });
     if (!errors.answers.some(Boolean)) delete errors.answers;
-    if (!errors.answerExplanations.some(Boolean)) delete errors.answerExplanations;
   }
 
   return Object.keys(errors).length > 0 ? errors : {};
@@ -204,7 +199,6 @@ export const validateMatchingPart = (part) => {
     part.questions.forEach((q, qIdx) => {
       const qErrors = {};
       if (!q.text?.trim()) qErrors.text = true;
-      if (!q.explanation?.trim()) qErrors.explanation = true;
       if (!q.selectedAnswerId) qErrors.selectedAnswerId = true;
       if (Object.keys(qErrors).length > 0) errors.questions[qIdx] = qErrors;
     });
@@ -284,15 +278,6 @@ export const getValidationErrorMessage = (errors) => {
     return 'Please select the correct answer for each question';
   if (
     errors.parts?.some(
-      (p) =>
-        p?.questions && Object.keys(p.questions).some((qIdx) => p.questions[qIdx]?.explanation),
-    )
-  )
-    return 'All question explanations must be filled';
-  if (errors.parts?.some((p) => p?.answerExplanations?.some(Boolean)))
-    return 'All answer explanations must be filled';
-  if (
-    errors.parts?.some(
       (p) => p?.questions && Object.keys(p.questions).some((qIdx) => p.questions[qIdx]?.answers),
     )
   )
@@ -354,12 +339,6 @@ export const validateReadingPartPayload = (parts) => {
     for (let j = 0; j < part.questions.length; j++) {
       const q = part.questions[j];
       const qNum = q.question_number || j + 1;
-
-      if (['F', 'G', 'H', 'I', 'J'].includes(format)) {
-        if (isEmptyText(q.explanation)) {
-          return `Error in ${partName}, Question ${qNum}: Explanation is required.`;
-        }
-      }
 
       if (!q.answers || q.answers.length === 0) {
         return `Error in ${partName}, Question ${qNum}: No answers provided.`;

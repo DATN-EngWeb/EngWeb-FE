@@ -108,6 +108,7 @@ export default function ListeningHub() {
           setTotalPages(1);
         }
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error('Failed to fetch tests:', err);
         setError(err.message || 'Failed to load tests. Please try again later.');
       } finally {
@@ -126,10 +127,6 @@ export default function ListeningHub() {
     setPage(1); // Reset to page 1 on filter change
   };
 
-  const handleApplyFilters = () => {
-    console.log('Applying filters:', filters);
-  };
-
   const handlePageChange = (event, value) => {
     setPage(value);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -137,18 +134,7 @@ export default function ListeningHub() {
 
   return (
     <Box sx={pageContainerStyles}>
-      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 8, lg: 15 }, mx: 'auto', mt: 4, mb: 4 }}>
-        <Box sx={headerSectionStyles}>
-          <Typography variant="h3" sx={{ fontWeight: 700, color: 'primary.main', mb: 1 }}>
-            Listening Hub
-          </Typography>
-          <Typography variant="subtitle1" sx={{ color: 'text.secondary', mb: 3 }}>
-            Improve your English listening skills with carefully prepared tests.
-          </Typography>
-        </Box>
-      </Container>
-
-      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 8, lg: 15 }, mx: 'auto' }}>
+      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 8, lg: 15 }, mx: 'auto', pt: 4 }}>
         <Grid container spacing={2} sx={{ flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
           <Grid
             item
@@ -248,6 +234,31 @@ export default function ListeningHub() {
 
                 <Box>
                   <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                    Sort by
+                  </Typography>
+                  <Select
+                    fullWidth
+                    size="small"
+                    value={filters.ordering}
+                    onChange={(e) => handleFilterChange('ordering', e.target.value)}
+                    sx={{
+                      bgcolor: 'background.paper',
+                      borderRadius: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      '& fieldset': { border: 'none' },
+                    }}
+                  >
+                    <MenuItem value="-created_at">Newest First</MenuItem>
+                    <MenuItem value="created_at">Oldest First</MenuItem>
+                    <MenuItem value="-updated_at">Recently Updated</MenuItem>
+                    <MenuItem value="title">Title (A-Z)</MenuItem>
+                    <MenuItem value="-title">Title (Z-A)</MenuItem>
+                  </Select>
+                </Box>
+
+                <Box>
+                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
                     Level
                   </Typography>
                   <Stack>
@@ -328,24 +339,6 @@ export default function ListeningHub() {
                     </Select>
                   </Box>
                 )}
-
-                <Button
-                  variant="contained"
-                  fullWidth
-                  size="large"
-                  onClick={handleApplyFilters}
-                  sx={{
-                    bgcolor: 'warning.main',
-                    color: 'dark.main',
-                    fontWeight: 700,
-                    borderRadius: 3,
-                    textTransform: 'none',
-                    boxShadow: 'none',
-                    '&:hover': { bgcolor: 'warning.dark' },
-                  }}
-                >
-                  Apply
-                </Button>
               </Stack>
             </Box>
           </Grid>
@@ -358,29 +351,6 @@ export default function ListeningHub() {
               width: { xs: '100%', md: 'auto' },
             }}
           >
-            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-              <Select
-                value={filters.ordering}
-                onChange={(e) => handleFilterChange('ordering', e.target.value)}
-                size="small"
-                sx={{
-                  minWidth: 160,
-                  display: 'flex',
-                  ml: 'auto',
-                  bgcolor: 'background.paper',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  '& fieldset': { border: 'none' },
-                }}
-              >
-                <MenuItem value="-created_at">Newest First</MenuItem>
-                <MenuItem value="created_at">Oldest First</MenuItem>
-                <MenuItem value="-updated_at">Recently Updated</MenuItem>
-                <MenuItem value="title">Title (A-Z)</MenuItem>
-                <MenuItem value="-title">Title (Z-A)</MenuItem>
-              </Select>
-            </Stack>
-
             <Box
               sx={{
                 display: 'grid',

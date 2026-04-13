@@ -37,6 +37,7 @@ export default function BasicInformation({
   skill,
   testName,
   level,
+  timeLimit,
   format,
   topics,
   onChange,
@@ -127,6 +128,21 @@ export default function BasicInformation({
                 value={testName}
                 onChange={(e) => onChange('testName', e.target.value)}
                 error={errors?.testName}
+              />
+            </Box>
+            <Box sx={{ flex: 0.4 }}>
+              <Typography variant="body2" mb={1}>
+                Time <span style={{ color: 'red' }}>*</span>
+              </Typography>
+              <TextField
+                fullWidth
+                size="small"
+                type="number"
+                sx={textInput}
+                placeholder="Enter time"
+                value={timeLimit ?? ''}
+                onChange={(e) => onChange('timeLimit', e.target.value)}
+                error={errors?.timeLimit}
               />
             </Box>
           </Box>

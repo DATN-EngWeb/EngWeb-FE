@@ -24,6 +24,7 @@ import {
 import { useParams, useRouter } from 'next/navigation';
 import SendIcon from '@mui/icons-material/Send';
 import EditNoteIcon from '@mui/icons-material/EditNote';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import HistoryEduIcon from '@mui/icons-material/HistoryEdu';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
@@ -35,7 +36,6 @@ import { getProductiveTestDetails, createProductiveTest, getAIFeedback } from '@
 import ProductivePreview from '../Writing-Speaking/ProductivePreview';
 import { levelTheme } from '../TestCard';
 import * as styles from '../../styles/student/Writing/WritingTestStyles';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 export default function WritingTest() {
   const params = useParams();
   const testId = params.test_id;
@@ -117,6 +117,7 @@ export default function WritingTest() {
           }
         }
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Fetch error:', error);
         setSnackbar({ open: true, message: 'Failed to load test data', severity: 'error' });
       }
@@ -141,6 +142,12 @@ export default function WritingTest() {
   const handleSubmit = () => {
     if (wordCount >= settings.minWords) {
       setOpenShareModal(true);
+    } else {
+      setSnackbar({
+        open: true,
+        message: `You need at least ${settings.minWords} words to submit. (Current: ${wordCount} words)`,
+        severity: 'warning',
+      });
     }
   };
   const handleFinalSubmit = async () => {
@@ -156,6 +163,7 @@ export default function WritingTest() {
         user_note_text: note,
         user_answer_text: text,
       });
+      // eslint-disable-next-line no-console
       console.log('Submission response:', response);
       setIsDraftSaved(true);
       setIsSaving(false);
@@ -170,6 +178,7 @@ export default function WritingTest() {
         router.push(`/student/writing/${testId}`);
       }, 1000);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Submission error:', error);
       setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
     }
@@ -191,6 +200,7 @@ export default function WritingTest() {
         user_answer_text: text,
       });
 
+      // eslint-disable-next-line no-console
       console.log('Submit Success:', response);
       newHistoryID = response.id;
       setHistoryID(newHistoryID);
@@ -220,6 +230,7 @@ export default function WritingTest() {
         severity: 'success',
       });
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Submission error:', error);
       setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
       setIsSaving(false);
@@ -229,13 +240,16 @@ export default function WritingTest() {
     // step2: get feedback
     try {
       if (!newHistoryID) throw new Error('No History ID found');
+      // eslint-disable-next-line no-console
       console.log('Fetching feedback for ID:', newHistoryID);
       const category = await getAIFeedback({ id: newHistoryID });
       localStorage.setItem('category', JSON.stringify(category.ai_feedback));
       localStorage.setItem('remainAIturns', category.remaining_turns);
+      // eslint-disable-next-line no-console
       console.log('Fetched AI feedback:', category);
       router.push(`/student/writing/${testId}/${attempt}/AI-feedback`);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Error fetching AI feedback:', error);
       setSnackbar({ open: true, message: 'Failed to get AI feedback', severity: 'error' });
     } finally {
@@ -268,6 +282,7 @@ export default function WritingTest() {
         router.push(`/student/writing/${testId}`);
       }, 1000);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Draft save error:', error);
       setSnackbar({ open: true, message: 'Failed to save draft', severity: 'error' });
     }
@@ -283,74 +298,145 @@ export default function WritingTest() {
   };
 
   return (
-    <Box>
+    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <Box sx={styles.testHeaderContainer}>
-        {/* Test title and Level */}
-        <Stack direction="row" alignItems="center">
-          <Box>
-            <Stack direction="row" alignItems="center">
-              <Typography variant="h6" sx={{ fontWeight: 800, color: '#4e342e' }}>
-                {testData.title || 'Practice Test Name'}
-              </Typography>
-              <Box
-                sx={{
-                  px: 2,
-                  py: 0.5,
-                  borderRadius: '8px',
-                  border: `1px solid`,
-                  borderColor: levelTheme[testData.level]?.border,
-                  color: levelTheme[testData.level]?.text,
-                  bgcolor: levelTheme[testData.level]?.bg,
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  ml: 2,
-                }}
-              >
-                Level {testData.level || 'Level A1'}
-              </Box>
-            </Stack>
-            <Stack
-              direction="row"
-              spacing={3}
-              alignItems="center"
-              sx={{ mt: 1 }}
-              divider={<Box sx={styles.divider} />}
-            >
-              <Box sx={{ ...styles.groupIcon }}>
-                <HistoryEduIcon />
-                <Typography variant="body2">
-                  {FormatMapper[testData.type] || 'Writing an article'}
-                </Typography>
-              </Box>
-              <Box sx={{ ...styles.groupIcon }}>
-                <MenuBookIcon />
-                <Typography variant="body2">
-                  {settings.minWords} - {settings.maxWords} words
-                </Typography>
-              </Box>
-              <Box sx={{ ...styles.groupIcon }}>
-                <TimerIcon />
-                <Typography variant="body2">{testData.time} mins</Typography>
-              </Box>
-            </Stack>
-          </Box>
-        </Stack>
-
         {/* time counter*/}
-        <Box sx={styles.timerBox}>
-          <AccessTimeIcon sx={{ fontSize: 28 }} />
-          <Typography variant="inherit">
-            {isMounted ? formatDuration(secondsElapsed) : '00:00'}
-          </Typography>
+        <Box sx={{ width: 320, display: 'flex', justifyContent: 'flex-start' }}>
+          <Box sx={styles.timerBox}>
+            <AccessTimeIcon sx={{ fontSize: 28 }} />
+            <Typography variant="inherit">
+              {isMounted ? formatDuration(secondsElapsed) : '00:00'}
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Test title and Level */}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Stack direction="row" alignItems="center">
+            <Typography variant="h6" sx={{ fontWeight: 800, color: '#4e342e' }}>
+              {testData.title || 'Practice Test Name'}
+            </Typography>
+            <Box
+              sx={{
+                px: 2,
+                py: 0.5,
+                borderRadius: '8px',
+                border: `1px solid`,
+                borderColor: levelTheme[testData.level]?.border,
+                color: levelTheme[testData.level]?.text,
+                bgcolor: levelTheme[testData.level]?.bg,
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                ml: 2,
+              }}
+            >
+              Level {testData.level || 'Level A1'}
+            </Box>
+          </Stack>
+          <Stack
+            direction="row"
+            spacing={3}
+            alignItems="center"
+            sx={{ mt: 1 }}
+            divider={<Box sx={styles.divider} />}
+          >
+            <Box sx={{ ...styles.groupIcon }}>
+              <HistoryEduIcon />
+              <Typography variant="body2">
+                {FormatMapper[testData.type] || 'Writing an article'}
+              </Typography>
+            </Box>
+            <Box sx={{ ...styles.groupIcon }}>
+              <MenuBookIcon />
+              <Typography variant="body2">
+                {settings.minWords} - {settings.maxWords} words
+              </Typography>
+            </Box>
+            <Box sx={{ ...styles.groupIcon }}>
+              <TimerIcon />
+              <Typography variant="body2">{testData.time} mins</Typography>
+            </Box>
+          </Stack>
+        </Box>
+
+        {/* Action Buttons on the Right */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1,
+            alignItems: 'flex-end',
+          }}
+        >
+          {/* Row 1: Save Draft and Submit Test */}
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Button
+              variant="contained"
+              startIcon={<EditNoteIcon />}
+              onClick={handleSaveDraft}
+              sx={{
+                ...styles.aiButton,
+                bgcolor: 'info.pastel',
+                color: 'info.main',
+                py: 1,
+                px: 2,
+                borderRadius: '12px',
+                fontSize: '0.8125rem',
+                minWidth: 'auto',
+                textTransform: 'none',
+                fontWeight: 700,
+                '&:hover': { bgcolor: '#e3f2fd' },
+              }}
+            >
+              Save Draft
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<SendIcon />}
+              onClick={handleSubmit}
+              sx={{
+                ...styles.submitButton(wordCount < settings.minWords),
+                py: 1,
+                px: 2,
+                borderRadius: '12px',
+                fontSize: '0.8125rem',
+                minWidth: 'auto',
+                textTransform: 'none',
+                fontWeight: 700,
+              }}
+            >
+              Submit Test
+            </Button>
+          </Stack>
+
+          {/* Row 2: AI Feedback */}
+          <Button
+            variant="contained"
+            fullWidth
+            startIcon={<AutoAwesomeIcon />}
+            onClick={handleAIFeedback}
+            sx={{
+              ...styles.aiButton,
+              py: 1,
+              px: 2,
+              borderRadius: '12px',
+              fontSize: '0.8125rem',
+              minWidth: 'auto',
+              textTransform: 'none',
+              fontWeight: 700,
+            }}
+          >
+            AI Feedback
+          </Button>
         </Box>
       </Box>
 
-      <Box sx={styles.mainContainer}>
+      <Box sx={{ ...styles.mainContainer, flex: 1 }}>
         <Box sx={styles.contentWrapper}>
           <PanelGroup direction="horizontal" id="writing-test-layout">
             {/* test  data */}
             <Panel defaultSize={50} minSize={40}>
-              <Box sx={{ height: '100%', overflowY: 'auto', pr: 1 }}>
+              <Box sx={{ height: '100%', overflowY: 'auto', mr: 2 }}>
                 <ProductivePreview
                   preview={false}
                   title={testData.title}
@@ -361,24 +447,51 @@ export default function WritingTest() {
               </Box>
             </Panel>
 
-            <PanelResizeHandle id="resize-handle" style={{ width: '8px', cursor: 'col-resize' }} />
+            <PanelResizeHandle
+              id="resize-handle"
+              style={{
+                width: '12px',
+                cursor: 'col-resize',
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {/* Vertical Line */}
+              <Box sx={{ width: '2px', height: '100%', bgcolor: '#e0e0e0' }} />
+              {/* Circular Handle */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: 28,
+                  height: 28,
+                  bgcolor: 'white',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 0 4px rgba(0,0,0,0.15)',
+                  border: '1px solid #eee',
+                  zIndex: 2,
+                  fontSize: 14,
+                  color: 'text.secondary',
+                  userSelect: 'none',
+                  '&:hover': {
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                  },
+                }}
+              >
+                ⇔
+              </Box>
+            </PanelResizeHandle>
 
             {/* student test */}
             <Panel defaultSize={50} minSize={40}>
-              <Box sx={{ height: '100%', overflowY: 'auto', pl: 1 }}>
-                {/*  Outline */}
-                {!showOutline && (
-                  <Button
-                    variant="contained"
-                    onClick={() => setShowOutline(!showOutline)}
-                    sx={{ ...styles.outlineButton }}
-                  >
-                    <>
-                      <AssignmentOutlinedIcon /> Note/Outline <ExpandMore />
-                    </>
-                  </Button>
-                )}
-
+              <Box sx={{ height: '100%', overflowY: 'auto', ml: 2 }}>
                 <Collapse in={showOutline}>
                   <Paper sx={styles.outlinePaper}>
                     <Box
@@ -416,70 +529,53 @@ export default function WritingTest() {
 
                 {/* MAIN WRITING AREA */}
                 <Paper sx={styles.writingPaper}>
-                  <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-                    <LinearProgress
-                      variant="determinate"
-                      value={progress}
-                      sx={{
-                        flexGrow: 1,
-                        height: 10,
-                        borderRadius: 5,
-                        bgcolor: '#eee',
-                        '& .MuiLinearProgress-bar': { bgcolor: '#ffc107' },
-                      }}
-                    />
+                  <Box
+                    sx={{
+                      mb: 2,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    {!showOutline ? (
+                      <Button
+                        variant="contained"
+                        onClick={() => setShowOutline(true)}
+                        sx={{ ...styles.outlineButton, mb: 0 }}
+                      >
+                        <AssignmentOutlinedIcon sx={{ mr: 1 }} /> Note/Outline <ExpandMore />
+                      </Button>
+                    ) : (
+                      <Box />
+                    )}
                     <Typography variant="body2" fontWeight={700}>
                       {wordCount} words
-                      {/* {wordCount}/{settings.minWords} words */}
                     </Typography>
-                  </Stack>
+                  </Box>
 
                   <TextField
                     multiline
                     fullWidth
-                    rows={14}
+                    minRows={10}
                     placeholder="Enter your answer here ..."
                     value={text}
                     onChange={(e) => setText(e.target.value)}
-                    sx={styles.textFieldStyle}
+                    sx={{
+                      ...styles.textFieldStyle,
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      '& .MuiInputBase-root': {
+                        flex: 1,
+                        alignItems: 'flex-start',
+                      },
+                      '& .MuiInputBase-input': {
+                        height: '100% !important',
+                      },
+                    }}
                     disabled={isFinished}
                   />
-                  {!isFinished ? (
-                    <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        startIcon={<AutoAwesomeIcon />}
-                        onClick={() => handleAIFeedback('AI Feedback')}
-                        sx={styles.aiButton}
-                      >
-                        AI Feedback
-                      </Button>
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        startIcon={<EditNoteIcon />}
-                        onClick={() => handleSaveDraft('Save Draft')}
-                        sx={{
-                          ...styles.aiButton,
-                          bgcolor: 'info.pastel',
-                          '&:hover': { bgcolor: 'blue.main' },
-                        }}
-                      >
-                        Save Draft
-                      </Button>
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        startIcon={<SendIcon />}
-                        onClick={() => handleSubmit('Submit')}
-                        disabled={wordCount < settings.minWords}
-                        sx={styles.submitButton(wordCount < settings.minWords)}
-                      >
-                        Submit
-                      </Button>
-                    </Stack>
-                  ) : (
+                  {isFinished && (
                     <Alert severity="success" sx={{ mt: 3, borderRadius: '12px' }}>
                       This test has been submitted for grading. You can no longer edit the content.
                     </Alert>
@@ -517,7 +613,7 @@ export default function WritingTest() {
               textAlign: 'center',
             }}
           >
-            Submit
+            Submit Test
           </DialogTitle>
           <DialogContent>
             <Typography variant="body2" display="block">
@@ -528,15 +624,9 @@ export default function WritingTest() {
             <Button
               variant="contained"
               onClick={handleFinalSubmit}
-              sx={{
-                bgcolor: '#4e342e',
-                borderRadius: '12px',
-                px: 3,
-                textTransform: 'none',
-                '&:hover': { bgcolor: '#3e2723' },
-              }}
+              sx={styles.submitButton(wordCount < 100)}
             >
-              Submit
+              Submit Test
             </Button>
           </DialogActions>
         </Dialog>

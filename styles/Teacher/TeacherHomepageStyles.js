@@ -14,23 +14,19 @@ export const TeacherHomepageStyles = {
   },
   welcomeHeader: {
     marginBottom: '32px',
-    backgroundColor: 'background.paper',
-    borderRadius: '25px',
-    padding: { xs: '20px', md: '32px' },
+    backgroundColor: '#fff',
+    borderRadius: '24px',
+    padding: '24px',
     width: '100%',
   },
   welcomeTitle: {
-    fontSize: { xs: '1.5rem', sm: '1.7rem', md: '2rem' },
-    fontWeight: 500,
-    color: 'primary.dark',
-    marginBottom: '8px',
-    marginLeft: { xs: '0px', sm: '10px' },
+    fontSize: { xs: '1.5rem', md: '3rem' },
+    fontWeight: 600,
+    color: 'primary.main',
   },
   welcomeSub: {
-    color: 'darkGrey.light',
-    marginBottom: '0px',
-    marginLeft: { xs: '0px', sm: '10px' },
-    fontSize: { xs: '1rem', sm: '1.1rem', md: '1.2rem' },
+    color: 'text.secondary',
+    fontSize: { xs: '0.9rem', md: '1rem' },
   },
 
   filterSection: {

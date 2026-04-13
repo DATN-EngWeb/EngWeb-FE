@@ -6,12 +6,13 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import InfoIcon from '@mui/icons-material/Info';
 import * as styles from '../../styles/student/HistoryTestStyles';
 import HistoryItem from './HistoryItem';
+import HistoryTable from '../Student/HistoryTable';
+import HistoryAIFeedbackModal from '../WritingTest/HistoryAIFeedbackModal';
 import { levelTheme } from '../TestCard';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { getProductiveTest, getProductiveTestDetails } from '../../api/test';
 import { SidebarForum } from './SidebarForum';
-import { StudyTip } from './StudyTip';
 import Edit from '@mui/icons-material/Edit';
 import {
   Box,
@@ -37,6 +38,8 @@ export default function ProductiveTestHistory() {
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [openAIModal, setOpenAIModal] = useState(false);
+  const [selectedAIFeedback, setSelectedAIFeedback] = useState(null);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -53,6 +56,7 @@ export default function ProductiveTestHistory() {
         setHistoryData(Array.isArray(listAttempt) ? listAttempt : (listAttempt?.results ?? []));
         setTotalCount(Array.isArray(listAttempt) ? listAttempt.length : (listAttempt?.count ?? 0));
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Error fetching data:', error);
         setHistoryData([]);
       } finally {
@@ -107,6 +111,80 @@ export default function ProductiveTestHistory() {
     testData.skill === 'S'
       ? router.push(`/student/speaking/${test_id}/${submissions.length + 1}`)
       : router.push(`/student/writing/${test_id}/${submissions.length + 1}`);
+  };
+
+  const handleViewDetail = (item) => {
+    if (item.type === 'S') {
+      if (item.ai_feedback) {
+        localStorage.setItem('category', JSON.stringify(item.ai_feedback));
+      } else {
+        localStorage.removeItem('category');
+      }
+
+      if (item.remaining_turns) {
+        localStorage.setItem('remainAIturns', JSON.stringify(item.remaining_turns));
+      }
+      const wordCount = item.user_answer_text
+        ? item.user_answer_text.trim().split(/\s+/).length
+        : 0;
+      localStorage.setItem(
+        'aiFeedbackContext',
+        JSON.stringify({
+          historyId: item.id,
+          text: item.user_answer_text,
+          wordCount: wordCount,
+          title: item.title || 'Writing Task',
+          type: item.format || (item.skill === 'W' ? 'A' : 'S'),
+          audio: item.audio_path,
+          duration: item.total_time,
+        }),
+      );
+      router.push(
+        item.skill === 'S'
+          ? `/student/speaking/${item.productive_test}/${item.attempt}/AI-feedback`
+          : `/student/writing/${item.productive_test}/${item.attempt}/AI-feedback`,
+      );
+      return;
+    }
+
+    const dataToSave = {
+      answer: item.user_answer_text,
+      note: item.user_note_text,
+      isReadOnly: false,
+      startTime: item.start_time,
+      totalTime: item.total_time,
+      audio: item.audio_path,
+      feedback: item.ai_feedback,
+    };
+    sessionStorage.setItem('current_productive_attempt', JSON.stringify(dataToSave));
+    if (item.skill === 'S') {
+      router.push(`/student/speaking/${item.productive_test}/${item.attempt}`);
+    } else {
+      router.push(`/student/writing/${item.productive_test}/${item.attempt}`);
+    }
+  };
+
+  const handleShare = (item) => {
+    if (item.is_shared) {
+      if (item.skill === 'W') {
+        router.push(`/student/writing/${item.productive_test}/forum?open_post=${item.post_id}`);
+      } else {
+        router.push(`/student/speaking/${item.productive_test}/forum?open_post=${item.post_id}`);
+      }
+    } else {
+      if (item.skill === 'W') {
+        router.push(`/student/writing/${item.productive_test}/share/${item.id}`);
+      } else {
+        router.push(`/student/speaking/${item.productive_test}/share/${item.id}`);
+      }
+    }
+  };
+
+  const handleOpenAIReviewed = (item) => {
+    if (item.ai_feedback) {
+      setSelectedAIFeedback(item.ai_feedback);
+      setOpenAIModal(true);
+    }
   };
 
   return (
@@ -193,39 +271,19 @@ export default function ProductiveTestHistory() {
             </Typography>
           </Stack>
 
-          <Stack spacing={2}>
-            {submissions.length > 0 ? (
-              submissions.map((sub, index) => (
-                <HistoryItem
-                  key={index}
-                  data={{
-                    ...sub,
-                    skill: testData.skill,
-                    min_words: testData.productive_test.min_word,
-                  }}
-                />
-              ))
-            ) : (
-              <Paper
-                elevation={0}
-                sx={{
-                  color: 'primary.main',
-                  p: 6,
-                  textAlign: 'center',
-                  borderRadius: '24px',
-                  border: '1px solid #f0f0f0',
-                  bgcolor: 'white',
-                }}
-              >
-                <Typography variant="body1" fontWeight={700}>
-                  You haven't submitted any responses yet.
-                </Typography>
-                <Typography variant="body2">
-                  Start your first attempt to track your performance!
-                </Typography>
-              </Paper>
-            )}
-          </Stack>
+          <Box>
+            <HistoryTable
+              data={submissions.map((sub) => ({
+                ...sub,
+                skill: testData.skill,
+                min_words: testData.productive_test.min_word,
+              }))}
+              skill={testData.skill}
+              onViewDetail={handleViewDetail}
+              onShare={handleShare}
+              onOpenAIReviewed={handleOpenAIReviewed}
+            />
+          </Box>
 
           {totalPages > 1 && (
             <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
@@ -246,11 +304,14 @@ export default function ProductiveTestHistory() {
         <Grid item sx={{ width: '30%' }}>
           <Stack spacing={3}>
             <SidebarForum />
-
-            <StudyTip level={testData.level} />
           </Stack>
         </Grid>
       </Grid>
+      <HistoryAIFeedbackModal
+        open={openAIModal}
+        onClose={() => setOpenAIModal(false)}
+        data={selectedAIFeedback}
+      />
     </Box>
   );
 }

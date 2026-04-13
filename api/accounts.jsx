@@ -160,7 +160,14 @@ export async function logout(refreshTokenValue, accessToken) {
     cache: 'no-store',
   });
 
-  return handleResponse(response);
+  try {
+    return await handleResponse(response);
+  } catch (error) {
+    if (error.message === 'Invalid refresh token' || error.status === 400) {
+      return {};
+    }
+    throw error;
+  }
 }
 
 export async function forgotPassword(usernameOrEmail) {

@@ -34,35 +34,18 @@ const TestTimer = () => {
       sx={{
         display: 'flex',
         alignItems: 'center',
-        backgroundColor: 'background.paper',
-        px: 2,
-        py: 1,
-        borderRadius: 2,
-        border: '1px solid',
-        borderColor: 'divider',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-        width: '120px',
-        minWidth: '120px',
-        position: 'relative',
-        justifyContent: 'center',
+        gap: 1,
+        color: '#5d4037',
+        fontWeight: 700,
+        fontSize: '1.25rem',
       }}
     >
-      <AccessTimeIcon
-        sx={{
-          color: 'secondary.main',
-          fontSize: 20,
-          position: 'absolute',
-          left: '12px',
-        }}
-      />
+      <AccessTimeIcon sx={{ fontSize: 28 }} />
       <Typography
-        variant="h6"
+        variant="inherit"
         sx={{
           fontWeight: 700,
-          color: 'text.primary',
-          fontSize: '1.1rem',
           fontVariantNumeric: 'tabular-nums',
-          ml: 3, // Offset for the absolute icon
         }}
       >
         {formatTime(seconds)}

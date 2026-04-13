@@ -159,12 +159,18 @@ export default function ReviewTestPage() {
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
   return (
     <Box component="main" sx={styles.contentWrapper}>
-      {/* Header Section */}
-      <Box sx={styles.welcomeHeader}>
-        <Typography variant="h1" sx={styles.welcomeTitle}>
+      <Box
+        sx={{
+          backgroundColor: '#fff',
+          borderRadius: 3,
+          p: 3,
+          mb: 4,
+        }}
+      >
+        <Typography variant="h3" fontWeight={600} color="primary.main">
           {isMine ? 'My Test Collection' : 'Review Test Center'}
         </Typography>
-        <Typography variant="body1" sx={styles.welcomeSub} mb={3}>
+        <Typography color="text.secondary">
           {isMine
             ? 'Manage and track the status of your created exam questions.'
             : 'Review exam questions from colleagues to ensure quality.'}
@@ -278,7 +284,7 @@ export default function ReviewTestPage() {
       </Box>
 
       {/* Table Section */}
-      <TableContainer component={Paper} sx={{ mt: 2, maxHeight: 600 }}>
+      <TableContainer component={Paper} elevation={0} sx={styles.tableContainer}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
             <CircularProgress />
@@ -299,7 +305,7 @@ export default function ReviewTestPage() {
             <TableBody>
               {tests.length > 0 ? (
                 tests.map((item) => (
-                  <TableRow key={item.id} hover>
+                  <TableRow key={item.id} hover sx={styles.tableRow}>
                     {!isMine && (
                       <TableCell sx={styles.tableBodyCell}>
                         <Stack direction="row" alignItems="center" spacing={1.5}>

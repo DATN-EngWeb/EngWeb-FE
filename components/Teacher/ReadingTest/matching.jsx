@@ -26,12 +26,14 @@ export default function MatchingForm({
   handleDeleteQuestion,
   questions,
   setQuestions,
+  setLocalAnswers,
   handleUpdateScoreForEachQuestionPart,
   handleUpdateContentPart,
   handleEditorError,
+  errors,
 }) {
   const [isOpen, setIsOpen] = React.useState(true);
-  const [answers, setLocalAnswers] = React.useState(() => {
+  const [answers, setLocalAnswersProp] = React.useState(() => {
     if (localAnswers && localAnswers.length > 0) {
       return localAnswers;
     }
@@ -48,16 +50,20 @@ export default function MatchingForm({
     const activeQuestions = questions.filter((q) => q.action !== 'delete');
     const activeLabels = activeQuestions.map((_, i) => String.fromCharCode(65 + i));
 
-    setLocalAnswers((prevAnswers) => {
-      return activeLabels.map((label, i) => {
-        const existingAnswer = prevAnswers.find((a) => a.option_label === label);
-        return {
-          id: existingAnswer ? existingAnswer.id : i,
-          option_label: label,
-          answer_text: existingAnswer ? existingAnswer.answer_text : '',
-        };
-      });
+    const nextAnswers = activeLabels.map((label, i) => {
+      const existingAnswer = answers.find((a) => a.option_label === label);
+      return {
+        id: existingAnswer ? existingAnswer.id : i,
+        option_label: label,
+        answer_text: existingAnswer ? existingAnswer.answer_text : '',
+      };
     });
+
+    // Synchronize with parent state
+    if (JSON.stringify(nextAnswers) !== JSON.stringify(answers)) {
+      setLocalAnswersProp(nextAnswers);
+      setLocalAnswers(nextAnswers);
+    }
 
     let needsFix = false;
     const validatedQuestions = questions.map((q) => {
@@ -79,7 +85,7 @@ export default function MatchingForm({
     if (needsFix) {
       setQuestions(validatedQuestions);
     }
-  }, [activeCount]);
+  }, [activeCount, answers, questions, setQuestions, setLocalAnswers]);
 
   const handleAddQuestion = () => {
     const activeQs = questions.filter((q) => q.action !== 'delete');
@@ -158,6 +164,7 @@ export default function MatchingForm({
     const nextLocalAnswers = answers.map((a) =>
       a.option_label === optionLabel ? { ...a, answer_text: newContent } : a,
     );
+    setLocalAnswersProp(nextLocalAnswers);
     setLocalAnswers(nextLocalAnswers);
 
     const nextQuestions = questions.map((q) => {
@@ -215,7 +222,7 @@ export default function MatchingForm({
             <Box sx={multipleChoiceStyles.headingContainer}>
               <Typography sx={multipleChoiceStyles.headingCard}>Part {index + 1}</Typography>
               <Typography sx={multipleChoiceStyles.descriptionCard}>
-                Matching - {questions.filter((q) => q.action !== 'delete').length} questions
+                Matching · {questions.filter((q) => q.action !== 'delete').length} questions
               </Typography>
             </Box>
           </Box>
@@ -274,6 +281,7 @@ export default function MatchingForm({
               <OutlinedInput
                 placeholder="Enter the score for each question here"
                 defaultValue={part.scoreForEachQuestion}
+                error={!!errors.score}
                 sx={uploadReadingStyles.input}
                 onBlur={(e) => handleUpdateScoreForEachQuestionPart(partId, e.target.value)}
               />
@@ -349,6 +357,7 @@ export default function MatchingForm({
                           <Box sx={multipleChoiceStyles.labelQuestionsContainer}>
                             <Box sx={multipleChoiceStyles.questionLabel}>{qIndex + 1}</Box>
                             <OutlinedInput
+                              size="small"
                               multiline
                               placeholder="Enter explanation here"
                               defaultValue={question.explanation}
@@ -356,12 +365,14 @@ export default function MatchingForm({
                               sx={uploadReadingStyles.inputMultiline}
                             />
                             <FormControl
+                              size="small"
                               sx={{
                                 ...uploadReadingStyles.formControl,
                                 width: { xs: '150px', md: '180px' },
                               }}
                             >
                               <Select
+                                size="small"
                                 value={
                                   question.answers &&
                                   question.answers[0] &&
@@ -425,6 +436,7 @@ export default function MatchingForm({
                       <OutlinedInput
                         multiline
                         placeholder="Enter an answer here"
+                        error={!answer.answer_text && !!errors.matchingAnswers}
                         sx={multipleChoiceStyles.optionInput}
                         defaultValue={answer.answer_text}
                         onBlur={(e) => handleUpdateAnswer(answer.option_label, e.target.value)}

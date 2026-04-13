@@ -2,6 +2,7 @@
 
 import { Box, Button, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import SendIcon from '@mui/icons-material/Send';
 
 import { listeningtestStyles } from '../../../styles/student/Listening/listeningTestStyles';
 
@@ -16,10 +17,17 @@ export default function TestHeading({
 }) {
   return (
     <>
-      <Box sx={{ ...listeningtestStyles.testHeadingContainer, py: { xs: 0.5, md: 1 } }}>
+      <Box
+        sx={{
+          ...listeningtestStyles.testHeadingContainer,
+          minHeight: '80px',
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
         {/* Left: Timer or Back/Exit */}
         <Box
-          sx={{ width: { xs: 'auto', md: '200px' }, display: 'flex', alignItems: 'center', gap: 1 }}
+          sx={{ width: { xs: 'auto', md: '320px' }, display: 'flex', alignItems: 'center', gap: 1 }}
         >
           {isTeacher && onExit && (
             <Button
@@ -45,18 +53,48 @@ export default function TestHeading({
           {partLabel && <Typography sx={listeningtestStyles.formatName}>{partLabel}</Typography>}
         </Box>
 
-        {/* Right: Submit Test or AI Review */}
-        <Box sx={listeningtestStyles.summitButtonWrapper}>
-          {!isTeacher ? (
-            <Button sx={listeningtestStyles.submitButton} onClick={onSubmit}>
+        {/* Right: Submit Test and/or AI Review */}
+        <Box
+          sx={{
+            width: { xs: 'auto', md: '320px' },
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            gap: 1.5,
+          }}
+        >
+          {onAIReview && (
+            <Button
+              sx={{
+                ...listeningtestStyles.submitButton,
+                backgroundColor: 'info.pastel',
+                color: 'info.main',
+                py: 1,
+                fontSize: '0.8125rem',
+                minWidth: 'auto',
+                px: 2,
+                '&:hover': { bgcolor: '#e3f2fd' },
+              }}
+              onClick={onAIReview}
+            >
+              AI Feedback
+            </Button>
+          )}
+          {onSubmit && (
+            <Button
+              startIcon={<SendIcon />}
+              sx={{
+                ...listeningtestStyles.submitButton,
+                py: 1,
+                px: 2,
+                fontSize: '0.8125rem',
+                minWidth: 'auto',
+              }}
+              onClick={onSubmit}
+            >
               Submit Test
             </Button>
-          ) : (
-            onAIReview && (
-              <Button sx={listeningtestStyles.submitButton} onClick={onAIReview}>
-                AI Review
-              </Button>
-            )
           )}
         </Box>
       </Box>

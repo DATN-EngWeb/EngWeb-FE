@@ -24,7 +24,6 @@ import { levelTheme } from '../TestCard';
 import * as styles from '../../styles/student/HistoryTestStyles';
 import ProgressTrackingCard from '../Writing-Speaking/ProgressTrackingCard';
 import { SidebarForum } from '../Writing-Speaking/SidebarForum';
-import { StudyTip } from '../Writing-Speaking/StudyTip';
 
 export default function ReceptiveTestHistory({ testData, onPracticeNow }) {
   const InfoIcon = InfoOutlinedIcon;
@@ -262,7 +261,6 @@ export default function ReceptiveTestHistory({ testData, onPracticeNow }) {
           <Stack spacing={3}>
             <ProgressTrackingCard historyData={submissions} />
             <SidebarForum count={128} />
-            <StudyTip level={testData?.level} />
           </Stack>
         </Grid>
       </Grid>

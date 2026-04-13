@@ -13,6 +13,7 @@ import {
   Pagination,
   Button,
   InputAdornment,
+  Container,
 } from '@mui/material';
 import { useParams, useRouter, useSearchParams, usePathname } from 'next/navigation';
 import ForumPostCard from '../../../../../components/Forum/ForumPostCard';
@@ -50,6 +51,7 @@ export default function ForumPage() {
         setPosts(response.results || []);
         setCount(response.count || 0);
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Error fetching posts:', error);
       }
     };
@@ -57,7 +59,7 @@ export default function ForumPage() {
   }, [page, ordering, search, tab, params.test_id]);
 
   return (
-    <Box maxWidth={800} mx="auto" mt={4} px={2}>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" fontWeight={700} mb={0.5} sx={{ color: 'primary.main' }}>
         Our Forum
       </Typography>
@@ -156,6 +158,6 @@ export default function ForumPage() {
           size="large"
         />
       </Box>
-    </Box>
+    </Container>
   );
 }

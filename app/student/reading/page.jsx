@@ -116,6 +116,7 @@ export default function ReadingHub() {
           setTotalPages(1);
         }
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error('Failed to fetch tests:', err);
         setError(err.message || 'Failed to load tests. Please try again later.');
       } finally {
@@ -132,10 +133,6 @@ export default function ReadingHub() {
       [field]: value,
     }));
     setPage(1); // Reset to page 1 on filter change
-  };
-
-  const handleApplyFilters = () => {
-    console.log('Applying filters:', filters);
   };
 
   const handlePageChange = (event, value) => {
@@ -245,6 +242,31 @@ export default function ReadingHub() {
 
                 <Box>
                   <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                    Sort by
+                  </Typography>
+                  <Select
+                    fullWidth
+                    size="small"
+                    value={filters.ordering}
+                    onChange={(e) => handleFilterChange('ordering', e.target.value)}
+                    sx={{
+                      bgcolor: 'background.paper',
+                      borderRadius: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      '& fieldset': { border: 'none' },
+                    }}
+                  >
+                    <MenuItem value="-created_at">Newest First</MenuItem>
+                    <MenuItem value="created_at">Oldest First</MenuItem>
+                    <MenuItem value="-updated_at">Recently Updated</MenuItem>
+                    <MenuItem value="title">Title (A-Z)</MenuItem>
+                    <MenuItem value="-title">Title (Z-A)</MenuItem>
+                  </Select>
+                </Box>
+
+                <Box>
+                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
                     Level
                   </Typography>
                   <Stack>
@@ -325,49 +347,6 @@ export default function ReadingHub() {
                     </Select>
                   </Box>
                 )}
-
-                <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                    Sort by
-                  </Typography>
-                  <Select
-                    fullWidth
-                    size="small"
-                    value={filters.ordering}
-                    onChange={(e) => handleFilterChange('ordering', e.target.value)}
-                    sx={{
-                      bgcolor: 'background.paper',
-                      borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      '& fieldset': { border: 'none' },
-                    }}
-                  >
-                    <MenuItem value="-created_at">Newest First</MenuItem>
-                    <MenuItem value="created_at">Oldest First</MenuItem>
-                    <MenuItem value="-updated_at">Recently Updated</MenuItem>
-                    <MenuItem value="title">Title (A-Z)</MenuItem>
-                    <MenuItem value="-title">Title (Z-A)</MenuItem>
-                  </Select>
-                </Box>
-
-                <Button
-                  variant="contained"
-                  fullWidth
-                  size="large"
-                  onClick={handleApplyFilters}
-                  sx={{
-                    bgcolor: 'warning.main',
-                    color: 'dark.main',
-                    fontWeight: 700,
-                    borderRadius: 3,
-                    textTransform: 'none',
-                    boxShadow: 'none',
-                    '&:hover': { bgcolor: 'warning.dark' },
-                  }}
-                >
-                  Apply
-                </Button>
               </Stack>
             </Box>
           </Grid>
@@ -380,29 +359,6 @@ export default function ReadingHub() {
               width: { xs: '100%', md: 'auto' },
             }}
           >
-            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-              <Select
-                value={filters.ordering}
-                onChange={(e) => handleFilterChange('ordering', e.target.value)}
-                size="small"
-                sx={{
-                  minWidth: 160,
-                  display: 'flex',
-                  ml: 'auto',
-                  bgcolor: 'background.paper',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  '& fieldset': { border: 'none' },
-                }}
-              >
-                <MenuItem value="-created_at">Newest First</MenuItem>
-                <MenuItem value="created_at">Oldest First</MenuItem>
-                <MenuItem value="-updated_at">Recently Updated</MenuItem>
-                <MenuItem value="title">Title (A-Z)</MenuItem>
-                <MenuItem value="-title">Title (Z-A)</MenuItem>
-              </Select>
-            </Stack>
-
             <Box
               sx={{
                 display: 'grid',
