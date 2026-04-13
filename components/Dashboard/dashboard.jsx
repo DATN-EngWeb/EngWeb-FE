@@ -185,25 +185,17 @@ export default function StudentDashboard() {
           <StreakProgress />
         </Stack>
         <Stack spacing={2}>
-          <OverallProgress
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            historyData={historyData}
-            statisticsData={statisticsData}
-            filterLevelForTab={filterLevelForTab}
-            setFilterLevelForTab={setFilterLevelForTab}
+          <LevelPointsPanel
+            isLevelLoading={isLevelLoading}
+            currentLevel={currentLevel}
+            cumulativePoint={cumulativePoint}
+            currentLevelProgress={currentLevelProgress}
+            nextLevel={nextLevel}
+            pointsToNextLevel={pointsToNextLevel}
+            sortedLevels={sortedLevels}
+            currentLevelId={studentProfile?.level?.id}
           />
-          <ProgressHistory
-            progressHistory={progressHistory}
-            totalItems={totalItems}
-            itemsPerPage={itemsPerPage}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            filterSkill={filterSkill}
-            setFilterSkill={setFilterSkill}
-            filterLevelForHistory={filterLevelForHistory}
-            setFilterLevelForHistory={setFilterLevelForHistory}
-          />
+          <StreakProgress />
         </Stack>
       </Box>
     </Container>
