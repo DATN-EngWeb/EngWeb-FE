@@ -59,6 +59,7 @@ export default function SpeakingTest() {
   const [question, setQuestion] = useState({ description: '', suggestion: '', audio: null });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [serverErrorOpen, setServerErrorOpen] = useState(false);
+  const [isFetchingFeedback, setIsFetchingFeedback] = useState(false);
 
   const handleServerErrorClose = () => {
     setServerErrorOpen(false);
@@ -258,12 +259,6 @@ export default function SpeakingTest() {
       setSecondsElapsed(0);
       setStartTime(new Date().toISOString());
       sessionStorage.removeItem('current_productive_attempt');
-
-      setSnackbar({
-        open: true,
-        message: 'Test submitted! Fetching AI Feedback...',
-        severity: 'success',
-      });
     } catch (error) {
       if (
         error?.status >= 500 ||
@@ -280,6 +275,7 @@ export default function SpeakingTest() {
 
     try {
       if (!newHistoryID) throw new Error('No History ID found');
+      setIsFetchingFeedback(true);
       const category = await getSpeakingAIFeedback({ id: newHistoryID });
       localStorage.setItem('category', JSON.stringify(category.ai_feedback));
       localStorage.setItem('remainAIturns', category.remaining_turns);
@@ -296,6 +292,7 @@ export default function SpeakingTest() {
       }
     } finally {
       setIsSaving(false);
+      setIsFetchingFeedback(false);
     }
   };
 
@@ -766,9 +763,26 @@ export default function SpeakingTest() {
         </Dialog>
         <Backdrop
           sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 999 }}
-          open={isSaving}
+          open={isFetchingFeedback}
         >
           <AIGradingLoading />
+        </Backdrop>
+
+        {/* Regular Submit/Save Backdrop */}
+        <Backdrop
+          sx={{
+            color: '#fff',
+            zIndex: (theme) => theme.zIndex.drawer + 998,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+          }}
+          open={isSaving && !isFetchingFeedback}
+        >
+          <CircularProgress color="inherit" />
+          <Typography variant="h6" fontWeight="bold">
+            Please wait...
+          </Typography>
         </Backdrop>
 
         <Dialog

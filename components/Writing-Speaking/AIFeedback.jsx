@@ -17,6 +17,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Paper,
 } from '@mui/material';
 import { LightbulbOutlined, CheckCircleOutline } from '@mui/icons-material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -116,7 +117,7 @@ function CustomTick(props) {
         {shortName}
       </tspan>
       <tspan x={finalX} dy="1.2em" fill="#333" fontSize="14" fontWeight="bold">
-        5.0
+        {score}
       </tspan>
     </text>
   );
@@ -312,8 +313,25 @@ export default function AIFeedback() {
                     </Box>
                   )}
                 </>
-              ) : (
+              ) : categories.length > 0 ? (
                 <DiffViewer originalText={context.text} revisedText={revised_text} />
+              ) : (
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 4,
+                    minHeight: '200px',
+                    bgcolor: 'transparent',
+                    border: '1px solid #ffd54f',
+                    borderRadius: 3,
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '1rem',
+                  }}
+                >
+                  <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 2 }}>
+                    {context.text || 'No text submitted.'}
+                  </Typography>
+                </Paper>
               )}
             </Box>
 

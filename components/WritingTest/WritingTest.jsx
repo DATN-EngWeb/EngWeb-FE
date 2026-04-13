@@ -59,6 +59,7 @@ export default function WritingTest() {
   const [note, setNote] = useState('');
   const [historyID, setHistoryID] = useState(0);
   const [serverErrorOpen, setServerErrorOpen] = useState(false);
+  const [isFetchingFeedback, setIsFetchingFeedback] = useState(false);
 
   const handleServerErrorClose = () => {
     setServerErrorOpen(false);
@@ -236,12 +237,6 @@ export default function WritingTest() {
       setSecondsElapsed(0);
       setIsFinished(false);
       sessionStorage.removeItem('current_productive_attempt');
-
-      setSnackbar({
-        open: true,
-        message: 'Test submitted! Fetching AI Feedback...',
-        severity: 'success',
-      });
     } catch (error) {
       if (
         error?.status >= 500 ||
@@ -259,6 +254,7 @@ export default function WritingTest() {
     // step2: get feedback
     try {
       if (!newHistoryID) throw new Error('No History ID found');
+      setIsFetchingFeedback(true);
       // eslint-disable-next-line no-console
       console.log('Fetching feedback for ID:', newHistoryID);
       const category = await getAIFeedback({ id: newHistoryID });
@@ -279,6 +275,7 @@ export default function WritingTest() {
       }
     } finally {
       setIsSaving(false);
+      setIsFetchingFeedback(false);
     }
   };
 
@@ -658,9 +655,26 @@ export default function WritingTest() {
         </Dialog>
         <Backdrop
           sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 999 }}
-          open={isSaving}
+          open={isFetchingFeedback}
         >
           <AIGradingLoading />
+        </Backdrop>
+
+        {/* Regular Submit/Save Backdrop */}
+        <Backdrop
+          sx={{
+            color: '#fff',
+            zIndex: (theme) => theme.zIndex.drawer + 998,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+          }}
+          open={isSaving && !isFetchingFeedback}
+        >
+          <CircularProgress color="inherit" />
+          <Typography variant="h6" fontWeight="bold">
+            Please wait...
+          </Typography>
         </Backdrop>
 
         <Dialog
