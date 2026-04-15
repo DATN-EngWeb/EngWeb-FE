@@ -8,12 +8,12 @@ import { useStreakContext } from '../../context/streakContext';
 import { useAuth } from '../../hooks/useAuth';
 
 const getStreakLevel = (count) => {
-  if (count >= 200) return 5;
-  if (count >= 100) return 4;
-  if (count >= 30) return 3;
-  if (count >= 10) return 2;
-  if (count > 3) return 1;
-  return 1;
+  if (count >= 10) return 5;
+  if (count >= 7) return 4;
+  if (count >= 5) return 3;
+  if (count >= 3) return 2;
+  if (count > 1) return 1;
+  return 0;
 };
 
 const levelConfigs = {
@@ -50,15 +50,16 @@ export default function AnimatedStreakBadge({ size = 180 }) {
   useEffect(() => {
     if (isLoading || !isAuthenticated || user?.role !== 'S' || !is_streak_lit_today) return;
 
-    const isMilestone = streak_count === 100 || streak_count === 200;
+    const isMilestone =
+      streak_count === 1 ||
+      streak_count === 3 ||
+      streak_count === 5 ||
+      streak_count === 7 ||
+      streak_count === 10;
     if (!isMilestone) return;
 
-    const storageKey = `celebrated_streak_${streak_count}`;
-    const hasCelebratedStorage = localStorage.getItem(storageKey);
-
-    if (!hasCelebratedRef.current && !hasCelebratedStorage) {
+    if (!hasCelebratedRef.current) {
       hasCelebratedRef.current = true;
-      localStorage.setItem(storageKey, 'true');
       setIsVisible(true);
     }
   }, [streak_count, is_streak_lit_today, isLoading, isAuthenticated, user]);
