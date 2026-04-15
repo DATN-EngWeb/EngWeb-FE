@@ -27,6 +27,10 @@ import AddIcon from '@mui/icons-material/Add';
 import ArticleOutlined from '@mui/icons-material/ArticleOutlined';
 import EditNoteOutlined from '@mui/icons-material/EditNoteOutlined';
 import BorderColorOutlined from '@mui/icons-material/BorderColorOutlined';
+import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';
+import SendRounded from '@mui/icons-material/SendRounded';
+import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
+import FileUploadIcon from '@mui/icons-material/FileUpload';
 import Link from '@mui/icons-material/Link';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
@@ -49,6 +53,8 @@ import {
   buildReceptiveTestPayload,
 } from '../../../../../utils/testTransformers';
 import { getPresignedUrl, uploadToObjectStorage, confirmUpload } from '../../../../../api/test';
+import { validateReadingPartUpdatePayload } from '../../../../../utils/testValidation';
+import ScrollToTopButton from '../../../../../components/CreateTest/ScrollToTopButton';
 
 export default function Page() {
   const { test_id } = useParams();
@@ -189,7 +195,6 @@ export default function Page() {
             return newPart;
           }),
         );
-
         setParts(processedParts);
       } catch (error) {
         console.error('Lỗi tải dữ liệu bài thi:', error);
@@ -211,11 +216,60 @@ export default function Page() {
     prevPartsLengthRef.current = parts.length;
   }, [parts.length]);
 
+  const [errors, setErrors] = useState({});
+
   // Hàm xử lý tải lên các Part của bài thi
   const handleUploadParts = async (status) => {
     setIsLoading(true);
+    setErrors({}); // Reset errors before validation
     try {
+      // Validate Basic Info
+      if (!test.title) {
+        setErrors((prev) => ({ ...prev, title: true }));
+        setSnackbar({
+          open: true,
+          message: 'Please fill title of test!',
+          severity: 'error',
+        });
+        setIsLoading(false);
+        return;
+      }
+      if (!['A1', 'A2', 'B1', 'B2'].includes(test.level)) {
+        setErrors((prev) => ({ ...prev, level: true }));
+        setSnackbar({
+          open: true,
+          message: 'Please select a valid level (A1-B2)!',
+          severity: 'error',
+        });
+        setIsLoading(false);
+        return;
+      }
+      if (!test.time || isNaN(test.time) || Number(test.time) <= 0) {
+        setErrors((prev) => ({ ...prev, time: true }));
+        setSnackbar({
+          open: true,
+          message: 'Please enter a valid time greater than 0!',
+          severity: 'error',
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const transformedParts = transformFormatUpdateData(parts);
+      const errorMessage = validateReadingPartUpdatePayload(transformedParts, parts);
+
+      if (errorMessage) {
+        // Here we could parse errorMessage to find exactly where it failed,
+        // but for now let's show a general error in parts if it fails.
+        // As requested by user, we should highlight specific fields.
+        setSnackbar({
+          open: true,
+          message: errorMessage,
+          severity: 'error',
+        });
+        setIsLoading(false);
+        return;
+      }
 
       const files = collectFilesReading(transformedParts);
       const filenameToUrl = {};
@@ -671,6 +725,7 @@ export default function Page() {
             handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
             handleUpdateContentPart={handleUpdateContentPart}
             handleEditorError={handleEditorError}
+            errors={errors}
           />
         );
       case 'J':
@@ -685,9 +740,15 @@ export default function Page() {
             handleDeleteQuestion={handleDeleteQuestion}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
+            setLocalAnswers={(newAns) => {
+              setParts((prev) =>
+                prev.map((p) => (p.id === part.id ? { ...p, localAnswers: newAns } : p)),
+              );
+            }}
             handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
             handleUpdateContentPart={handleUpdateContentPart}
             handleEditorError={handleEditorError}
+            errors={errors}
           />
         );
       case 'I':
@@ -707,6 +768,7 @@ export default function Page() {
             handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
             handleUpdateContentPart={handleUpdateContentPart}
             handleEditorError={handleEditorError}
+            errors={errors}
           />
         );
       default:
@@ -716,6 +778,7 @@ export default function Page() {
 
   return (
     <Box sx={uploadReadingStyles.mainContainer}>
+      <ScrollToTopButton />
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
