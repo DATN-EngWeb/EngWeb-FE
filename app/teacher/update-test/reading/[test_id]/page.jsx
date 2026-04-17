@@ -1,5 +1,6 @@
 /* eslint-env browser */
 /* eslint-disable no-console */
+/* global DOMParser */
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -379,48 +380,74 @@ export default function Page() {
     setParts((prevParts) =>
       prevParts.map((p) => {
         if (p.id === partId) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(p.content || '', 'text/html');
+          const blankCount = doc.querySelectorAll('.blank-element').length;
+
           const deletedOldQuestions = (p.questions || [])
             .map((q) => {
+              if (q.action === 'delete') return q;
               if (q.action === 'create') return null;
-              return { id: q.id, action: 'delete' };
+              if (test.flag === 'update') return { id: q.id, action: 'delete' };
+              return null;
             })
-            .filter(Boolean);
+            .filter(Boolean); // Lọc bỏ các giá trị null
 
-          // Tạo câu hỏi mặc định tùy theo Format
-          const newQuestion = {
-            id: Date.now(),
-            question_number: 1,
-            explanation: '',
-            score: p.scoreForEachQuestion || 10, // Lấy score mặc định của Part
-            ...(test.flag === 'update' && { action: 'create' }),
-          };
+          const newQuestions = [];
+          for (let i = 0; i < blankCount; i++) {
+            const newQuestion = {
+              id: Date.now() + i,
+              question_number: i + 1,
+              explanation: '',
+              score: p.scoreForEachQuestion || 10,
+              ...(test.flag === 'update' && { action: 'create' }),
+            };
 
-          if (newFormat === 'H') {
-            // Loại H: Cần content và mảng answers
-            newQuestion.content = '';
-            newQuestion.answers = [
-              {
-                option_label: 'A',
-                is_correct: true,
-                answer_text: '',
-                ...(test.flag === 'update' && { action: 'create' }),
-              },
-            ];
-          } else if (newFormat === 'I') {
-            // Loại I: answers vẫn là mảng nhưng chứa 1 phần tử, không có trường content trong Question
-            newQuestion.answers = [
-              {
-                is_correct: true,
-                answer_text: '',
-                ...(test.flag === 'update' && { action: 'create' }),
-              },
-            ];
+            if (newFormat === 'H') {
+              // Loại H: Cần content và mảng answers có option_label
+              newQuestion.content = '';
+              newQuestion.answers = [
+                {
+                  id: Date.now() + i + 100,
+                  option_label: 'A',
+                  is_correct: true,
+                  answer_text: '',
+                  ...(test.flag === 'update' && { action: 'create' }),
+                },
+                {
+                  id: Date.now() + i + 200,
+                  option_label: 'B',
+                  is_correct: false,
+                  answer_text: '',
+                  ...(test.flag === 'update' && { action: 'create' }),
+                },
+                {
+                  id: Date.now() + i + 300,
+                  option_label: 'C',
+                  is_correct: false,
+                  answer_text: '',
+                  ...(test.flag === 'update' && { action: 'create' }),
+                },
+              ];
+            } else if (newFormat === 'I') {
+              // Loại I: Không cần content, answers không có option_label
+              newQuestion.answers = [
+                {
+                  id: Date.now() + i + 100,
+                  is_correct: true,
+                  answer_text: '',
+                  ...(test.flag === 'update' && { action: 'create' }),
+                },
+              ];
+            }
+
+            newQuestions.push(newQuestion);
           }
 
           return {
             ...p,
             format: newFormat,
-            questions: [...deletedOldQuestions, newQuestion],
+            questions: [...deletedOldQuestions, ...newQuestions],
             ...(test.flag === 'update' && !p.action && { action: 'update' }),
           };
         }
@@ -617,25 +644,9 @@ export default function Page() {
                 },
               ];
             } else if (format === 'H') {
-              newQuestion.content = '';
-              newQuestion.answers = [
-                {
-                  id: 0,
-                  option_label: 'A',
-                  is_correct: true,
-                  answer_text: '',
-                  ...(test.flag === 'update' && { action: 'create' }),
-                },
-              ];
+              return updatedPart;
             } else if (format === 'I') {
-              newQuestion.answers = [
-                {
-                  id: 0,
-                  is_correct: true,
-                  answer_text: '',
-                  ...(test.flag === 'update' && { action: 'create' }),
-                },
-              ];
+              return updatedPart;
             } else if (format === 'J') {
               newQuestion.answers = [
                 {
@@ -760,7 +771,6 @@ export default function Page() {
             partId={part.id}
             index={index}
             handleDeletePart={handleDeletePart}
-            handleDeleteQuestion={handleDeleteQuestion}
             handleDeleteOption={handleDeleteOption}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}

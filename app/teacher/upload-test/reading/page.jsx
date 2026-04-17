@@ -1,6 +1,7 @@
 /* eslint-env browser */
 /* eslint-disable no-console */
 /* global fetch */
+/* global DOMParser */
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -294,28 +295,63 @@ export default function Page() {
     setParts((prevParts) =>
       prevParts.map((p) => {
         if (p.id === partId) {
-          // 1. Tạo câu hỏi mặc định tùy theo Format
-          const newQuestion = {
-            id: 0,
-            question_number: 1,
-            explanation: '',
-            score: p.scoreForEachQuestion || 10, // Lấy score mặc định của Part
-          };
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(p.content || '', 'text/html');
+          const blankCount = doc.querySelectorAll('.blank-element').length;
 
-          if (newFormat === 'H') {
-            // Loại H: Cần content và mảng answers có 1 lựa chọn mặc định
-            newQuestion.content = '';
-            newQuestion.answers = [{ id: 0, option_label: 'A', is_correct: true, answer_text: '' }];
-          } else if (newFormat === 'I') {
-            // Loại I: answers vẫn là mảng nhưng chứa 1 phần tử
-            newQuestion.answers = [{ id: 0, is_correct: true, answer_text: '' }];
-            // Lưu ý: Loại I không có trường content trong Question theo logic của bạn
+          const existingQuestions = p.questions || [];
+
+          const rebuiltQuestions = [];
+
+          for (let i = 0; i < blankCount; i++) {
+            const existingQ = existingQuestions[i];
+
+            const newQuestion = {
+              id: existingQ ? existingQ.id : Date.now() + i,
+              question_number: i + 1,
+              explanation: '',
+              score: p.scoreForEachQuestion || 10,
+            };
+
+            if (newFormat === 'H') {
+              newQuestion.content = '';
+              newQuestion.answers = [
+                {
+                  id: Date.now() + i + 100,
+                  option_label: 'A',
+                  is_correct: true,
+                  answer_text: '',
+                },
+                {
+                  id: Date.now() + i + 200,
+                  option_label: 'B',
+                  is_correct: false,
+                  answer_text: '',
+                },
+                {
+                  id: Date.now() + i + 300,
+                  option_label: 'C',
+                  is_correct: false,
+                  answer_text: '',
+                },
+              ];
+            } else if (newFormat === 'I') {
+              newQuestion.answers = [
+                {
+                  id: Date.now() + i + 100,
+                  is_correct: true,
+                  answer_text: '',
+                },
+              ];
+            }
+
+            rebuiltQuestions.push(newQuestion);
           }
 
           return {
             ...p,
             format: newFormat,
-            questions: [newQuestion],
+            questions: rebuiltQuestions,
           };
         }
         return p;
@@ -411,10 +447,9 @@ export default function Page() {
               { id: 2, option_label: 'C', is_correct: false, answer_text: '' },
             ];
           } else if (format === 'H') {
-            newQuestion.content = '';
-            newQuestion.answers = [{ id: 0, option_label: 'A', is_correct: true, answer_text: '' }];
+            return updatedPart;
           } else if (format === 'I') {
-            newQuestion.answers = [{ id: 0, is_correct: true, answer_text: '' }];
+            return updatedPart;
           } else if (format === 'J') {
             newQuestion.answers = [{ id: 0, option_label: '', is_correct: true, answer_text: '' }];
           }
@@ -510,7 +545,6 @@ export default function Page() {
             partId={part.id}
             index={index}
             handleDeletePart={handleDeletePart}
-            handleDeleteQuestion={handleDeleteQuestion}
             handleDeleteOption={handleDeleteOption}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}

@@ -34,8 +34,6 @@ export default function ReceptiveTestResult({ historyId }) {
   const testId = params?.test_id;
   const router = useRouter();
 
-  console.log('Received historyId:', historyId);
-
   const [history, setHistory] = useState(null);
   const [testData, setTestData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -237,7 +235,7 @@ export default function ReceptiveTestResult({ historyId }) {
           </Button>
           {/* Test Title */}
           <Grid container spacing={3} alignItems="center">
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Typography
                 variant="h3"
                 sx={{
@@ -277,7 +275,7 @@ export default function ReceptiveTestResult({ historyId }) {
       <Container maxWidth="lg" sx={{ mt: 6 }}>
         <Grid container spacing={4}>
           {/* Summary Cards */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Paper
               sx={{
                 p: 4,
@@ -415,7 +413,7 @@ export default function ReceptiveTestResult({ historyId }) {
             </Paper>
           </Grid>
           {/* Answer Breakdown */}
-          <Grid item xs={12} md={8}>
+          <Grid size={{ xs: 12, md: 8 }}>
             {/* Score && Accuracy && Time */}
             <Paper
               elevation={0}
@@ -549,14 +547,17 @@ export default function ReceptiveTestResult({ historyId }) {
                             }}
                           >
                             <Grid container spacing={2} alignItems="flex-start">
-                              <Grid item xs={1} sx={{ display: 'flex', justifyContent: 'center' }}>
+                              <Grid
+                                size={{ xs: 1 }}
+                                sx={{ display: 'flex', justifyContent: 'center' }}
+                              >
                                 {isCorrect ? (
                                   <CheckCircleOutlineIcon sx={{ color: '#16a34a', fontSize: 28 }} />
                                 ) : (
                                   <HighlightOffIcon sx={{ color: '#dc2626', fontSize: 28 }} />
                                 )}
                               </Grid>
-                              <Grid item xs={11}>
+                              <Grid size={{ xs: 11 }}>
                                 <Stack spacing={1}>
                                   <Typography
                                     variant="subtitle2"
@@ -584,7 +585,7 @@ export default function ReceptiveTestResult({ historyId }) {
                                   )}
                                   {/* Answer Options */}
                                   <Grid container spacing={2}>
-                                    <Grid item xs={6}>
+                                    <Grid size={{ xs: 6 }}>
                                       <Box
                                         sx={{
                                           p: 1.5,
@@ -640,12 +641,12 @@ export default function ReceptiveTestResult({ historyId }) {
                                                         }}
                                                       >
                                                         <span style={{ marginTop: '2px' }}>
-                                                          {correctAns.option_label}.
+                                                          {a.option_label}.
                                                         </span>
                                                         {imgUrl && (
                                                           <img
                                                             src={imgUrl}
-                                                            alt={`Correct Option ${correctAns.option_label}`}
+                                                            alt={`Correct Option ${a.option_label}`}
                                                             style={{
                                                               maxWidth: '100px',
                                                               borderRadius: '4px',
@@ -665,7 +666,7 @@ export default function ReceptiveTestResult({ historyId }) {
                                       </Box>
                                     </Grid>
                                     {!isCorrect && (
-                                      <Grid item xs={6}>
+                                      <Grid size={{ xs: 6 }}>
                                         <Box
                                           sx={{
                                             p: 1.5,
