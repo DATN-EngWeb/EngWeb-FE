@@ -40,6 +40,7 @@ import SendIcon from '@mui/icons-material/Send';
 import { uploadMediaFile } from '../../utils/uploadHelpers';
 import CustomAudioPlayer from '../Test/customAudioPlayer';
 import AIGradingLoading from '../Writing-Speaking/AIGradingLoading';
+import SubmitLoadingDialog from '../Writing-Speaking/SubmitLoadingDialog';
 
 export default function SpeakingTest() {
   const params = useParams();
@@ -52,7 +53,10 @@ export default function SpeakingTest() {
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioBlob, setAudioBlob] = useState(null);
   const [hasRecorded, setHasRecorded] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState('idle');
+  const [submitMode, setSubmitMode] = useState('');
+  const [bonusPoint, setBonusPoint] = useState(0);
+  const [historyID, setHistoryID] = useState(0);
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [testData, setTestData] = useState({ title: '', level: '' });
@@ -169,9 +173,12 @@ export default function SpeakingTest() {
   }
   const handleFinalSubmit = async () => {
     setOpenShareModal(false);
-    setIsSaving(true);
+    setSubmitStatus('submitting');
     try {
-      if (!audioBlob) return null;
+      if (!audioBlob) {
+        setSubmitStatus('idle');
+        return null;
+      }
 
       const audioFile = new File([audioBlob], `recording_${testId}.webm`, {
         type: 'audio/mpeg',
@@ -191,19 +198,24 @@ export default function SpeakingTest() {
         audio_path: audioUrl,
         is_shared: true,
       });
+
+      // Delay to ensure the "Submitting..." spinner state is visible
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
       // eslint-disable-next-line no-console
       console.log('Submission response:', response);
+      if (response && response.earned_bonus_point) {
+        setBonusPoint(response.earned_bonus_point);
+      } else {
+        setBonusPoint(0);
+      }
       setIsDraftSaved(true);
-      setIsSaving(false);
+      setSubmitMode('final');
+      setSubmitStatus('submitted');
       setAudioBlob(null);
       setRecordingTime(0);
       setSecondsElapsed(0);
       setStartTime(new Date().toISOString());
-      setSnackbar({ open: true, message: 'Test submitted successfully!', severity: 'success' });
-      setTimeout(() => {
-        sessionStorage.removeItem('current_productive_attempt');
-        router.push(`/student/speaking/${testId}`);
-      }, 1000);
     } catch (error) {
       if (
         error?.status >= 500 ||
@@ -212,18 +224,22 @@ export default function SpeakingTest() {
       ) {
         setServerErrorOpen(true);
       } else {
-        setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        setSubmitStatus('error');
       }
     }
   };
 
   const handleAIFeedback = async () => {
     setOpenShareModal(false);
-    setIsSaving(true);
+    setSubmitStatus('submitting');
     let newHistoryID = null;
 
     try {
-      if (!audioBlob) return null;
+      if (!audioBlob) {
+        setSubmitStatus('idle');
+        return null;
+      }
 
       const audioFile = new File([audioBlob], `recording_${testId}.webm`, {
         type: 'audio/mpeg',
@@ -241,17 +257,15 @@ export default function SpeakingTest() {
         is_shared: true,
       });
 
-      newHistoryID = response.id;
+      // Delay để thấy spinner Submitting
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
-      localStorage.setItem(
-        'aiFeedbackContext',
-        JSON.stringify({
-          duration: recordingTime,
-          title: testData.title,
-          type: testData.type,
-          audio: uploadedAudioUrl,
-        }),
-      );
+      if (response && response.earned_bonus_point) {
+        setBonusPoint(response.earned_bonus_point);
+      } else {
+        setBonusPoint(0);
+      }
+      setHistoryID(response.id);
 
       setIsDraftSaved(true);
       setAudioBlob(null);
@@ -259,6 +273,9 @@ export default function SpeakingTest() {
       setSecondsElapsed(0);
       setStartTime(new Date().toISOString());
       sessionStorage.removeItem('current_productive_attempt');
+
+      setSubmitMode('ai');
+      setSubmitStatus('submitted');
     } catch (error) {
       if (
         error?.status >= 500 ||
@@ -267,16 +284,18 @@ export default function SpeakingTest() {
       ) {
         setServerErrorOpen(true);
       } else {
-        setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        setSubmitStatus('error');
       }
-      setIsSaving(false);
       return;
     }
+  };
 
+  const fetchAIFeedback = async () => {
     try {
-      if (!newHistoryID) throw new Error('No History ID found');
+      if (!historyID) throw new Error('No History ID found');
       setIsFetchingFeedback(true);
-      const category = await getSpeakingAIFeedback({ id: newHistoryID });
+      const category = await getSpeakingAIFeedback({ id: historyID });
       localStorage.setItem('category', JSON.stringify(category.ai_feedback));
       localStorage.setItem('remainAIturns', category.remaining_turns);
       router.push(`/student/speaking/${testId}/${attempt}/AI-feedback`);
@@ -291,7 +310,6 @@ export default function SpeakingTest() {
         setSnackbar({ open: true, message: 'Failed to get AI feedback', severity: 'error' });
       }
     } finally {
-      setIsSaving(false);
       setIsFetchingFeedback(false);
     }
   };
@@ -301,6 +319,20 @@ export default function SpeakingTest() {
     H: 'Picture Description Task',
     I: 'Social Issue Discussion',
     J: 'Reading Aloud Task',
+  };
+
+  const handleCloseSubmitDialog = () => {
+    if (submitStatus === 'submitted') {
+      if (submitMode === 'final') {
+        sessionStorage.removeItem('current_productive_attempt');
+        router.push(`/student/speaking/${testId}`);
+      } else if (submitMode === 'ai') {
+        setSubmitStatus('idle');
+        fetchAIFeedback();
+      }
+    } else {
+      setSubmitStatus('idle');
+    }
   };
   const handleToggleRecording = async () => {
     if (!isRecording) {
@@ -721,9 +753,6 @@ export default function SpeakingTest() {
           <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
         </Snackbar>
 
-        <Backdrop sx={{ zIndex: 1200, color: '#fff' }} open={isSaving}>
-          <CircularProgress color="inherit" />
-        </Backdrop>
         {/* Share to forum modal */}
         <Dialog
           open={openShareModal}
@@ -768,22 +797,11 @@ export default function SpeakingTest() {
           <AIGradingLoading />
         </Backdrop>
 
-        {/* Regular Submit/Save Backdrop */}
-        <Backdrop
-          sx={{
-            color: '#fff',
-            zIndex: (theme) => theme.zIndex.drawer + 998,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2,
-          }}
-          open={isSaving && !isFetchingFeedback}
-        >
-          <CircularProgress color="inherit" />
-          <Typography variant="h6" fontWeight="bold">
-            Please wait...
-          </Typography>
-        </Backdrop>
+        <SubmitLoadingDialog
+          status={submitStatus}
+          bonusPoint={bonusPoint}
+          onClose={handleCloseSubmitDialog}
+        />
 
         <Dialog
           open={serverErrorOpen}

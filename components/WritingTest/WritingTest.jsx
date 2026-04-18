@@ -6,13 +6,10 @@ import React, { useState, useMemo, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Snackbar,
   Alert,
   Backdrop,
-  CircularProgress,
   Button,
   Stack,
-  LinearProgress,
   TextField,
   Collapse,
   Paper,
@@ -35,6 +32,8 @@ import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import { getProductiveTestDetails, createProductiveTest, getAIFeedback } from '@/api/test';
 import ProductivePreview from '../Writing-Speaking/ProductivePreview';
 import AIGradingLoading from '../Writing-Speaking/AIGradingLoading';
+import SaveDraftToast from '../Writing-Speaking/SaveDraftToast';
+import SubmitLoadingDialog from '../Writing-Speaking/SubmitLoadingDialog';
 import { levelTheme } from '../TestCard';
 import * as styles from '../../styles/student/Writing/WritingTestStyles';
 export default function WritingTest() {
@@ -45,7 +44,12 @@ export default function WritingTest() {
 
   // States
   const [text, setText] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState('idle');
+  const [submitMode, setSubmitMode] = useState('');
+  const [bonusPoint, setBonusPoint] = useState(0);
+  const [levelData, setLevelData] = useState(null);
+  const [finalTimeStr, setFinalTimeStr] = useState('');
+  const [draftStatus, setDraftStatus] = useState('idle');
   const [showOutline, setShowOutline] = useState(false);
   const [testData, setTestData] = useState({ title: '', level: '' });
   const [question, setQuestion] = useState({ description: '', suggestion: '', audio: null });
@@ -71,11 +75,6 @@ export default function WritingTest() {
   const wordCount = useMemo(() => {
     return text.trim() ? text.trim().split(/\s+/).length : 0;
   }, [text]);
-
-  const progress = useMemo(() => {
-    if (!settings.minWords) return 0;
-    return Math.min((wordCount / settings.minWords) * 100, 100);
-  }, [wordCount, settings.minWords]);
 
   const formatDuration = (totalSeconds) => {
     const mins = Math.floor(totalSeconds / 60);
@@ -160,7 +159,7 @@ export default function WritingTest() {
   };
   const handleFinalSubmit = async () => {
     setOpenShareModal(false);
-    setIsSaving(true);
+    setSubmitStatus('submitting');
     try {
       const response = await createProductiveTest({
         productive_test: testId,
@@ -171,35 +170,46 @@ export default function WritingTest() {
         user_note_text: note,
         user_answer_text: text,
       });
+
+      // Delay to ensure the "Submitting..." spinner state is visible
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      setBonusPoint(response?.earned_bonus_point || 0);
+      setLevelData(response?.level_notice || null);
+      setHistoryID(response.id);
+      setSubmitMode('final');
+      setFinalTimeStr(formatDuration(secondsElapsed));
+
+      localStorage.setItem(
+        'aiFeedbackContext',
+        JSON.stringify({
+          historyId: response.id,
+          text: text,
+          wordCount: wordCount,
+          title: testData.title || 'Writing Task',
+          type: testData.type,
+          audio: null,
+          duration: secondsElapsed,
+        }),
+      );
+
       // eslint-disable-next-line no-console
       console.log('Submission response:', response);
       setIsDraftSaved(true);
-      setIsSaving(false);
+      setSubmitStatus('submitted');
       setText('');
       setNote('');
       setSecondsElapsed(0);
       setIsFinished(false);
       setStartTime(new Date().toISOString());
-      setSnackbar({ open: true, message: 'Test submitted successfully!', severity: 'success' });
-      setTimeout(() => {
-        sessionStorage.removeItem('current_productive_attempt');
-        router.push(`/student/writing/${testId}`);
-      }, 1000);
     } catch (error) {
-      if (
-        error?.status >= 500 ||
-        error?.response?.status >= 500 ||
-        error?.message?.includes('500')
-      ) {
-        setServerErrorOpen(true);
-      } else {
-        setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
-      }
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      setSubmitStatus('error');
     }
   };
   const handleAIFeedback = async () => {
-    setIsSaving(true);
     setOpenShareModal(false);
+    setIsFetchingFeedback(true);
 
     let newHistoryID = null;
 
@@ -214,6 +224,11 @@ export default function WritingTest() {
         user_answer_text: text,
       });
 
+      setBonusPoint(response?.earned_bonus_point || 0);
+      setLevelData(response?.level_notice || null);
+      setSubmitMode('ai');
+      setFinalTimeStr(formatDuration(secondsElapsed));
+
       // eslint-disable-next-line no-console
       console.log('Submit Success:', response);
       newHistoryID = response.id;
@@ -223,10 +238,13 @@ export default function WritingTest() {
       localStorage.setItem(
         'aiFeedbackContext',
         JSON.stringify({
+          historyId: response.id,
           text: text,
           wordCount: wordCount,
-          title: testData.title,
+          title: testData.title || 'Writing Task',
           type: testData.type,
+          audio: null,
+          duration: secondsElapsed,
         }),
       );
 
@@ -238,6 +256,7 @@ export default function WritingTest() {
       setIsFinished(false);
       sessionStorage.removeItem('current_productive_attempt');
     } catch (error) {
+      setIsFetchingFeedback(false);
       if (
         error?.status >= 500 ||
         error?.response?.status >= 500 ||
@@ -247,17 +266,20 @@ export default function WritingTest() {
       } else {
         setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
       }
-      setIsSaving(false);
       return;
     }
 
-    // step2: get feedback
+    fetchAIFeedback(newHistoryID);
+  };
+
+  const fetchAIFeedback = async (idToFetch) => {
+    const targetID = idToFetch || historyID;
     try {
-      if (!newHistoryID) throw new Error('No History ID found');
+      if (!targetID) throw new Error('No History ID found');
       setIsFetchingFeedback(true);
       // eslint-disable-next-line no-console
-      console.log('Fetching feedback for ID:', newHistoryID);
-      const category = await getAIFeedback({ id: newHistoryID });
+      console.log('Fetching feedback for ID:', targetID);
+      const category = await getAIFeedback({ id: targetID });
       localStorage.setItem('category', JSON.stringify(category.ai_feedback));
       localStorage.setItem('remainAIturns', category.remaining_turns);
       // eslint-disable-next-line no-console
@@ -274,13 +296,12 @@ export default function WritingTest() {
         setSnackbar({ open: true, message: 'Failed to get AI feedback', severity: 'error' });
       }
     } finally {
-      setIsSaving(false);
       setIsFetchingFeedback(false);
     }
   };
 
   const handleSaveDraft = async () => {
-    setIsSaving(true);
+    setDraftStatus('saving');
     try {
       const response = await createProductiveTest({
         productive_test: testId,
@@ -291,23 +312,45 @@ export default function WritingTest() {
         user_note_text: note,
         user_answer_text: text,
       });
+
+      // Delay to ensure the "Saving draft..." spinner state is visible
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
       setIsDraftSaved(true);
-      setIsSaving(false);
-      setSnackbar({ open: true, message: 'Draft saved successfully!', severity: 'success' });
+      setDraftStatus('saved');
       setText('');
       setNote('');
       setSecondsElapsed(0);
       setStartTime(new Date().toISOString());
       setIsFinished(false);
-      setTimeout(() => {
-        sessionStorage.removeItem('current_productive_attempt');
-        router.push(`/student/writing/${testId}`);
-      }, 1000);
     } catch (error) {
+      // Delay before switching to error state
+      await new Promise((resolve) => setTimeout(resolve, 400));
       // eslint-disable-next-line no-console
       console.error('Draft save error:', error);
-      setSnackbar({ open: true, message: 'Failed to save draft', severity: 'error' });
+      setDraftStatus('error');
     }
+  };
+
+  const handleCloseDraftToast = () => {
+    if (draftStatus === 'saved') {
+      sessionStorage.removeItem('current_productive_attempt');
+      router.push(`/student/writing/${testId}`);
+    }
+    setDraftStatus('idle');
+  };
+
+  const handleGlobalClose = () => {
+    setSubmitStatus('idle');
+    if (submitStatus === 'submitted') {
+      sessionStorage.removeItem('current_productive_attempt');
+      router.push(`/student/writing/${testId}`);
+    }
+  };
+
+  const handleViewResultAction = () => {
+    setSubmitStatus('idle');
+    router.push(`/student/writing/${testId}/${attempt}/AI-feedback`);
   };
 
   const FormatMapper = {
@@ -610,18 +653,15 @@ export default function WritingTest() {
         </Box>
 
         {/* snackbar */}
-        <Snackbar
+        {/* <Snackbar
           open={snackbar.open}
           autoHideDuration={4000}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
           anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         >
           <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
-        </Snackbar>
+        </Snackbar> */}
 
-        <Backdrop sx={{ zIndex: 1200, color: '#fff' }} open={isSaving}>
-          <CircularProgress color="inherit" />
-        </Backdrop>
         {/* Share to forum modal */}
         <Dialog
           open={openShareModal}
@@ -660,22 +700,24 @@ export default function WritingTest() {
           <AIGradingLoading />
         </Backdrop>
 
-        {/* Regular Submit/Save Backdrop */}
-        <Backdrop
-          sx={{
-            color: '#fff',
-            zIndex: (theme) => theme.zIndex.drawer + 998,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2,
-          }}
-          open={isSaving && !isFetchingFeedback}
-        >
-          <CircularProgress color="inherit" />
-          <Typography variant="h6" fontWeight="bold">
-            Please wait...
-          </Typography>
-        </Backdrop>
+        {/* Regular Submit/Save Components */}
+        <SubmitLoadingDialog
+          status={submitStatus}
+          bonusPoint={bonusPoint}
+          timeTaken={finalTimeStr}
+          currentXP={levelData ? levelData.current_exp - bonusPoint : undefined}
+          levelMaxXP={levelData ? levelData.current_level?.max_xp : undefined}
+          level={levelData ? levelData.current_level?.level_number : undefined}
+          onClose={handleGlobalClose}
+          onViewResults={handleViewResultAction}
+          onContinue={handleGlobalClose}
+        />
+
+        <SaveDraftToast
+          status={draftStatus}
+          onClose={handleCloseDraftToast}
+          onRetry={handleSaveDraft}
+        />
 
         <Dialog
           open={serverErrorOpen}
