@@ -189,7 +189,7 @@ const getStreakLevel = (count) => {
   if (count >= 7) return 4;
   if (count >= 5) return 3;
   if (count >= 3) return 2;
-  if (count > 1) return 1;
+  if (count >= 1) return 1;
   return 0;
 };
 
@@ -230,9 +230,11 @@ export default function StreakBadge({ isHaveText = true }) {
       <StreakSvgDefs />
       <Tooltip
         title={
-          is_streak_lit_today
-            ? `Level ${currentLevel} - Learned today!`
-            : 'Remember to do exercises to keep the streak!'
+          streak_count > 0
+            ? is_streak_lit_today
+              ? `Level ${currentLevel} - Learned today!`
+              : 'Remember to do exercises to keep the streak!'
+            : null
         }
       >
         <Box
@@ -241,7 +243,7 @@ export default function StreakBadge({ isHaveText = true }) {
             alignItems: 'flex-end',
             justifyContent: 'center',
             gap: 0,
-            cursor: 'pointer',
+            cursor: streak_count > 0 ? 'pointer' : 'default',
             borderRadius: '24px',
             backgroundColor: is_streak_lit_today ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
             transition: 'all 0.3s ease',
@@ -297,7 +299,7 @@ export default function StreakBadge({ isHaveText = true }) {
                 transition: 'color 0.3s ease',
               }}
             >
-              {streak_count > 1 ? streak_count : ''}
+              {streak_count >= 1 ? streak_count : ''}
             </Typography>
           )}
         </Box>

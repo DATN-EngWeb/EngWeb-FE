@@ -31,7 +31,6 @@ export const StreakProvider = ({ children }) => {
     }
   }, [isAuthenticated, user?.role]);
 
-  // Tự động load lần đầu khi login
   useEffect(() => {
     fetchStreak();
   }, [fetchStreak]);

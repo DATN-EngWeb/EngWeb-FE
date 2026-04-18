@@ -12,7 +12,7 @@ const getStreakLevel = (count) => {
   if (count >= 7) return 4;
   if (count >= 5) return 3;
   if (count >= 3) return 2;
-  if (count > 1) return 1;
+  if (count >= 1) return 1;
   return 0;
 };
 
@@ -49,22 +49,21 @@ export default function AnimatedStreakBadge({ size = 180 }) {
 
   useEffect(() => {
     if (isLoading || !isAuthenticated || user?.role !== 'S' || !is_streak_lit_today) return;
+    if (![1, 3, 5, 7, 10].includes(streak_count)) return;
 
-    const isMilestone =
-      streak_count === 1 ||
-      streak_count === 3 ||
-      streak_count === 5 ||
-      streak_count === 7 ||
-      streak_count === 10;
-    if (!isMilestone) return;
+    const storageKey = `streak_celeb_${user.id}`;
+    const today = new Date().toDateString(); // "Mon May 20 2024"
 
-    if (!hasCelebratedRef.current) {
+    const savedData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+
+    if (!hasCelebratedRef.current && savedData.date !== today) {
       hasCelebratedRef.current = true;
       setIsVisible(true);
+      localStorage.setItem(storageKey, JSON.stringify({ date: today }));
     }
   }, [streak_count, is_streak_lit_today, isLoading, isAuthenticated, user]);
 
-  // HÀM TẠO TIA LỬA (Dịch từ script JS gốc của bạn)
+  // HÀM TẠO TIA LỬA
   const createSpark = useCallback(
     (isBurst = false) => {
       if (!sparkContainerRef.current) return;
@@ -112,7 +111,7 @@ export default function AnimatedStreakBadge({ size = 180 }) {
     [config.sparkColor, size],
   );
 
-  // HÀM LẮC LƯ HỮU CƠ (Bê nguyên từ startSway của bạn)
+  // HÀM LẮC LƯ HỮU CƠ
   const startSway = useCallback(() => {
     if (!outerLayerRef.current || !innerLayerRef.current) return;
 
