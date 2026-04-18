@@ -61,3 +61,15 @@ export const formatDateFull = (dateString) => {
     year: 'numeric',
   }).format(date);
 };
+
+// 3600 --> 1.0
+export const secondsToHours = (seconds) => {
+  if (!seconds || isNaN(seconds)) return '0';
+  return (seconds / 3600).toFixed(1);
+};
+
+// 60 --> 1.0
+export const secondsToMinutesValue = (seconds) => {
+  if (!seconds || isNaN(seconds)) return '0';
+  return (seconds / 60).toFixed(1);
+};

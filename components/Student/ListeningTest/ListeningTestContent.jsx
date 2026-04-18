@@ -51,7 +51,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
   const [receptiveParts, setReceptiveParts] = useState([]);
   const [mediaResources, setMediaResources] = useState({});
   const [indexPart, setIndexPart] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(testData?.time || 0);
+  const [startTime, setStartTime] = useState(testData?.total_time || 0);
   const [allAnswers, setAllAnswers] = useState({});
 
   const [openConfirm, setOpenConfirm] = useState(false);
@@ -62,6 +62,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
     type: 'D',
     start_time: '2026-02-25T10:00:00Z',
     end_time: null,
+    total_time: 0,
     answer_histories: [],
   });
 
@@ -137,6 +138,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
         type: submitType,
         start_time: testHistory.start_time,
         end_time: new Date().toISOString(),
+        total_time: startTime,
         answer_histories: formattedHistories,
       };
 
@@ -245,7 +247,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
         setTestData(svData);
         setReceptiveParts(parts);
-        setTimeLeft(svData.time * 60);
 
         if (typeof window !== 'undefined') {
           const saved = window.sessionStorage.getItem('current_receptive_attempt');
@@ -276,6 +277,8 @@ export default function ListeningTestContent({ test_id, initialData }) {
               type: savedData.isReadOnly ? 'S' : 'D',
               answer_histories: transformAnswers(restoredAnswers),
             });
+
+            setStartTime(savedData.totalTime || 0);
           } else {
             setTestHistory({
               receptive_test: svData.id,
@@ -307,12 +310,15 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
   // Timer
   useEffect(() => {
-    if (timeLeft <= 0) return;
     const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
+      setStartTime((prev) => {
+        const current = Number(prev) || 0;
+        return current + 1;
+      });
     }, 1000);
+
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, []);
 
   const goNextPart = () => {
     if (indexPart < receptiveParts.length - 1) {
@@ -529,7 +535,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
                 mr: 0.5,
               }}
             />
-            {formatTimeFromMinutes(timeLeft / 60)}
+            {formatTimeFromMinutes(startTime / 60)}
           </Box>
           <Box sx={listeningtestStyles.nameTestAndFormatPart}>
             <Typography sx={listeningtestStyles.nameTest}>{testData?.title}</Typography>
