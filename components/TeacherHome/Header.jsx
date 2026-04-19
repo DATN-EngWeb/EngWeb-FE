@@ -69,6 +69,7 @@ export default function TeacherHeader() {
     { label: 'My List Test', href: '/teacher' },
     { label: 'List Review Test', href: '/teacher/review-test' },
     { label: 'Upload Test', href: '/teacher/upload-test' },
+    { label: 'Forum', href: '/teacher/forum' },
   ];
 
   return (
