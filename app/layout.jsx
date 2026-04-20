@@ -1,6 +1,7 @@
 import { ThemeProvider } from '../theme/ThemeProvider';
 import { StreakProvider } from '../context/streakContext';
 import EmotionCacheProvider from '../lib/registry';
+import { NotificationProvider } from '../components/Notifications/NotificationProvider';
 import './globals.css';
 import './globals-editor.css';
 
@@ -15,7 +16,9 @@ export default function RootLayout({ children }) {
       <body suppressHydrationWarning>
         <EmotionCacheProvider>
           <StreakProvider>
-            <ThemeProvider>{children}</ThemeProvider>
+            <ThemeProvider>
+              <NotificationProvider>{children}</NotificationProvider>
+            </ThemeProvider>
           </StreakProvider>
         </EmotionCacheProvider>
       </body>
