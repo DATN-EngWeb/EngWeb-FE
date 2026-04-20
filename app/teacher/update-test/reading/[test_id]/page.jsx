@@ -26,10 +26,6 @@ import {
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import AddIcon from '@mui/icons-material/Add';
 import ArticleOutlined from '@mui/icons-material/ArticleOutlined';
-import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';
-import FileUploadIcon from '@mui/icons-material/FileUpload';
-import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
-import SendRounded from '@mui/icons-material/SendRounded';
 import EditNoteOutlined from '@mui/icons-material/EditNoteOutlined';
 import BorderColorOutlined from '@mui/icons-material/BorderColorOutlined';
 import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';

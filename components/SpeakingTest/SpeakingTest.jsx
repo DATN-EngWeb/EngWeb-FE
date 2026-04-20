@@ -38,8 +38,6 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SendIcon from '@mui/icons-material/Send';
 import { uploadMediaFile } from '../../utils/uploadHelpers';
 import CustomAudioPlayer from '../Test/customAudioPlayer';
-import AIGradingLoading from '../Writing-Speaking/AIGradingLoading';
-import SubmitLoadingDialog from '../Writing-Speaking/SubmitLoadingDialog';
 import { useStreakContext } from '../../context/streakContext';
 import AIGradingLoading from '../Writing-Speaking/AIGradingLoading';
 import SubmitLoadingDialog from '../Writing-Speaking/SubmitLoadingDialog';
