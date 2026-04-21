@@ -35,7 +35,7 @@ import AIGradingLoading from '../Writing-Speaking/AIGradingLoading';
 import SaveDraftToast from '../Writing-Speaking/SaveDraftToast';
 import SubmitLoadingDialog from '../Writing-Speaking/SubmitLoadingDialog';
 import { levelTheme } from '../TestCard';
-import * as styles from '../../styles/student/Writing/WritingTestStyles';
+import * as styles from '@/styles/Student/Writing/WritingTestStyles';
 import { useStreakContext } from '@/context/streakContext';
 
 export default function WritingTest() {

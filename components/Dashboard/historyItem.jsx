@@ -4,7 +4,7 @@ import React from 'react';
 import { Paper, Stack, Box, Typography, Button } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import * as styles from '../../styles/student/HistoryTestStyles';
+import * as styles from '@/styles/Student/HistoryTestStyles';
 import { useRouter } from 'next/navigation';
 
 export default function HistoryItem({ data, filterSkill }) {

@@ -1,5 +1,5 @@
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
-import * as styles from './../../styles/student/HistoryTestStyles';
+import * as styles from '@/styles/Student/HistoryTestStyles';
 import { Box, Typography, Stack } from '@mui/material';
 export const StudyTip = ({ level = 'A1' }) => (
   <Box sx={styles.studyTipBox}>

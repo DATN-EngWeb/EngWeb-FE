@@ -19,7 +19,7 @@ import StarIcon from '@mui/icons-material/Star';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import DescriptionIcon from '@mui/icons-material/Description';
 import ShareIcon from '@mui/icons-material/Share';
-import * as styles from '@/styles/student/HistoryTestStyles';
+import * as styles from '@/styles/Student/HistoryTestStyles';
 import { formatDate } from '../../utils/stringFormat';
 
 const formatTime = (totalSeconds) => {
