@@ -386,3 +386,148 @@ export const validateReadingPartPayload = (parts) => {
   }
   return null;
 };
+
+export const validateReadingPartUpdatePayload = (transformedParts, originalParts) => {
+  if (!originalParts || !Array.isArray(originalParts) || originalParts.length === 0) {
+    return null;
+  }
+
+  const activeOriginalParts = originalParts.filter((p) => p.action !== 'delete');
+  const hasDeletedPart = originalParts.some((p) => p.action === 'delete');
+
+  if (hasDeletedPart) {
+    if (activeOriginalParts.length === 0) {
+      return 'The test must have at least one active part.';
+    }
+  }
+
+  for (let i = 0; i < activeOriginalParts.length; i++) {
+    const p = activeOriginalParts[i];
+    const displayNum = p.order || i + 1;
+    const score = p.scoreForEachQuestion;
+
+    if (
+      score === undefined ||
+      score === null ||
+      score === '' ||
+      isNaN(score) ||
+      Number(score) === 0
+    ) {
+      return `Score for each question in Part ${displayNum} has not been filled.`;
+    }
+  }
+
+  for (let pIndex = 0; pIndex < transformedParts.length; pIndex++) {
+    const tPart = transformedParts[pIndex];
+
+    if (tPart.action === 'delete') continue;
+
+    const originalPart = originalParts.find((p) => p.id === tPart.id) || tPart;
+    const displayPartNum =
+      originalPart.order ||
+      tPart.order ||
+      activeOriginalParts.findIndex((p) => p.id === originalPart.id) + 1 ||
+      pIndex + 1;
+
+    const partFormat = originalPart.format || tPart.format;
+
+    if (tPart.action === 'create' || tPart.action === 'update') {
+      if (!partFormat) return `Part ${displayPartNum} is missing a test format.`;
+
+      if (partFormat !== 'F' && (!tPart.content || String(tPart.content).trim() === '')) {
+        return `Part ${displayPartNum} is missing content.`;
+      }
+      if (
+        !['G', 'H', 'I', 'J'].includes(partFormat) &&
+        (!tPart.description || String(tPart.description).trim() === '')
+      ) {
+        return `Part ${displayPartNum} is missing a description.`;
+      }
+    }
+
+    const originalQuestions = originalPart.questions || [];
+    const activeQuestions = originalQuestions.filter((q) => q.action !== 'delete');
+    const hasDeletedQuestion = originalQuestions.some((q) => q.action === 'delete');
+
+    if (tPart.action === 'create' || hasDeletedQuestion) {
+      if (activeQuestions.length === 0) {
+        return `Part ${displayPartNum} must have at least one question.`;
+      }
+    }
+
+    const tQuestions = tPart.questions || [];
+    for (let qIndex = 0; qIndex < tQuestions.length; qIndex++) {
+      const tQuestion = tQuestions[qIndex];
+
+      if (tQuestion.action === 'delete') continue;
+
+      const originalQuestion = originalQuestions.find((q) => q.id === tQuestion.id) || tQuestion;
+      const displayQuestionNum =
+        originalQuestion.question_number ||
+        activeQuestions.findIndex((q) => q.id === originalQuestion.id) + 1;
+
+      if (tQuestion.action === 'create' || tQuestion.action === 'update') {
+        if (
+          !['I', 'J'].includes(partFormat) &&
+          (!tQuestion.content || String(tQuestion.content).trim() === '')
+        ) {
+          return `Question ${displayQuestionNum} in Part ${displayPartNum} is missing content.`;
+        }
+
+        if (!tQuestion.explanation || String(tQuestion.explanation).trim() === '') {
+          return `Question ${displayQuestionNum} in Part ${displayPartNum} is missing an explanation.`;
+        }
+      }
+
+      const originalAnswers = originalQuestion.answers || [];
+      const activeAnswers = originalAnswers.filter((a) => a.action !== 'delete');
+      const hasDeletedAnswer = originalAnswers.some((a) => a.action === 'delete');
+
+      const hasCorrectAnswerChanged = (tQuestion.answers || []).some(
+        (tAns) =>
+          tAns.action === 'update' && Object.prototype.hasOwnProperty.call(tAns, 'is_correct'),
+      );
+
+      if (['F', 'G', 'H'].includes(partFormat)) {
+        if (tQuestion.action === 'create' || hasDeletedAnswer || hasCorrectAnswerChanged) {
+          if (activeAnswers.length < 3) {
+            return `Question ${displayQuestionNum} in Part ${displayPartNum} must have at least 3 answer options.`;
+          }
+
+          const hasCorrectAnswer = activeAnswers.some((a) => a.is_correct);
+          if (!hasCorrectAnswer) {
+            return `Question ${displayQuestionNum} in Part ${displayPartNum} must have at least one correct answer selected.`;
+          }
+        }
+      }
+
+      const tAnswers = tQuestion.answers || [];
+      for (let aIndex = 0; aIndex < tAnswers.length; aIndex++) {
+        const tAns = tAnswers[aIndex];
+
+        if (tAns.action === 'delete') continue;
+
+        if (tAns.action === 'create' || tAns.action === 'update') {
+          // 1. Kiểm tra Option Label (Trừ I)
+          if (
+            partFormat !== 'I' &&
+            (!tAns.option_label || String(tAns.option_label).trim() === '')
+          ) {
+            return `An answer in Question ${displayQuestionNum}, Part ${displayPartNum} is missing an option label (A, B, C...).`;
+          }
+
+          if (!tAns.answer_text || String(tAns.answer_text).trim() === '') {
+            const isMultipleChoice = ['F', 'G', 'H'].includes(partFormat);
+            const optionLabel = tAns.option_label ? ` (${tAns.option_label})` : '';
+
+            return isMultipleChoice
+              ? `Option${optionLabel} in Question ${displayQuestionNum}, Part ${displayPartNum} is missing answer text.`
+              : `An answer in Question ${displayQuestionNum}, Part ${displayPartNum} is missing answer text.`;
+          }
+        }
+      }
+    }
+  }
+
+  return null;
+};

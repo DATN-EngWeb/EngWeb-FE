@@ -1,3 +1,6 @@
+/* global DOMParser */
+'use client';
+
 import React from 'react';
 import {
   Box,
@@ -27,7 +30,6 @@ export default function FillBlankForm({
   partId,
   index,
   handleDeletePart,
-  handleDeleteQuestion,
   handleDeleteOption,
   questions,
   setQuestions,
@@ -47,41 +49,82 @@ export default function FillBlankForm({
     }));
   };
 
-  const handleAddQuestion = () => {
-    const currentFormat = part.format;
+  const countBlanks = (html) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    return doc.querySelectorAll('.blank-element').length;
+  };
+
+  const syncQuestionsWithBlanks = (newContent) => {
+    const blankCount = countBlanks(newContent);
     const activeQuestions = questions.filter((q) => q.action !== 'delete');
+    const currentCount = activeQuestions.length;
 
-    const newQuestion = {
-      id: Date.now(),
-      question_number: activeQuestions.length + 1,
-      explanation: '',
-      ...(flag === 'update' && { action: 'create' }),
-    };
+    if (blankCount === currentCount) return;
 
-    // Loại H: Cần content và answers với option_label
-    // Loại I: Chỉ cần answers và không có option_label
-    if (currentFormat === 'H') {
-      newQuestion.content = '';
-      newQuestion.answers = [
-        {
-          id: 0,
-          option_label: 'A',
-          is_correct: true,
-          answer_text: '',
+    let updatedQuestions = [...questions];
+
+    if (blankCount > currentCount) {
+      const numToAdd = blankCount - currentCount;
+      for (let i = 0; i < numToAdd; i++) {
+        const newQuestion = {
+          id: Date.now() + i,
+          question_number: currentCount + i + 1,
+          explanation: '',
           ...(flag === 'update' && { action: 'create' }),
-        },
-      ];
-    } else if (currentFormat === 'I') {
-      newQuestion.answers = [
-        {
-          id: 0,
-          is_correct: true,
-          answer_text: '',
-          ...(flag === 'update' && { action: 'create' }),
-        },
-      ];
+        };
+
+        if (part.format === 'H') {
+          newQuestion.content = '';
+          newQuestion.answers = [
+            {
+              id: Date.now() + i + 100,
+              option_label: 'A',
+              is_correct: true,
+              answer_text: '',
+              ...(flag === 'update' && { action: 'create' }),
+            },
+            {
+              id: Date.now() + i + 200,
+              option_label: 'B',
+              is_correct: false,
+              answer_text: '',
+              ...(flag === 'update' && { action: 'create' }),
+            },
+            {
+              id: Date.now() + i + 300,
+              option_label: 'C',
+              is_correct: false,
+              answer_text: '',
+              ...(flag === 'update' && { action: 'create' }),
+            },
+          ];
+        } else if (part.format === 'I') {
+          newQuestion.answers = [
+            {
+              id: Date.now() + i + 100,
+              is_correct: true,
+              answer_text: '',
+              ...(flag === 'update' && { action: 'create' }),
+            },
+          ];
+        }
+        updatedQuestions.push(newQuestion);
+      }
+    } else {
+      let removeCount = currentCount - blankCount;
+      for (let i = updatedQuestions.length - 1; i >= 0 && removeCount > 0; i--) {
+        if (updatedQuestions[i].action !== 'delete') {
+          if (flag === 'update' && updatedQuestions[i].action !== 'create') {
+            updatedQuestions[i] = { ...updatedQuestions[i], action: 'delete' };
+          } else {
+            updatedQuestions.splice(i, 1);
+          }
+          removeCount--;
+        }
+      }
     }
-    setQuestions([...questions, newQuestion]);
+    setQuestions(updatedQuestions);
   };
 
   const handleUpdateQuestion = (questionId, value) => {
@@ -366,7 +409,10 @@ export default function FillBlankForm({
               </Box>
               <ClientSideCustomEditor
                 data={part.content || ''}
-                onChange={(content) => handleUpdateContentPart(part.id, content)}
+                onChange={(content) => {
+                  handleUpdateContentPart(part.id, content);
+                  syncQuestionsWithBlanks(content);
+                }}
                 onError={(msg) => handleEditorError(part.id, msg)}
                 startingBlankId={1}
               />
@@ -389,20 +435,14 @@ export default function FillBlankForm({
               {questions.filter((q) => q.action !== 'delete').length === 0 ? (
                 <Box sx={multipleChoiceStyles.questionsContainer}>
                   <Typography
-                    onClick={handleAddQuestion}
                     sx={{
                       width: '100%',
-                      display: 'inline-flex',
-                      fontSize: { xs: '0.8rem', md: '1rem' },
-                      alignItems: 'center',
-                      gap: 0.5,
+                      textAlign: 'center',
                       color: 'text.gray',
-                      cursor: 'pointer',
-                      justifyContent: 'center',
+                      fontSize: '0.9rem',
                     }}
                   >
-                    <AddRoundedIcon sx={{ fontSize: { xs: '1rem', md: '1.4rem' } }} />
-                    Add your first question
+                    No blanks inserted yet. Use the editor toolbar to insert blanks.
                   </Typography>
                 </Box>
               ) : (
@@ -429,10 +469,6 @@ export default function FillBlankForm({
                                 mt: 0.2,
                               }}
                             >
-                              <DeleteRoundedIcon
-                                onClick={() => handleDeleteQuestion(partId, question.id)}
-                                sx={multipleChoiceStyles.trashIconQuestion}
-                              />
                               <ExpandLessRoundedIcon
                                 onClick={() => toggleQuestionCollapse(question.id)}
                                 sx={{
@@ -582,10 +618,6 @@ export default function FillBlankForm({
                           </Collapse>
                         </Box>
                       ))}
-                  </Box>
-                  <Box onClick={handleAddQuestion} sx={multipleChoiceStyles.addQuestionBox}>
-                    <AddRoundedIcon sx={{ fontSize: '1.2rem' }} />
-                    Add question
                   </Box>
                 </>
               )}

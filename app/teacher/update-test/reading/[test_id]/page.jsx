@@ -1,5 +1,6 @@
 /* eslint-env browser */
 /* eslint-disable no-console */
+/* global DOMParser */
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -27,6 +28,10 @@ import AddIcon from '@mui/icons-material/Add';
 import ArticleOutlined from '@mui/icons-material/ArticleOutlined';
 import EditNoteOutlined from '@mui/icons-material/EditNoteOutlined';
 import BorderColorOutlined from '@mui/icons-material/BorderColorOutlined';
+import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';
+import SendRounded from '@mui/icons-material/SendRounded';
+import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
+import FileUploadIcon from '@mui/icons-material/FileUpload';
 import Link from '@mui/icons-material/Link';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
@@ -49,6 +54,8 @@ import {
   buildReceptiveTestPayload,
 } from '../../../../../utils/testTransformers';
 import { getPresignedUrl, uploadToObjectStorage, confirmUpload } from '../../../../../api/test';
+import { validateReadingPartUpdatePayload } from '../../../../../utils/testValidation';
+import ScrollToTopButton from '../../../../../components/CreateTest/ScrollToTopButton';
 
 export default function Page() {
   const { test_id } = useParams();
@@ -189,7 +196,6 @@ export default function Page() {
             return newPart;
           }),
         );
-
         setParts(processedParts);
       } catch (error) {
         console.error('Lỗi tải dữ liệu bài thi:', error);
@@ -211,11 +217,60 @@ export default function Page() {
     prevPartsLengthRef.current = parts.length;
   }, [parts.length]);
 
+  const [errors, setErrors] = useState({});
+
   // Hàm xử lý tải lên các Part của bài thi
   const handleUploadParts = async (status) => {
     setIsLoading(true);
+    setErrors({}); // Reset errors before validation
     try {
+      // Validate Basic Info
+      if (!test.title) {
+        setErrors((prev) => ({ ...prev, title: true }));
+        setSnackbar({
+          open: true,
+          message: 'Please fill title of test!',
+          severity: 'error',
+        });
+        setIsLoading(false);
+        return;
+      }
+      if (!['A1', 'A2', 'B1', 'B2'].includes(test.level)) {
+        setErrors((prev) => ({ ...prev, level: true }));
+        setSnackbar({
+          open: true,
+          message: 'Please select a valid level (A1-B2)!',
+          severity: 'error',
+        });
+        setIsLoading(false);
+        return;
+      }
+      if (!test.time || isNaN(test.time) || Number(test.time) <= 0) {
+        setErrors((prev) => ({ ...prev, time: true }));
+        setSnackbar({
+          open: true,
+          message: 'Please enter a valid time greater than 0!',
+          severity: 'error',
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const transformedParts = transformFormatUpdateData(parts);
+      const errorMessage = validateReadingPartUpdatePayload(transformedParts, parts);
+
+      if (errorMessage) {
+        // Here we could parse errorMessage to find exactly where it failed,
+        // but for now let's show a general error in parts if it fails.
+        // As requested by user, we should highlight specific fields.
+        setSnackbar({
+          open: true,
+          message: errorMessage,
+          severity: 'error',
+        });
+        setIsLoading(false);
+        return;
+      }
 
       const files = collectFilesReading(transformedParts);
       const filenameToUrl = {};
@@ -325,48 +380,74 @@ export default function Page() {
     setParts((prevParts) =>
       prevParts.map((p) => {
         if (p.id === partId) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(p.content || '', 'text/html');
+          const blankCount = doc.querySelectorAll('.blank-element').length;
+
           const deletedOldQuestions = (p.questions || [])
             .map((q) => {
+              if (q.action === 'delete') return q;
               if (q.action === 'create') return null;
-              return { id: q.id, action: 'delete' };
+              if (test.flag === 'update') return { id: q.id, action: 'delete' };
+              return null;
             })
-            .filter(Boolean);
+            .filter(Boolean); // Lọc bỏ các giá trị null
 
-          // Tạo câu hỏi mặc định tùy theo Format
-          const newQuestion = {
-            id: Date.now(),
-            question_number: 1,
-            explanation: '',
-            score: p.scoreForEachQuestion || 10, // Lấy score mặc định của Part
-            ...(test.flag === 'update' && { action: 'create' }),
-          };
+          const newQuestions = [];
+          for (let i = 0; i < blankCount; i++) {
+            const newQuestion = {
+              id: Date.now() + i,
+              question_number: i + 1,
+              explanation: '',
+              score: p.scoreForEachQuestion || 10,
+              ...(test.flag === 'update' && { action: 'create' }),
+            };
 
-          if (newFormat === 'H') {
-            // Loại H: Cần content và mảng answers
-            newQuestion.content = '';
-            newQuestion.answers = [
-              {
-                option_label: 'A',
-                is_correct: true,
-                answer_text: '',
-                ...(test.flag === 'update' && { action: 'create' }),
-              },
-            ];
-          } else if (newFormat === 'I') {
-            // Loại I: answers vẫn là mảng nhưng chứa 1 phần tử, không có trường content trong Question
-            newQuestion.answers = [
-              {
-                is_correct: true,
-                answer_text: '',
-                ...(test.flag === 'update' && { action: 'create' }),
-              },
-            ];
+            if (newFormat === 'H') {
+              // Loại H: Cần content và mảng answers có option_label
+              newQuestion.content = '';
+              newQuestion.answers = [
+                {
+                  id: Date.now() + i + 100,
+                  option_label: 'A',
+                  is_correct: true,
+                  answer_text: '',
+                  ...(test.flag === 'update' && { action: 'create' }),
+                },
+                {
+                  id: Date.now() + i + 200,
+                  option_label: 'B',
+                  is_correct: false,
+                  answer_text: '',
+                  ...(test.flag === 'update' && { action: 'create' }),
+                },
+                {
+                  id: Date.now() + i + 300,
+                  option_label: 'C',
+                  is_correct: false,
+                  answer_text: '',
+                  ...(test.flag === 'update' && { action: 'create' }),
+                },
+              ];
+            } else if (newFormat === 'I') {
+              // Loại I: Không cần content, answers không có option_label
+              newQuestion.answers = [
+                {
+                  id: Date.now() + i + 100,
+                  is_correct: true,
+                  answer_text: '',
+                  ...(test.flag === 'update' && { action: 'create' }),
+                },
+              ];
+            }
+
+            newQuestions.push(newQuestion);
           }
 
           return {
             ...p,
             format: newFormat,
-            questions: [...deletedOldQuestions, newQuestion],
+            questions: [...deletedOldQuestions, ...newQuestions],
             ...(test.flag === 'update' && !p.action && { action: 'update' }),
           };
         }
@@ -563,25 +644,9 @@ export default function Page() {
                 },
               ];
             } else if (format === 'H') {
-              newQuestion.content = '';
-              newQuestion.answers = [
-                {
-                  id: 0,
-                  option_label: 'A',
-                  is_correct: true,
-                  answer_text: '',
-                  ...(test.flag === 'update' && { action: 'create' }),
-                },
-              ];
+              return updatedPart;
             } else if (format === 'I') {
-              newQuestion.answers = [
-                {
-                  id: 0,
-                  is_correct: true,
-                  answer_text: '',
-                  ...(test.flag === 'update' && { action: 'create' }),
-                },
-              ];
+              return updatedPart;
             } else if (format === 'J') {
               newQuestion.answers = [
                 {
@@ -671,6 +736,7 @@ export default function Page() {
             handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
             handleUpdateContentPart={handleUpdateContentPart}
             handleEditorError={handleEditorError}
+            errors={errors}
           />
         );
       case 'J':
@@ -685,9 +751,15 @@ export default function Page() {
             handleDeleteQuestion={handleDeleteQuestion}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
+            setLocalAnswers={(newAns) => {
+              setParts((prev) =>
+                prev.map((p) => (p.id === part.id ? { ...p, localAnswers: newAns } : p)),
+              );
+            }}
             handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
             handleUpdateContentPart={handleUpdateContentPart}
             handleEditorError={handleEditorError}
+            errors={errors}
           />
         );
       case 'I':
@@ -699,7 +771,6 @@ export default function Page() {
             partId={part.id}
             index={index}
             handleDeletePart={handleDeletePart}
-            handleDeleteQuestion={handleDeleteQuestion}
             handleDeleteOption={handleDeleteOption}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
@@ -707,6 +778,7 @@ export default function Page() {
             handleUpdateScoreForEachQuestionPart={handleUpdateScoreForEachQuestionPart}
             handleUpdateContentPart={handleUpdateContentPart}
             handleEditorError={handleEditorError}
+            errors={errors}
           />
         );
       default:
@@ -716,6 +788,7 @@ export default function Page() {
 
   return (
     <Box sx={uploadReadingStyles.mainContainer}>
+      <ScrollToTopButton />
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}

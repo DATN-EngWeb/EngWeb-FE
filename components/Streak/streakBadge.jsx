@@ -184,14 +184,13 @@ const StreakSvgDefs = () => (
   </svg>
 );
 
-// Logic mới: Trên 3 mới là Level 1
 const getStreakLevel = (count) => {
-  if (count >= 200) return 5;
-  if (count >= 100) return 4;
-  if (count >= 30) return 3;
-  if (count >= 10) return 2;
-  if (count > 3) return 1;
-  return 0; // 0, 1, 2, 3 chưa có Level
+  if (count >= 10) return 5;
+  if (count >= 7) return 4;
+  if (count >= 5) return 3;
+  if (count >= 3) return 2;
+  if (count >= 1) return 1;
+  return 0;
 };
 
 // Cập nhật Style để xử lý Level 0 (Chưa có huy hiệu)
@@ -226,18 +225,16 @@ export default function StreakBadge({ isHaveText = true }) {
   const currentLevel = getStreakLevel(streak_count);
   const activeStyle = getLevelStyle(currentLevel, is_streak_lit_today);
 
-  console.log('Streak Count: ', streak_count);
-  console.log('Is Today: ', is_streak_lit_today);
-  console.log('Current Level: ', currentLevel);
-
   return (
     <>
       <StreakSvgDefs />
       <Tooltip
         title={
-          is_streak_lit_today
-            ? `Level ${currentLevel} - Đã học hôm nay!`
-            : 'Nhớ làm bài tập để giữ chuỗi nhé!'
+          streak_count > 0
+            ? is_streak_lit_today
+              ? `Level ${currentLevel} - Learned today!`
+              : 'Remember to do exercises to keep the streak!'
+            : null
         }
       >
         <Box
@@ -246,7 +243,7 @@ export default function StreakBadge({ isHaveText = true }) {
             alignItems: 'flex-end',
             justifyContent: 'center',
             gap: 0,
-            cursor: 'pointer',
+            cursor: streak_count > 0 ? 'pointer' : 'default',
             borderRadius: '24px',
             backgroundColor: is_streak_lit_today ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
             transition: 'all 0.3s ease',
@@ -302,7 +299,7 @@ export default function StreakBadge({ isHaveText = true }) {
                 transition: 'color 0.3s ease',
               }}
             >
-              {streak_count > 3 ? streak_count : ''}
+              {streak_count >= 1 ? streak_count : ''}
             </Typography>
           )}
         </Box>

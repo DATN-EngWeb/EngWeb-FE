@@ -24,7 +24,7 @@ import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
 import TrackChangesIcon from '@mui/icons-material/TrackChanges';
 import ProgressTracking from '@/components/Dashboard/progressTracking';
-import { minutesToHour } from '@/utils/stringFormat';
+import { secondsToHours, secondsToMinutesValue } from '@/utils/stringFormat';
 
 const statCardStyle = {
   p: 1,
@@ -305,11 +305,11 @@ export default function OverallProgress({
                 icon={AccessTimeOutlinedIcon}
                 label="Average time"
                 value={
-                  statisticsData?.average_completion_time > 120
-                    ? minutesToHour(statisticsData.average_completion_time)
-                    : `${statisticsData?.average_completion_time || 0}`
+                  statisticsData?.average_completion_time >= 3600
+                    ? secondsToHours(statisticsData.average_completion_time)
+                    : secondsToMinutesValue(statisticsData?.average_completion_time || 0)
                 }
-                unit={statisticsData?.average_completion_time > 120 ? 'hours' : 'minutes'}
+                unit={statisticsData?.average_completion_time >= 3600 ? 'hours' : 'minutes'}
                 helpText="Average time per test"
               />
               <StatItem

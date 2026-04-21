@@ -186,23 +186,32 @@ export default function SkeletonStudentDashboard() {
           >
             <SkeletonBox width="180px" height="28px" />
 
-            {/* Tabs Skeleton */}
+            {/* Header Tabs & Filter Controls Skeleton */}
             <Box
               sx={{
                 display: { xs: 'grid', md: 'flex' },
                 gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'none' },
+                justifyContent: { xs: 'center', md: 'space-between' },
                 gap: 1,
                 width: '100%',
               }}
             >
-              {[1, 2, 3, 4].map((i) => (
-                <SkeletonBox key={i} width={{ xs: '100%', md: '120px' }} height="40px" />
-              ))}
-            </Box>
+              {/* Desktop Tabs */}
+              <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
+                {[1, 2, 3, 4].map((i) => (
+                  <SkeletonBox key={i} width="120px" height="40px" />
+                ))}
+              </Box>
 
-            {/* Filter Controls */}
-            <Box sx={{ display: 'flex', gap: 1, width: '100%' }}>
-              <SkeletonBox width="120px" height="40px" borderRadius="8px" />
+              {/* Mobile Tab Select */}
+              <Box sx={{ display: { xs: 'flex', md: 'none' }, width: '100%' }}>
+                <SkeletonBox width="100%" height="40px" borderRadius="8px" />
+              </Box>
+
+              {/* Filter Controls */}
+              <Box sx={{ display: 'flex', width: { xs: '100%', md: 'auto' } }}>
+                <SkeletonBox width={{ xs: '100%', md: '120px' }} height="40px" borderRadius="8px" />
+              </Box>
             </Box>
 
             {/* Content Area Skeleton */}
