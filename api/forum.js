@@ -27,6 +27,22 @@ export const getPosts = async (params = {}) => {
   });
 };
 
+export const editPost = async (payload, postId) => {
+  return apiFetch(`${FORUM_BASE_URL}/posts/${postId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+};
+
+export const deletePost = async (postId) => {
+  return apiFetch(`${FORUM_BASE_URL}/posts/${postId}`, {
+    method: 'DELETE',
+  });
+};
+
 export const reactToPost = async (postId) => {
   return apiFetch(`${FORUM_BASE_URL}/reactions/${postId}`, {
     method: 'POST',
@@ -44,5 +60,21 @@ export const createComment = async (content) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(content),
+  });
+};
+
+export const editComment = async (payload, commentId) => {
+  return apiFetch(`${FORUM_BASE_URL}/comments/${commentId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+};
+
+export const deleteComment = async (commentId) => {
+  return apiFetch(`${FORUM_BASE_URL}/comments/${commentId}`, {
+    method: 'DELETE',
   });
 };
