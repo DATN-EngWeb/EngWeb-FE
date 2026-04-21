@@ -7,8 +7,8 @@ import InstructionIcon from '../../../Test/instructionIcon';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CircleIcon from '@mui/icons-material/Circle';
-import { listeningPartStyles } from '../../../../styles/student/Listening/listeningTestStyles';
-import { multipleChoiceStyles } from '../../../../styles/Teacher/Reading/QuesitonTypeStyles';
+import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
+import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
 
 export default function MultipleChoiceQuestionAudio({
   dataPart,
@@ -16,6 +16,8 @@ export default function MultipleChoiceQuestionAudio({
   userAnswers,
   onUpdateAnswers,
   media,
+  disabled,
+  detailAnswers,
 }) {
   const { audioSrc, passageSrc } = media;
   const [leftWidth, setLeftWidth] = useState(40); // percentage width
@@ -48,7 +50,7 @@ export default function MultipleChoiceQuestionAudio({
     const handleMouseMove = (event) => {
       event.preventDefault();
 
-      // 3. Sử dụng ref thay vì querySelector
+      // Sử dụng ref thay vì querySelector
       const container = containerRef.current;
       if (!container) return;
 
@@ -213,47 +215,136 @@ export default function MultipleChoiceQuestionAudio({
             {dataPart.description}
           </Typography>
         </Box>
-        {dataPart?.receptive_questions?.map((question, index) => (
-          <Box key={question.id} sx={listeningPartStyles.questionContainerCol}>
-            {/* -------- Question Name Section --------- */}
-            <Box sx={listeningPartStyles.questionTextContainer}>
-              <Typography sx={listeningPartStyles.questionLabelRectangle}>{index + 1}</Typography>
-              <Typography sx={listeningPartStyles.questionText}>
-                {question.content || question.text}
-              </Typography>
-            </Box>
-            <Box sx={listeningPartStyles.audioAndOptionsContainer}>
-              {/* -------- Options Section --------- */}
-              <Box sx={listeningPartStyles.optionsGridRow}>
-                {question.receptive_answers.map((option) => (
-                  <Box
-                    key={`${option.id}`}
-                    sx={{ ...multipleChoiceStyles.optionContainer, cursor: 'pointer' }}
-                    onClick={() => handleSetCorrectOption(question.id, option.id)}
-                  >
-                    <Checkbox
-                      checked={userAnswers[question.id] === option.id}
-                      icon={<RadioButtonUncheckedIcon sx={multipleChoiceStyles.uncheckIcon} />}
-                      checkedIcon={
-                        <Box sx={multipleChoiceStyles.checkedIconWrapper}>
-                          <RadioButtonUncheckedIcon sx={multipleChoiceStyles.outerCircle} />
-                          <CircleIcon sx={multipleChoiceStyles.innerCircle} />
-                        </Box>
-                      }
-                      sx={multipleChoiceStyles.checkboxRoot}
-                    />
-                    <Typography sx={{ ...multipleChoiceStyles.optionLabel, flexShrink: 0 }}>
-                      {option.option_label || option.label}.
-                    </Typography>
-                    <Typography sx={{ ...multipleChoiceStyles.optionLabel, fontWeight: 400 }}>
-                      {option.answer_text || option.text}
-                    </Typography>
-                  </Box>
-                ))}
+        {dataPart?.receptive_questions?.map((question, index) => {
+          const questionResult = Array.isArray(detailAnswers)
+            ? detailAnswers.find((ans) => ans.question_id === question.id)
+            : null;
+
+          // Tìm đáp án đúng để hiển thị
+          const correctAnswer = question.receptive_answers?.find((a) => a.is_correct);
+          const correctAnswerText = correctAnswer
+            ? `${correctAnswer.option_label || correctAnswer.label}. ${correctAnswer.answer_text || correctAnswer.text || ''}`
+            : '';
+
+          return (
+            <Box key={question.id} sx={listeningPartStyles.questionContainerCol}>
+              {/* -------- Question Name Section --------- */}
+              <Box sx={listeningPartStyles.questionTextContainer}>
+                <Typography sx={listeningPartStyles.questionLabelRectangle}>{index + 1}</Typography>
+                <Typography sx={listeningPartStyles.questionText}>
+                  {question.content || question.text}
+                </Typography>
               </Box>
+              <Box sx={listeningPartStyles.audioAndOptionsContainer}>
+                {/* -------- Options Section --------- */}
+                <Box sx={listeningPartStyles.optionsGridRow}>
+                  {question.receptive_answers.map((option) => {
+                    const isSelectedInTesting = userAnswers[question.id] === option.id;
+                    const isSelectedInReview = questionResult?.selected_answer_id === option.id;
+                    const isCorrect = questionResult?.is_correct;
+
+                    return (
+                      <Box
+                        key={`${option.id}`}
+                        onClick={() => !disabled && handleSetCorrectOption(question.id, option.id)}
+                        sx={{
+                          ...multipleChoiceStyles.optionContainer,
+                          cursor: disabled ? 'default' : 'pointer',
+                          ...(questionResult &&
+                            isSelectedInReview && {
+                              border: `1px solid ${isCorrect ? '#4caf50' : '#f44336'}`,
+                              backgroundColor: isCorrect
+                                ? 'rgba(76, 175, 80, 0.05)'
+                                : 'rgba(244, 67, 54, 0.05)',
+                            }),
+                        }}
+                      >
+                        <Checkbox
+                          disabled={disabled}
+                          checked={isSelectedInTesting || isSelectedInReview}
+                          icon={<RadioButtonUncheckedIcon sx={multipleChoiceStyles.uncheckIcon} />}
+                          checkedIcon={
+                            <Box sx={multipleChoiceStyles.checkedIconWrapper}>
+                              <RadioButtonUncheckedIcon
+                                sx={{
+                                  ...multipleChoiceStyles.outerCircle,
+                                  ...(questionResult &&
+                                    isSelectedInReview && {
+                                      color: isCorrect ? 'success.main' : 'error.main',
+                                    }),
+                                }}
+                              />
+                              <CircleIcon
+                                sx={{
+                                  ...multipleChoiceStyles.innerCircle,
+                                  ...(questionResult &&
+                                    isSelectedInReview && {
+                                      color: isCorrect ? 'success.main' : 'error.main',
+                                    }),
+                                }}
+                              />
+                            </Box>
+                          }
+                          sx={{
+                            ...multipleChoiceStyles.checkboxRoot,
+                            ...(questionResult &&
+                              isSelectedInReview && {
+                                color: isCorrect ? 'success.main' : 'error.main',
+                                '&.Mui-checked': {
+                                  color: isCorrect ? 'success.main' : 'error.main',
+                                },
+                              }),
+                          }}
+                        />
+                        <Typography
+                          sx={{
+                            ...multipleChoiceStyles.optionLabel,
+                            flexShrink: 0,
+                            ...(questionResult &&
+                              isSelectedInReview && {
+                                color: isCorrect ? '#4caf50' : '#f44336',
+                                fontWeight: 600,
+                              }),
+                          }}
+                        >
+                          {option.option_label || option.label}.
+                        </Typography>
+                        <Typography
+                          sx={{
+                            ...multipleChoiceStyles.optionLabel,
+                            fontWeight: 400,
+                            ...(questionResult &&
+                              isSelectedInReview && {
+                                color: isCorrect ? '#4caf50' : '#f44336',
+                                fontWeight: 500,
+                              }),
+                          }}
+                        >
+                          {option.answer_text || option.text}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Box>
+              </Box>
+              {/* -------- Explanation Section --------- */}
+              {questionResult && (
+                <Box sx={{ pr: { xs: 0, md: 4 }, width: '100%' }}>
+                  <Box sx={{ ...listeningPartStyles.explanationContainer }}>
+                    <Typography sx={listeningPartStyles.correctText}>
+                      Correct Answer: {correctAnswerText}
+                    </Typography>
+                    {question.explanation && (
+                      <Typography sx={listeningPartStyles.explanationText}>
+                        <strong>Explanation:</strong> {question.explanation}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              )}
             </Box>
-          </Box>
-        ))}
+          );
+        })}
       </Box>
     </Container>
   );

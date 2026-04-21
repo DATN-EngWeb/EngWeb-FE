@@ -26,20 +26,23 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { getReceptiveTestDetails } from '../../../api/teacher/upload-reading';
 import { createReceptiveTest } from '../../../api/test';
-import { listeningtestStyles } from '../../../styles/student/Listening/listeningTestStyles';
+import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import {
   loadAudioSource,
   loadImageSource,
   fetchHtmlContent,
 } from '../../../api/teacher/upload-reading';
-import { getListeningTestTypeLabel, formatTimeFromMinutes } from '../../../utils/stringFormat';
+import {
+  getListeningTestTypeLabel,
+  formatTimeFromMinutes,
+  secondsToMinutesValue,
+} from '../../../utils/stringFormat';
 import MultipleChoiceImagePart from './part/multipleChoiceImage';
 import FillBlankPart from './part/fillBlanks';
 import MultipleChoiceSingleAudio from './part/multipleChoiceSingleAudio';
 import MultipleChoiceQuestionAudio from './part/multipleChoiceMultiQuestionAudio';
 import Matching from './part/matching';
 import Skeleton from './skeleton';
-import ReceptiveTestResult from '../ReceptiveTestResult/ReceptiveTestResult';
 import { useStreakContext } from '@/context/streakContext';
 
 export default function ListeningTestContent({ test_id, initialData }) {
@@ -53,6 +56,9 @@ export default function ListeningTestContent({ test_id, initialData }) {
   const [indexPart, setIndexPart] = useState(0);
   const [startTime, setStartTime] = useState(testData?.total_time || 0);
   const [allAnswers, setAllAnswers] = useState({});
+
+  const [isReadOnly, setIsReadOnly] = useState(false);
+  const [detailAnswers, setDetailAnswers] = useState([]);
 
   const [openConfirm, setOpenConfirm] = useState(false);
   const [submitType, setSubmitType] = useState('D');
@@ -68,7 +74,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [submittedHistoryId, setSubmittedHistoryId] = useState(null);
   const { refreshStreak } = useStreakContext();
 
   const transformAnswers = (answersObj) => {
@@ -153,7 +158,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
       });
 
       if (submitType === 'S') {
-        setSubmittedHistoryId(response.id);
         await refreshStreak();
       } else {
         setTimeout(() => {
@@ -279,6 +283,8 @@ export default function ListeningTestContent({ test_id, initialData }) {
               answer_histories: transformAnswers(restoredAnswers),
             });
 
+            setIsReadOnly(savedData.isReadOnly);
+            setDetailAnswers(savedData.answer_histories);
             setStartTime(savedData.totalTime || 0);
           } else {
             setTestHistory({
@@ -311,6 +317,8 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
   // Timer
   useEffect(() => {
+    if (isReadOnly) return;
+
     const timer = setInterval(() => {
       setStartTime((prev) => {
         const current = Number(prev) || 0;
@@ -319,7 +327,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [isReadOnly]);
 
   const goNextPart = () => {
     if (indexPart < receptiveParts.length - 1) {
@@ -358,6 +366,8 @@ export default function ListeningTestContent({ test_id, initialData }) {
       userAnswers: allAnswers[part.id] || {},
       onUpdateAnswers: (answers) => handleUpdateAnswers(part.id, answers),
       media: mediaResources[part.id] || {},
+      disabled: isReadOnly,
+      detailAnswers: detailAnswers,
     };
 
     switch (part.format) {
@@ -375,10 +385,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
         return null;
     }
   };
-
-  if (submittedHistoryId) {
-    return <ReceptiveTestResult historyId={submittedHistoryId} />;
-  }
 
   if (isInitial) {
     return <Skeleton />;
@@ -536,7 +542,11 @@ export default function ListeningTestContent({ test_id, initialData }) {
                 mr: 0.5,
               }}
             />
-            {formatTimeFromMinutes(startTime / 60)}
+            {isReadOnly
+              ? startTime > 60
+                ? `Time: ${secondsToMinutesValue(startTime)} mins`
+                : `Time: ${startTime}s`
+              : formatTimeFromMinutes(startTime / 60)}
           </Box>
           <Box sx={listeningtestStyles.nameTestAndFormatPart}>
             <Typography sx={listeningtestStyles.nameTest}>{testData?.title}</Typography>
