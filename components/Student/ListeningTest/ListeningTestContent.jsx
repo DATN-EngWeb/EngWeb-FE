@@ -158,6 +158,18 @@ export default function ListeningTestContent({ test_id, initialData }) {
       });
 
       if (submitType === 'S') {
+        const dataToSave = {
+          answer_histories: response.answer_histories || [],
+          attempt: response.attempt || 1,
+          isReadOnly: response.type === 'S',
+          startTime: response.start_time,
+          totalTime: response.total_time,
+        };
+
+        const stringifiedData = JSON.stringify(dataToSave);
+        window.sessionStorage.setItem('current_receptive_attempt', stringifiedData);
+        setIsInitial(true);
+        setIndexPart(0);
         await refreshStreak();
       } else {
         setTimeout(() => {
@@ -185,7 +197,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
     const fetchTestData = async () => {
       if (!test_id) return;
       try {
-        setIsInitial(true);
         const svData = await getReceptiveTestDetails(test_id);
         const parts = svData.receptive_test.receptive_parts || [];
 
@@ -313,7 +324,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
         });
       });
     };
-  }, [test_id]);
+  }, [test_id, isInitial]);
 
   // Timer
   useEffect(() => {
@@ -560,6 +571,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
               startIcon={<SendIcon />}
               sx={listeningtestStyles.submitButton}
               onClick={handlePreSubmit}
+              disabled={isReadOnly}
             >
               Submit Test
             </Button>
