@@ -90,34 +90,21 @@ const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButto
         };
 
       case 'J': {
-        const sentences = [];
-        const seenOptions = new Set();
+        const activeQuestions = currentPart.questions.filter((q) => q.action !== 'delete');
+        const sentences = activeQuestions.map((q) => ({
+          id: q.id,
+          text: q.content || q.text || q.explanation || '', // Support both content and text, fallback to explanation
+        }));
 
-        currentPart.questions.forEach((q) => {
-          q.answers.forEach((a, index) => {
-            if (!seenOptions.has(a.option_label)) {
-              seenOptions.add(a.option_label);
-              sentences.push({
-                id:
-                  a.option_label && a.option_label !== 'undefined'
-                    ? a.option_label
-                    : String.fromCharCode(65 + index),
-                text: a.answer_text,
-              });
-            }
-          });
-        });
-
-        let passageWithGaps = currentPart.content || '';
-        const gaps = currentPart.questions.map((q) => q.question_number).sort((a, b) => a - b);
+        const gaps = activeQuestions.map((q) => q.question_number).sort((a, b) => a - b);
 
         return {
           component: MatchingContent,
           props: {
             ...commonProps,
-            sentences: sentences.sort((a, b) => a.id.localeCompare(b.id)),
+            sentences: sentences,
             gaps: gaps,
-            passage: passageWithGaps,
+            passage: currentPart.content || '',
           },
         };
       }

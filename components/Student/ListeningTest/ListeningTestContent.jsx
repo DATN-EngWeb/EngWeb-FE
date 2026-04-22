@@ -142,7 +142,8 @@ export default function ListeningTestContent({ test_id, initialData }) {
         answer_histories: formattedHistories,
       };
 
-      const response = await createReceptiveTest(payload);
+      const token = localStorage.getItem('accessToken');
+      const response = await createReceptiveTest(payload, token);
 
       setOpenConfirm(false);
       setSnackbar({

@@ -50,26 +50,35 @@ export function transformFillBlanksTest(backendTest) {
   }
 
   const parts = receptiveParts
-    .filter((part) => part.format === 'I' || part.format === 'H')
-    .map((part, index) => ({
-      id: part.order || index + 1,
-      databaseId: part.id,
-      title: `Part ${part.order || index + 1}`,
-      passage: part.content || '',
-      passageTitle: part.description || '',
-      blanks: extractBlanks(part.receptive_questions || []),
-      questions:
-        part.receptive_questions?.map((q) => ({
-          id: q.id,
-          questionNumber: q.question_number,
-          options:
-            q.receptive_answers?.map((a) => ({
-              id: a.id,
-              value: a.option_label,
-              label: `${a.option_label}. ${a.answer_text}`,
-            })) || [],
-        })) || [],
-    }));
+    .filter((part) => part.format === 'I' || part.format === 'H' || part.format === 'D')
+    .map((part, index) => {
+      const questions = (part.receptive_questions || []).map((q) => ({
+        id: q.id,
+        question_number: q.question_number,
+        explanation: q.explanation,
+        correctLabel: q.receptive_answers?.find((a) => a.is_correct)?.option_label || '',
+        correctText: q.receptive_answers?.find((a) => a.is_correct)?.answer_text || '',
+        options:
+          q.receptive_answers?.map((a) => ({
+            id: a.id,
+            value: a.option_label,
+            label: `${a.option_label}. ${a.answer_text}`,
+            isCorrect: a.is_correct,
+          })) || [],
+      }));
+
+      return {
+        id: part.order || index + 1,
+        databaseId: part.id,
+        title: `Part ${part.order || index + 1}`,
+        passage: part.content || '',
+        passageTitle: part.description || '',
+        blanks: extractBlanks(part.receptive_questions || []),
+        questions,
+        componentType: 'fill-blanks',
+        rawPart: part,
+      };
+    });
 
   return { parts };
 }
@@ -85,19 +94,13 @@ export function transformMatchingTest(backendTest) {
   const parts = receptiveParts
     .filter((part) => part.format === 'J' || part.format === 'E')
     .map((part, index) => {
-      const allAnswers = new Map();
-      part.receptive_questions?.forEach((question) => {
-        question.receptive_answers?.forEach((answer) => {
-          if (!allAnswers.has(answer.option_label)) {
-            allAnswers.set(answer.option_label, {
-              id: answer.option_label,
-              text: answer.answer_text,
-            });
-          }
-        });
+      const sentences = (part.receptive_questions || []).map((question) => {
+        return {
+          id: question.id,
+          text: question.content || question.explanation || '',
+          question_number: question.question_number,
+        };
       });
-
-      const sentences = Array.from(allAnswers.values()).sort((a, b) => a.id.localeCompare(b.id));
 
       const gaps = extractBlanks(part.receptive_questions || []);
 
@@ -111,6 +114,14 @@ export function transformMatchingTest(backendTest) {
         });
       }
 
+      const questions = (part.receptive_questions || []).map((q) => ({
+        id: q.id,
+        question_number: q.question_number,
+        explanation: q.explanation,
+        correctLabel: q.receptive_answers?.find((a) => a.is_correct)?.option_label || '',
+        correctText: q.receptive_answers?.find((a) => a.is_correct)?.answer_text || '',
+      }));
+
       return {
         id: part.order || index + 1,
         title: `Part ${part.order || index + 1}`,
@@ -118,6 +129,9 @@ export function transformMatchingTest(backendTest) {
         passageTitle: part.description || '',
         sentences,
         gaps,
+        questions,
+        componentType: 'matching',
+        rawPart: part,
       };
     });
 
@@ -149,12 +163,14 @@ export function transformMultiChoiceTest(backendTest) {
               id: answer.id,
               value: answer.option_label,
               label: `${answer.option_label}. ${answer.answer_text}`,
+              isCorrect: answer.is_correct,
             })) || [];
 
           return {
             id: question.id,
             questionNumber: question.question_number,
             question: question.content,
+            explanation: question.explanation,
             options,
           };
         }) || [];
@@ -166,6 +182,8 @@ export function transformMultiChoiceTest(backendTest) {
         passage: part.content || '',
         passageTitle: part.description || '',
         questions,
+        componentType: 'multi-choice',
+        rawPart: part,
       };
     });
 

@@ -355,13 +355,13 @@ export const validateReadingPartPayload = (parts) => {
         return `Error in ${partName}, Question ${qNum}: At least one correct answer must be selected.`;
       }
 
-      if (['F', 'G', 'H'].includes(format)) {
+      if (['F', 'G', 'H', 'J'].includes(format)) {
         if (isEmptyText(q.content)) {
           return `Error in ${partName}, Question ${qNum}: Question content cannot be empty.`;
         }
       }
 
-      if (['F', 'G', 'H', 'J'].includes(format)) {
+      if (['F', 'G', 'H'].includes(format)) {
         for (let k = 0; k < q.answers.length; k++) {
           const ans = q.answers[k];
           if (isEmptyText(ans.answer_text)) {

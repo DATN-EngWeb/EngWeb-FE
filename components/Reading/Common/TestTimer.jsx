@@ -5,18 +5,22 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 
-const TestTimer = () => {
-  const [seconds, setSeconds] = useState(0);
+const TestTimer = ({ initialSeconds = 0, isActive = true, value }) => {
+  const [seconds, setSeconds] = useState(initialSeconds);
 
   useEffect(() => {
+    if (!isActive) return;
+
     const interval = setInterval(() => {
       setSeconds((prev) => prev + 1);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isActive]);
 
   const formatTime = (totalSeconds) => {
+    if (typeof totalSeconds !== 'number') return totalSeconds;
+
     const hrs = Math.floor(totalSeconds / 3600);
     const mins = Math.floor((totalSeconds % 3600) / 60);
     const secs = totalSeconds % 60;
@@ -48,7 +52,7 @@ const TestTimer = () => {
           fontVariantNumeric: 'tabular-nums',
         }}
       >
-        {formatTime(seconds)}
+        {value !== undefined ? value : formatTime(seconds)}
       </Typography>
     </Box>
   );

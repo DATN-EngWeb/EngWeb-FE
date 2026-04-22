@@ -12,9 +12,12 @@ import {
   Select,
   MenuItem,
   FormControl,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import Header from '../../Home/Header';
 import TestHeading from '../../Student/Common/TestHeading';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import {
   containerStyles,
   headerWrapperStyles,
@@ -46,7 +49,9 @@ const MatchingContent = ({
   passageTitle = '',
   sentences = [],
   gaps = [],
+  questions = [],
   answers,
+  showResults = false,
   onAnswerChange = () => {},
   onPartChange = () => {},
   isTeacher = false,
@@ -56,6 +61,7 @@ const MatchingContent = ({
   currentSection = 1,
   totalSections = 5,
   embedded = false,
+  timerNode,
   onAIReview,
   onExit,
 }) => {
@@ -63,6 +69,57 @@ const MatchingContent = ({
   const [selectedAnswers, setSelectedAnswers] = useState(answers || {});
   const [leftWidth, setLeftWidth] = useState(55); // percentage width for passage
   const [isDragging, setIsDragging] = useState(false);
+  const [passageContent, setPassageContent] = useState(passage);
+  const [processedSentences, setProcessedSentences] = useState(sentences);
+
+  useEffect(() => {
+    setPassageContent(passage);
+    const fetchContent = async () => {
+      if (
+        passage &&
+        typeof passage === 'string' &&
+        passage.startsWith('http') &&
+        passage.includes('storage.googleapis.com')
+      ) {
+        try {
+          const response = await fetch(passage);
+          const text = await response.text();
+          setPassageContent(text);
+        } catch (error) {
+          console.error('Failed to fetch passage content:', error); // eslint-disable-line no-console
+        }
+      }
+    };
+    fetchContent();
+  }, [passage]);
+
+  useEffect(() => {
+    setProcessedSentences(sentences);
+    const fetchSentences = async () => {
+      const newSentences = await Promise.all(
+        sentences.map(async (s) => {
+          if (
+            s.text &&
+            typeof s.text === 'string' &&
+            s.text.startsWith('http') &&
+            s.text.includes('storage.googleapis.com')
+          ) {
+            try {
+              const response = await fetch(s.text);
+              const text = await response.text();
+              return { ...s, text };
+            } catch (error) {
+              console.error('Failed to fetch sentence content:', error); // eslint-disable-line no-console
+              return s;
+            }
+          }
+          return s;
+        }),
+      );
+      setProcessedSentences(newSentences);
+    };
+    fetchSentences();
+  }, [sentences]);
 
   useEffect(() => {
     setSelectedPart(currentPart - 1);
@@ -154,9 +211,9 @@ const MatchingContent = ({
   };
 
   const renderPassageWithGaps = () => {
-    if (!passage) return null;
+    if (!passageContent) return null;
 
-    const processedPassage = passage.replace(/\[(\d+)\]/g, (match, number) => {
+    const processedPassage = passageContent.replace(/\[(\d+)\]/g, (match, number) => {
       return `<span style="display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; margin: 0 4px; vertical-align: middle; background-color: #FFF3E0; color: #E65100; border: 1px solid #FFB74D; border-radius: 6px; font-weight: 700; font-size: 0.9rem; cursor: default; user-select: none;">${number}</span>`;
     });
 
@@ -186,9 +243,9 @@ const MatchingContent = ({
       {!embedded && <Header />}
       <TestHeading
         testName={testName}
-        onSubmit={handleSubmit}
-        isTeacher={isTeacher}
-        timerNode={!isTeacher ? <TestTimer /> : null}
+        onSubmit={showResults ? null : handleSubmit}
+        isTeacher={isTeacher || showResults}
+        timerNode={timerNode || (!isTeacher && !showResults ? <TestTimer /> : null)}
         onAIReview={onAIReview}
         onExit={onExit}
       />
@@ -461,12 +518,12 @@ const MatchingContent = ({
                         mb: 2,
                       }}
                     >
-                      Missing Sentences
+                      Match Question
                     </Typography>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                      {sentences.map((sentence, index) => (
+                      {processedSentences.map((sentence, index) => (
                         <Box
-                          key={sentence.id}
+                          key={`${sentence.id}-${index}`}
                           sx={{
                             display: 'flex',
                             gap: 1,
@@ -507,62 +564,178 @@ const MatchingContent = ({
                       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
                     }}
                   >
-                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(2, 1fr)',
+                        gap: 3,
+                        width: '100%',
+                      }}
+                    >
                       {gaps.map((gapNumber) => (
                         <Box
                           key={gapNumber}
                           sx={{
                             display: 'flex',
-                            alignItems: 'center',
-                            gap: 1.5,
+                            flexDirection: 'column',
+                            gap: 0.5,
+                            minWidth: 0, // Prevent grid items from overflowing
                           }}
                         >
                           <Box
                             sx={{
-                              width: 32,
-                              height: 32,
-                              backgroundColor: 'primary.main',
-                              color: 'background.paper',
-                              borderRadius: '4px',
                               display: 'flex',
                               alignItems: 'center',
-                              justifyContent: 'center',
-                              fontWeight: 600,
-                              fontSize: '1rem',
-                              flexShrink: 0,
+                              gap: 1.5,
                             }}
                           >
-                            {gapNumber}
-                          </Box>
-                          <FormControl fullWidth size="small">
-                            <Select
-                              value={selectedAnswers[gapNumber] || ''}
-                              onChange={(e) => handleAnswerChange(gapNumber, e.target.value)}
-                              disabled={isTeacher}
-                              displayEmpty
+                            <Box
                               sx={{
-                                backgroundColor: 'background.paper',
-                                '& .MuiOutlinedInput-notchedOutline': {
-                                  borderColor: 'divider',
-                                },
-                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                  borderColor: 'secondary.main',
-                                },
-                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                  borderColor: 'secondary.main',
-                                },
+                                width: 32,
+                                height: 32,
+                                backgroundColor: 'primary.main',
+                                color: 'background.paper',
+                                borderRadius: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontWeight: 600,
+                                fontSize: '1rem',
+                                flexShrink: 0,
                               }}
                             >
-                              <MenuItem value="" disabled>
-                                Select
-                              </MenuItem>
-                              {sentences.map((sentence, index) => (
-                                <MenuItem key={sentence.id} value={sentence.id}>
-                                  {index + 1}
+                              {gapNumber}
+                            </Box>
+                            <FormControl fullWidth size="small">
+                              <Select
+                                value={selectedAnswers[gapNumber] || ''}
+                                onChange={(e) => handleAnswerChange(gapNumber, e.target.value)}
+                                displayEmpty
+                                disabled={isTeacher || showResults}
+                                sx={{
+                                  backgroundColor: 'background.paper',
+                                  '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: showResults
+                                      ? (() => {
+                                          const q = questions.find(
+                                            (qu) => qu.question_number === gapNumber,
+                                          );
+                                          return selectedAnswers[gapNumber] === q?.correctLabel
+                                            ? 'success.main'
+                                            : 'error.main';
+                                        })()
+                                      : 'divider',
+                                    borderWidth: showResults ? 2 : 1,
+                                  },
+                                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: showResults ? 'inherit' : 'secondary.main',
+                                  },
+                                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: showResults ? 'inherit' : 'secondary.main',
+                                  },
+                                }}
+                              >
+                                <MenuItem value="" disabled>
+                                  Select
                                 </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
+                                {processedSentences
+                                  .map((_, idx) => String.fromCharCode(65 + idx))
+                                  .map((label) => (
+                                    <MenuItem key={label} value={label}>
+                                      {label}
+                                    </MenuItem>
+                                  ))}
+                              </Select>
+                            </FormControl>
+                          </Box>
+
+                          {showResults && (
+                            <Box sx={{ pl: { xs: 0, sm: 6 }, mt: 0.5, minWidth: 0 }}>
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 1,
+                                  flexWrap: 'wrap',
+                                  mb: 1,
+                                }}
+                              >
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    fontWeight: 700,
+                                    color: 'text.secondary',
+                                    fontSize: '0.7rem',
+                                    textTransform: 'uppercase',
+                                  }}
+                                >
+                                  Correct Answer:
+                                </Typography>
+                                <Box
+                                  sx={{
+                                    px: 0.8,
+                                    py: 0.2,
+                                    borderRadius: '4px',
+                                    bgcolor: 'success.main',
+                                    color: 'white',
+                                    fontWeight: 800,
+                                    fontSize: '0.75rem',
+                                    display: 'inline-flex',
+                                  }}
+                                >
+                                  {(() => {
+                                    const q = questions.find(
+                                      (qu) => qu.question_number === gapNumber,
+                                    );
+                                    return q?.correctLabel || 'N/A';
+                                  })()}
+                                </Box>
+                              </Box>
+
+                              {(() => {
+                                const q = questions.find((qu) => qu.question_number === gapNumber);
+                                if (q?.explanation) {
+                                  return (
+                                    <Box
+                                      sx={{
+                                        p: 1.5,
+                                        bgcolor: '#fff7ed',
+                                        borderRadius: '8px',
+                                        border: '1px solid #ffedd5',
+                                        boxSizing: 'border-box',
+                                      }}
+                                    >
+                                      <Typography
+                                        variant="caption"
+                                        sx={{
+                                          color: '#ea580c',
+                                          fontWeight: 800,
+                                          display: 'block',
+                                          mb: 0.5,
+                                          fontSize: '0.7rem',
+                                        }}
+                                      >
+                                        EXPLANATION
+                                      </Typography>
+                                      <Typography
+                                        variant="caption"
+                                        sx={{
+                                          color: '#9a3412',
+                                          fontSize: '0.75rem',
+                                          lineHeight: 1.4,
+                                          display: 'block',
+                                          wordBreak: 'break-word',
+                                        }}
+                                      >
+                                        {q.explanation}
+                                      </Typography>
+                                    </Box>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </Box>
+                          )}
                         </Box>
                       ))}
                     </Box>

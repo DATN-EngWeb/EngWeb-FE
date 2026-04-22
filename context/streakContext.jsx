@@ -7,7 +7,7 @@ import { getUserStreak } from '../api/dashboard';
 const StreakContext = createContext();
 
 export const StreakProvider = ({ children }) => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading: authLoading } = useAuth();
   const [streakData, setStreakData] = useState({
     streak_count: 0,
     is_streak_lit_today: false,
@@ -16,7 +16,9 @@ export const StreakProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchStreak = useCallback(async () => {
-    if (!isAuthenticated || user?.role !== 'S') {
+    if (authLoading) return;
+
+    if (!isAuthenticated || !user || user.role !== 'S') {
       setIsLoading(false);
       return;
     }
@@ -25,11 +27,11 @@ export const StreakProvider = ({ children }) => {
       const res = await getUserStreak();
       setStreakData(res);
     } catch (error) {
-      console.error('Streak fetch error:', error);
+      console.error('Streak fetch error:', error); // eslint-disable-line no-console
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, user?.role]);
+  }, [authLoading, isAuthenticated, user]);
 
   useEffect(() => {
     fetchStreak();

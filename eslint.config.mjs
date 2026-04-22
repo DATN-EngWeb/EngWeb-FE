@@ -11,6 +11,7 @@ export default [
       'postcss.config.js',
       'commitlint.config.js',
       '**/*.config.js',
+      '**/*.css',
     ],
   },
 
@@ -40,6 +41,7 @@ export default [
         FormData: 'readonly',
         URL: 'readonly',
         localStorage: 'readonly',
+        fetch: 'readonly',
       },
     },
     rules: {
@@ -53,6 +55,7 @@ export default [
         },
       ],
       'no-console': 'warn',
+      'no-redeclare': 'off',
     },
   },
 
@@ -79,7 +82,6 @@ export default [
         require: 'readonly',
         exports: 'readonly',
         React: 'readonly',
-        localStorage: 'readonly',
         FileReader: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
@@ -89,12 +91,14 @@ export default [
         FormData: 'readonly',
         URL: 'readonly',
         localStorage: 'readonly',
+        fetch: 'readonly',
       },
     },
     rules: {
       ...js.configs.recommended.rules,
       'no-unused-vars': 'off', // Turn off for JSX files since components are used in JSX
       'no-console': 'warn',
+      'no-redeclare': 'off',
     },
   },
 ];
