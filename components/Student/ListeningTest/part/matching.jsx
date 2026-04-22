@@ -69,9 +69,7 @@ export default function Matching({
         <Box sx={listeningPartStyles.instructionContainer}>
           <InstructionIcon />
           <Box sx={listeningPartStyles.instructionWrapper}>
-            <Typography
-              sx={{ color: 'secondary.main', fontSize: '1rem', fontWeight: 600, mb: 0.5 }}
-            >
+            <Typography sx={{ color: 'red.text', fontSize: '1rem', fontWeight: 600, mb: 0.5 }}>
               Instruction
             </Typography>
             <Typography sx={{ color: 'text.primary', fontSize: '0.9rem', lineHeight: 1.5 }}>
@@ -106,6 +104,7 @@ export default function Matching({
               return (
                 <Box
                   key={question.id}
+                  id={`question-${question.id}`}
                   sx={{
                     display: 'flex',
                     flexDirection: 'column',

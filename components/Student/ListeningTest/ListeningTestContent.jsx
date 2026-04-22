@@ -77,6 +77,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [targetQuestionId, setTargetQuestionId] = useState(null);
 
   const { refreshStreak } = useStreakContext();
 
@@ -386,6 +387,74 @@ export default function ListeningTestContent({ test_id, initialData }) {
     }));
   };
 
+  const handleNavigateToQuestion = (partIndex, questionId) => {
+    setIndexPart(partIndex);
+    setTargetQuestionId(questionId);
+  };
+
+  // Logic cuộn trang và nháy sáng siêu an toàn (Không làm to chữ)
+  useEffect(() => {
+    if (targetQuestionId && indexPart !== -1) {
+      let retryCount = 0;
+      const maxRetries = 15;
+
+      const attemptScroll = () => {
+        const element = document.getElementById(`question-${targetQuestionId}`);
+
+        if (element && element.getBoundingClientRect().height > 0) {
+          window.requestAnimationFrame(() => {
+            // 1. Cuộn vào giữa màn hình
+            element.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+            });
+
+            // 2. CSS an toàn tuyệt đối: CHỈ ĐỔI MÀU, không dùng thẻ *, không đụng font-size
+            if (!document.getElementById('safe-blink-style')) {
+              const style = document.createElement('style');
+              style.id = 'safe-blink-style';
+              style.innerHTML = `
+                .safe-color-blink .MuiTypography-root,
+                .safe-color-blink .MuiInputBase-input,
+                .safe-color-blink .MuiButton-root,
+                .safe-color-blink svg {
+                  color: #FCD34D !important;
+                  fill: #FCD34D !important;
+                }
+              `;
+              document.head.appendChild(style);
+            }
+
+            // 3. Kịch bản nháy màu tĩnh
+            setTimeout(() => {
+              element.classList.add('safe-color-blink'); // Sáng lần 1
+
+              setTimeout(() => {
+                element.classList.remove('safe-color-blink'); // Tắt lần 1
+
+                setTimeout(() => {
+                  element.classList.add('safe-color-blink'); // Sáng lần 2
+
+                  setTimeout(() => {
+                    element.classList.remove('safe-color-blink'); // Tắt lần 2 (Kết thúc)
+                  }, 350);
+                }, 200);
+              }, 350);
+            }, 300); // Đợi cuộn ổn định rồi mới nháy
+          });
+
+          setTargetQuestionId(null);
+        } else if (retryCount < maxRetries) {
+          retryCount++;
+          setTimeout(attemptScroll, 100);
+        }
+      };
+
+      const timer = setTimeout(attemptScroll, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [indexPart, targetQuestionId]);
+
   const renderPart = (part, index) => {
     // - 'A': Listening - Multiple choice images
     // - 'B': Listening - Multiple choice text (one audio per question)
@@ -581,6 +650,9 @@ export default function ListeningTestContent({ test_id, initialData }) {
           sx={{
             ...listeningtestStyles.summitButtonWrapper,
             order: { xs: 2, md: 1 },
+            ...(!isReadOnly && {
+              display: 'none',
+            }),
           }}
         >
           <Button
@@ -691,6 +763,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
             startTime={startTime}
             allAnswers={allAnswers}
             detailAnswers={detailAnswers}
+            onNavigateToQuestion={handleNavigateToQuestion}
           />
         ) : (
           receptiveParts.map((part, index) => renderPart(part, index))

@@ -5,32 +5,30 @@ import Spinner from '../../../components/spinner';
 export default function Skeleton() {
   return (
     <Box sx={{ ...listeningtestStyles.mainContainer, overflow: 'hidden' }}>
-      <Container maxWidth="lg">
-        {/* -------- Test Heading Section --------- */}
-        <Box sx={{ ...listeningtestStyles.testHeadingContainer, justifyContent: 'center' }}>
-          <Box sx={listeningtestStyles.nameTestAndFormatPart}>
-            <Typography sx={listeningtestStyles.nameTestSkeleton}></Typography>
-            <Typography sx={listeningtestStyles.formatNameSkeleton}></Typography>
-          </Box>
+      {/* -------- Test Heading Section --------- */}
+      <Box sx={{ ...listeningtestStyles.testHeadingContainer, justifyContent: 'center' }}>
+        <Box sx={listeningtestStyles.nameTestAndFormatPart}>
+          <Typography sx={listeningtestStyles.nameTestSkeleton}></Typography>
+          <Typography sx={listeningtestStyles.formatNameSkeleton}></Typography>
         </Box>
-        <Box sx={listeningtestStyles.separatorLine}></Box>
-        {/* -------- List Part Selection --------- */}
-        <Box sx={listeningtestStyles.listPartContainer}>
-          {[1, 2, 3, 4].map((part, index) => (
-            <Box sx={listeningtestStyles.boxPartSkeleton} key={index}></Box>
-          ))}
-        </Box>
-        <Box
-          sx={{
-            ...listeningtestStyles.separatorLine,
-            backgroundColor: 'gray.main',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            justifyItems: 'center',
-          }}
-        ></Box>
-      </Container>
+      </Box>
+      <Box sx={listeningtestStyles.separatorLine}></Box>
+      {/* -------- List Part Selection --------- */}
+      <Box sx={listeningtestStyles.listPartContainer}>
+        {[1, 2, 3, 4].map((part, index) => (
+          <Box sx={listeningtestStyles.boxPartSkeleton} key={index}></Box>
+        ))}
+      </Box>
+      <Box
+        sx={{
+          ...listeningtestStyles.separatorLine,
+          backgroundColor: 'gray.main',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          justifyItems: 'center',
+        }}
+      ></Box>
       <Box
         sx={{
           width: '100%',

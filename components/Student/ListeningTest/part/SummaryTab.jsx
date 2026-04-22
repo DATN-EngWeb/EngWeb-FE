@@ -21,7 +21,13 @@ const secondsToMinutesValue = (seconds) => {
 };
 
 // --- Main Component ---
-export default function SummaryTab({ staticData, startTime, allAnswers, detailAnswers }) {
+export default function SummaryTab({
+  staticData,
+  startTime,
+  allAnswers,
+  detailAnswers,
+  onNavigateToQuestion,
+}) {
   const theme = useTheme();
 
   // 1. Tính toán các chỉ số chung
@@ -390,7 +396,13 @@ export default function SummaryTab({ staticData, startTime, allAnswers, detailAn
                   {part.questions.map((q, qIdx) => (
                     <Box
                       key={qIdx}
+                      onClick={() => onNavigateToQuestion(idx, q.id)}
                       sx={{
+                        cursor: 'pointer',
+                        transition: 'transform 0.1s',
+                        '&:hover': {
+                          transform: 'scale(1.05)',
+                        },
                         display: 'flex',
                         alignItems: 'center',
                         gap: 0.5,

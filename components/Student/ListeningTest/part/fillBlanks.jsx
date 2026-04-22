@@ -181,9 +181,7 @@ export default function FillBlankPart({
         <Box sx={listeningPartStyles.instructionContainer}>
           <InstructionIcon />
           <Box sx={listeningPartStyles.instructionWrapper}>
-            <Typography
-              sx={{ color: 'secondary.main', fontSize: '1rem', fontWeight: 600, mb: 0.5 }}
-            >
+            <Typography sx={{ color: 'red.text', fontSize: '1rem', fontWeight: 600, mb: 0.5 }}>
               Instruction
             </Typography>
             <Typography
@@ -233,6 +231,7 @@ export default function FillBlankPart({
                   return (
                     <Box
                       key={answer.id}
+                      id={`question-${answer.id}`}
                       sx={{ display: 'flex', flexDirection: 'column', width: '100%', mb: 1 }}
                     >
                       <Box
@@ -298,6 +297,7 @@ export default function FillBlankPart({
                   return (
                     <Box
                       key={question.id}
+                      id={`question-${question.id}`}
                       sx={{
                         display: 'flex',
                         flexDirection: 'column',

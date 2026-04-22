@@ -351,6 +351,8 @@ export const listeningPartStyles = {
     cursor: 'pointer',
     px: 2,
     py: 1,
+    overflow: 'hidden',
+    flexShrink: 0,
   },
   questionContainerCol: {
     width: '100%',

@@ -38,7 +38,7 @@ export default function MultipleChoiceSingleAudio({
       <Box sx={listeningPartStyles.instructionContainer}>
         <InstructionIcon />
         <Box sx={listeningPartStyles.instructionWrapper}>
-          <Typography sx={{ color: 'secondary.main', fontSize: '1rem', fontWeight: 600, mb: 0.5 }}>
+          <Typography sx={{ color: 'red.text', fontSize: '1rem', fontWeight: 600, mb: 0.5 }}>
             Instruction
           </Typography>
           <Typography
@@ -68,7 +68,11 @@ export default function MultipleChoiceSingleAudio({
             : '';
 
           return (
-            <Box key={question.id} sx={listeningPartStyles.questionContainerCol}>
+            <Box
+              key={question.id}
+              id={`question-${question.id}`}
+              sx={listeningPartStyles.questionContainerCol}
+            >
               {/* -------- Question Name Section --------- */}
               <Box sx={listeningPartStyles.questionTextContainer}>
                 <Typography sx={listeningPartStyles.questionLabelRectangle}>{index + 1}</Typography>
