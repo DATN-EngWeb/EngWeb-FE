@@ -41,7 +41,7 @@ export const listeningtestStyles = {
   backButton: {
     width: { xs: 'auto', md: '200px' },
     color: 'gray.main',
-    fontSize: '1rem',
+    fontSize: { xs: '1rem', md: '1.2rem' },
     fontWeight: 500,
     cursor: 'pointer',
     display: 'flex',

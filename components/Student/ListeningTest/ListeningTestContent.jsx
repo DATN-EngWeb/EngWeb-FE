@@ -32,18 +32,16 @@ import {
   loadImageSource,
   fetchHtmlContent,
 } from '../../../api/teacher/upload-reading';
-import {
-  getListeningTestTypeLabel,
-  formatTimeFromMinutes,
-  secondsToMinutesValue,
-} from '../../../utils/stringFormat';
+import { getListeningTestTypeLabel, formatTimeFromMinutes } from '../../../utils/stringFormat';
 import MultipleChoiceImagePart from './part/multipleChoiceImage';
 import FillBlankPart from './part/fillBlanks';
 import MultipleChoiceSingleAudio from './part/multipleChoiceSingleAudio';
 import MultipleChoiceQuestionAudio from './part/multipleChoiceMultiQuestionAudio';
 import Matching from './part/matching';
 import Skeleton from './skeleton';
+import SummaryTab from './part/SummaryTab';
 import { useStreakContext } from '@/context/streakContext';
+import { ChevronLeftRounded } from '@mui/icons-material';
 
 export default function ListeningTestContent({ test_id, initialData }) {
   const router = useRouter();
@@ -59,6 +57,12 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [detailAnswers, setDetailAnswers] = useState([]);
+  const [staticData, setStaticData] = useState({
+    bonus_points: 0,
+    earned_bonus_points: 0,
+    total_score: 0,
+    feedback_message: '',
+  });
 
   const [openConfirm, setOpenConfirm] = useState(false);
   const [submitType, setSubmitType] = useState('D');
@@ -164,6 +168,10 @@ export default function ListeningTestContent({ test_id, initialData }) {
           isReadOnly: response.type === 'S',
           startTime: response.start_time,
           totalTime: response.total_time,
+          bonus_point: response.bonus_point,
+          earned_bonus_point: response.earned_bonus_point,
+          total_score: response.total_score,
+          feedback_message: response.feedback_message,
         };
 
         const stringifiedData = JSON.stringify(dataToSave);
@@ -297,6 +305,15 @@ export default function ListeningTestContent({ test_id, initialData }) {
             setIsReadOnly(savedData.isReadOnly);
             setDetailAnswers(savedData.answer_histories);
             setStartTime(savedData.totalTime || 0);
+            setStaticData({
+              bonus_points: savedData.bonus_points,
+              earned_bonus_points: savedData.earned_bonus_points,
+              total_score: savedData.total_score,
+              feedback_message: savedData.feedback_message,
+            });
+            if (savedData.isReadOnly) {
+              setIndexPart(-1);
+            }
           } else {
             setTestHistory({
               receptive_test: svData.id,
@@ -348,10 +365,17 @@ export default function ListeningTestContent({ test_id, initialData }) {
   };
 
   const goPrevPart = () => {
-    if (indexPart > 0) {
+    if (indexPart === 0 && isReadOnly) {
+      window.scrollTo({ top: 64, behavior: 'smooth' });
+      setIndexPart(-1);
+    } else if (indexPart > 0) {
       window.scrollTo({ top: 64, behavior: 'smooth' });
       setIndexPart(indexPart - 1);
     }
+  };
+
+  const handleBack = () => {
+    window.history.back();
   };
 
   // Hàm cập nhật câu trả lời người dùng
@@ -416,6 +440,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
           {snackbar.message}
         </Alert>
       </Snackbar>
+      {/* --------- Confirm Section --------- */}
       <Dialog
         open={openConfirm}
         onClose={() => !isSubmitting && setOpenConfirm(false)}
@@ -543,80 +568,142 @@ export default function ListeningTestContent({ test_id, initialData }) {
           </Button>
         </DialogActions>
       </Dialog>
-      <Container maxWidth="lg">
-        {/* -------- Test Heading Section --------- */}
-        <Box sx={listeningtestStyles.testHeadingContainer}>
-          <Box sx={listeningtestStyles.timeLeft}>
-            <AccessTimeIcon
-              sx={{
-                fontSize: 28,
-                mr: 0.5,
-              }}
-            />
-            {isReadOnly
-              ? startTime > 60
-                ? `Time: ${secondsToMinutesValue(startTime)} mins`
-                : `Time: ${startTime}s`
-              : formatTimeFromMinutes(startTime / 60)}
-          </Box>
-          <Box sx={listeningtestStyles.nameTestAndFormatPart}>
-            <Typography sx={listeningtestStyles.nameTest}>{testData?.title}</Typography>
-            <Typography sx={listeningtestStyles.formatName}>
-              {`Part ${indexPart + 1}: `}
-              {getListeningTestTypeLabel(receptiveParts[indexPart]?.format)}
-            </Typography>
-          </Box>
-          <Box sx={listeningtestStyles.summitButtonWrapper}>
-            <Button
-              startIcon={<SendIcon />}
-              sx={listeningtestStyles.submitButton}
-              onClick={handlePreSubmit}
-              disabled={isReadOnly}
-            >
-              Submit Test
-            </Button>
-          </Box>
+      {/* -------- Test Heading Section --------- */}
+      <Box
+        maxWidth="lg"
+        sx={{
+          ...listeningtestStyles.testHeadingContainer,
+          mx: 'auto',
+        }}
+      >
+        {/* Back Button */}
+        <Box
+          sx={{
+            ...listeningtestStyles.summitButtonWrapper,
+            order: { xs: 2, md: 1 },
+          }}
+        >
+          <Button
+            startIcon={<ChevronLeftRounded />}
+            sx={{
+              ...listeningtestStyles.backButton,
+              '& .MuiButton-startIcon': {
+                '& svg': {
+                  fontSize: { xs: '1.5rem', md: '1.75rem' },
+                },
+              },
+            }}
+            onClick={() => handleBack()}
+          >
+            Back
+          </Button>
         </Box>
-        <Box sx={listeningtestStyles.separatorLine}></Box>
-        {/* -------- List Part Selection --------- */}
-        <Box sx={listeningtestStyles.listPartContainer}>
-          {receptiveParts.map((part, index) => (
-            <Box
-              sx={{
-                ...listeningtestStyles.boxPart,
-                ...(index === indexPart && {
-                  backgroundColor: 'background.default',
-                  borderColor: 'orange.light',
-                  color: 'orange.dark',
-                }),
-                ...((index < indexPart - 1 || index > indexPart + 1) && {
-                  display: { xs: 'none', sm: 'flex' },
-                }),
-                ...(((index === indexPart - 2 && indexPart === receptiveParts.length - 1) ||
-                  (index === indexPart + 2 && indexPart === 0)) && {
-                  display: 'flex',
-                }),
-              }}
-              key={part.id}
-              onClick={() => setIndexPart(index)}
-            >
-              Part {index + 1}
-            </Box>
-          ))}
+        {/* Time Left */}
+        <Box sx={{ ...listeningtestStyles.timeLeft, ...(isReadOnly && { display: 'none' }) }}>
+          <AccessTimeIcon
+            sx={{
+              fontSize: 28,
+              mr: 0.5,
+            }}
+          />
+          {formatTimeFromMinutes(startTime / 60)}
         </Box>
-        <Box sx={{ ...listeningtestStyles.separatorLine, backgroundColor: 'gray.main' }}></Box>
-      </Container>
+        {/* Name Test and Format Part */}
+        <Box sx={listeningtestStyles.nameTestAndFormatPart}>
+          <Typography sx={listeningtestStyles.nameTest}>{testData?.title}</Typography>
+          <Typography sx={listeningtestStyles.formatName}>
+            {indexPart === -1
+              ? 'Summary'
+              : `Part ${indexPart + 1}: ${getListeningTestTypeLabel(
+                  receptiveParts[indexPart]?.format,
+                )}`}
+          </Typography>
+        </Box>
+        {/* Submit Button */}
+        <Box
+          sx={{
+            ...listeningtestStyles.summitButtonWrapper,
+            ...(isReadOnly && { visibility: 'hidden' }),
+          }}
+        >
+          <Button
+            startIcon={<SendIcon />}
+            sx={listeningtestStyles.submitButton}
+            onClick={handlePreSubmit}
+            disabled={isReadOnly}
+          >
+            Submit Test
+          </Button>
+        </Box>
+      </Box>
+      <Box sx={listeningtestStyles.separatorLine}></Box>
+      {/* -------- List Part Selection --------- */}
+      <Box maxWidth="lg" sx={{ ...listeningtestStyles.listPartContainer, mx: 'auto' }}>
+        {/* -------- Summary Tab -------- */}
+        {isReadOnly && (
+          <Box
+            sx={{
+              ...listeningtestStyles.boxPart,
+              width: 'auto',
+              px: 2,
+              ...(indexPart === -1 && {
+                backgroundColor: 'background.default',
+                borderColor: 'orange.light',
+                color: 'orange.dark',
+              }),
+            }}
+            onClick={() => setIndexPart(-1)}
+          >
+            Summary
+          </Box>
+        )}
+        {/* -------- Receptive Test Parts -------- */}
+        {receptiveParts.map((part, index) => (
+          <Box
+            sx={{
+              ...listeningtestStyles.boxPart,
+              ...(index === indexPart && {
+                backgroundColor: 'background.default',
+                borderColor: 'orange.light',
+                color: 'orange.dark',
+              }),
+              ...((index < indexPart - 1 || index > indexPart + 1) && {
+                display: { xs: 'none', sm: 'flex' },
+              }),
+              ...(((index === indexPart - 2 && indexPart === receptiveParts.length - 1) ||
+                (index === indexPart + 2 && indexPart === 0)) && {
+                display: 'flex',
+              }),
+            }}
+            key={part.id}
+            onClick={() => setIndexPart(index)}
+          >
+            Part {index + 1}
+          </Box>
+        ))}
+      </Box>
+      <Box sx={{ ...listeningtestStyles.separatorLine, backgroundColor: 'gray.main' }}></Box>
       {/* -------- Part Content Section --------- */}
       <Box sx={{ width: '100%', height: 'auto', backgroundColor: 'background.gray' }}>
-        {receptiveParts.map((part, index) => renderPart(part, index))}
+        {indexPart === -1 ? (
+          <SummaryTab
+            staticData={staticData}
+            startTime={startTime}
+            allAnswers={allAnswers}
+            detailAnswers={detailAnswers}
+          />
+        ) : (
+          receptiveParts.map((part, index) => renderPart(part, index))
+        )}
       </Box>
       {/* -------- Stepper Section --------- */}
-      <Box sx={{ width: '100%', height: 'auto', backgroundColor: 'background.gray' }}>
+      <Box sx={{ width: '100%', height: 'auto', backgroundColor: 'background.gray', pb: 4 }}>
         <Container maxWidth="lg" sx={listeningtestStyles.stepperContainer}>
           <Typography
             sx={{
               ...listeningtestStyles.backButton,
-              visibility: indexPart === 0 ? 'hidden' : 'visible',
+              visibility:
+                indexPart === -1 || (!isReadOnly && indexPart === 0) ? 'hidden' : 'visible',
             }}
             onClick={goPrevPart}
           >
@@ -641,8 +728,14 @@ export default function ListeningTestContent({ test_id, initialData }) {
             ) : (
               <Button
                 startIcon={<SendIcon />}
-                sx={{ ...listeningtestStyles.submitButton, px: 3, py: 0.5 }}
+                sx={{
+                  ...listeningtestStyles.submitButton,
+                  px: 3,
+                  py: 0.5,
+                  ...(isReadOnly && { visibility: 'hidden' }),
+                }}
                 onClick={handlePreSubmit}
+                disabled={isReadOnly}
               >
                 Submit
               </Button>

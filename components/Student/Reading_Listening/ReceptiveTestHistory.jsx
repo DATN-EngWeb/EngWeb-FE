@@ -105,6 +105,10 @@ export default function ReceptiveTestHistory({ onPracticeNow }) {
       isReadOnly: item.type === 'S',
       startTime: item.start_time,
       totalTime: item.total_time,
+      bonus_point: item.bonus_point,
+      earned_bonus_point: item.earned_bonus_point,
+      total_score: item.total_score,
+      feedback_message: item.feedback_message,
     };
     sessionStorage.setItem('current_receptive_attempt', JSON.stringify(dataToSave));
     if (item.skill === 'L') {
