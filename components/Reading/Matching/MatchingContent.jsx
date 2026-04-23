@@ -15,6 +15,7 @@ import {
   IconButton,
   Tooltip,
 } from '@mui/material';
+import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded';
 import Header from '../../Home/Header';
 import TestHeading from '../../Student/Common/TestHeading';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
@@ -69,6 +70,7 @@ const MatchingContent = ({
   const [selectedAnswers, setSelectedAnswers] = useState(answers || {});
   const [leftWidth, setLeftWidth] = useState(55); // percentage width for passage
   const [isDragging, setIsDragging] = useState(false);
+  const containerRef = React.useRef(null);
   const [passageContent, setPassageContent] = useState(passage);
   const [processedSentences, setProcessedSentences] = useState(sentences);
 
@@ -145,12 +147,13 @@ const MatchingContent = ({
 
     const handleMouseMove = (event) => {
       event.preventDefault();
+      const clientX = event.type.startsWith('touch') ? event.touches[0].clientX : event.clientX;
       // Get the actual container width (contentWrapper)
-      const container = document.querySelector('[data-content-wrapper]');
+      const container = containerRef.current;
       if (!container) {
         const totalWidth = window.innerWidth || document.body.clientWidth;
         if (!totalWidth) return;
-        const newLeftWidth = (event.clientX / totalWidth) * 100;
+        const newLeftWidth = (clientX / totalWidth) * 100;
         const clamped = Math.min(75, Math.max(25, newLeftWidth));
         setLeftWidth(clamped);
         return;
@@ -163,7 +166,7 @@ const MatchingContent = ({
       if (!containerWidth) return;
 
       // Calculate relative position within container
-      const relativeX = event.clientX - containerLeft;
+      const relativeX = clientX - containerLeft;
       const newLeftWidth = (relativeX / containerWidth) * 100;
       const clamped = Math.min(75, Math.max(25, newLeftWidth));
       setLeftWidth(clamped);
@@ -176,15 +179,21 @@ const MatchingContent = ({
     };
 
     // Prevent text selection while dragging
-    document.body.style.userSelect = 'none';
-    document.body.style.cursor = 'col-resize';
+    if (isDragging) {
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = 'col-resize';
+    }
 
     window.addEventListener('mousemove', handleMouseMove, { passive: false });
     window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchmove', handleMouseMove, { passive: false });
+    window.addEventListener('touchend', handleMouseUp);
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleMouseMove);
+      window.removeEventListener('touchend', handleMouseUp);
       document.body.style.userSelect = '';
       document.body.style.cursor = '';
     };
@@ -241,14 +250,16 @@ const MatchingContent = ({
       }}
     >
       {!embedded && <Header />}
-      <TestHeading
-        testName={testName}
-        onSubmit={showResults ? null : handleSubmit}
-        isTeacher={isTeacher || showResults}
-        timerNode={timerNode || (!isTeacher && !showResults ? <TestTimer /> : null)}
-        onAIReview={onAIReview}
-        onExit={onExit}
-      />
+      {!embedded && (
+        <TestHeading
+          testName={testName}
+          onSubmit={showResults ? null : handleSubmit}
+          isTeacher={isTeacher || showResults}
+          timerNode={timerNode || (!isTeacher && !showResults ? <TestTimer /> : null)}
+          onAIReview={onAIReview}
+          onExit={onExit}
+        />
+      )}
       <Box sx={{ backgroundColor: 'background.paper' }}>
         <Container maxWidth={false} disableGutters sx={{ px: { xs: 2, md: 4 } }}>
           <Box sx={headerWrapperStyles}>
@@ -314,6 +325,7 @@ const MatchingContent = ({
       >
         <Container maxWidth={false} disableGutters sx={{ height: '100%', px: 0 }}>
           <Box
+            ref={containerRef}
             data-content-wrapper
             sx={{
               ...contentWrapperStyles,
@@ -376,6 +388,8 @@ const MatchingContent = ({
             {/* Draggable divider */}
             <Box
               onMouseDown={() => setIsDragging(true)}
+              onTouchStart={() => setIsDragging(true)}
+              onDragStart={(e) => e.preventDefault()}
               sx={{
                 position: 'relative',
                 display: { xs: 'none', md: 'flex' },
@@ -384,6 +398,9 @@ const MatchingContent = ({
                 width: 32,
                 cursor: 'col-resize',
                 flexShrink: 0,
+                zIndex: 10,
+                userSelect: 'none',
+                touchAction: 'none',
               }}
               role="separator"
             >
@@ -459,28 +476,17 @@ const MatchingContent = ({
                 }}
               >
                 {/* Instruction Section */}
-                <Box sx={{ p: 3, pb: 0 }}>
+                <Box sx={{ px: 1.5, py: 3 }}>
                   <Paper sx={instructionBoxStyles}>
-                    <Box sx={instructionIconStyles}>
-                      <svg
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
-                          fill="currentColor"
-                        />
-                      </svg>
-                    </Box>
+                    <ErrorRoundedIcon
+                      sx={{ color: 'reading.instructionIcon', fontSize: '1.5rem' }}
+                    />
                     <Box>
                       <Typography
                         sx={{
                           fontWeight: 600,
                           fontSize: '1rem',
-                          color: 'secondary.main',
+                          color: 'reading.instructionIcon',
                           mb: 0.5,
                         }}
                       >
@@ -500,7 +506,7 @@ const MatchingContent = ({
                 </Box>
 
                 {/* Content Section */}
-                <Box sx={{ p: 3, pt: 3 }}>
+                <Box sx={{ px: 1.5, py: 3, pt: 0 }}>
                   <Paper
                     sx={{
                       p: 2.5,
@@ -757,14 +763,8 @@ const MatchingContent = ({
                       variant="contained"
                       sx={{
                         ...nextButtonStyles,
-                        backgroundColor: 'primary.main',
-                        border: '1px solid',
-                        borderColor: 'primary.main', // explicit border to maintain size if needed
                         visibility: currentSection < totalSections ? 'visible' : 'hidden',
                         pointerEvents: currentSection < totalSections ? 'auto' : 'none',
-                        '&:hover': {
-                          backgroundColor: 'primary.dark',
-                        },
                       }}
                       onClick={onNext}
                       disabled={isTeacher}

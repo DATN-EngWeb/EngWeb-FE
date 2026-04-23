@@ -25,6 +25,7 @@ export function useAuth(redirectTo = '/login') {
       localStorage.removeItem('username');
       localStorage.removeItem('avatar');
       localStorage.removeItem('userStatus');
+      localStorage.removeItem('userRole');
       document.cookie = 'userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
     }
     setIsAuthenticated(false);

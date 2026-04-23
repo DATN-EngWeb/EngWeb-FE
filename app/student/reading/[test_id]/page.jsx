@@ -28,6 +28,7 @@ import {
   transformFillBlanksTest,
   transformMatchingTest,
 } from '@/utils/testDataTransform';
+import TestTimer from '@/components/Reading/Common/TestTimer';
 import ReceptiveTestHistory from '@/components/Student/Reading_Listening/ReceptiveTestHistory';
 
 export default function ReadingTestPage() {
@@ -45,6 +46,17 @@ export default function ReadingTestPage() {
   const [openSubmitDialog, setOpenSubmitDialog] = useState(false);
   const [openWarningDialog, setOpenWarningDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  useEffect(() => {
+    if (!isPracticing || isSubmitting) return;
+
+    const interval = setInterval(() => {
+      setElapsedSeconds((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isPracticing, isSubmitting]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -355,6 +367,7 @@ export default function ReadingTestPage() {
       onNext: handleNext,
       currentSection: currentPartIndex + 1,
       totalSections: testData.parts.length,
+      timerNode: <TestTimer initialSeconds={elapsedSeconds} />,
     };
 
     switch (currentPart.componentType) {

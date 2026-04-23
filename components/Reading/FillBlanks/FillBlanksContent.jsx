@@ -17,6 +17,7 @@ import {
   IconButton,
   Tooltip,
 } from '@mui/material';
+import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded';
 import Header from '../../Home/Header';
 import TestHeading from '../../Student/Common/TestHeading';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
@@ -78,6 +79,29 @@ const FillBlanksContent = ({
   const [selectedAnswers, setSelectedAnswers] = useState(answers || {});
   const [leftWidth, setLeftWidth] = useState(55);
   const [isDragging, setIsDragging] = useState(false);
+  const containerRef = React.useRef(null);
+  const [passageContent, setPassageContent] = useState(passage);
+
+  useEffect(() => {
+    setPassageContent(passage);
+    const fetchContent = async () => {
+      if (
+        passage &&
+        typeof passage === 'string' &&
+        passage.startsWith('http') &&
+        passage.includes('storage.googleapis.com')
+      ) {
+        try {
+          const response = await fetch(passage);
+          const text = await response.text();
+          setPassageContent(text);
+        } catch (error) {
+          console.error('Failed to fetch passage content:', error); // eslint-disable-line no-console
+        }
+      }
+    };
+    fetchContent();
+  }, [passage]);
 
   useEffect(() => {
     setSelectedPart(currentPart - 1);
@@ -100,19 +124,44 @@ const FillBlanksContent = ({
     if (!isDragging) return;
     const handleMouseMove = (event) => {
       event.preventDefault();
-      const container = document.querySelector('[data-content-wrapper]');
-      if (!container) return;
+      const clientX = event.type.startsWith('touch') ? event.touches[0].clientX : event.clientX;
+      const container = containerRef.current;
+      if (!container) {
+        const totalWidth = window.innerWidth || document.body.clientWidth;
+        if (!totalWidth) return;
+        const newLeftWidth = (clientX / totalWidth) * 100;
+        setLeftWidth(Math.min(75, Math.max(25, newLeftWidth)));
+        return;
+      }
       const containerRect = container.getBoundingClientRect();
-      const relativeX = event.clientX - containerRect.left;
+      const relativeX = clientX - containerRect.left;
       const newLeftWidth = (relativeX / containerRect.width) * 100;
       setLeftWidth(Math.min(75, Math.max(25, newLeftWidth)));
     };
-    const handleMouseUp = () => setIsDragging(false);
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+
+    if (isDragging) {
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = 'col-resize';
+    }
+
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchmove', handleMouseMove, { passive: false });
+    window.addEventListener('touchend', handleMouseUp);
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleMouseMove);
+      window.removeEventListener('touchend', handleMouseUp);
+      if (isDragging) {
+        document.body.style.userSelect = '';
+        document.body.style.cursor = '';
+      }
     };
   }, [isDragging]);
 
@@ -129,8 +178,8 @@ const FillBlanksContent = ({
   };
 
   const renderPassageWithBlanks = () => {
-    if (!passage) return null;
-    const processPassage = passage
+    if (!passageContent) return null;
+    const processPassage = passageContent
       .replace(/\((\d+)\)/g, (match, number) => {
         return `<span style="display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; margin: 0 4px; vertical-align: middle; background-color: #FFF3E0; color: #E65100; border: 1px solid #FFB74D; border-radius: 6px; font-weight: 700; font-size: 0.9rem; cursor: default; user-select: none;">${number}</span>`;
       })
@@ -141,7 +190,7 @@ const FillBlanksContent = ({
   };
 
   const isMultiChoiceFormat =
-    questions && questions.length > 0 && questions.some((q) => q.options && q.options.length > 0);
+    questions && questions.length > 0 && questions.some((q) => q.options && q.options.length > 1);
 
   return (
     <Box
@@ -164,14 +213,16 @@ const FillBlanksContent = ({
       }}
     >
       {!embedded && <Header />}
-      <TestHeading
-        testName={testName}
-        onSubmit={showResults ? null : () => onSubmit(selectedAnswers)}
-        isTeacher={isTeacher || showResults}
-        timerNode={timerNode || (!isTeacher && !showResults ? <TestTimer /> : null)}
-        onAIReview={onAIReview}
-        onExit={onExit}
-      />
+      {!embedded && (
+        <TestHeading
+          testName={testName}
+          onSubmit={showResults ? null : () => onSubmit(selectedAnswers)}
+          isTeacher={isTeacher || showResults}
+          timerNode={timerNode || (!isTeacher && !showResults ? <TestTimer /> : null)}
+          onAIReview={onAIReview}
+          onExit={onExit}
+        />
+      )}
 
       <Box sx={{ backgroundColor: 'background.paper' }}>
         <Container maxWidth={false} disableGutters sx={{ px: { xs: 2, md: 4 } }}>
@@ -211,6 +262,7 @@ const FillBlanksContent = ({
       <Box sx={{ ...containerStyles, flex: 1, overflow: 'hidden' }}>
         <Container maxWidth={false} disableGutters sx={{ height: '100%', px: 0 }}>
           <Box
+            ref={containerRef}
             data-content-wrapper
             sx={{
               ...contentWrapperStyles,
@@ -218,11 +270,13 @@ const FillBlanksContent = ({
               flexDirection: { xs: 'column', md: 'row' },
               display: 'flex',
               alignItems: 'stretch',
+              gap: 0,
             }}
           >
             <Box
               sx={{
                 ...leftPaneStyles,
+                flex: '0 0 auto',
                 width: { xs: '100%', md: `${leftWidth}%` },
                 overflowY: 'auto',
                 p: 3,
@@ -235,6 +289,8 @@ const FillBlanksContent = ({
 
             <Box
               onMouseDown={() => setIsDragging(true)}
+              onTouchStart={() => setIsDragging(true)}
+              onDragStart={(e) => e.preventDefault()}
               sx={{
                 display: { xs: 'none', md: 'flex' },
                 alignItems: 'center',
@@ -242,6 +298,10 @@ const FillBlanksContent = ({
                 width: 32,
                 cursor: 'col-resize',
                 flexShrink: 0,
+                zIndex: 10,
+                position: 'relative',
+                userSelect: 'none',
+                touchAction: 'none',
               }}
             >
               <Box
@@ -269,18 +329,21 @@ const FillBlanksContent = ({
             <Box
               sx={{
                 ...rightPaneStyles,
+                flex: '0 0 auto',
                 width: { xs: '100%', md: `calc(${100 - leftWidth}% - 32px)` },
                 overflowY: 'auto',
               }}
             >
-              <Box sx={{ p: 3 }}>
+              <Box sx={{ px: 1.5, py: 3 }}>
                 <Paper sx={instructionBoxStyles}>
-                  <Box sx={instructionIconStyles}>ℹ️</Box>
+                  <ErrorRoundedIcon sx={{ color: 'reading.instructionIcon', fontSize: '1.5rem' }} />
                   <Box>
-                    <Typography sx={{ fontWeight: 600, color: 'secondary.main' }}>
+                    <Typography sx={{ fontWeight: 600, color: 'reading.instructionIcon' }}>
                       Instruction
                     </Typography>
-                    <Typography sx={{ fontSize: '0.9rem' }}>Fill in the missing words.</Typography>
+                    <Typography sx={{ fontSize: '0.9rem', color: 'text.primary' }}>
+                      Read the passage on the left and fill in the missing words.
+                    </Typography>
                   </Box>
                 </Paper>
 
@@ -307,7 +370,7 @@ const FillBlanksContent = ({
                                     ? 'success.light'
                                     : 'error.light'
                                   : 'transparent',
-                                p: showResults ? 2 : 0,
+                                p: 2,
                                 borderRadius: 2,
                               }}
                             >

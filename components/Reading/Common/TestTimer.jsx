@@ -9,6 +9,10 @@ const TestTimer = ({ initialSeconds = 0, isActive = true, value }) => {
   const [seconds, setSeconds] = useState(initialSeconds);
 
   useEffect(() => {
+    setSeconds(initialSeconds);
+  }, [initialSeconds]);
+
+  useEffect(() => {
     if (!isActive) return;
 
     const interval = setInterval(() => {

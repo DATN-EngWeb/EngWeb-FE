@@ -468,7 +468,7 @@ export const validateReadingPartUpdatePayload = (transformedParts, originalParts
 
       if (tQuestion.action === 'create' || tQuestion.action === 'update') {
         if (
-          !['I', 'J'].includes(partFormat) &&
+          !['I'].includes(partFormat) &&
           (!tQuestion.content || String(tQuestion.content).trim() === '')
         ) {
           return `Question ${displayQuestionNum} in Part ${displayPartNum} is missing content.`;

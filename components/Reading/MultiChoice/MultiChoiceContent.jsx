@@ -16,6 +16,7 @@ import {
   IconButton,
   Tooltip,
 } from '@mui/material';
+import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded';
 import Header from '../../Home/Header';
 import TestHeading from '../../Student/Common/TestHeading';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
@@ -69,6 +70,29 @@ const MultiChoiceContent = ({
   const [selectedAnswers, setSelectedAnswers] = useState(answers || {});
   const [leftWidth, setLeftWidth] = useState(55);
   const [isDragging, setIsDragging] = useState(false);
+  const containerRef = React.useRef(null);
+  const [passageContent, setPassageContent] = useState(passage);
+
+  useEffect(() => {
+    setPassageContent(passage);
+    const fetchContent = async () => {
+      if (
+        passage &&
+        typeof passage === 'string' &&
+        passage.startsWith('http') &&
+        passage.includes('storage.googleapis.com')
+      ) {
+        try {
+          const response = await fetch(passage);
+          const text = await response.text();
+          setPassageContent(text);
+        } catch (error) {
+          console.error('Failed to fetch passage content:', error); // eslint-disable-line no-console
+        }
+      }
+    };
+    fetchContent();
+  }, [passage]);
 
   useEffect(() => {
     setSelectedPart(currentPart - 1);
@@ -91,19 +115,44 @@ const MultiChoiceContent = ({
     if (!isDragging) return;
     const handleMouseMove = (event) => {
       event.preventDefault();
-      const container = document.querySelector('[data-content-wrapper]');
-      if (!container) return;
+      const clientX = event.type.startsWith('touch') ? event.touches[0].clientX : event.clientX;
+      const container = containerRef.current;
+      if (!container) {
+        const totalWidth = window.innerWidth || document.body.clientWidth;
+        if (!totalWidth) return;
+        const newLeftWidth = (clientX / totalWidth) * 100;
+        setLeftWidth(Math.min(75, Math.max(25, newLeftWidth)));
+        return;
+      }
       const containerRect = container.getBoundingClientRect();
-      const relativeX = event.clientX - containerRect.left;
+      const relativeX = clientX - containerRect.left;
       const newLeftWidth = (relativeX / containerRect.width) * 100;
       setLeftWidth(Math.min(75, Math.max(25, newLeftWidth)));
     };
-    const handleMouseUp = () => setIsDragging(false);
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+
+    if (isDragging) {
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = 'col-resize';
+    }
+
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchmove', handleMouseMove, { passive: false });
+    window.addEventListener('touchend', handleMouseUp);
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleMouseMove);
+      window.removeEventListener('touchend', handleMouseUp);
+      if (isDragging) {
+        document.body.style.userSelect = '';
+        document.body.style.cursor = '';
+      }
     };
   }, [isDragging]);
 
@@ -140,14 +189,16 @@ const MultiChoiceContent = ({
       }}
     >
       {!embedded && <Header />}
-      <TestHeading
-        testName={testName}
-        onSubmit={showResults ? null : () => onSubmit(selectedAnswers)}
-        isTeacher={isTeacher || showResults}
-        timerNode={timerNode || (!isTeacher && !showResults ? <TestTimer /> : null)}
-        onAIReview={onAIReview}
-        onExit={onExit}
-      />
+      {!embedded && (
+        <TestHeading
+          testName={testName}
+          onSubmit={showResults ? null : () => onSubmit(selectedAnswers)}
+          isTeacher={isTeacher || showResults}
+          timerNode={timerNode || (!isTeacher && !showResults ? <TestTimer /> : null)}
+          onAIReview={onAIReview}
+          onExit={onExit}
+        />
+      )}
 
       <Box sx={{ backgroundColor: 'background.paper' }}>
         <Container maxWidth={false} disableGutters sx={{ px: { xs: 2, md: 4 } }}>
@@ -189,6 +240,7 @@ const MultiChoiceContent = ({
       <Box sx={{ ...containerStyles, flex: 1, overflow: 'hidden' }}>
         <Container maxWidth={false} disableGutters sx={{ height: '100%', px: 0 }}>
           <Box
+            ref={containerRef}
             data-content-wrapper
             sx={{
               ...contentWrapperStyles,
@@ -196,11 +248,13 @@ const MultiChoiceContent = ({
               flexDirection: { xs: 'column', md: 'row' },
               display: 'flex',
               alignItems: 'stretch',
+              gap: 0,
             }}
           >
             <Box
               sx={{
                 ...leftPaneStyles,
+                flex: '0 0 auto',
                 width: { xs: '100%', md: `${leftWidth}%` },
                 overflowY: 'auto',
                 p: 3,
@@ -208,11 +262,16 @@ const MultiChoiceContent = ({
               }}
             >
               {passageTitle && <Typography sx={passageTitleStyles}>{passageTitle}</Typography>}
-              <Typography sx={passageTextStyles} dangerouslySetInnerHTML={{ __html: passage }} />
+              <Typography
+                sx={passageTextStyles}
+                dangerouslySetInnerHTML={{ __html: passageContent }}
+              />
             </Box>
 
             <Box
               onMouseDown={() => setIsDragging(true)}
+              onTouchStart={() => setIsDragging(true)}
+              onDragStart={(e) => e.preventDefault()}
               sx={{
                 display: { xs: 'none', md: 'flex' },
                 alignItems: 'center',
@@ -220,6 +279,10 @@ const MultiChoiceContent = ({
                 width: 32,
                 cursor: 'col-resize',
                 flexShrink: 0,
+                zIndex: 10,
+                position: 'relative',
+                userSelect: 'none',
+                touchAction: 'none',
               }}
             >
               <Box
@@ -247,19 +310,20 @@ const MultiChoiceContent = ({
             <Box
               sx={{
                 ...rightPaneStyles,
+                flex: '0 0 auto',
                 width: { xs: '100%', md: `calc(${100 - leftWidth}% - 32px)` },
                 overflowY: 'auto',
               }}
             >
-              <Box sx={{ p: 3 }}>
+              <Box sx={{ px: 1.5, py: 3 }}>
                 <Paper sx={instructionBoxStyles}>
-                  <Box sx={instructionIconStyles}>ℹ️</Box>
+                  <ErrorRoundedIcon sx={{ color: 'reading.instructionIcon', fontSize: '1.5rem' }} />
                   <Box>
-                    <Typography sx={{ fontWeight: 600, color: 'secondary.main' }}>
+                    <Typography sx={{ fontWeight: 600, color: 'reading.instructionIcon' }}>
                       Instruction
                     </Typography>
-                    <Typography sx={{ fontSize: '0.9rem' }}>
-                      Choose the best answer for each question.
+                    <Typography sx={{ fontSize: '0.9rem', color: 'text.primary' }}>
+                      Read the passage on the left and choose the correct answer for each question.
                     </Typography>
                   </Box>
                 </Paper>
@@ -278,7 +342,7 @@ const MultiChoiceContent = ({
                               ? 'success.light'
                               : 'error.light'
                             : 'transparent',
-                          p: showResults ? 2 : 0,
+                          p: 2,
                           borderRadius: 2,
                         }}
                       >

@@ -18,7 +18,11 @@ export const StreakProvider = ({ children }) => {
   const fetchStreak = useCallback(async () => {
     if (authLoading) return;
 
-    if (!isAuthenticated || !user || user.role !== 'S') {
+    // Get the latest role from either user object or localStorage to avoid race conditions during login
+    const currentRole =
+      user?.role || (typeof window !== 'undefined' ? localStorage.getItem('userRole') : null);
+
+    if (!isAuthenticated || currentRole !== 'S') {
       setIsLoading(false);
       return;
     }
@@ -27,7 +31,13 @@ export const StreakProvider = ({ children }) => {
       const res = await getUserStreak();
       setStreakData(res);
     } catch (error) {
-      console.error('Streak fetch error:', error); // eslint-disable-line no-console
+      // If we get a 403, it means the user is not authorized (not a student)
+      // We handle this silently to avoid annoying error overlays for non-student users
+      if (error.status === 403) {
+        setIsLoading(false);
+        return;
+      }
+      console.error('Streak fetch error:', error.message || error); // eslint-disable-line no-console
     } finally {
       setIsLoading(false);
     }
