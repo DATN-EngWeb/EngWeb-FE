@@ -1,7 +1,7 @@
 /* global fetch */
 'use client';
 import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, usePathname } from 'next/navigation';
 import {
   Box,
   Typography,
@@ -13,6 +13,11 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Backdrop,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Paper,
 } from '@mui/material';
 import { LightbulbOutlined, CheckCircleOutline } from '@mui/icons-material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -34,6 +39,8 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import DiffViewer from './DiffViewer';
+import CustomAudioPlayer from '../Test/customAudioPlayer';
+import AIGradingLoading from './AIGradingLoading';
 import * as styles from '../../styles/student/Writing/AIFeedbackStyles';
 
 function CustomTooltip({ active, payload }) {
@@ -110,7 +117,7 @@ function CustomTick(props) {
         {shortName}
       </tspan>
       <tspan x={finalX} dy="1.2em" fill="#333" fontSize="14" fontWeight="bold">
-        5.0
+        {score}
       </tspan>
     </text>
   );
@@ -130,6 +137,14 @@ export default function AIFeedback() {
   const testId = params.test_id;
   const attempt = params.attempt;
   const router = useRouter();
+  const pathname = usePathname();
+  const isSpeaking = pathname.includes('/speaking/');
+
+  const [serverErrorOpen, setServerErrorOpen] = useState(false);
+  const handleServerErrorClose = () => {
+    setServerErrorOpen(false);
+    router.push(isSpeaking ? '/student/speaking' : '/student/writing');
+  };
 
   const formatTime = (totalSeconds) => {
     if (!totalSeconds) return '00:00';
@@ -266,9 +281,7 @@ export default function AIFeedback() {
             >
               <Box>
                 <Typography variant="h4" fontWeight="800" color="#3e2723" mb={0.5}>
-                  {categories.length > 0 && context.type !== 'S'
-                    ? 'AI Corrected'
-                    : 'Your Submission'}
+                  {categories.length > 0 && !isSpeaking ? 'AI Corrected' : 'Your Submission'}
                 </Typography>
               </Box>
               <Box sx={styles.metricsDisplay}>
@@ -281,31 +294,44 @@ export default function AIFeedback() {
                   METRICS
                 </Typography>
                 <Typography variant="body1" color="text.primary">
-                  {context.type !== 'S' && `${context.wordCount} words`}
-                  {context.type !== 'S' && context.duration ? ' - ' : ''}
+                  {!isSpeaking && `${context.wordCount} words`}
+                  {!isSpeaking && context.duration ? ' - ' : ''}
                   {context.duration ? formatTime(context.duration) : ''}
                 </Typography>
               </Box>
             </Stack>
 
             <Box>
-              {context.type === 'S' ? (
+              {isSpeaking ? (
                 <>
                   <Typography variant="body1" color="text.secondary">
                     Your speaking response has been recorded. You can play your submission below.
                   </Typography>
                   {context.audio && (
                     <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
-                      <audio
-                        controls
-                        src={context.audio}
-                        style={{ width: '100%', maxWidth: '500px', borderRadius: '8px' }}
-                      />
+                      <CustomAudioPlayer src={context.audio} isActive={true} />
                     </Box>
                   )}
                 </>
-              ) : (
+              ) : categories.length > 0 ? (
                 <DiffViewer originalText={context.text} revisedText={revised_text} />
+              ) : (
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 4,
+                    minHeight: '200px',
+                    bgcolor: 'transparent',
+                    border: '1px solid #ffd54f',
+                    borderRadius: 3,
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '1rem',
+                  }}
+                >
+                  <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 2 }}>
+                    {context.text || 'No text submitted.'}
+                  </Typography>
+                </Paper>
               )}
             </Box>
 
@@ -339,10 +365,9 @@ export default function AIFeedback() {
                       if (!context.historyId) return;
                       setIsFetchingFeedback(true);
                       try {
-                        const feedbackRes =
-                          context.type === 'S'
-                            ? await getSpeakingAIFeedback({ id: context.historyId })
-                            : await getAIFeedback({ id: context.historyId });
+                        const feedbackRes = isSpeaking
+                          ? await getSpeakingAIFeedback({ id: context.historyId })
+                          : await getAIFeedback({ id: context.historyId });
                         localStorage.setItem('category', JSON.stringify(feedbackRes.ai_feedback));
                         localStorage.setItem(
                           'remainAIturns',
@@ -350,22 +375,26 @@ export default function AIFeedback() {
                         );
                         window.location.reload();
                       } catch (error) {
-                        console.error('Fetch feedback failed', error);
+                        if (
+                          error?.status >= 500 ||
+                          error?.response?.status >= 500 ||
+                          error?.message?.includes('500')
+                        ) {
+                          setServerErrorOpen(true);
+                        } else {
+                          alert('Failed to get AI Feedback. Please try again.');
+                        }
                       } finally {
                         setIsFetchingFeedback(false);
                       }
                     }}
                     disabled={isFetchingFeedback}
                     startIcon={
-                      isFetchingFeedback ? (
-                        <CircularProgress size={20} color="inherit" />
-                      ) : (
-                        <AutoAwesomeIcon sx={{ color: '#fbc02d' }} />
-                      )
+                      isFetchingFeedback ? <> </> : <AutoAwesomeIcon sx={{ color: '#fbc02d' }} />
                     }
                     sx={{
-                      bgcolor: '#f57c00',
-                      '&:hover': { bgcolor: '#ef6c00' },
+                      bgcolor: 'primary.main',
+                      '&:hover': { bgcolor: 'primary.dark' },
                       borderRadius: 2,
                       px: 4,
                       py: 1.5,
@@ -377,6 +406,35 @@ export default function AIFeedback() {
                 </>
               )}
             </Box>
+
+            <Backdrop
+              sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 999 }}
+              open={isFetchingFeedback}
+            >
+              <AIGradingLoading />
+            </Backdrop>
+
+            <Dialog
+              open={serverErrorOpen}
+              onClose={handleServerErrorClose}
+              PaperProps={{ sx: { borderRadius: 3, p: 2, minWidth: 320 } }}
+            >
+              <DialogTitle sx={{ fontWeight: 'bold', color: 'error.main' }}>
+                Server Error
+              </DialogTitle>
+              <DialogContent>
+                <Typography>The system is experiencing issues. Please try again later.</Typography>
+              </DialogContent>
+              <DialogActions>
+                <Button
+                  onClick={handleServerErrorClose}
+                  variant="contained"
+                  sx={{ bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' } }}
+                >
+                  OK
+                </Button>
+              </DialogActions>
+            </Dialog>
           </Box>
 
           {/* RIGHT COLUMN: Feedback & Score */}
@@ -633,7 +691,7 @@ export default function AIFeedback() {
                   sx={styles.tryAgainButton}
                   onClick={() =>
                     router.push(
-                      `/student/${context.type === 'S' ? 'speaking' : 'writing'}/${testId}/${parseInt(attempt) + 1}`,
+                      `/student/${isSpeaking ? 'speaking' : 'writing'}/${testId}/${parseInt(attempt) + 1}`,
                     )
                   }
                   startIcon={<ReplayIcon />}

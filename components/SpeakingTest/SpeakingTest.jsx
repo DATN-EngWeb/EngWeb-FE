@@ -38,6 +38,8 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SendIcon from '@mui/icons-material/Send';
 import { uploadMediaFile } from '../../utils/uploadHelpers';
 import CustomAudioPlayer from '../Test/customAudioPlayer';
+import AIGradingLoading from '../Writing-Speaking/AIGradingLoading';
+import SubmitLoadingDialog from '../Writing-Speaking/SubmitLoadingDialog';
 import { useStreakContext } from '../../context/streakContext';
 
 export default function SpeakingTest() {
@@ -52,12 +54,22 @@ export default function SpeakingTest() {
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioBlob, setAudioBlob] = useState(null);
   const [hasRecorded, setHasRecorded] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState('idle');
+  const [submitMode, setSubmitMode] = useState('');
+  const [bonusPoint, setBonusPoint] = useState(0);
+  const [historyID, setHistoryID] = useState(0);
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [testData, setTestData] = useState({ title: '', level: '' });
   const [question, setQuestion] = useState({ description: '', suggestion: '', audio: null });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [serverErrorOpen, setServerErrorOpen] = useState(false);
+  const [isFetchingFeedback, setIsFetchingFeedback] = useState(false);
+
+  const handleServerErrorClose = () => {
+    setServerErrorOpen(false);
+    router.push('/student/speaking');
+  };
   const [isMounted, setIsMounted] = useState(false);
   const [openShareModal, setOpenShareModal] = useState(false);
   const [startTime, setStartTime] = useState(new Date().toISOString());
@@ -131,8 +143,6 @@ export default function SpeakingTest() {
             : null,
         });
       } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('Fetch error:', error);
         setSnackbar({ open: true, message: 'Failed to load test data', severity: 'error' });
       }
     };
@@ -164,9 +174,12 @@ export default function SpeakingTest() {
   }
   const handleFinalSubmit = async () => {
     setOpenShareModal(false);
-    setIsSaving(true);
+    setSubmitStatus('submitting');
     try {
-      if (!audioBlob) return null;
+      if (!audioBlob) {
+        setSubmitStatus('idle');
+        return null;
+      }
 
       const audioFile = new File([audioBlob], `recording_${testId}.webm`, {
         type: 'audio/mpeg',
@@ -186,10 +199,20 @@ export default function SpeakingTest() {
         audio_path: audioUrl,
         is_shared: true,
       });
+
+      // Delay to ensure the "Submitting..." spinner state is visible
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
       // eslint-disable-next-line no-console
       console.log('Submission response:', response);
+      if (response && response.earned_bonus_point) {
+        setBonusPoint(response.earned_bonus_point);
+      } else {
+        setBonusPoint(0);
+      }
       setIsDraftSaved(true);
-      setIsSaving(false);
+      setSubmitMode('final');
+      setSubmitStatus('submitted');
       setAudioBlob(null);
       setRecordingTime(0);
       setSecondsElapsed(0);
@@ -201,19 +224,29 @@ export default function SpeakingTest() {
         router.push(`/student/speaking/${testId}`);
       }, 1000);
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Submission error:', error);
-      setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
+      if (
+        error?.status >= 500 ||
+        error?.response?.status >= 500 ||
+        error?.message?.includes('500')
+      ) {
+        setServerErrorOpen(true);
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        setSubmitStatus('error');
+      }
     }
   };
 
   const handleAIFeedback = async () => {
     setOpenShareModal(false);
-    setIsSaving(true);
+    setSubmitStatus('submitting');
     let newHistoryID = null;
 
     try {
-      if (!audioBlob) return null;
+      if (!audioBlob) {
+        setSubmitStatus('idle');
+        return null;
+      }
 
       const audioFile = new File([audioBlob], `recording_${testId}.webm`, {
         type: 'audio/mpeg',
@@ -231,17 +264,15 @@ export default function SpeakingTest() {
         is_shared: true,
       });
 
-      newHistoryID = response.id;
+      // Delay để thấy spinner Submitting
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
-      localStorage.setItem(
-        'aiFeedbackContext',
-        JSON.stringify({
-          duration: recordingTime,
-          title: testData.title,
-          type: testData.type,
-          audio: uploadedAudioUrl,
-        }),
-      );
+      if (response && response.earned_bonus_point) {
+        setBonusPoint(response.earned_bonus_point);
+      } else {
+        setBonusPoint(0);
+      }
+      setHistoryID(response.id);
 
       setIsDraftSaved(true);
       setAudioBlob(null);
@@ -250,31 +281,43 @@ export default function SpeakingTest() {
       setStartTime(new Date().toISOString());
       sessionStorage.removeItem('current_productive_attempt');
 
-      setSnackbar({
-        open: true,
-        message: 'Test submitted! Fetching AI Feedback...',
-        severity: 'success',
-      });
+      setSubmitMode('ai');
+      setSubmitStatus('submitted');
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Submission error:', error);
-      setSnackbar({ open: true, message: 'Failed to submit test', severity: 'error' });
-      setIsSaving(false);
+      if (
+        error?.status >= 500 ||
+        error?.response?.status >= 500 ||
+        error?.message?.includes('500')
+      ) {
+        setServerErrorOpen(true);
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        setSubmitStatus('error');
+      }
       return;
     }
+  };
 
+  const fetchAIFeedback = async () => {
     try {
-      if (!newHistoryID) throw new Error('No History ID found');
-      const category = await getSpeakingAIFeedback({ id: newHistoryID });
+      if (!historyID) throw new Error('No History ID found');
+      setIsFetchingFeedback(true);
+      const category = await getSpeakingAIFeedback({ id: historyID });
       localStorage.setItem('category', JSON.stringify(category.ai_feedback));
       localStorage.setItem('remainAIturns', category.remaining_turns);
       router.push(`/student/speaking/${testId}/${attempt}/AI-feedback`);
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error fetching AI feedback:', error);
-      setSnackbar({ open: true, message: 'Failed to get AI feedback', severity: 'error' });
+      if (
+        error?.status >= 500 ||
+        error?.response?.status >= 500 ||
+        error?.message?.includes('500')
+      ) {
+        setServerErrorOpen(true);
+      } else {
+        setSnackbar({ open: true, message: 'Failed to get AI feedback', severity: 'error' });
+      }
     } finally {
-      setIsSaving(false);
+      setIsFetchingFeedback(false);
     }
   };
 
@@ -283,6 +326,20 @@ export default function SpeakingTest() {
     H: 'Picture Description Task',
     I: 'Social Issue Discussion',
     J: 'Reading Aloud Task',
+  };
+
+  const handleCloseSubmitDialog = () => {
+    if (submitStatus === 'submitted') {
+      if (submitMode === 'final') {
+        sessionStorage.removeItem('current_productive_attempt');
+        router.push(`/student/speaking/${testId}`);
+      } else if (submitMode === 'ai') {
+        setSubmitStatus('idle');
+        fetchAIFeedback();
+      }
+    } else {
+      setSubmitStatus('idle');
+    }
   };
   const handleToggleRecording = async () => {
     if (!isRecording) {
@@ -703,9 +760,6 @@ export default function SpeakingTest() {
           <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
         </Snackbar>
 
-        <Backdrop sx={{ zIndex: 1200, color: '#fff' }} open={isSaving}>
-          <CircularProgress color="inherit" />
-        </Backdrop>
         {/* Share to forum modal */}
         <Dialog
           open={openShareModal}
@@ -740,6 +794,38 @@ export default function SpeakingTest() {
               }}
             >
               Submit
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Backdrop
+          sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 999 }}
+          open={isFetchingFeedback}
+        >
+          <AIGradingLoading />
+        </Backdrop>
+
+        <SubmitLoadingDialog
+          status={submitStatus}
+          bonusPoint={bonusPoint}
+          onClose={handleCloseSubmitDialog}
+        />
+
+        <Dialog
+          open={serverErrorOpen}
+          onClose={handleServerErrorClose}
+          PaperProps={{ sx: { borderRadius: 3, p: 2, minWidth: 320 } }}
+        >
+          <DialogTitle sx={{ fontWeight: 'bold', color: 'error.main' }}>Server Error</DialogTitle>
+          <DialogContent>
+            <Typography>The system is experiencing issues. Please try again later.</Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={handleServerErrorClose}
+              variant="contained"
+              sx={{ bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' } }}
+            >
+              OK
             </Button>
           </DialogActions>
         </Dialog>
