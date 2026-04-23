@@ -15,7 +15,8 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel,
+  Menu,
+  Alert,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -24,10 +25,13 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import CloseIcon from '@mui/icons-material/Close';
 import CustomAudioPlayer from '../Test/customAudioPlayer';
 import { useState, useEffect, useRef } from 'react';
-import { getComments, createComment, reactToPost } from '../../api/forum';
+import { getComments, createComment, editComment, deleteComment } from '../../api/forum';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import Snackbar from '@mui/material/Snackbar';
+import { useAuth } from '../../hooks/useAuth';
 import { formatDate } from '../../utils/stringFormat';
 
-const DEBOUNCE_MS = 800;
+const PAGE_SIZE = 10;
 
 export default function ForumPostModal({
   post,
@@ -48,7 +52,13 @@ export default function ForumPostModal({
   const [ordering, setOrdering] = useState('-created_at');
   const bottomRef = useRef(null);
 
-  const PAGE_SIZE = 10;
+  const { user } = useAuth();
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editCommentText, setEditCommentText] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
+  const [deleteLoadingId, setDeleteLoadingId] = useState(null);
+  const [anchorElMap, setAnchorElMap] = useState({});
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   const fetchPage = async (page = 1, append = false, order = ordering) => {
     if (page === 1) setLoadingComments(true);
@@ -105,6 +115,52 @@ export default function ForumPostModal({
       console.error('Failed to post comment:', err);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDeleteComment = async (comment) => {
+    setDeleteLoadingId(comment.id);
+    setAnchorElMap((prev) => ({ ...prev, [comment.id]: null }));
+    try {
+      await deleteComment(comment.id);
+      setComments((prev) => prev.filter((com) => com.id !== comment.id));
+      setSnackbar({
+        open: true,
+        message: 'Comment deleted',
+        severity: 'success',
+      });
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: 'Failed to delete comment',
+        severity: 'error',
+      });
+    } finally {
+      setDeleteLoadingId(null);
+    }
+  };
+
+  const handleEditComment = async (comment) => {
+    setEditLoading(true);
+    try {
+      await editComment({ content: editCommentText }, comment.id);
+      setComments((prev) =>
+        prev.map((com) => (com.id === comment.id ? { ...com, content: editCommentText } : com)),
+      );
+      setEditingCommentId(null);
+      setSnackbar({
+        open: true,
+        message: 'Comment updated',
+        severity: 'success',
+      });
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: 'Failed to update comment',
+        severity: 'error',
+      });
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -182,13 +238,13 @@ export default function ForumPostModal({
             <Box display="flex" gap={2} color="text.secondary">
               <Box display="flex" alignItems="center" gap={0.5}>
                 <FavoriteBorderIcon fontSize="small" />
-                <Typography variant="body2" fontWeight={600}>
+                <Typography fontSize="small" variant="body2" fontWeight={600}>
                   {likeCount}
                 </Typography>
               </Box>
               <Box display="flex" alignItems="center" gap={0.5}>
                 <ChatBubbleOutlineIcon fontSize="small" />
-                <Typography variant="body2" fontWeight={600}>
+                <Typography fontSize="small" variant="body2" fontWeight={600}>
                   {commentCount}
                 </Typography>
               </Box>
@@ -228,40 +284,133 @@ export default function ForumPostModal({
             </Typography>
           ) : (
             <>
-              {comments.map((c, i) => (
-                <Box key={c.id ?? i} display="flex" gap={1.5} mb={2}>
-                  <Avatar src={c.author_avatar} sx={{ width: 36, height: 36 }} />
-                  <Box
-                    flex={1}
-                    sx={{
-                      bgcolor: '#f0f0f0',
-                      borderRadius: 2,
-                      px: 2,
-                      py: 1.5,
-                      position: 'relative',
-                    }}
-                  >
-                    <Typography fontWeight={700} variant="body2">
-                      {c.author_name}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ whiteSpace: 'pre-line' }}
+              {comments.map((c, i) => {
+                const isAuthor = user?.id && String(user.id) === String(c.author_id);
+                const isEditing = editingCommentId === c.id;
+                return (
+                  <Box key={c.id ?? i} display="flex" gap={1.5} mb={2}>
+                    <Avatar src={c.author_avatar} sx={{ width: 36, height: 36 }} />
+                    <Box
+                      flex={1}
+                      sx={{
+                        bgcolor: '#f0f0f0',
+                        borderRadius: 2,
+                        px: 2,
+                        py: 1.5,
+                        position: 'relative',
+                      }}
                     >
-                      {c.content}
-                    </Typography>
-                    {c.created_at && (
-                      <Typography
-                        variant="caption"
-                        sx={{ position: 'absolute', top: 10, right: 12, color: '#6B2C1F' }}
-                      >
-                        {formatDate(c.created_at)}
-                      </Typography>
-                    )}
+                      <Box display="flex" alignItems="center">
+                        <Typography fontWeight={700} variant="body2" flex={1}>
+                          {c.author_name}
+                        </Typography>
+                        {c.created_at && (
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              position: 'absolute',
+                              top: 10,
+                              right: isAuthor && !isEditing ? 36 : 12,
+                              color: '#6B2C1F',
+                            }}
+                          >
+                            {formatDate(c.created_at)}
+                          </Typography>
+                        )}
+                        {isAuthor && !isEditing && (
+                          <IconButton
+                            size="small"
+                            sx={{ position: 'absolute', top: 2, right: 4 }}
+                            onClick={(e) =>
+                              setAnchorElMap((prev) => ({ ...prev, [c.id]: e.currentTarget }))
+                            }
+                          >
+                            <MoreVertIcon fontSize="small" />
+                          </IconButton>
+                        )}
+                        {isAuthor && !isEditing && (
+                          <Menu
+                            anchorEl={anchorElMap[c.id]}
+                            open={Boolean(anchorElMap[c.id])}
+                            onClose={() => setAnchorElMap((prev) => ({ ...prev, [c.id]: null }))}
+                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                          >
+                            <MenuItem
+                              onClick={() => {
+                                setEditingCommentId(c.id);
+                                setEditCommentText(c.content);
+                                setAnchorElMap((prev) => ({ ...prev, [c.id]: null }));
+                              }}
+                            >
+                              Edit
+                            </MenuItem>
+                            <MenuItem
+                              onClick={handleDeleteComment(c)}
+                              sx={{ color: 'error.main' }}
+                              disabled={deleteLoadingId === c.id}
+                            >
+                              {deleteLoadingId === c.id ? 'Deleting...' : 'Delete'}
+                            </MenuItem>
+                          </Menu>
+                        )}
+                      </Box>
+                      {isEditing ? (
+                        <Box display="flex" alignItems="center" gap={1} mt={1}>
+                          <TextField
+                            value={editCommentText}
+                            onChange={(e) => setEditCommentText(e.target.value)}
+                            size="small"
+                            fullWidth
+                            multiline
+                            minRows={1}
+                            maxRows={4}
+                            sx={{ background: '#fff', borderRadius: 1 }}
+                          />
+                          <Button
+                            size="small"
+                            variant="contained"
+                            disabled={editLoading || !editCommentText.trim()}
+                            onClick={handleEditComment(c)}
+                            sx={{ minWidth: 0, px: 1.5, borderRadius: 2 }}
+                          >
+                            Save
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="text"
+                            onClick={() => setEditingCommentId(null)}
+                            sx={{ minWidth: 0, px: 1.5, borderRadius: 2 }}
+                          >
+                            Cancel
+                          </Button>
+                        </Box>
+                      ) : (
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ whiteSpace: 'pre-line', mt: 1 }}
+                        >
+                          {c.content}
+                        </Typography>
+                      )}
+                    </Box>
                   </Box>
-                </Box>
-              ))}
+                );
+              })}
+              <Snackbar
+                open={snackbar.open}
+                autoHideDuration={3500}
+                onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+              >
+                <Alert
+                  severity={snackbar.severity}
+                  onClose={() => setSnackbar({ ...snackbar, open: false })}
+                >
+                  {snackbar.message}
+                </Alert>
+              </Snackbar>
               {nextPage && (
                 <Box display="flex" justifyContent="center" mb={2}>
                   <Button

@@ -1102,7 +1102,6 @@ export const buildReceptiveTestPayload = (test, preparedParts, status) => {
           ...(!['G', 'H', 'I', 'J'].includes(format) && {
             description: part.description || '',
           }),
-          resources: part.resources || '',
 
           receptive_questions: (part.questions || []).map((q) => {
             if (q.action === 'delete') {
@@ -1117,7 +1116,6 @@ export const buildReceptiveTestPayload = (test, preparedParts, status) => {
               ...(!['I', 'J'].includes(format) && { content: q.content || '' }),
               explanation: q.explanation || '',
               score: q.score || 0,
-              resources: q.resources || '',
 
               receptive_answers: (q.answers || []).map((ans) => {
                 if (ans.action === 'delete') {

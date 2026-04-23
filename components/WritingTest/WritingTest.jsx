@@ -36,11 +36,14 @@ import SaveDraftToast from '../Writing-Speaking/SaveDraftToast';
 import SubmitLoadingDialog from '../Writing-Speaking/SubmitLoadingDialog';
 import { levelTheme } from '../TestCard';
 import * as styles from '../../styles/student/Writing/WritingTestStyles';
+import { useStreakContext } from '@/context/streakContext';
+
 export default function WritingTest() {
   const params = useParams();
   const testId = params.test_id;
   const attempt = params.attempt;
   const router = useRouter();
+  const { refreshStreak } = useStreakContext();
 
   // States
   const [text, setText] = useState('');
@@ -202,6 +205,12 @@ export default function WritingTest() {
       setSecondsElapsed(0);
       setIsFinished(false);
       setStartTime(new Date().toISOString());
+      setSnackbar({ open: true, message: 'Test submitted successfully!', severity: 'success' });
+      await refreshStreak();
+      setTimeout(() => {
+        sessionStorage.removeItem('current_productive_attempt');
+        router.push(`/student/writing/${testId}`);
+      }, 1000);
     } catch (error) {
       await new Promise((resolve) => setTimeout(resolve, 400));
       setSubmitStatus('error');

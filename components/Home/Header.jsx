@@ -30,6 +30,8 @@ import {
 import RoleSelectionModal from '../Auth/RoleSelectionModal';
 import { useAuth } from '../../hooks/useAuth';
 import { logout as logoutAPI } from '../../api/accounts';
+import AnimatedStreakBadge from '../Streak/animatedStreakBadge';
+import StreakBadge from '../Streak/streakBadge';
 
 export default function Header() {
   const router = useRouter();
@@ -208,6 +210,8 @@ export default function Header() {
             <Box sx={actionBoxStyles}>
               {isAuthenticated && user ? (
                 <>
+                  <AnimatedStreakBadge />
+                  <StreakBadge />
                   <Box
                     id="user-menu-button"
                     role="button"

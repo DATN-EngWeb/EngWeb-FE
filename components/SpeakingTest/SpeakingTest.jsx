@@ -19,7 +19,6 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material';
-
 import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -41,12 +40,14 @@ import { uploadMediaFile } from '../../utils/uploadHelpers';
 import CustomAudioPlayer from '../Test/customAudioPlayer';
 import AIGradingLoading from '../Writing-Speaking/AIGradingLoading';
 import SubmitLoadingDialog from '../Writing-Speaking/SubmitLoadingDialog';
+import { useStreakContext } from '../../context/streakContext';
 
 export default function SpeakingTest() {
   const params = useParams();
   const testId = params.test_id;
   const attempt = params.attempt;
   const router = useRouter();
+  const { refreshStreak } = useStreakContext();
 
   // States
   const [isRecording, setIsRecording] = useState(false);
@@ -216,6 +217,12 @@ export default function SpeakingTest() {
       setRecordingTime(0);
       setSecondsElapsed(0);
       setStartTime(new Date().toISOString());
+      setSnackbar({ open: true, message: 'Test submitted successfully!', severity: 'success' });
+      await refreshStreak();
+      setTimeout(() => {
+        sessionStorage.removeItem('current_productive_attempt');
+        router.push(`/student/speaking/${testId}`);
+      }, 1000);
     } catch (error) {
       if (
         error?.status >= 500 ||
