@@ -8,6 +8,8 @@ import CircleIcon from '@mui/icons-material/Circle';
 import InstructionIcon from '../../../Test/instructionIcon';
 import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
+import SumaryPartTab from './sumaryPartTab';
+import { usePathname } from 'next/navigation';
 
 export default function MultipleChoiceSingleAudio({
   dataPart,
@@ -17,7 +19,13 @@ export default function MultipleChoiceSingleAudio({
   media,
   disabled,
   detailAnswers,
+  onNavigateToQuestion,
 }) {
+  const pathname = usePathname();
+  const isTeacherView = pathname?.includes('/teacher/view-test/');
+
+  const showSummary = disabled && !isTeacherView;
+
   const { audioSrcs } = media;
   const [currentPlayingId, setCurrentPlayingId] = useState(null);
 
@@ -30,11 +38,21 @@ export default function MultipleChoiceSingleAudio({
     onUpdateAnswers(newAnswers);
   };
 
-  return (
-    <Container
-      maxWidth="md"
-      sx={{ ...listeningPartStyles.containerCol, display: isActive ? 'flex' : 'none' }}
-    >
+  // Chuẩn bị dữ liệu trạng thái cho SumaryPartTab
+  const partQuestions = isActive
+    ? dataPart?.receptive_questions?.map((question) => {
+        const questionResult = Array.isArray(detailAnswers)
+          ? detailAnswers.find((ans) => ans.question_id === question.id)
+          : null;
+        return {
+          id: question.id,
+          isCorrect: questionResult?.is_correct || false,
+        };
+      })
+    : [];
+
+  const mainContent = (
+    <Container maxWidth="md" sx={{ ...listeningPartStyles.containerCol }}>
       <Box sx={listeningPartStyles.instructionContainer}>
         <InstructionIcon />
         <Box sx={listeningPartStyles.instructionWrapper}>
@@ -208,5 +226,27 @@ export default function MultipleChoiceSingleAudio({
         })}
       </Box>
     </Container>
+  );
+
+  return (
+    <Box sx={{ display: isActive ? 'block' : 'none', width: '100%' }}>
+      {showSummary ? (
+        <Container
+          maxWidth="lg"
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            alignItems: 'flex-start',
+          }}
+        >
+          <Box maxWidth="md" sx={{ flex: { xs: 1, md: 3 }, width: '100%' }}>
+            {mainContent}
+          </Box>
+          <SumaryPartTab questions={partQuestions} onNavigateToQuestion={onNavigateToQuestion} />
+        </Container>
+      ) : (
+        mainContent
+      )}
+    </Box>
   );
 }

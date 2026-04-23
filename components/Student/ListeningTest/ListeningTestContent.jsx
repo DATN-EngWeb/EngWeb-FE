@@ -39,7 +39,7 @@ import MultipleChoiceSingleAudio from './part/multipleChoiceSingleAudio';
 import MultipleChoiceQuestionAudio from './part/multipleChoiceMultiQuestionAudio';
 import Matching from './part/matching';
 import Skeleton from './skeleton';
-import SummaryTab from './part/SummaryTab';
+import SummaryTab from './part/sumaryTab';
 import { useStreakContext } from '@/context/streakContext';
 import { ChevronLeftRounded } from '@mui/icons-material';
 
@@ -472,6 +472,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
       media: mediaResources[part.id] || {},
       disabled: isReadOnly,
       detailAnswers: detailAnswers,
+      onNavigateToQuestion: (questionId) => handleNavigateToQuestion(index, questionId),
     };
 
     switch (part.format) {

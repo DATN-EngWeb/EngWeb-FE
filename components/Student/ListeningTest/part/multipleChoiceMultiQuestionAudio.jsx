@@ -9,6 +9,8 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CircleIcon from '@mui/icons-material/Circle';
 import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
+import SumaryPartTab from './sumaryPartTab';
+import { usePathname } from 'next/navigation';
 
 export default function MultipleChoiceQuestionAudio({
   dataPart,
@@ -18,7 +20,13 @@ export default function MultipleChoiceQuestionAudio({
   media,
   disabled,
   detailAnswers,
+  onNavigateToQuestion,
 }) {
+  const pathname = usePathname();
+  const isTeacherView = pathname?.includes('/teacher/view-test/');
+
+  const showSummary = disabled && !isTeacherView;
+
   const { audioSrc, passageSrc } = media;
   const [leftWidth, setLeftWidth] = useState(40); // percentage width
   const [isDragging, setIsDragging] = useState(false);
@@ -50,7 +58,6 @@ export default function MultipleChoiceQuestionAudio({
     const handleMouseMove = (event) => {
       event.preventDefault();
 
-      // Sử dụng ref thay vì querySelector
       const container = containerRef.current;
       if (!container) return;
 
@@ -60,11 +67,9 @@ export default function MultipleChoiceQuestionAudio({
 
       if (!containerWidth || containerWidth === 0) return;
 
-      // Tính toán vị trí chuột tương đối trong khung
       const relativeX = event.clientX - containerLeft;
       const newLeftWidth = (relativeX / containerWidth) * 100;
 
-      // Giới hạn vùng kéo (25% - 75%)
       const clamped = Math.min(75, Math.max(25, newLeftWidth));
       setLeftWidth(clamped);
     };
@@ -89,16 +94,28 @@ export default function MultipleChoiceQuestionAudio({
     };
   }, [isDragging]);
 
-  return (
-    <Container
+  // Chuẩn bị dữ liệu trạng thái cho SumaryPartTab
+  const partQuestions = isActive
+    ? dataPart?.receptive_questions?.map((question) => {
+        const questionResult = Array.isArray(detailAnswers)
+          ? detailAnswers.find((ans) => ans.question_id === question.id)
+          : null;
+        return {
+          id: question.id,
+          isCorrect: questionResult?.is_correct || false,
+        };
+      })
+    : [];
+
+  const mainContent = (
+    <Box
       ref={containerRef}
-      maxWidth="lg"
       sx={{
         ...listeningPartStyles.containerColRow,
-        display: isActive ? 'flex' : 'none',
         height: { xs: 'auto', md: '100vh' },
         maxHeight: { xs: 'none', md: '100vh' },
         overflow: { xs: 'visible', md: 'hidden' },
+        width: '100%',
       }}
     >
       {/* -------- Audio and Instruction Section --------- */}
@@ -163,7 +180,6 @@ export default function MultipleChoiceQuestionAudio({
         }}
         role="separator"
       >
-        {/* Vertical line */}
         <Box
           sx={{
             position: 'absolute',
@@ -175,7 +191,6 @@ export default function MultipleChoiceQuestionAudio({
             backgroundColor: isDragging ? 'warning.main' : 'divider',
           }}
         />
-        {/* Handle circle */}
         <Box
           sx={{
             width: 28,
@@ -213,12 +228,12 @@ export default function MultipleChoiceQuestionAudio({
             {dataPart.description}
           </Typography>
         </Box>
+        {/* -------- Questions Section --------- */}
         {dataPart?.receptive_questions?.map((question, index) => {
           const questionResult = Array.isArray(detailAnswers)
             ? detailAnswers.find((ans) => ans.question_id === question.id)
             : null;
 
-          // Tìm đáp án đúng để hiển thị
           const correctAnswer = question.receptive_answers?.find((a) => a.is_correct);
           const correctAnswerText = correctAnswer
             ? `${correctAnswer.option_label || correctAnswer.label}. ${correctAnswer.answer_text || correctAnswer.text || ''}`
@@ -230,15 +245,14 @@ export default function MultipleChoiceQuestionAudio({
               id={`question-${question.id}`}
               sx={listeningPartStyles.questionContainerCol}
             >
-              {/* -------- Question Name Section --------- */}
               <Box sx={listeningPartStyles.questionTextContainer}>
                 <Typography sx={listeningPartStyles.questionLabelRectangle}>{index + 1}</Typography>
                 <Typography sx={listeningPartStyles.questionText}>
                   {question.content || question.text}
                 </Typography>
               </Box>
+
               <Box sx={listeningPartStyles.audioAndOptionsContainer}>
-                {/* -------- Options Section --------- */}
                 <Box sx={listeningPartStyles.optionsGridRow}>
                   {question.receptive_answers.map((option) => {
                     const isSelectedInTesting = userAnswers[question.id] === option.id;
@@ -348,6 +362,30 @@ export default function MultipleChoiceQuestionAudio({
           );
         })}
       </Box>
-    </Container>
+    </Box>
+  );
+
+  return (
+    <Box sx={{ display: isActive ? 'block' : 'none', width: '100%' }}>
+      {showSummary ? (
+        <Container
+          maxWidth="xl"
+          disableGutters
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            alignItems: 'flex-start',
+            pr: 2,
+          }}
+        >
+          <Box maxWidth="lg" sx={{ flex: { xs: 1, md: 4 }, width: '100%', pt: 2 }}>
+            {mainContent}
+          </Box>
+          <SumaryPartTab questions={partQuestions} onNavigateToQuestion={onNavigateToQuestion} />
+        </Container>
+      ) : (
+        <Container maxWidth="lg">{mainContent}</Container>
+      )}
+    </Box>
   );
 }

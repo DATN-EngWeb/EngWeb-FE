@@ -8,6 +8,8 @@ import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import { multipleChoiceStyles, matchingStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
 import { uploadReadingStyles } from '@/styles/Teacher/Reading/UploadReadingStyles';
+import SumaryPartTab from './sumaryPartTab';
+import { usePathname } from 'next/navigation';
 
 export default function Matching({
   dataPart,
@@ -17,7 +19,13 @@ export default function Matching({
   media,
   disabled,
   detailAnswers,
+  onNavigateToQuestion,
 }) {
+  const pathname = usePathname();
+  const isTeacherView = pathname?.includes('/teacher/view-test/');
+
+  const showSummary = disabled && !isTeacherView;
+
   const { audioSrc } = media;
   const answers = dataPart.receptive_questions.map((question) => ({
     id: question.receptive_answers[0]?.id || null,
@@ -51,11 +59,21 @@ export default function Matching({
     onUpdateAnswers(newAnswers);
   };
 
-  return (
-    <Container
-      maxWidth="md"
-      sx={{ ...listeningPartStyles.containerCol, display: isActive ? 'grid' : 'none' }}
-    >
+  // Chuẩn bị dữ liệu trạng thái cho SumaryPartTab
+  const partQuestions = isActive
+    ? dataPart?.receptive_questions?.map((question) => {
+        const questionResult = Array.isArray(detailAnswers)
+          ? detailAnswers.find((ans) => ans.question_id === question.id)
+          : null;
+        return {
+          id: question.id,
+          isCorrect: questionResult?.is_correct || false,
+        };
+      })
+    : [];
+
+  const mainContent = (
+    <Box sx={{ ...listeningPartStyles.containerCol, width: '100%' }}>
       {/* -------- Audio and Instruction Section --------- */}
       <Box sx={listeningPartStyles.basicFlexColCenStart}>
         <Box sx={{ width: '100%', height: 'auto' }}>
@@ -183,7 +201,6 @@ export default function Matching({
                         <MenuItem value="">
                           <em>Select</em>
                         </MenuItem>
-                        {/* Hiện đầy đủ danh sách, không cần vô hiệu hóa */}
                         {answers
                           ?.sort((a, b) => a.option_label.localeCompare(b.option_label))
                           .map((answer) => (
@@ -194,7 +211,6 @@ export default function Matching({
                       </Select>
                     </FormControl>
                   </Box>
-
                   {/* -------- Explanation Section --------- */}
                   {questionResult && (
                     <Box sx={listeningPartStyles.explanationContainer}>
@@ -223,7 +239,6 @@ export default function Matching({
                       alignItems: 'flex-start',
                     }}
                   >
-                    {/* -------- Question Name Section --------- */}
                     <Typography
                       sx={{ ...multipleChoiceStyles.optionLabel, fontWeight: 700, flexShrink: 0 }}
                     >
@@ -242,7 +257,7 @@ export default function Matching({
                 ))
               : answers
                   ?.sort((a, b) => a.option_label.localeCompare(b.option_label))
-                  .map((answer, index) => (
+                  .map((answer) => (
                     <Box
                       key={answer.option_label}
                       sx={{
@@ -251,7 +266,6 @@ export default function Matching({
                         alignItems: 'flex-start',
                       }}
                     >
-                      {/* -------- Question Name Section --------- */}
                       <Typography
                         sx={{ ...multipleChoiceStyles.optionLabel, fontWeight: 700, flexShrink: 0 }}
                       >
@@ -271,6 +285,30 @@ export default function Matching({
           </Box>
         </Box>
       </Box>
-    </Container>
+    </Box>
+  );
+
+  return (
+    <Box sx={{ display: isActive ? 'block' : 'none', width: '100%' }}>
+      {showSummary ? (
+        <Container
+          maxWidth="lg"
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            alignItems: 'flex-start',
+            px: { xs: 2, md: 0 },
+          }}
+        >
+          <Box maxWidth="md" sx={{ flex: { xs: 1, md: 3 }, width: '100%' }}>
+            {mainContent}
+          </Box>
+          <SumaryPartTab questions={partQuestions} onNavigateToQuestion={onNavigateToQuestion} />
+        </Container>
+      ) : (
+        /* Ở chế độ Testing, ta dùng lại Container md để căn giữa bài làm như cũ */
+        <Container maxWidth="md">{mainContent}</Container>
+      )}
+    </Box>
   );
 }

@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { Container, Box, Typography, Button } from '@mui/material';
 import CustomAudioPlayer from '../../../Test/customAudioPlayer';
 import InstructionIcon from '../../../Test/instructionIcon';
 import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
+import SumaryPartTab from './sumaryPartTab';
 
 export default function MultipleChoiceImagePart({
   dataPart,
@@ -14,7 +16,13 @@ export default function MultipleChoiceImagePart({
   media,
   disabled,
   detailAnswers,
+  onNavigateToQuestion,
 }) {
+  const pathname = usePathname();
+  const isTeacherView = pathname?.includes('/teacher/view-test/');
+
+  const showSummary = disabled && !isTeacherView;
+
   const { audioSrc, imageSrcs } = media;
 
   useEffect(() => {
@@ -22,7 +30,6 @@ export default function MultipleChoiceImagePart({
       const audioElements = document.querySelectorAll('audio');
       audioElements.forEach((audio) => {
         audio.pause();
-        // audio.currentTime = 0;
       });
     }
   }, [isActive]);
@@ -32,18 +39,28 @@ export default function MultipleChoiceImagePart({
       ...userAnswers,
       [questionId]: optionID,
     };
-
     onUpdateAnswers(newAnswers);
   };
 
-  return (
+  // Chuẩn bị dữ liệu trạng thái cho SumaryPartTab
+  const partQuestions =
+    dataPart?.receptive_questions?.map((question, index) => {
+      const questionResult = Array.isArray(detailAnswers)
+        ? detailAnswers.find((ans) => ans.question_id === question.id)
+        : null;
+      return {
+        id: question.id,
+        isCorrect: questionResult?.is_correct || false,
+      };
+    }) || [];
+
+  const mainContent = (
     <Container
       maxWidth="md"
       sx={{ ...listeningPartStyles.containerCol, display: isActive ? 'grid' : 'none' }}
     >
       {/* -------- Audio And Instruction Section --------- */}
       <Box sx={listeningPartStyles.basicFlexColCenStart}>
-        {/* -------- Audio --------- */}
         <Box sx={{ width: '100%', height: 'auto' }}>
           {audioSrc ? (
             <CustomAudioPlayer src={audioSrc} isActive={isActive} />
@@ -51,7 +68,6 @@ export default function MultipleChoiceImagePart({
             <Typography variant="caption">Loading audio...</Typography>
           )}
         </Box>
-        {/* -------- Instruction --------- */}
         <Box sx={listeningPartStyles.instructionContainer}>
           <InstructionIcon />
           <Box sx={listeningPartStyles.instructionWrapper}>
@@ -73,6 +89,7 @@ export default function MultipleChoiceImagePart({
           </Box>
         </Box>
       </Box>
+
       {/* -------- Question Section --------- */}
       <Box sx={listeningPartStyles.questionSection}>
         {dataPart?.receptive_questions?.map((question, index) => {
@@ -91,7 +108,6 @@ export default function MultipleChoiceImagePart({
               id={`question-${question.id}`}
               sx={listeningPartStyles.questionContainerCol}
             >
-              {/* -------- Question Name Section --------- */}
               <Box sx={listeningPartStyles.questionTextContainer}>
                 <Typography sx={listeningPartStyles.questionLabelRectangle}>{index + 1}</Typography>
                 <Typography sx={listeningPartStyles.questionText}>
@@ -165,5 +181,27 @@ export default function MultipleChoiceImagePart({
         })}
       </Box>
     </Container>
+  );
+
+  return (
+    <Box sx={{ display: isActive ? 'block' : 'none', width: '100%' }}>
+      {showSummary ? (
+        <Container
+          maxWidth="lg"
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            alignItems: 'flex-start',
+          }}
+        >
+          <Box maxWidth="md" sx={{ flex: { xs: 1, md: 3 }, width: '100%' }}>
+            {mainContent}
+          </Box>
+          <SumaryPartTab questions={partQuestions} onNavigateToQuestion={onNavigateToQuestion} />
+        </Container>
+      ) : (
+        mainContent
+      )}
+    </Box>
   );
 }

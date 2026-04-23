@@ -6,6 +6,8 @@ import CustomAudioPlayer from '../../../Test/customAudioPlayer';
 import InstructionIcon from '../../../Test/instructionIcon';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
+import SumaryPartTab from './sumaryPartTab';
+import { usePathname } from 'next/navigation';
 
 export default function FillBlankPart({
   dataPart,
@@ -15,7 +17,13 @@ export default function FillBlankPart({
   media = {},
   disabled,
   detailAnswers,
+  onNavigateToQuestion,
 }) {
+  const pathname = usePathname();
+  const isTeacherView = pathname?.includes('/teacher/view-test/');
+
+  const showSummary = disabled && !isTeacherView;
+
   const { audioSrc = '', passageSrc = '' } = media;
   const [leftWidth, setLeftWidth] = useState(40); // percentage width
   const [isDragging, setIsDragging] = useState(false);
@@ -83,16 +91,31 @@ export default function FillBlankPart({
     };
   }, [isDragging]);
 
-  return (
-    <Container
+  // Chuẩn bị dữ liệu trạng thái cho SumaryPartTab
+  const questionsArray =
+    dataPart?.type === 'fill_in_the_blanks' ? dataPart?.answers : dataPart?.receptive_questions;
+  const partQuestions =
+    isActive && questionsArray
+      ? questionsArray.map((question) => {
+          const questionResult = Array.isArray(detailAnswers)
+            ? detailAnswers.find((ans) => ans.question_id === question.id)
+            : null;
+          return {
+            id: question.id,
+            isCorrect: questionResult?.is_correct || false,
+          };
+        })
+      : [];
+
+  const mainContent = (
+    <Box
       ref={containerRef}
-      maxWidth="lg"
       sx={{
         ...listeningPartStyles.containerColRow,
-        display: isActive ? 'flex' : 'none',
         height: { xs: 'auto', md: '100vh' },
         maxHeight: { xs: 'none', md: '100vh' },
         overflow: { xs: 'visible', md: 'hidden' },
+        width: '100%',
       }}
     >
       {/* -------- Audio and Passage Section --------- */}
@@ -370,6 +393,30 @@ export default function FillBlankPart({
           </Box>
         </Box>
       </Box>
-    </Container>
+    </Box>
+  );
+
+  return (
+    <Box sx={{ display: isActive ? 'block' : 'none', width: '100%' }}>
+      {showSummary ? (
+        <Container
+          maxWidth="xl"
+          disableGutters
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            alignItems: 'flex-start',
+            pr: 2,
+          }}
+        >
+          <Box maxWidth="lg" sx={{ flex: { xs: 1, md: 4 }, width: '100%', pt: 2 }}>
+            {mainContent}
+          </Box>
+          <SumaryPartTab questions={partQuestions} onNavigateToQuestion={onNavigateToQuestion} />
+        </Container>
+      ) : (
+        <Container maxWidth="lg">{mainContent}</Container>
+      )}
+    </Box>
   );
 }

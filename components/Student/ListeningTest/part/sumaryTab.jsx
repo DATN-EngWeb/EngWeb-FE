@@ -13,14 +13,12 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
-// --- Helper Functions ---
 const secondsToMinutesValue = (seconds) => {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return `${m}m ${s}s`;
 };
 
-// --- Main Component ---
 export default function SummaryTab({
   staticData,
   startTime,
@@ -86,35 +84,11 @@ export default function SummaryTab({
           overflow: 'hidden',
           borderRadius: '1rem',
           p: { xs: 2, md: 4 },
-          bgcolor: theme.palette.yellow.main,
+          bgcolor: theme.palette.background.default,
+          border: `1px solid ${alpha(theme.palette.primary.main, 0.5)}`,
           mb: 3,
         }}
       >
-        {/* Background Decorative Circles */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: -100,
-            right: -100,
-            width: 250,
-            height: 250,
-            bgcolor: 'rgba(255,255,255,0.2)',
-            borderRadius: '50%',
-            filter: 'blur(40px)',
-          }}
-        />
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: -80,
-            left: -80,
-            width: 200,
-            height: 200,
-            bgcolor: 'rgba(255,255,255,0.2)',
-            borderRadius: '50%',
-            filter: 'blur(30px)',
-          }}
-        />
         <Stack
           direction={{ xs: 'column', md: 'row' }}
           spacing={{ xs: 2, md: 4 }}
@@ -174,7 +148,7 @@ export default function SummaryTab({
               flexDirection: 'column',
               alignItems: 'center',
               gap: 1,
-              bgcolor: alpha(theme.palette.primary.main, 0.05),
+              bgcolor: theme.palette.yellow.main,
               backdropFilter: 'blur(10px)',
               border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
               p: 2,
@@ -217,7 +191,7 @@ export default function SummaryTab({
                     sx={{ color: `${theme.palette.yellow.main} !important`, fontSize: '1rem' }}
                   />
                 }
-                label={`+${bonusExp} EXP`}
+                label={`+${bonusExp} XP`}
                 sx={{
                   bgcolor: theme.palette.primary.main,
                   color: theme.palette.yellow.main,
@@ -265,7 +239,7 @@ export default function SummaryTab({
         <Grid size={{ xs: 6, md: 3 }}>
           <StatCard
             icon={<FlashOnIcon sx={{ fontSize: 32 }} />}
-            label="Bonus EXP"
+            label="Bonus XP"
             value={`+${bonusExp}`}
             iconColor={theme.palette.red.text}
             bgcolor={theme.palette.background.default}
@@ -368,27 +342,51 @@ export default function SummaryTab({
                       borderRadius: 1.5,
                       border: `1px solid ${theme.palette.gray.main}`,
                       boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
                     }}
                   >
-                    <Typography
-                      component="span"
-                      sx={{
-                        fontWeight: 700,
-                        fontSize: '0.875rem',
-                        color:
-                          part.correctCount > 0
-                            ? theme.palette.success.main
-                            : theme.palette.error.main,
-                      }}
-                    >
-                      {part.correctCount}
-                    </Typography>
-                    <Typography
-                      component="span"
-                      sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.gray }}
-                    >
-                      /{part.totalCount}
-                    </Typography>
+                    {/* Chỉ hiện số câu Đúng nếu > 0 */}
+                    {part.correctCount > 0 && (
+                      <Typography
+                        component="span"
+                        sx={{
+                          fontWeight: 700,
+                          fontSize: '0.875rem',
+                          color: theme.palette.success.main,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                        }}
+                      >
+                        <CheckCircleIcon sx={{ fontSize: 16 }} /> {part.correctCount} Correct
+                      </Typography>
+                    )}
+                    {part.correctCount > 0 && part.totalCount - part.correctCount > 0 && (
+                      <Typography
+                        component="span"
+                        sx={{ color: theme.palette.text.disabled, fontSize: '0.875rem', mx: 0.5 }}
+                      >
+                        |
+                      </Typography>
+                    )}
+                    {part.totalCount - part.correctCount > 0 && (
+                      <Typography
+                        component="span"
+                        sx={{
+                          fontWeight: 700,
+                          fontSize: '0.875rem',
+                          color: theme.palette.error.main,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                        }}
+                      >
+                        <CancelOutlinedIcon sx={{ fontSize: 16 }} />{' '}
+                        {part.totalCount - part.correctCount} Incorrect
+                      </Typography>
+                    )}
                   </Box>
                 </Stack>
 

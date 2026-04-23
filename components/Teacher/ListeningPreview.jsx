@@ -186,71 +186,71 @@ export default function ListeningPreview({
         },
       }}
     >
-      <Container maxWidth="lg" className="no-print">
-        <Box sx={listeningtestStyles.testHeadingContainer}>
-          {showHeaderActions ? (
-            <Typography
-              sx={{ ...listeningtestStyles.backButton, fontSize: { xs: '0.8rem', md: '1rem' } }}
-              onClick={onPreview}
-            >
-              <ExpandLessIcon
-                sx={{
-                  cursor: 'pointer',
-                  fontSize: { xs: '1.6rem', md: '1.8rem' },
-                  color: 'gray.main',
-                  transform: 'rotate(270deg)',
-                }}
-              />
-              Back
-            </Typography>
-          ) : (
-            <Box sx={{ minWidth: 80 }} />
-          )}
-          <Box sx={listeningtestStyles.nameTestAndFormatPart}>
-            <Typography sx={listeningtestStyles.nameTest}>{basicInfo?.testName}</Typography>
-            <Typography sx={listeningtestStyles.formatName}>
-              {`Part ${indexPart + 1}: `}
-              {getListeningTestTypeLabel(parts[indexPart]?.format || parts[indexPart]?.type)}
-            </Typography>
-          </Box>
-          {showHeaderActions ? (
-            <Box sx={{ ...listeningtestStyles.summitButtonWrapper, display: 'flex', gap: 1 }}>
-              <Button sx={listeningtestStyles.submitButton} disabled>
-                Submit Test
-              </Button>
-            </Box>
-          ) : (
-            <Box sx={{ minWidth: 120 }} />
-          )}
-        </Box>
-        <Box sx={listeningtestStyles.separatorLine}></Box>
-        <Box sx={listeningtestStyles.listPartContainer}>
-          {parts.map((part, index) => (
-            <Box
+      <Box sx={listeningtestStyles.testHeadingContainer}>
+        {showHeaderActions ? (
+          <Typography
+            sx={{ ...listeningtestStyles.backButton, fontSize: { xs: '0.8rem', md: '1rem' } }}
+            onClick={onPreview}
+          >
+            <ExpandLessIcon
               sx={{
-                ...listeningtestStyles.boxPart,
-                ...(index === indexPart && {
-                  backgroundColor: 'background.default',
-                  borderColor: 'orange.light',
-                  color: 'orange.dark',
-                }),
-                ...((index < indexPart - 1 || index > indexPart + 1) && {
-                  display: { xs: 'none', sm: 'flex' },
-                }),
-                ...(((index === indexPart - 2 && indexPart === parts.length - 1) ||
-                  (index === indexPart + 2 && indexPart === 0)) && {
-                  display: 'flex',
-                }),
+                cursor: 'pointer',
+                fontSize: { xs: '1.6rem', md: '1.8rem' },
+                color: 'gray.main',
+                transform: 'rotate(270deg)',
               }}
-              key={part.id}
-              onClick={() => setIndexPart(index)}
-            >
-              Part {index + 1}
-            </Box>
-          ))}
+            />
+            Back
+          </Typography>
+        ) : (
+          <Box sx={{ minWidth: 120 }} />
+        )}
+        <Box sx={{ ...listeningtestStyles.nameTestAndFormatPart, order: 0 }}>
+          <Typography sx={listeningtestStyles.nameTest}>{basicInfo?.testName}</Typography>
+          <Typography sx={listeningtestStyles.formatName}>
+            {`Part ${indexPart + 1}: `}
+            {getListeningTestTypeLabel(parts[indexPart]?.format || parts[indexPart]?.type)}
+          </Typography>
         </Box>
-        <Box sx={{ ...listeningtestStyles.separatorLine, backgroundColor: 'gray.main' }}></Box>
-      </Container>
+        {showHeaderActions ? (
+          <Box
+            sx={{ ...listeningtestStyles.summitButtonWrapper, display: 'flex', gap: 1, order: 0 }}
+          >
+            <Button sx={listeningtestStyles.submitButton} disabled>
+              Submit Test
+            </Button>
+          </Box>
+        ) : (
+          <Box sx={{ minWidth: 120 }} />
+        )}
+      </Box>
+      <Box sx={listeningtestStyles.separatorLine}></Box>
+      <Box sx={listeningtestStyles.listPartContainer}>
+        {parts.map((part, index) => (
+          <Box
+            sx={{
+              ...listeningtestStyles.boxPart,
+              ...(index === indexPart && {
+                backgroundColor: 'background.default',
+                borderColor: 'orange.light',
+                color: 'orange.dark',
+              }),
+              ...((index < indexPart - 1 || index > indexPart + 1) && {
+                display: { xs: 'none', sm: 'flex' },
+              }),
+              ...(((index === indexPart - 2 && indexPart === parts.length - 1) ||
+                (index === indexPart + 2 && indexPart === 0)) && {
+                display: 'flex',
+              }),
+            }}
+            key={part.id}
+            onClick={() => setIndexPart(index)}
+          >
+            Part {index + 1}
+          </Box>
+        ))}
+      </Box>
+      <Box sx={{ ...listeningtestStyles.separatorLine, backgroundColor: 'gray.main' }}></Box>
       <Box
         className="no-print"
         sx={{ width: '100%', height: 'auto', backgroundColor: 'background.gray' }}
