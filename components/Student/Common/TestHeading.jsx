@@ -27,9 +27,15 @@ export default function TestHeading({
       >
         {/* Left: Timer or Back/Exit */}
         <Box
-          sx={{ width: { xs: 'auto', md: '320px' }, display: 'flex', alignItems: 'center', gap: 1 }}
+          sx={{
+            width: { xs: 'auto', md: '320px' },
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            gap: 0.5,
+          }}
         >
-          {isTeacher && onExit && (
+          {onExit && (
             <Button
               onClick={onExit}
               size="small"
