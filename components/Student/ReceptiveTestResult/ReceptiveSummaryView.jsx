@@ -88,9 +88,16 @@ const ReceptiveSummaryView = ({
       </Box>
       {/* Main Content */}
       <Container maxWidth="lg" sx={{ mt: 6 }}>
-        <Grid container spacing={4}>
-          {/* Summary Cards */}
-          <Grid item xs={12} md={4}>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 4,
+            alignItems: 'flex-start',
+            flexDirection: { xs: 'column', sm: 'row' },
+          }}
+        >
+          {/* Summary Cards Sidebar */}
+          <Box sx={{ width: { xs: '100%', sm: '33.333%' }, flexShrink: 0 }}>
             <Paper
               sx={{
                 p: 4,
@@ -246,10 +253,10 @@ const ReceptiveSummaryView = ({
                 </Button>
               </Stack>
             </Paper>
-          </Grid>
+          </Box>
 
-          {/* Answer Breakdown */}
-          <Grid item xs={12} md={8}>
+          {/* Answer Breakdown Content */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
             {/* Score && Accuracy && Time */}
             <Paper
               elevation={0}
@@ -344,50 +351,132 @@ const ReceptiveSummaryView = ({
                               '&:hover': { boxShadow: '0 10px 15px -3px rgba(0,0,0,0.05)' },
                             }}
                           >
-                            <Grid container spacing={2} alignItems="flex-start">
-                              <Grid item xs={1} sx={{ display: 'flex', justifyContent: 'center' }}>
-                                {isCorrect ? (
-                                  <CheckCircleOutlineIcon sx={{ color: '#16a34a', fontSize: 28 }} />
-                                ) : (
-                                  <HighlightOffIcon sx={{ color: '#dc2626', fontSize: 28 }} />
-                                )}
-                              </Grid>
-                              <Grid item xs={11}>
-                                <Stack spacing={1}>
-                                  <Typography
-                                    variant="subtitle2"
-                                    sx={{
-                                      fontWeight: 700,
-                                      color: '#1e293b',
-                                      fontFamily: '"Outfit", sans-serif',
-                                    }}
-                                  >
-                                    Question {q.question_number || index + 1}
-                                  </Typography>
-                                  {/* Question Content */}
-                                  <Typography
-                                    variant="body1"
-                                    sx={{
-                                      color: '#475569',
-                                      mb: 1,
-                                      fontFamily: '"Outfit", sans-serif',
-                                    }}
-                                    dangerouslySetInnerHTML={{ __html: q.content }}
-                                  />
-                                  {/* Audio Player */}
-                                  {q.resources.audio && (
-                                    <CustomAudioPlayer src={q.resources.audio} />
-                                  )}
-                                  {/* Answer Options */}
-                                  <Grid container spacing={2}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                              {isCorrect ? (
+                                <CheckCircleOutlineIcon sx={{ color: '#16a34a', fontSize: 28 }} />
+                              ) : (
+                                <HighlightOffIcon sx={{ color: '#dc2626', fontSize: 28 }} />
+                              )}
+                              <Typography
+                                variant="subtitle2"
+                                sx={{
+                                  fontWeight: 700,
+                                  color: '#1e293b',
+                                  fontSize: '1rem',
+                                  fontFamily: '"Outfit", sans-serif',
+                                }}
+                              >
+                                Question {q.question_number || index + 1}
+                              </Typography>
+                            </Box>
+
+                            <Box sx={{ pl: 5.5 }}>
+                              <Stack spacing={2}>
+                                {/* Question Content */}
+                                <Typography
+                                  variant="body1"
+                                  sx={{
+                                    color: '#475569',
+                                    mb: 1,
+                                    fontSize: '1rem',
+                                    fontFamily: '"Outfit", sans-serif',
+                                  }}
+                                  dangerouslySetInnerHTML={{ __html: q.content }}
+                                />
+                                {/* Audio Player */}
+                                {q.resources.audio && <CustomAudioPlayer src={q.resources.audio} />}
+                                {/* Answer Options */}
+                                <Grid container spacing={2}>
+                                  <Grid item xs={6}>
+                                    <Box
+                                      sx={{
+                                        p: 1.5,
+                                        borderRadius: '10px',
+                                        bgcolor: isCorrect ? '#f0fdf4' : '#fef2f2',
+                                        border: '1px solid',
+                                        borderColor: isCorrect ? '#dcfce7' : '#fecaca',
+                                      }}
+                                    >
+                                      <Typography
+                                        variant="caption"
+                                        display="block"
+                                        color="text.secondary"
+                                        fontWeight={700}
+                                        sx={{ fontFamily: '"Outfit", sans-serif' }}
+                                      >
+                                        YOUR ANSWER
+                                      </Typography>
+                                      <Typography
+                                        variant="body2"
+                                        fontWeight={600}
+                                        color={isCorrect ? '#166534' : '#991b1b'}
+                                        sx={{ fontFamily: '"Outfit", sans-serif' }}
+                                      >
+                                        {userAns?.selected_answer_id
+                                          ? // Xử lí đặc biệt cho format E do cấu trúc matching
+                                            (part.format === 'E'
+                                              ? part.receptive_questions.flatMap(
+                                                  (qu) => qu.receptive_answers,
+                                                )
+                                              : q.receptive_answers
+                                            ).find((a) => a.id === userAns.selected_answer_id)
+                                            ? (() => {
+                                                const a = (
+                                                  part.format === 'E'
+                                                    ? part.receptive_questions.flatMap(
+                                                        (qu) => qu.receptive_answers,
+                                                      )
+                                                    : q.receptive_answers
+                                                ).find(
+                                                  (ans) => ans.id === userAns.selected_answer_id,
+                                                );
+                                                if (part.format === 'A') {
+                                                  const imgUrl = a.resources?.image;
+                                                  return (
+                                                    <span
+                                                      style={{
+                                                        display: 'inline-flex',
+                                                        alignItems: 'flex-start',
+                                                        gap: '8px',
+                                                        lineHeight: '1.2',
+                                                      }}
+                                                    >
+                                                      <span style={{ marginTop: '2px' }}>
+                                                        {a.option_label ? `${a.option_label}.` : ''}
+                                                      </span>
+                                                      {imgUrl && (
+                                                        <img
+                                                          src={imgUrl}
+                                                          alt={`Option ${a.option_label}`}
+                                                          style={{
+                                                            maxWidth: '100px',
+                                                            borderRadius: '4px',
+                                                            objectFit: 'contain',
+                                                            display: 'block',
+                                                          }}
+                                                        />
+                                                      )}
+                                                    </span>
+                                                  );
+                                                }
+                                                const label = a.option_label
+                                                  ? `${a.option_label}. `
+                                                  : '';
+                                                return `${label}${a.answer_text || ''}`;
+                                              })()
+                                            : 'N/A'
+                                          : userAns?.user_answer_text || 'No answer'}
+                                      </Typography>
+                                    </Box>
+                                  </Grid>
+                                  {!isCorrect && (
                                     <Grid item xs={6}>
                                       <Box
                                         sx={{
                                           p: 1.5,
                                           borderRadius: '10px',
-                                          bgcolor: isCorrect ? '#f0fdf4' : '#fef2f2',
-                                          border: '1px solid',
-                                          borderColor: isCorrect ? '#dcfce7' : '#fecaca',
+                                          bgcolor: '#f0fdf4',
+                                          border: '1px solid #dcfce7',
                                         }}
                                       >
                                         <Typography
@@ -397,172 +486,92 @@ const ReceptiveSummaryView = ({
                                           fontWeight={700}
                                           sx={{ fontFamily: '"Outfit", sans-serif' }}
                                         >
-                                          YOUR ANSWER
+                                          CORRECT ANSWER
                                         </Typography>
                                         <Typography
                                           variant="body2"
                                           fontWeight={600}
-                                          color={isCorrect ? '#166534' : '#991b1b'}
+                                          color="#166534"
                                           sx={{ fontFamily: '"Outfit", sans-serif' }}
                                         >
-                                          {userAns?.selected_answer_id
-                                            ? // Xử lí đặc biệt cho format E do cấu trúc matching
-                                              (part.format === 'E'
-                                                ? part.receptive_questions.flatMap(
-                                                    (qu) => qu.receptive_answers,
-                                                  )
-                                                : q.receptive_answers
-                                              ).find((a) => a.id === userAns.selected_answer_id)
-                                              ? (() => {
-                                                  const a = (
-                                                    part.format === 'E'
-                                                      ? part.receptive_questions.flatMap(
-                                                          (qu) => qu.receptive_answers,
-                                                        )
-                                                      : q.receptive_answers
-                                                  ).find(
-                                                    (ans) => ans.id === userAns.selected_answer_id,
-                                                  );
-                                                  // Xử lý đặc biệt cho format A do có hình ảnh đi kèm
-                                                  if (part.format === 'A') {
-                                                    const imgUrl = a.resources?.image;
-                                                    return (
-                                                      <span
-                                                        style={{
-                                                          display: 'inline-flex',
-                                                          alignItems: 'flex-start',
-                                                          gap: '8px',
-                                                          lineHeight: '1.2',
-                                                        }}
-                                                      >
-                                                        <span style={{ marginTop: '2px' }}>
-                                                          {correctAns.option_label}.
-                                                        </span>
-                                                        {imgUrl && (
-                                                          <img
-                                                            src={imgUrl}
-                                                            alt={`Correct Option ${correctAns.option_label}`}
-                                                            style={{
-                                                              maxWidth: '100px',
-                                                              borderRadius: '4px',
-                                                              objectFit: 'contain',
-                                                              display: 'block',
-                                                            }}
-                                                          />
-                                                        )}
+                                          {correctAns
+                                            ? (() => {
+                                                const imgUrl = correctAns.resources?.image;
+                                                // Format A: Hiển thị Label + Ảnh
+                                                if (part.format === 'A') {
+                                                  return (
+                                                    <span
+                                                      style={{
+                                                        display: 'inline-flex',
+                                                        alignItems: 'flex-start',
+                                                        gap: '8px',
+                                                        lineHeight: '1.2',
+                                                      }}
+                                                    >
+                                                      <span style={{ marginTop: '2px' }}>
+                                                        {correctAns.option_label}.
                                                       </span>
-                                                    );
-                                                  }
-                                                  return `${a.option_label}. ${a.answer_text || ''}`;
-                                                })()
-                                              : 'N/A'
-                                            : userAns?.user_answer_text || 'No answer'}
+
+                                                      {imgUrl && (
+                                                        <img
+                                                          src={imgUrl}
+                                                          alt={`Correct Option ${correctAns.option_label}`}
+                                                          style={{
+                                                            maxWidth: '100px',
+                                                            borderRadius: '4px',
+                                                            objectFit: 'contain',
+                                                            display: 'block',
+                                                          }}
+                                                        />
+                                                      )}
+                                                    </span>
+                                                  );
+                                                }
+                                                // Format D, I thì không hiện label, các format khác hiện "A. Text" nếu có label
+                                                const label =
+                                                  !['D', 'I'].includes(part.format) &&
+                                                  correctAns.option_label
+                                                    ? `${correctAns.option_label}. `
+                                                    : '';
+                                                return `${label}${correctAns.answer_text || ''}`;
+                                              })()
+                                            : 'N/A'}
                                         </Typography>
                                       </Box>
                                     </Grid>
-                                    {!isCorrect && (
-                                      <Grid item xs={6}>
-                                        <Box
-                                          sx={{
-                                            p: 1.5,
-                                            borderRadius: '10px',
-                                            bgcolor: '#f0fdf4',
-                                            border: '1px solid #dcfce7',
-                                          }}
-                                        >
-                                          <Typography
-                                            variant="caption"
-                                            display="block"
-                                            color="text.secondary"
-                                            fontWeight={700}
-                                            sx={{ fontFamily: '"Outfit", sans-serif' }}
-                                          >
-                                            CORRECT ANSWER
-                                          </Typography>
-                                          <Typography
-                                            variant="body2"
-                                            fontWeight={600}
-                                            color="#166534"
-                                            sx={{ fontFamily: '"Outfit", sans-serif' }}
-                                          >
-                                            {correctAns
-                                              ? (() => {
-                                                  const imgUrl = correctAns.resources?.image;
-                                                  // Format A: Hiển thị Label + Ảnh
-                                                  if (part.format === 'A') {
-                                                    return (
-                                                      <span
-                                                        style={{
-                                                          display: 'inline-flex',
-                                                          alignItems: 'flex-start',
-                                                          gap: '8px',
-                                                          lineHeight: '1.2',
-                                                        }}
-                                                      >
-                                                        <span style={{ marginTop: '2px' }}>
-                                                          {correctAns.option_label}.
-                                                        </span>
-
-                                                        {imgUrl && (
-                                                          <img
-                                                            src={imgUrl}
-                                                            alt={`Correct Option ${correctAns.option_label}`}
-                                                            style={{
-                                                              maxWidth: '100px',
-                                                              borderRadius: '4px',
-                                                              objectFit: 'contain',
-                                                              display: 'block',
-                                                            }}
-                                                          />
-                                                        )}
-                                                      </span>
-                                                    );
-                                                  }
-                                                  // Format D thì không hiện label, các format khác hiện "A. Text"
-                                                  const label =
-                                                    part.format !== 'D'
-                                                      ? `${correctAns.option_label}. `
-                                                      : '';
-                                                  return `${label}${correctAns.answer_text || ''}`;
-                                                })()
-                                              : 'N/A'}
-                                          </Typography>
-                                        </Box>
-                                      </Grid>
-                                    )}
-                                  </Grid>
-
-                                  {q.explanation && (
-                                    <Box
-                                      sx={{
-                                        mt: 2,
-                                        p: 2,
-                                        bgcolor: '#f8fafc',
-                                        borderRadius: '12px',
-                                        borderLeft: '4px solid #cbd5e1',
-                                      }}
-                                    >
-                                      <Typography
-                                        variant="caption"
-                                        display="block"
-                                        color="text.secondary"
-                                        fontWeight={700}
-                                        sx={{ mb: 0.5, fontFamily: '"Outfit", sans-serif' }}
-                                      >
-                                        EXPLANATION
-                                      </Typography>
-                                      <Typography
-                                        variant="body2"
-                                        color="#475569"
-                                        sx={{ fontFamily: '"Outfit", sans-serif' }}
-                                      >
-                                        {q.explanation}
-                                      </Typography>
-                                    </Box>
                                   )}
-                                </Stack>
-                              </Grid>
-                            </Grid>
+                                </Grid>
+
+                                {q.explanation && (
+                                  <Box
+                                    sx={{
+                                      mt: 2,
+                                      p: 2,
+                                      bgcolor: '#f8fafc',
+                                      borderRadius: '12px',
+                                      borderLeft: '4px solid #cbd5e1',
+                                    }}
+                                  >
+                                    <Typography
+                                      variant="caption"
+                                      display="block"
+                                      color="text.secondary"
+                                      fontWeight={700}
+                                      sx={{ mb: 0.5, fontFamily: '"Outfit", sans-serif' }}
+                                    >
+                                      EXPLANATION
+                                    </Typography>
+                                    <Typography
+                                      variant="body2"
+                                      color="#475569"
+                                      sx={{ fontFamily: '"Outfit", sans-serif' }}
+                                    >
+                                      {q.explanation}
+                                    </Typography>
+                                  </Box>
+                                )}
+                              </Stack>
+                            </Box>
                           </Paper>
                         );
                       })}
@@ -570,8 +579,8 @@ const ReceptiveSummaryView = ({
                   </Box>
                 ))}
             </Stack>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Container>
     </Box>
   );

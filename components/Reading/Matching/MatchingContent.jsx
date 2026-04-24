@@ -207,9 +207,12 @@ const MatchingContent = ({
   const handleAnswerChange = (gapNumber, value) => {
     if (isTeacher) return;
 
+    const question = questions.find((q) => q.question_number === gapNumber);
+    if (!question) return;
+
     const newAnswers = {
       ...selectedAnswers,
-      [gapNumber]: value,
+      [question.id]: value,
     };
     setSelectedAnswers(newAnswers);
     onAnswerChange(newAnswers);
@@ -614,7 +617,12 @@ const MatchingContent = ({
                             </Box>
                             <FormControl fullWidth size="small">
                               <Select
-                                value={selectedAnswers[gapNumber] || ''}
+                                value={(() => {
+                                  const q = questions.find(
+                                    (qu) => qu.question_number === gapNumber,
+                                  );
+                                  return selectedAnswers[q?.id] || '';
+                                })()}
                                 onChange={(e) => handleAnswerChange(gapNumber, e.target.value)}
                                 displayEmpty
                                 disabled={isTeacher || showResults}
@@ -626,7 +634,8 @@ const MatchingContent = ({
                                           const q = questions.find(
                                             (qu) => qu.question_number === gapNumber,
                                           );
-                                          return selectedAnswers[gapNumber] === q?.correctLabel
+                                          const val = selectedAnswers[q?.id];
+                                          return val === q?.correctLabel
                                             ? 'success.main'
                                             : 'error.main';
                                         })()

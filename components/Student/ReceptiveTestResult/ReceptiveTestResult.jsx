@@ -210,10 +210,6 @@ export default function ReceptiveTestResult({
 
         const val = answer?.option_label || ah.user_answer_text || '';
         answersMap[ah.question_id] = val;
-
-        if (question?.question_number) {
-          answersMap[question.question_number] = val;
-        }
       });
     }
 

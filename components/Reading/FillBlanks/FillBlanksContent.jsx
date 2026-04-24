@@ -278,13 +278,39 @@ const FillBlanksContent = ({
                 ...leftPaneStyles,
                 flex: '0 0 auto',
                 width: { xs: '100%', md: `${leftWidth}%` },
-                overflowY: 'auto',
-                p: 3,
-                backgroundColor: 'background.paper',
+                height: '100%',
+                maxHeight: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+                p: 0,
               }}
             >
-              {passageTitle && <Typography sx={passageTitleStyles}>{passageTitle}</Typography>}
-              <Box sx={passageContainerStyles}>{renderPassageWithBlanks()}</Box>
+              <Box
+                sx={{
+                  flex: 1,
+                  overflowY: 'scroll',
+                  overflowX: 'hidden',
+                  p: 3,
+                  scrollbarWidth: 'thin',
+                  '&::-webkit-scrollbar': {
+                    width: '8px',
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    background: 'transparent',
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: '#ccc',
+                    borderRadius: '4px',
+                    '&:hover': {
+                      background: '#999',
+                    },
+                  },
+                }}
+              >
+                {passageTitle && <Typography sx={passageTitleStyles}>{passageTitle}</Typography>}
+                <Box sx={passageContainerStyles}>{renderPassageWithBlanks()}</Box>
+              </Box>
             </Box>
 
             <Box
@@ -331,10 +357,36 @@ const FillBlanksContent = ({
                 ...rightPaneStyles,
                 flex: '0 0 auto',
                 width: { xs: '100%', md: `calc(${100 - leftWidth}% - 32px)` },
-                overflowY: 'auto',
+                height: '100%',
+                maxHeight: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
               }}
             >
-              <Box sx={{ px: 1.5, py: 3 }}>
+              <Box
+                sx={{
+                  flex: 1,
+                  overflowY: 'scroll',
+                  overflowX: 'hidden',
+                  px: 1.5,
+                  py: 3,
+                  scrollbarWidth: 'thin',
+                  '&::-webkit-scrollbar': {
+                    width: '8px',
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    background: 'transparent',
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: '#ccc',
+                    borderRadius: '4px',
+                    '&:hover': {
+                      background: '#999',
+                    },
+                  },
+                }}
+              >
                 <Paper sx={instructionBoxStyles}>
                   <ErrorRoundedIcon sx={{ color: 'reading.instructionIcon', fontSize: '1.5rem' }} />
                   <Box>
@@ -342,7 +394,7 @@ const FillBlanksContent = ({
                       Instruction
                     </Typography>
                     <Typography sx={{ fontSize: '0.9rem', color: 'text.primary' }}>
-                      Read the passage on the left and fill in the missing words.
+                      Read the passage on the left and fill in the blanks with the correct words.
                     </Typography>
                   </Box>
                 </Paper>
@@ -471,15 +523,16 @@ const FillBlanksContent = ({
                           );
                         })
                       : blanks.map((num) => {
-                          const userAns = selectedAnswers[num] || '';
                           const qInfo = questions.find((qu) => qu.question_number === num);
+                          const questionId = qInfo?.id || num;
+                          const userAns = selectedAnswers[questionId] || '';
                           const isCorrect =
                             userAns.toLowerCase().trim() ===
                             (qInfo?.correctText || '').toLowerCase().trim();
 
                           return (
                             <Box
-                              key={num}
+                              key={questionId}
                               sx={{
                                 ...answerInputBoxStyles,
                                 flexDirection: 'column',
@@ -500,7 +553,7 @@ const FillBlanksContent = ({
                                 <TextField
                                   fullWidth
                                   value={userAns}
-                                  onChange={(e) => handleAnswerChange(num, e.target.value)}
+                                  onChange={(e) => handleAnswerChange(questionId, e.target.value)}
                                   disabled={isTeacher || showResults}
                                   sx={{
                                     ...answerInputStyles,

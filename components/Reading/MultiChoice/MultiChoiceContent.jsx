@@ -256,16 +256,42 @@ const MultiChoiceContent = ({
                 ...leftPaneStyles,
                 flex: '0 0 auto',
                 width: { xs: '100%', md: `${leftWidth}%` },
-                overflowY: 'auto',
-                p: 3,
-                backgroundColor: 'background.paper',
+                height: '100%',
+                maxHeight: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+                p: 0, // Padding moved to inner scroll box
               }}
             >
-              {passageTitle && <Typography sx={passageTitleStyles}>{passageTitle}</Typography>}
-              <Typography
-                sx={passageTextStyles}
-                dangerouslySetInnerHTML={{ __html: passageContent }}
-              />
+              <Box
+                sx={{
+                  flex: 1,
+                  overflowY: 'scroll',
+                  overflowX: 'hidden',
+                  p: 3,
+                  scrollbarWidth: 'thin',
+                  '&::-webkit-scrollbar': {
+                    width: '8px',
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    background: 'transparent',
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: '#ccc',
+                    borderRadius: '4px',
+                    '&:hover': {
+                      background: '#999',
+                    },
+                  },
+                }}
+              >
+                {passageTitle && <Typography sx={passageTitleStyles}>{passageTitle}</Typography>}
+                <Typography
+                  sx={passageTextStyles}
+                  dangerouslySetInnerHTML={{ __html: passageContent }}
+                />
+              </Box>
             </Box>
 
             <Box
@@ -312,10 +338,36 @@ const MultiChoiceContent = ({
                 ...rightPaneStyles,
                 flex: '0 0 auto',
                 width: { xs: '100%', md: `calc(${100 - leftWidth}% - 32px)` },
-                overflowY: 'auto',
+                height: '100%',
+                maxHeight: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
               }}
             >
-              <Box sx={{ px: 1.5, py: 3 }}>
+              <Box
+                sx={{
+                  flex: 1,
+                  overflowY: 'scroll',
+                  overflowX: 'hidden',
+                  px: 1.5,
+                  py: 3,
+                  scrollbarWidth: 'thin',
+                  '&::-webkit-scrollbar': {
+                    width: '8px',
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    background: 'transparent',
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: '#ccc',
+                    borderRadius: '4px',
+                    '&:hover': {
+                      background: '#999',
+                    },
+                  },
+                }}
+              >
                 <Paper sx={instructionBoxStyles}>
                   <ErrorRoundedIcon sx={{ color: 'reading.instructionIcon', fontSize: '1.5rem' }} />
                   <Box>
