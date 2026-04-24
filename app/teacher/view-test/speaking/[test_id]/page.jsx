@@ -28,9 +28,26 @@ export default function ViewSpeakingTestPage({ params }) {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  }, []);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await getProductiveTestDetails(test_id);
+        if (!response.is_owner) {
+          setSnackbar({
+            open: true,
+            message: 'You do not have permission to view this test',
+            severity: 'error',
+          });
+          setTimeout(() => router.push('/teacher'), 1500);
+          setLoading(false);
+          return;
+        }
         setStatus(response.status);
 
         const descUrl = response.productive_test?.description;

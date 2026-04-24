@@ -1,5 +1,6 @@
 export const uploadReadingStyles = {
   mainContainer: {
+    py: { xs: 1, md: 2 },
     pb: { xs: 1, md: 2 },
     backgroundColor: '#FFF4E9',
     minHeight: '100vh',
@@ -106,7 +107,7 @@ export const uploadReadingStyles = {
   // -------- Upload Reading Test Form Section ---------
   nameTestAndTime: {
     display: 'grid',
-    gridTemplateColumns: '70% 30%',
+    gridTemplateColumns: { xs: '1fr', sm: 'minmax(0, 7fr) minmax(0, 3fr)' },
     gap: 2,
     width: '100%',
   },
@@ -220,6 +221,7 @@ export const uploadReadingStyles = {
     },
     py: 1.5,
     px: 2,
+    // mb: 1,
   },
   // -------- Reading Content Container ---------
   addPartButton: {

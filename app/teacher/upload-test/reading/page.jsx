@@ -19,9 +19,7 @@ import {
   MenuItem,
   Snackbar,
   Alert,
-  IconButton,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import AddIcon from '@mui/icons-material/Add';
 import ArticleOutlined from '@mui/icons-material/ArticleOutlined';
@@ -397,29 +395,44 @@ export default function Page() {
   };
 
   const handleDeleteOption = (partId, questionId, optionLabel) => {
+    let deleteBlocked = false;
+
     setParts((prevParts) =>
-      prevParts.map((p) =>
-        p.id === partId
-          ? {
-              ...p,
-              questions: p.questions.map((q) =>
-                q.id === questionId
-                  ? {
-                      ...q,
-                      // Lọc bỏ optionId, sau đó cập nhật lại nhãn A, B, C nếu cần
-                      answers: q.answers
-                        .filter((a) => a.option_label !== optionLabel)
-                        .map((a, index) => ({
-                          ...a,
-                          option_label: String.fromCharCode(65 + index), // Reset lại nhãn A, B, C theo thứ tự mới
-                        })),
-                    }
-                  : q,
-              ),
+      prevParts.map((p) => {
+        if (p.id !== partId) return p;
+
+        return {
+          ...p,
+          questions: p.questions.map((q) => {
+            if (q.id !== questionId) return q;
+
+            if (q.answers.length <= 2) {
+              deleteBlocked = true;
+              return q;
             }
-          : p,
-      ),
+
+            return {
+              ...q,
+              // Lọc bỏ optionId, sau đó cập nhật lại nhãn A, B, C nếu cần
+              answers: q.answers
+                .filter((a) => a.option_label !== optionLabel)
+                .map((a, index) => ({
+                  ...a,
+                  option_label: String.fromCharCode(65 + index), // Reset lại nhãn A, B, C theo thứ tự mới
+                })),
+            };
+          }),
+        };
+      }),
     );
+
+    if (deleteBlocked) {
+      setSnackbar({
+        open: true,
+        message: 'Each question must keep at least 2 answer options.',
+        severity: 'warning',
+      });
+    }
   };
 
   const handleSelectType = (partId, format) => {
@@ -578,20 +591,14 @@ export default function Page() {
       <ScrollToTopButton />
       <Container maxWidth="lg">
         {/* -------- Title Section --------- */}
-        {!showInlinePreview && (
-          <Box sx={uploadReadingStyles.cardTitle}>
-            <Typography variant="h3" sx={uploadReadingStyles.mainTitleHeading}>
-              Create New Reading Test
-            </Typography>
-            <Typography variant="body1" sx={uploadReadingStyles.description}>
-              Fill in details below to create a new reading test for your students.
-            </Typography>
-          </Box>
-        )}
+        <TestEditorHeader
+          title="Create New Reading Test"
+          description="Fill in the details below to create a new reading test for your students"
+          sx={{ mb: 2.5 }}
+        />
         {/* -------- Function Buttons Section --------- */}
         <Box
           sx={{
-            position: 'sticky',
             top: 0,
             zIndex: 1100,
             backgroundColor: '#FFF4E9',
@@ -690,7 +697,9 @@ export default function Page() {
                 </FormControl>
               </Box>
               <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-                <FormLabel sx={uploadReadingStyles.labelInput}>Description</FormLabel>
+                <FormLabel sx={uploadReadingStyles.labelInput}>
+                  Description <span style={{ color: 'red' }}>*</span>
+                </FormLabel>
                 <OutlinedInput
                   size="small"
                   placeholder="Enter description here"

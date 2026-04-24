@@ -114,6 +114,7 @@ export default function TeacherForumHub() {
           ordering: filters.ordering,
           status: 'P',
           type: 'P',
+          post_count: true,
         };
 
         if (filters.title) {

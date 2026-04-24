@@ -10,7 +10,7 @@ import {
   textInput,
 } from '../../styles/Teacher/Listening/ListeningStyles';
 
-export default function BasicInformation({ testName, level, time, description, onChange, errors }) {
+export default function BasicInformation({ testName, level, time, description, onChange }) {
   return (
     <Paper sx={panelPaper}>
       <Box sx={sectionHeader}>
@@ -35,7 +35,6 @@ export default function BasicInformation({ testName, level, time, description, o
             value={testName}
             onChange={(e) => onChange('testName', e.target.value)}
             size="small"
-            error={errors?.testName}
             sx={textInput}
           />
         </Box>
@@ -50,21 +49,21 @@ export default function BasicInformation({ testName, level, time, description, o
             placeholder="60"
             value={time ?? ''}
             onChange={(e) => onChange('time', e.target.value)}
-            error={errors?.time}
             sx={textInput}
           />
         </Box>
       </Box>
 
       <Box sx={{ mb: 2 }}>
-        <Typography sx={{ ...labelText, mb: 0.5 }}>Description</Typography>
+        <Typography sx={{ ...labelText, mb: 0.5 }}>
+          Description <span style={{ color: 'red' }}>*</span>
+        </Typography>
         <TextField
           fullWidth
           size="small"
           placeholder="Enter description here"
           value={description ?? ''}
           onChange={(e) => onChange('description', e.target.value)}
-          error={errors?.description}
           sx={textInput}
         />
       </Box>
@@ -86,7 +85,6 @@ export default function BasicInformation({ testName, level, time, description, o
               alignItems: 'center',
             },
           }}
-          error={errors?.level}
         >
           <Select value={level} onChange={(e) => onChange('level', e.target.value)} displayEmpty>
             <MenuItem value="" disabled>

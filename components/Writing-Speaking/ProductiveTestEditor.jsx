@@ -88,6 +88,7 @@ export default function ProductiveTestEditor({
   onFeedback,
   isFeedbackActive,
   feedbackContent,
+  showTestSettings = true,
 }) {
   const isFeedbackMode = Boolean(feedbackContent && isFeedbackActive);
 
@@ -190,41 +191,40 @@ export default function ProductiveTestEditor({
                 />
               )}
 
-              {settingOpen && (
-                <TestSettingComponent
-                  {...settings}
-                  onChange={(field, value) => setSettings((prev) => ({ ...prev, [field]: value }))}
-                  errors={errors?.settings}
-                />
-              )}
+            {showTestSettings && settingOpen && (
+              <TestSettingComponent
+                {...settings}
+                onChange={(field, value) => setSettings((prev) => ({ ...prev, [field]: value }))}
+                errors={errors?.settings}
+              />
+            )}
 
-              {(!basicOpen || !settingOpen) && (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    gap: 1,
-                    mb: 2,
-                    position: 'sticky',
-                    top: 0,
-                    zIndex: 5,
-                    bgcolor: 'background.paper',
-                    py: 1,
-                  }}
-                >
-                  {!basicOpen && (
-                    <Button size="small" variant="outlined" onClick={() => setBasicOpen(true)}>
-                      Basic Info
-                    </Button>
-                  )}
-                  {!settingOpen && (
-                    <Button size="small" variant="outlined" onClick={() => setSettingOpen(true)}>
-                      Test Settings
-                    </Button>
-                  )}
-                </Box>
-              )}
-            </Box>
-          )}
+            {(!basicOpen || (showTestSettings && !settingOpen)) && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 1,
+                  mb: 2,
+                  position: 'sticky',
+                  top: 0,
+                  zIndex: 5,
+                  bgcolor: 'background.paper',
+                  py: 1,
+                }}
+              >
+                {!basicOpen && (
+                  <Button size="small" variant="outlined" onClick={() => setBasicOpen(true)}>
+                    Basic Info
+                  </Button>
+                )}
+                {showTestSettings && !settingOpen && (
+                  <Button size="small" variant="outlined" onClick={() => setSettingOpen(true)}>
+                    Test Settings
+                  </Button>
+                )}
+              </Box>
+            )}
+          </Box>
           {/* </Panel>
 
           <PanelResizeHandle
@@ -251,8 +251,7 @@ export default function ProductiveTestEditor({
           >
             {children}
           </Box>
-
-          {isFeedbackMode && (
+          {feedbackContent && isFeedbackActive && (
             <Box
               sx={{
                 width: '320px',

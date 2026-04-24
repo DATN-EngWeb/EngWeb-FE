@@ -28,9 +28,26 @@ export default function ViewListeningTestPage({ params }) {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  }, []);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const data = await getReceptiveTestDetails(test_id);
+        if (!data.is_owner) {
+          setSnackbar({
+            open: true,
+            message: 'You do not have permission to view this test',
+            severity: 'error',
+          });
+          setTimeout(() => router.push('/teacher'), 1500);
+          setLoading(false);
+          return;
+        }
         setStatus(data.status);
         setBasicInfo({
           testName: data.title || '',

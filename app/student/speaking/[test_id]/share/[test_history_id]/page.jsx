@@ -70,6 +70,14 @@ export default function ShareSpeakingPage() {
 
   const handleShare = async (e) => {
     e.preventDefault();
+    if (title.length > 100) {
+      setSnackbar({
+        open: true,
+        message: 'Title cannot exceed 100 characters.',
+        severity: 'error',
+      });
+      return;
+    }
     try {
       await createPost({
         productive_test_history_id: test_history_id,

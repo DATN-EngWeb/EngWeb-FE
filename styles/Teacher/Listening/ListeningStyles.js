@@ -29,7 +29,7 @@ export const sectionHeader = {
   display: 'flex',
   alignItems: 'center',
   gap: 1.5,
-  mb: 0.5,
+  mb: 2,
 };
 
 export const accentBar = {

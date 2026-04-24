@@ -8,6 +8,7 @@ import ProductivePreview from './../Writing-Speaking/ProductivePreview';
 import FeedbackPanel from '../Teacher/Feedback/FeedbackPanel';
 import { updateProductiveTest, getProductiveTestDetails } from '../../api/test';
 import { uploadHtmlContent, uploadMediaFile } from '../../utils/uploadHelpers';
+import { parseApiError } from '../../utils/productiveTestValidation';
 
 export default function UpdateSpeakingTestEditor() {
   const [mounted, setMounted] = useState(false);
@@ -63,6 +64,27 @@ export default function UpdateSpeakingTestEditor() {
   const loadTestData = useCallback(async () => {
     try {
       const response = await getProductiveTestDetails(testId);
+
+      if (!response.is_owner) {
+        setSnackbar({
+          open: true,
+          message: 'You do not have permission to edit this test',
+          severity: 'error',
+        });
+        setTimeout(() => router.push('/teacher/upload-test/speaking'), 1500);
+        return;
+      }
+
+      if (response.status !== 'D' && response.status !== 'I') {
+        setSnackbar({
+          open: true,
+          message: 'Only draft tests can be edited',
+          severity: 'error',
+        });
+        setTimeout(() => router.push('/teacher/upload-test/speaking'), 1500);
+        return;
+      }
+
       setTestStatus(response.status || '');
 
       setTestData({
@@ -205,7 +227,8 @@ export default function UpdateSpeakingTestEditor() {
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Update error:', error);
-      setSnackbar({ open: true, message: 'Failed to update test', severity: 'error' });
+      const errorMsg = parseApiError(error);
+      setSnackbar({ open: true, message: `Failed to update test: ${errorMsg}`, severity: 'error' });
     } finally {
       setIsSaving(false);
     }
@@ -230,6 +253,7 @@ export default function UpdateSpeakingTestEditor() {
       setBasicOpen={setBasicOpen}
       settingOpen={settingOpen}
       setSettingOpen={setSettingOpen}
+      showTestSettings={false}
       snackbar={snackbar}
       setSnackbar={setSnackbar}
       isReadOnly={isReadOnly}

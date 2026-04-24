@@ -263,6 +263,9 @@ export default function ViewTestFeedbackPage({ params }) {
         }
 
         const details = await detailFetcher(test_id);
+        if (!details.is_owner) {
+          throw new Error('You do not have permission to view feedback for this test.');
+        }
         setTestTitle(details?.title || `${skillLabel} Test Feedback`);
         setTestStatus(details?.status || null);
 

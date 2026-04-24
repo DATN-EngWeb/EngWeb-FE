@@ -44,6 +44,7 @@ import TestTimer from '../Common/TestTimer';
 
 const MatchingContent = ({
   testName = 'Practice Test Name',
+  partLabel,
   parts = ['Part 1', 'Part 2', 'Part 3', 'Part 4', 'Part 5'],
   currentPart = 3,
   passage = '',
@@ -256,6 +257,7 @@ const MatchingContent = ({
       {!embedded && (
         <TestHeading
           testName={testName}
+          partLabel={partLabel}
           onSubmit={showResults ? null : handleSubmit}
           isTeacher={isTeacher || showResults}
           timerNode={timerNode || (!isTeacher && !showResults ? <TestTimer /> : null)}
