@@ -32,6 +32,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { logout as logoutAPI } from '../../api/accounts';
 import AnimatedStreakBadge from '../Streak/animatedStreakBadge';
 import StreakBadge from '../Streak/streakBadge';
+import NotificationBell from '../Notifications/NotificationBell';
 
 export default function Header() {
   const router = useRouter();
@@ -212,6 +213,7 @@ export default function Header() {
                 <>
                   <AnimatedStreakBadge />
                   <StreakBadge />
+                  <NotificationBell />
                   <Box
                     id="user-menu-button"
                     role="button"
