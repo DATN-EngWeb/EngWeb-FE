@@ -1,5 +1,16 @@
 import React from 'react';
-import { Box, Typography, Paper, Stack, Chip, useTheme, Grid } from '@mui/material';
+import {
+  Box,
+  Typography,
+  Paper,
+  Stack,
+  Chip,
+  useTheme,
+  Grid,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+} from '@mui/material';
 import { alpha } from '@mui/material/styles';
 
 // --- MUI Icons ---
@@ -9,9 +20,9 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
 import BarChartIcon from '@mui/icons-material/BarChart';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const secondsToMinutesValue = (seconds) => {
   const m = Math.floor(seconds / 60);
@@ -24,11 +35,12 @@ export default function SummaryTab({
   startTime,
   allAnswers,
   detailAnswers,
+  receptiveParts,
   onNavigateToQuestion,
 }) {
   const theme = useTheme();
 
-  // 1. Tính toán các chỉ số chung
+  // Tính toán các chỉ số chung
   const score = staticData?.total_score || 0;
 
   const maxScore =
@@ -37,7 +49,7 @@ export default function SummaryTab({
       return sum + qScore;
     }, 0) || 0;
 
-  const bonusExp = staticData?.earned_bonus_points || 0;
+  const bonusExp = staticData?.earned_bonus_point || 0;
   const feedback = staticData?.feedback_message || 'Test Completed!';
 
   const totalQuestions = detailAnswers?.length || 0;
@@ -48,31 +60,41 @@ export default function SummaryTab({
   const timeFormatted = startTime > 60 ? secondsToMinutesValue(startTime) : `${startTime}s`;
   const avgTimePerQuestion = totalQuestions > 0 ? Math.round(startTime / totalQuestions) : 0;
 
-  // 2. Tính toán dữ liệu chi tiết cho từng Part
-  const partsData = allAnswers
-    ? Object.entries(allAnswers).map(([partId, questions], index) => {
-        const qIds = Object.keys(questions);
-        const qDetails = qIds
-          .map((qId) => {
-            const detail = detailAnswers?.find((d) => d.question_id.toString() === qId);
+  // Tính toán dữ liệu chi tiết cho từng Part
+  const partsData =
+    allAnswers && receptiveParts
+      ? Object.entries(allAnswers)
+          .map(([partId, questions]) => {
+            const actualPartIndex = receptiveParts.findIndex(
+              (p) => p.id.toString() === partId.toString(),
+            );
+
+            const validIndex = actualPartIndex !== -1 ? actualPartIndex : 0;
+
+            const qIds = Object.keys(questions);
+            const qDetails = qIds
+              .map((qId) => {
+                const detail = detailAnswers?.find((d) => d.question_id.toString() === qId);
+                return {
+                  id: qId,
+                  num: detail?.question_number || '?',
+                  isCorrect: detail?.is_correct || false,
+                };
+              })
+              .sort((a, b) => (Number(a.num) || 0) - (Number(b.num) || 0));
+
+            const correctInPart = qDetails.filter((q) => q.isCorrect).length;
+
             return {
-              id: qId,
-              num: detail?.question_number || '?',
-              isCorrect: detail?.is_correct || false,
+              name: `Part ${validIndex + 1}`,
+              actualIndex: validIndex,
+              correctCount: correctInPart,
+              totalCount: qDetails.length,
+              questions: qDetails,
             };
           })
-          .sort((a, b) => (Number(a.num) || 0) - (Number(b.num) || 0));
-
-        const correctInPart = qDetails.filter((q) => q.isCorrect).length;
-
-        return {
-          name: `Part ${index + 1}`,
-          correctCount: correctInPart,
-          totalCount: qDetails.length,
-          questions: qDetails,
-        };
-      })
-    : [];
+          .sort((a, b) => a.actualIndex - b.actualIndex)
+      : [];
 
   return (
     <Box sx={{ maxWidth: '900px', mx: 'auto', p: { xs: 2, md: 3 } }}>
@@ -148,7 +170,7 @@ export default function SummaryTab({
               flexDirection: 'column',
               alignItems: 'center',
               gap: 1,
-              bgcolor: theme.palette.yellow.main,
+              bgcolor: theme.palette.yellow?.main || '#ffd700',
               backdropFilter: 'blur(10px)',
               border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
               p: 2,
@@ -184,26 +206,10 @@ export default function SummaryTab({
                 /{maxScore}
               </Typography>
             </Stack>
-            {bonusExp > 0 && (
-              <Chip
-                icon={
-                  <FlashOnIcon
-                    sx={{ color: `${theme.palette.yellow.main} !important`, fontSize: '1rem' }}
-                  />
-                }
-                label={`+${bonusExp} XP`}
-                sx={{
-                  bgcolor: theme.palette.primary.main,
-                  color: theme.palette.yellow.main,
-                  fontWeight: 700,
-                  mt: 2,
-                  boxShadow: 2,
-                }}
-              />
-            )}
           </Box>
         </Stack>
       </Paper>
+
       {/* --- QUICK STATS GRID --- */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid size={{ xs: 6, md: 3 }}>
@@ -212,7 +218,7 @@ export default function SummaryTab({
             label="Accuracy"
             value={`${accuracy}%`}
             iconColor={theme.palette.info.main}
-            bgcolor={theme.palette.info.pastel}
+            bgcolor={theme.palette.info?.pastel || '#e3f2fd'}
             borderColor={theme.palette.info.light}
           />
         </Grid>
@@ -222,7 +228,7 @@ export default function SummaryTab({
             label="Correct"
             value={`${correctCount}/${totalQuestions}`}
             iconColor={theme.palette.success.main}
-            bgcolor={theme.palette.success.pastel}
+            bgcolor={theme.palette.success?.pastel || '#e8f5e9'}
             borderColor={theme.palette.success.light}
           />
         </Grid>
@@ -232,7 +238,7 @@ export default function SummaryTab({
             label="Time Taken"
             value={timeFormatted}
             iconColor={theme.palette.warning.dark}
-            bgcolor={theme.palette.warning.pastel}
+            bgcolor={theme.palette.warning?.pastel || '#fff8e1'}
             borderColor={theme.palette.warning.light}
           />
         </Grid>
@@ -241,9 +247,9 @@ export default function SummaryTab({
             icon={<FlashOnIcon sx={{ fontSize: 32 }} />}
             label="Bonus XP"
             value={`+${bonusExp}`}
-            iconColor={theme.palette.red.text}
+            iconColor={theme.palette.red?.text || '#d32f2f'}
             bgcolor={theme.palette.background.default}
-            borderColor={theme.palette.orange.light}
+            borderColor={theme.palette.orange?.light || '#ffcc80'}
           />
         </Grid>
       </Grid>
@@ -254,15 +260,22 @@ export default function SummaryTab({
         sx={{
           borderRadius: '24px',
           p: { xs: 3, md: 4 },
-          border: `1px solid ${theme.palette.reading.borderLight}`,
+          border: `1px solid ${theme.palette.reading?.borderLight || '#e0e0e0'}`,
           display: 'flex',
           flexDirection: 'column',
           gap: 2,
         }}
       >
         <Stack direction="row" alignItems="center" spacing={2}>
-          <Box sx={{ p: 1, bgcolor: theme.palette.gray.light, borderRadius: 2, display: 'flex' }}>
-            <BarChartIcon sx={{ color: theme.palette.darkGrey.light }} />
+          <Box
+            sx={{
+              p: 1,
+              bgcolor: theme.palette.gray?.light || '#f5f5f5',
+              borderRadius: 2,
+              display: 'flex',
+            }}
+          >
+            <BarChartIcon sx={{ color: theme.palette.darkGrey?.light || '#757575' }} />
           </Box>
           <Typography
             sx={{
@@ -274,6 +287,7 @@ export default function SummaryTab({
             Performance Breakdown
           </Typography>
         </Stack>
+
         {/* Insights */}
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 12 }}>
@@ -282,10 +296,10 @@ export default function SummaryTab({
               spacing={2}
               sx={{
                 p: 2,
-                bgcolor: 'background.gray',
+                bgcolor: theme.palette.background.gray || '#f8f9fa',
                 borderRadius: '16px',
                 border: `1px solid`,
-                borderColor: 'gray.main',
+                borderColor: theme.palette.gray?.main || '#e0e0e0',
                 height: '100%',
               }}
             >
@@ -298,7 +312,10 @@ export default function SummaryTab({
                 </Typography>
                 <Typography
                   variant="body2"
-                  sx={{ fontWeight: { xs: 400, md: 600 }, color: 'text.gray' }}
+                  sx={{
+                    fontWeight: { xs: 400, md: 600 },
+                    color: theme.palette.text?.gray || '#757575',
+                  }}
                 >
                   You spent an average of{' '}
                   <Box component="span" sx={{ color: 'info.main' }}>
@@ -310,125 +327,127 @@ export default function SummaryTab({
             </Stack>
           </Grid>
         </Grid>
-        {/* Parts Grid */}
-        <Grid container spacing={2}>
+
+        {/* CẬP NHẬT: Thêm alignItems="flex-start" để ngăn kéo giãn chiều cao */}
+        <Grid container spacing={2} alignItems="flex-start">
           {partsData.map((part, idx) => (
             <Grid size={{ xs: 12, md: 6 }} key={idx}>
-              <Box
+              <Accordion
+                disableGutters
+                elevation={0}
                 sx={{
-                  p: 2,
-                  bgcolor: theme.palette.background.gray,
-                  borderRadius: '16px',
-                  border: `1px solid ${theme.palette.gray.light}`,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: '100%',
+                  bgcolor: theme.palette.background.gray || '#f8f9fa',
+                  borderRadius: '16px !important',
+                  border: `1px solid ${theme.palette.gray?.light || '#e0e0e0'}`,
+                  '&:before': { display: 'none' },
+                  overflow: 'hidden',
+                  // CẬP NHẬT: Xóa height: '100%' để Box tự co theo nội dung
                 }}
               >
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  sx={{ mb: 2 }}
+                <AccordionSummary
+                  // CẬP NHẬT: Thêm sx={{ fontSize: '1.8rem' }} để làm to icon chevron
+                  expandIcon={
+                    <ExpandMoreIcon sx={{ fontSize: '1.8rem', color: 'text.secondary' }} />
+                  }
+                  sx={{
+                    p: 2,
+                    minHeight: 'unset',
+                    '& .MuiAccordionSummary-content': { m: 0 },
+                  }}
                 >
-                  <Typography sx={{ fontWeight: 700, color: 'primary.main' }}>
-                    {part.name}
-                  </Typography>
-                  <Box
-                    sx={{
-                      bgcolor: 'white',
-                      px: 1.5,
-                      py: 0.5,
-                      borderRadius: 1.5,
-                      border: `1px solid ${theme.palette.gray.main}`,
-                      boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                    }}
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    sx={{ width: '100%', pr: 1 }}
                   >
-                    {/* Chỉ hiện số câu Đúng nếu > 0 */}
-                    {part.correctCount > 0 && (
-                      <Typography
-                        component="span"
-                        sx={{
-                          fontWeight: 700,
-                          fontSize: '0.875rem',
-                          color: theme.palette.success.main,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 0.5,
-                        }}
-                      >
-                        <CheckCircleIcon sx={{ fontSize: 16 }} /> {part.correctCount} Correct
-                      </Typography>
-                    )}
-                    {part.correctCount > 0 && part.totalCount - part.correctCount > 0 && (
-                      <Typography
-                        component="span"
-                        sx={{ color: theme.palette.text.disabled, fontSize: '0.875rem', mx: 0.5 }}
-                      >
-                        |
-                      </Typography>
-                    )}
-                    {part.totalCount - part.correctCount > 0 && (
-                      <Typography
-                        component="span"
-                        sx={{
-                          fontWeight: 700,
-                          fontSize: '0.875rem',
-                          color: theme.palette.error.main,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 0.5,
-                        }}
-                      >
-                        <CancelOutlinedIcon sx={{ fontSize: 16 }} />{' '}
-                        {part.totalCount - part.correctCount} Incorrect
-                      </Typography>
-                    )}
-                  </Box>
-                </Stack>
-
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 'auto' }}>
-                  {part.questions.map((q, qIdx) => (
+                    <Typography sx={{ fontWeight: 700, color: 'primary.main' }}>
+                      {part.name}
+                    </Typography>
                     <Box
-                      key={qIdx}
-                      onClick={() => onNavigateToQuestion(idx, q.id)}
                       sx={{
-                        cursor: 'pointer',
-                        transition: 'transform 0.1s',
-                        '&:hover': {
-                          transform: 'scale(1.05)',
-                        },
+                        bgcolor: `${theme.palette.background.paper}`,
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 1.5,
+                        border: `1px solid ${theme.palette.gray?.main || '#e0e0e0'}`,
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 0.5,
-                        px: 1.25,
-                        py: 0.5,
-                        borderRadius: 2,
-                        border: '1px solid',
-                        borderColor: q.isCorrect
-                          ? theme.palette.success.light
-                          : theme.palette.error.light,
-                        bgcolor: q.isCorrect
-                          ? theme.palette.success.pastel
-                          : theme.palette.error.pastel,
-                        color: q.isCorrect ? theme.palette.success.dark : theme.palette.error.main,
                       }}
                     >
-                      <Typography sx={{ fontSize: '0.875rem', fontWeight: 700 }}>
-                        Q{q.num}
+                      <Typography
+                        component="span"
+                        sx={{
+                          fontWeight: 700,
+                          fontSize: '0.875rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                        }}
+                      >
+                        <Box
+                          component="span"
+                          sx={{
+                            color:
+                              part.correctCount > 0
+                                ? theme.palette.success.main
+                                : theme.palette.error.main,
+                          }}
+                        >
+                          {part.correctCount}
+                        </Box>
+                        <Box component="span" sx={{ color: theme.palette.text.disabled }}>
+                          / {part.totalCount}
+                        </Box>
                       </Typography>
-                      {q.isCorrect ? (
-                        <CheckCircleIcon sx={{ fontSize: 16 }} />
-                      ) : (
-                        <CancelOutlinedIcon sx={{ fontSize: 16 }} />
-                      )}
                     </Box>
-                  ))}
-                </Box>
-              </Box>
+                  </Stack>
+                </AccordionSummary>
+
+                <AccordionDetails sx={{ pt: 0, px: 2, pb: 2 }}>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {part.questions.map((q, qIdx) => (
+                      <Box
+                        key={qIdx}
+                        onClick={() => onNavigateToQuestion(part.actualIndex, q.id)}
+                        sx={{
+                          cursor: 'pointer',
+                          transition: 'transform 0.1s',
+                          '&:hover': {
+                            transform: 'scale(1.05)',
+                          },
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                          px: 1.25,
+                          py: 0.5,
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: q.isCorrect
+                            ? theme.palette.success.light
+                            : theme.palette.error.light,
+                          bgcolor: q.isCorrect
+                            ? theme.palette.success?.pastel || '#e8f5e9'
+                            : theme.palette.error?.pastel || '#ffebee',
+                          color: q.isCorrect
+                            ? theme.palette.success.dark
+                            : theme.palette.error.main,
+                        }}
+                      >
+                        <Typography sx={{ fontSize: '0.875rem', fontWeight: 700 }}>
+                          Q{q.num}
+                        </Typography>
+                        {q.isCorrect ? (
+                          <CheckCircleIcon sx={{ fontSize: 16 }} />
+                        ) : (
+                          <CancelOutlinedIcon sx={{ fontSize: 16 }} />
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                </AccordionDetails>
+              </Accordion>
             </Grid>
           ))}
         </Grid>
@@ -438,6 +457,8 @@ export default function SummaryTab({
 }
 
 function StatCard({ icon, label, value, iconColor, bgcolor, borderColor }) {
+  const theme = useTheme();
+
   return (
     <Box
       sx={{
@@ -456,7 +477,7 @@ function StatCard({ icon, label, value, iconColor, bgcolor, borderColor }) {
         sx={{
           mb: 1.5,
           p: 1.5,
-          bgcolor: 'white',
+          bgcolor: `${theme.palette.background.paper}`,
           borderRadius: '50%',
           boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
           display: 'flex',
@@ -468,7 +489,7 @@ function StatCard({ icon, label, value, iconColor, bgcolor, borderColor }) {
       <Typography variant="h5" sx={{ fontWeight: 800, color: iconColor, mb: 0.5 }}>
         {value}
       </Typography>
-      <Typography variant="body2" sx={{ fontWeight: 600, color: '#64748b' }}>
+      <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main' }}>
         {label}
       </Typography>
     </Box>

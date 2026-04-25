@@ -4,7 +4,15 @@ import Spinner from '../../../components/spinner';
 
 export default function Skeleton() {
   return (
-    <Box sx={{ ...listeningtestStyles.mainContainer, overflow: 'hidden' }}>
+    <Box
+      sx={{
+        ...listeningtestStyles.mainContainer,
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        height: { xs: 'calc(100vh - 56px)', md: 'calc(100vh - 64px)' },
+      }}
+    >
       {/* -------- Test Heading Section --------- */}
       <Box sx={{ ...listeningtestStyles.testHeadingContainer, justifyContent: 'center' }}>
         <Box sx={listeningtestStyles.nameTestAndFormatPart}>
@@ -31,8 +39,8 @@ export default function Skeleton() {
       ></Box>
       <Box
         sx={{
+          flex: 1,
           width: '100%',
-          height: '330px',
           backgroundColor: 'background.gray',
           display: 'flex',
           alignItems: 'flex-start',

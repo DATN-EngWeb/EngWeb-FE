@@ -22,12 +22,20 @@ export default function SumaryPartTab({ questions = [], onNavigateToQuestion }) 
         mb: { xs: '16px', md: 0 },
       }}
     >
-      <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', mb: 1 }}>
+      <Typography
+        variant="h6"
+        sx={{ fontSize: '1rem', fontWeight: 700, color: 'primary.main', mb: 1 }}
+      >
         Part Summary
       </Typography>
       <Typography
         variant="body2"
-        sx={{ fontSize: { xs: '0.8rem', md: '0.9rem' }, color: '#64748b', mb: 2, lineHeight: 1.5 }}
+        sx={{
+          fontSize: { xs: '0.8rem', md: '0.9rem' },
+          color: 'text.gray',
+          mb: 2,
+          lineHeight: 1.5,
+        }}
       >
         Click on a question to review your answer.
       </Typography>
@@ -48,9 +56,9 @@ export default function SumaryPartTab({ questions = [], onNavigateToQuestion }) 
               py: 0.5,
               borderRadius: 2,
               border: '1px solid',
-              borderColor: q.isCorrect ? '#86efac' : '#fca5a5',
-              bgcolor: q.isCorrect ? '#f0fdf4' : '#fef2f2',
-              color: q.isCorrect ? '#166534' : '#991b1b',
+              borderColor: q.isCorrect ? 'success.dark' : 'error.dark',
+              bgcolor: q.isCorrect ? 'success.pastel' : 'error.pastel',
+              color: q.isCorrect ? 'success.main' : 'error.main',
             }}
           >
             <Typography sx={{ fontSize: '0.875rem', fontWeight: 700 }}>Q{index + 1}</Typography>

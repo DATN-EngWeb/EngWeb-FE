@@ -246,9 +246,10 @@ export default function FillBlankPart({
           >
             {dataPart.type === 'fill_in_the_blanks'
               ? dataPart?.answers?.map((answer, index) => {
-                  const questionResult = Array.isArray(detailAnswers)
-                    ? detailAnswers.find((ans) => ans.question_id === answer.id)
-                    : null;
+                  const questionResult =
+                    disabled && Array.isArray(detailAnswers)
+                      ? detailAnswers.find((ans) => ans.question_id === answer.id)
+                      : null;
                   const isCorrect = questionResult?.is_correct;
 
                   return (
@@ -308,9 +309,10 @@ export default function FillBlankPart({
                   );
                 })
               : dataPart?.receptive_questions?.map((question, index) => {
-                  const questionResult = Array.isArray(detailAnswers)
-                    ? detailAnswers.find((ans) => ans.question_id === question.id)
-                    : null;
+                  const questionResult =
+                    disabled && Array.isArray(detailAnswers)
+                      ? detailAnswers.find((ans) => ans.question_id === question.id)
+                      : null;
                   const isCorrect = questionResult?.is_correct;
 
                   const correctAnswerText = question.receptive_answers?.find(

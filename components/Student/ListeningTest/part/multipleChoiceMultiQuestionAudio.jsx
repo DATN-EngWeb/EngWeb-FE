@@ -230,9 +230,10 @@ export default function MultipleChoiceQuestionAudio({
         </Box>
         {/* -------- Questions Section --------- */}
         {dataPart?.receptive_questions?.map((question, index) => {
-          const questionResult = Array.isArray(detailAnswers)
-            ? detailAnswers.find((ans) => ans.question_id === question.id)
-            : null;
+          const questionResult =
+            disabled && Array.isArray(detailAnswers)
+              ? detailAnswers.find((ans) => ans.question_id === question.id)
+              : null;
 
           const correctAnswer = question.receptive_answers?.find((a) => a.is_correct);
           const correctAnswerText = correctAnswer

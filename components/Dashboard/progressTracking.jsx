@@ -37,6 +37,10 @@ export default function ProgressTracking({ historyData, type, activeTab }) {
         isReadOnly: res.type === 'S',
         startTime: res.start_time,
         totalTime: res.total_time,
+        bonus_point: res.bonus_point,
+        earned_bonus_point: res.earned_bonus_point,
+        total_score: res.total_score,
+        feedback_message: res.feedback_message,
       };
     } else {
       dataToSave = {

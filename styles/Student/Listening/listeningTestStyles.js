@@ -39,7 +39,7 @@ export const listeningtestStyles = {
     border: 'none',
   },
   backButton: {
-    width: { xs: 'auto', md: '200px' },
+    width: { xs: 'auto', md: '300px' },
     color: 'gray.main',
     fontSize: { xs: '1rem', md: '1.2rem' },
     fontWeight: 500,
@@ -53,28 +53,58 @@ export const listeningtestStyles = {
   },
   summitButtonWrapper: {
     order: { xs: 3, md: 3 },
-    width: { xs: 'auto', md: '200px' },
+    width: { xs: 'auto', md: '300px' }, // Nới rộng lên 300px
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    gap: 1.5,
+    gap: 1.5, // Trả lại khoảng cách gap thoải mái hơn giữa 2 nút
   },
   submitButton: {
-    backgroundColor: '#f97316',
-    color: '#ffffff',
+    flex: 1, // Vẫn giữ flex: 1 để 2 nút chia đều cái khung 300px
+    minWidth: 0,
+    backgroundColor: 'yellow.main',
+    color: 'primary.main',
     borderRadius: '12px',
-    fontSize: { xs: '0.8rem', md: '1rem' },
+    fontSize: { xs: '0.8rem', md: '0.9rem' }, // Tăng lại cỡ chữ cho dễ đọc
     fontWeight: 700,
     textTransform: 'none',
     whiteSpace: 'nowrap',
-    '&:hover': {
-      backgroundColor: '#ea580c',
-      color: '#ffffff',
-      boxShadow: '0 4px 12px rgba(249, 115, 22, 0.2)',
+    px: 1.5, // Tăng lại padding ngang
+    py: 0.75, // Tăng lại padding dọc
+    '& .MuiButton-startIcon': {
+      marginRight: '6px',
+      marginLeft: '-4px',
+      '& svg': { fontSize: '1.2rem' }, // Icon to hơn một chút
     },
-    px: 2.5,
-    transition: 'all 0.2s ease-in-out',
+    '&:hover': {
+      filter: 'brightness(0.9)',
+      color: 'primary.main',
+    },
+  },
+  draftButton: {
+    flex: 1,
+    minWidth: 0,
+    backgroundColor: 'transparent',
+    color: 'primary.main',
+    borderRadius: '12px',
+    border: '2px solid',
+    borderColor: 'gray.main',
+    fontSize: { xs: '0.8rem', md: '0.9rem' }, // Tăng lại cỡ chữ
+    fontWeight: 700,
+    textTransform: 'none',
+    whiteSpace: 'nowrap',
+    px: 1.5,
+    py: 0.75,
+    '& .MuiButton-startIcon': {
+      marginRight: '6px',
+      marginLeft: '-4px',
+      '& svg': { fontSize: '1.2rem' },
+    },
+    '&:hover': {
+      backgroundColor: 'background.gray',
+      color: 'primary.main',
+    },
   },
   nameTestAndFormatPart: {
     order: { xs: 1, md: 2 },
@@ -170,7 +200,7 @@ export const listeningtestStyles = {
     py: 0.5,
     fontWeight: 700,
     fontSize: { xs: '1rem', md: '1.25rem' },
-    minWidth: { xs: '0', md: '200px' },
+    minWidth: { xs: '0', md: '300px' },
   },
   timeLeftSkeleton: {
     ...skeletonBase,
@@ -470,7 +500,7 @@ export const listeningPartStyles = {
     fontWeight: 500,
     textTransform: 'none',
     '&:hover': {
-      backgroundColor: 'warning.dark',
+      filter: 'brightness(0.9)',
       boxShadow: 'none',
     },
     px: 2.5,

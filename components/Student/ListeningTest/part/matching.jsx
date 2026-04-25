@@ -108,9 +108,10 @@ export default function Matching({
         <Box sx={listeningPartStyles.matchingQuestionAnswerContainerGrid}>
           <Box sx={listeningPartStyles.questionContainerCol}>
             {dataPart?.receptive_questions?.map((question, index) => {
-              const questionResult = Array.isArray(detailAnswers)
-                ? detailAnswers.find((ans) => ans.question_id === question.id)
-                : null;
+              const questionResult =
+                disabled && Array.isArray(detailAnswers)
+                  ? detailAnswers.find((ans) => ans.question_id === question.id)
+                  : null;
               const isCorrect = questionResult?.is_correct;
 
               // Tìm đáp án đúng để hiển thị

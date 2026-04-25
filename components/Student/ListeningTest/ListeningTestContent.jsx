@@ -24,6 +24,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import { getReceptiveTestDetails } from '../../../api/teacher/upload-reading';
 import { createReceptiveTest } from '../../../api/test';
 import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
@@ -58,8 +59,8 @@ export default function ListeningTestContent({ test_id, initialData }) {
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [detailAnswers, setDetailAnswers] = useState([]);
   const [staticData, setStaticData] = useState({
-    bonus_points: 0,
-    earned_bonus_points: 0,
+    bonus_point: 0,
+    earned_bonus_point: 0,
     total_score: 0,
     feedback_message: '',
   });
@@ -133,8 +134,12 @@ export default function ListeningTestContent({ test_id, initialData }) {
   };
 
   const handlePreSubmit = () => {
-    const currentType = checkCompletionStatus(testData, allAnswers);
-    setSubmitType(currentType);
+    setSubmitType('S');
+    setOpenConfirm(true);
+  };
+
+  const handlePreSaveDraft = () => {
+    setSubmitType('D');
     setOpenConfirm(true);
   };
 
@@ -307,8 +312,8 @@ export default function ListeningTestContent({ test_id, initialData }) {
             setDetailAnswers(savedData.answer_histories);
             setStartTime(savedData.totalTime || 0);
             setStaticData({
-              bonus_points: savedData.bonus_points,
-              earned_bonus_points: savedData.earned_bonus_points,
+              bonus_point: savedData.bonus_point,
+              earned_bonus_point: savedData.earned_bonus_point,
               total_score: savedData.total_score,
               feedback_message: savedData.feedback_message,
             });
@@ -392,7 +397,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
     setTargetQuestionId(questionId);
   };
 
-  // Logic cuộn trang và nháy sáng siêu an toàn (Không làm to chữ)
+  // Logic cuộn trang và nảy Container Question
   useEffect(() => {
     if (targetQuestionId && indexPart !== -1) {
       let retryCount = 0;
@@ -409,38 +414,31 @@ export default function ListeningTestContent({ test_id, initialData }) {
               block: 'center',
             });
 
-            // 2. CSS an toàn tuyệt đối: CHỈ ĐỔI MÀU, không dùng thẻ *, không đụng font-size
-            if (!document.getElementById('safe-blink-style')) {
+            // 2. CSS an toàn: CHỈ ĐẨY LÊN, KHÔNG ĐỔI MÀU
+            if (!document.getElementById('safe-bounce-style')) {
               const style = document.createElement('style');
-              style.id = 'safe-blink-style';
+              style.id = 'safe-bounce-style';
               style.innerHTML = `
-                .safe-color-blink .MuiTypography-root,
-                .safe-color-blink .MuiInputBase-input,
-                .safe-color-blink .MuiButton-root,
-                .safe-color-blink svg {
-                  color: #FCD34D !important;
-                  fill: #FCD34D !important;
+                @keyframes slightBounce {
+                  0%, 100% { transform: translateY(0); }
+                  50% { transform: translateY(-2px); } /* Đổi thành -1px nếu muốn nảy siêu nhẹ */
+                }
+                .safe-element-bounce {
+                  animation: slightBounce 0.3s ease-in-out 2; /* Nảy 2 lần trong 0.6s */
                 }
               `;
               document.head.appendChild(style);
             }
 
-            // 3. Kịch bản nháy màu tĩnh
+            // 3. Kịch bản nảy lên
             setTimeout(() => {
-              element.classList.add('safe-color-blink'); // Sáng lần 1
+              element.classList.add('safe-element-bounce');
 
+              // Dọn dẹp class sau khi animation hoàn thành (0.3s * 2 lần = 600ms)
               setTimeout(() => {
-                element.classList.remove('safe-color-blink'); // Tắt lần 1
-
-                setTimeout(() => {
-                  element.classList.add('safe-color-blink'); // Sáng lần 2
-
-                  setTimeout(() => {
-                    element.classList.remove('safe-color-blink'); // Tắt lần 2 (Kết thúc)
-                  }, 350);
-                }, 200);
-              }, 350);
-            }, 300); // Đợi cuộn ổn định rồi mới nháy
+                element.classList.remove('safe-element-bounce');
+              }, 600);
+            }, 300); // Đợi cuộn ổn định rồi mới nảy
           });
 
           setTargetQuestionId(null);
@@ -650,6 +648,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
         <Box
           sx={{
             ...listeningtestStyles.summitButtonWrapper,
+            justifyContent: 'flex-start',
             order: { xs: 2, md: 1 },
             ...(!isReadOnly && {
               display: 'none',
@@ -660,6 +659,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
             startIcon={<ChevronLeftRounded />}
             sx={{
               ...listeningtestStyles.backButton,
+              width: 'auto',
               '& .MuiButton-startIcon': {
                 '& svg': {
                   fontSize: { xs: '1.5rem', md: '1.75rem' },
@@ -692,13 +692,21 @@ export default function ListeningTestContent({ test_id, initialData }) {
                 )}`}
           </Typography>
         </Box>
-        {/* Submit Button */}
+        {/* Submit và Draft Button */}
         <Box
           sx={{
             ...listeningtestStyles.summitButtonWrapper,
             ...(isReadOnly && { visibility: 'hidden' }),
           }}
         >
+          <Button
+            startIcon={<SaveOutlinedIcon />}
+            sx={listeningtestStyles.draftButton}
+            onClick={handlePreSaveDraft}
+            disabled={isReadOnly}
+          >
+            Save Draft
+          </Button>
           <Button
             startIcon={<SendIcon />}
             sx={listeningtestStyles.submitButton}
@@ -764,6 +772,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
             startTime={startTime}
             allAnswers={allAnswers}
             detailAnswers={detailAnswers}
+            receptiveParts={receptiveParts}
             onNavigateToQuestion={handleNavigateToQuestion}
           />
         ) : (
@@ -776,6 +785,11 @@ export default function ListeningTestContent({ test_id, initialData }) {
           <Typography
             sx={{
               ...listeningtestStyles.backButton,
+              // Thêm logic display: Ẩn hẳn (none) trên mobile (xs) khi ở trang đầu để chữ Section dạt ra sát mép trái
+              display:
+                indexPart === -1 || (!isReadOnly && indexPart === 0)
+                  ? { xs: 'none', md: 'flex' }
+                  : 'flex',
               visibility:
                 indexPart === -1 || (!isReadOnly && indexPart === 0) ? 'hidden' : 'visible',
             }}
@@ -791,28 +805,52 @@ export default function ListeningTestContent({ test_id, initialData }) {
             />
             Back
           </Typography>
+
           <Typography sx={{ fontSize: '1rem' }}>
             Section {indexPart + 1} of {receptiveParts.length}
           </Typography>
-          <Box sx={listeningtestStyles.summitButtonWrapper}>
+
+          <Box
+            sx={{
+              ...listeningtestStyles.summitButtonWrapper,
+              // Thêm logic display: Ẩn hẳn Box wrapper này trên mobile (xs) khi ở trang cuối để chữ Section dạt ra sát mép phải
+              display:
+                indexPart === receptiveParts.length - 1 ? { xs: 'none', md: 'flex' } : 'flex',
+            }}
+          >
             {indexPart !== receptiveParts.length - 1 ? (
               <Button sx={listeningtestStyles.nextButton} onClick={goNextPart}>
                 Next
               </Button>
             ) : (
-              <Button
-                startIcon={<SendIcon />}
-                sx={{
-                  ...listeningtestStyles.submitButton,
-                  px: 3,
-                  py: 0.5,
-                  ...(isReadOnly && { visibility: 'hidden' }),
-                }}
-                onClick={handlePreSubmit}
-                disabled={isReadOnly}
-              >
-                Submit
-              </Button>
+              <Stack direction="row" spacing={1.5} sx={{ display: { xs: 'none', md: 'flex' } }}>
+                <Button
+                  startIcon={<SaveOutlinedIcon />}
+                  sx={{
+                    ...listeningtestStyles.draftButton,
+                    px: 3,
+                    py: 0.5,
+                    ...(isReadOnly && { display: 'none' }),
+                  }}
+                  onClick={handlePreSaveDraft}
+                  disabled={isReadOnly}
+                >
+                  Save Draft
+                </Button>
+                <Button
+                  startIcon={<SendIcon />}
+                  sx={{
+                    ...listeningtestStyles.submitButton,
+                    px: 3,
+                    py: 0.5,
+                    ...(isReadOnly && { visibility: 'hidden' }),
+                  }}
+                  onClick={handlePreSubmit}
+                  disabled={isReadOnly}
+                >
+                  Submit
+                </Button>
+              </Stack>
             )}
           </Box>
         </Container>

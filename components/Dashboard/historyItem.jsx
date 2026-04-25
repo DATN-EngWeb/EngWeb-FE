@@ -3,12 +3,16 @@
 import React from 'react';
 import { Paper, Stack, Box, Typography, Button } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import * as styles from '@/styles/Student/HistoryTestStyles';
 import { useRouter } from 'next/navigation';
 
 export default function HistoryItem({ data, filterSkill }) {
   const router = useRouter();
+
+  const isScoreType = filterSkill === 'L' || filterSkill === 'R';
+
   const handleViewDetail = (item) => {
     let dataToSave = {};
 
@@ -23,6 +27,10 @@ export default function HistoryItem({ data, filterSkill }) {
         isReadOnly: item.type === 'S',
         startTime: item.start_time,
         totalTime: item.total_time,
+        bonus_point: item.bonus_point,
+        earned_bonus_point: item.earned_bonus_point,
+        total_score: item.total_score,
+        feedback_message: item.feedback_message,
       };
     } else {
       dataToSave = {
@@ -76,10 +84,15 @@ export default function HistoryItem({ data, filterSkill }) {
             <Typography
               variant="caption"
               fontWeight={700}
-              color="#ffb300"
+              color="yellow.main"
               sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
             >
-              <StarIcon sx={{ fontSize: '1rem' }} /> 100 XP
+              {isScoreType ? (
+                <EmojiEventsIcon sx={{ fontSize: '1rem' }} />
+              ) : (
+                <StarIcon sx={{ fontSize: '1rem' }} />
+              )}{' '}
+              {isScoreType ? data.total_score : data.earned_bonus_point}
             </Typography>
             <Typography
               variant="caption"

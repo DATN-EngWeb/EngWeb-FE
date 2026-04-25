@@ -75,9 +75,10 @@ export default function MultipleChoiceSingleAudio({
       {/* -------- Question Section --------- */}
       <Box sx={listeningPartStyles.questionSection}>
         {dataPart?.receptive_questions?.map((question, index) => {
-          const questionResult = Array.isArray(detailAnswers)
-            ? detailAnswers.find((ans) => ans.question_id === question.id)
-            : null;
+          const questionResult =
+            disabled && Array.isArray(detailAnswers)
+              ? detailAnswers.find((ans) => ans.question_id === question.id)
+              : null;
 
           // Tìm đáp án đúng để hiển thị
           const correctAnswer = question.receptive_answers?.find((a) => a.is_correct);
