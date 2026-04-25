@@ -103,6 +103,7 @@ export default function FillBlankPart({
           return {
             id: question.id,
             isCorrect: questionResult?.is_correct || false,
+            isAnswered: !!questionResult,
           };
         })
       : [];
@@ -375,9 +376,8 @@ export default function FillBlankPart({
                           onBlur={(e) => handleUpdateUserAnswers(question.id, e.target.value)}
                         />
                       </Box>
-
                       {/* -------- Explanation Section --------- */}
-                      {questionResult && (
+                      {disabled && !isTeacherView && (
                         <Box sx={listeningPartStyles.explanationContainer}>
                           <Typography sx={listeningPartStyles.correctText}>
                             Correct Answer: {correctAnswerText}

@@ -23,6 +23,7 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 
 const secondsToMinutesValue = (seconds) => {
   const m = Math.floor(seconds / 60);
@@ -52,7 +53,9 @@ export default function SummaryTab({
   const bonusExp = staticData?.earned_bonus_point || 0;
   const feedback = staticData?.feedback_message || 'Test Completed!';
 
-  const totalQuestions = detailAnswers?.length || 0;
+  const totalQuestions =
+    receptiveParts?.reduce((sum, part) => sum + (part.receptive_questions?.length || 0), 0) || 0;
+
   const correctCount = detailAnswers?.filter((ans) => ans.is_correct).length || 0;
 
   const accuracy = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
@@ -60,41 +63,30 @@ export default function SummaryTab({
   const timeFormatted = startTime > 60 ? secondsToMinutesValue(startTime) : `${startTime}s`;
   const avgTimePerQuestion = totalQuestions > 0 ? Math.round(startTime / totalQuestions) : 0;
 
-  // Tính toán dữ liệu chi tiết cho từng Part
   const partsData =
-    allAnswers && receptiveParts
-      ? Object.entries(allAnswers)
-          .map(([partId, questions]) => {
-            const actualPartIndex = receptiveParts.findIndex(
-              (p) => p.id.toString() === partId.toString(),
-            );
+    receptiveParts?.map((part, index) => {
+      const questions = part.receptive_questions || [];
 
-            const validIndex = actualPartIndex !== -1 ? actualPartIndex : 0;
+      const qDetails = questions.map((q, qIdx) => {
+        const detail = detailAnswers?.find((d) => d.question_id.toString() === q.id.toString());
+        return {
+          id: q.id,
+          num: qIdx + 1,
+          isCorrect: detail?.is_correct || false,
+          isAnswered: !!detail,
+        };
+      });
 
-            const qIds = Object.keys(questions);
-            const qDetails = qIds
-              .map((qId) => {
-                const detail = detailAnswers?.find((d) => d.question_id.toString() === qId);
-                return {
-                  id: qId,
-                  num: detail?.question_number || '?',
-                  isCorrect: detail?.is_correct || false,
-                };
-              })
-              .sort((a, b) => (Number(a.num) || 0) - (Number(b.num) || 0));
+      const correctInPart = qDetails.filter((q) => q.isCorrect).length;
 
-            const correctInPart = qDetails.filter((q) => q.isCorrect).length;
-
-            return {
-              name: `Part ${validIndex + 1}`,
-              actualIndex: validIndex,
-              correctCount: correctInPart,
-              totalCount: qDetails.length,
-              questions: qDetails,
-            };
-          })
-          .sort((a, b) => a.actualIndex - b.actualIndex)
-      : [];
+      return {
+        name: `Part ${index + 1}`,
+        actualIndex: index,
+        correctCount: correctInPart,
+        totalCount: qDetails.length,
+        questions: qDetails,
+      };
+    }) || [];
 
   return (
     <Box sx={{ maxWidth: '900px', mx: 'auto', p: { xs: 2, md: 3 } }}>
@@ -328,7 +320,6 @@ export default function SummaryTab({
           </Grid>
         </Grid>
 
-        {/* CẬP NHẬT: Thêm alignItems="flex-start" để ngăn kéo giãn chiều cao */}
         <Grid container spacing={2} alignItems="flex-start">
           {partsData.map((part, idx) => (
             <Grid size={{ xs: 12, md: 6 }} key={idx}>
@@ -341,11 +332,9 @@ export default function SummaryTab({
                   border: `1px solid ${theme.palette.gray?.light || '#e0e0e0'}`,
                   '&:before': { display: 'none' },
                   overflow: 'hidden',
-                  // CẬP NHẬT: Xóa height: '100%' để Box tự co theo nội dung
                 }}
               >
                 <AccordionSummary
-                  // CẬP NHẬT: Thêm sx={{ fontSize: '1.8rem' }} để làm to icon chevron
                   expandIcon={
                     <ExpandMoreIcon sx={{ fontSize: '1.8rem', color: 'text.secondary' }} />
                   }
@@ -407,44 +396,56 @@ export default function SummaryTab({
 
                 <AccordionDetails sx={{ pt: 0, px: 2, pb: 2 }}>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {part.questions.map((q, qIdx) => (
-                      <Box
-                        key={qIdx}
-                        onClick={() => onNavigateToQuestion(part.actualIndex, q.id)}
-                        sx={{
-                          cursor: 'pointer',
-                          transition: 'transform 0.1s',
-                          '&:hover': {
-                            transform: 'scale(1.05)',
-                          },
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 0.5,
-                          px: 1.25,
-                          py: 0.5,
-                          borderRadius: 2,
-                          border: '1px solid',
-                          borderColor: q.isCorrect
-                            ? theme.palette.success.light
-                            : theme.palette.error.light,
-                          bgcolor: q.isCorrect
-                            ? theme.palette.success?.pastel || '#e8f5e9'
-                            : theme.palette.error?.pastel || '#ffebee',
-                          color: q.isCorrect
-                            ? theme.palette.success.dark
-                            : theme.palette.error.main,
-                        }}
-                      >
-                        <Typography sx={{ fontSize: '0.875rem', fontWeight: 700 }}>
-                          Q{q.num}
-                        </Typography>
-                        {q.isCorrect ? (
-                          <CheckCircleIcon sx={{ fontSize: 16 }} />
-                        ) : (
-                          <CancelOutlinedIcon sx={{ fontSize: 16 }} />
-                        )}
-                      </Box>
-                    ))}
+                    {part.questions.map((q, qIdx) => {
+                      const isUnanswered = !q.isAnswered;
+
+                      return (
+                        <Box
+                          key={qIdx}
+                          onClick={() => onNavigateToQuestion(part.actualIndex, q.id)}
+                          sx={{
+                            cursor: 'pointer',
+                            transition: 'transform 0.1s',
+                            '&:hover': {
+                              transform: 'scale(1.05)',
+                            },
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.5,
+                            px: 1.25,
+                            py: 0.5,
+                            borderRadius: 2,
+                            border: '1px solid',
+                            borderColor: isUnanswered
+                              ? theme.palette.darkGrey.light
+                              : q.isCorrect
+                                ? theme.palette.success.dark
+                                : theme.palette.error.dark,
+                            bgcolor: isUnanswered
+                              ? theme.palette.gray.light
+                              : q.isCorrect
+                                ? theme.palette.success.pastel
+                                : theme.palette.error.pastel,
+                            color: isUnanswered
+                              ? theme.palette.gray.main
+                              : q.isCorrect
+                                ? theme.palette.success.main
+                                : theme.palette.error.main,
+                          }}
+                        >
+                          <Typography sx={{ fontSize: '0.875rem', fontWeight: 700 }}>
+                            Q{q.num}
+                          </Typography>
+                          {isUnanswered ? (
+                            <RemoveCircleOutlineIcon sx={{ fontSize: 16 }} />
+                          ) : q.isCorrect ? (
+                            <CheckCircleIcon sx={{ fontSize: 16 }} />
+                          ) : (
+                            <CancelOutlinedIcon sx={{ fontSize: 16 }} />
+                          )}
+                        </Box>
+                      );
+                    })}
                   </Box>
                 </AccordionDetails>
               </Accordion>

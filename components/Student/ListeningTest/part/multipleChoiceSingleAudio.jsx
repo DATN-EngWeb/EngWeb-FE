@@ -47,6 +47,7 @@ export default function MultipleChoiceSingleAudio({
         return {
           id: question.id,
           isCorrect: questionResult?.is_correct || false,
+          isAnswered: !!questionResult,
         };
       })
     : [];
@@ -208,7 +209,7 @@ export default function MultipleChoiceSingleAudio({
                 </Box>
               </Box>
               {/* -------- Explanation Section --------- */}
-              {questionResult && (
+              {disabled && !isTeacherView && (
                 <Box sx={{ pr: { xs: 0, md: 4 }, width: '100%' }}>
                   <Box sx={listeningPartStyles.explanationContainer}>
                     <Typography sx={listeningPartStyles.correctText}>

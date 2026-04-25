@@ -257,19 +257,20 @@ export default function Page() {
       }
 
       const transformedParts = transformFormatUpdateData(parts);
-      const errorMessage = validateReadingPartUpdatePayload(transformedParts, parts);
-
-      if (errorMessage) {
-        // Here we could parse errorMessage to find exactly where it failed,
-        // but for now let's show a general error in parts if it fails.
-        // As requested by user, we should highlight specific fields.
-        setSnackbar({
-          open: true,
-          message: errorMessage,
-          severity: 'error',
-        });
-        setIsLoading(false);
-        return;
+      if (status === 'P') {
+        const errorMessage = validateReadingPartUpdatePayload(transformedParts, parts);
+        if (errorMessage) {
+          // Here we could parse errorMessage to find exactly where it failed,
+          // but for now let's show a general error in parts if it fails.
+          // As requested by user, we should highlight specific fields.
+          setSnackbar({
+            open: true,
+            message: errorMessage,
+            severity: 'error',
+          });
+          setIsLoading(false);
+          return;
+        }
       }
 
       const files = collectFilesReading(transformedParts);

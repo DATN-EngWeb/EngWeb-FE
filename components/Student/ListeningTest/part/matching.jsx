@@ -68,6 +68,7 @@ export default function Matching({
         return {
           id: question.id,
           isCorrect: questionResult?.is_correct || false,
+          isAnswered: !!questionResult,
         };
       })
     : [];
@@ -213,7 +214,7 @@ export default function Matching({
                     </FormControl>
                   </Box>
                   {/* -------- Explanation Section --------- */}
-                  {questionResult && (
+                  {disabled && !isTeacherView && (
                     <Box sx={listeningPartStyles.explanationContainer}>
                       <Typography sx={listeningPartStyles.correctText}>
                         Correct Answer: {correctAnswerText}
