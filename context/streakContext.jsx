@@ -7,7 +7,7 @@ import { getUserStreak } from '../api/dashboard';
 const StreakContext = createContext();
 
 export const StreakProvider = ({ children }) => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading: authLoading } = useAuth();
   const [streakData, setStreakData] = useState({
     streak_count: 0,
     is_streak_lit_today: false,
@@ -16,7 +16,13 @@ export const StreakProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchStreak = useCallback(async () => {
-    if (!isAuthenticated || user?.role !== 'S') {
+    if (authLoading) return;
+
+    // Get the latest role from either user object or localStorage to avoid race conditions during login
+    const currentRole =
+      user?.role || (typeof window !== 'undefined' ? localStorage.getItem('userRole') : null);
+
+    if (!isAuthenticated || currentRole !== 'S') {
       setIsLoading(false);
       return;
     }
@@ -25,11 +31,17 @@ export const StreakProvider = ({ children }) => {
       const res = await getUserStreak();
       setStreakData(res);
     } catch (error) {
-      console.error('Streak fetch error:', error);
+      // If we get a 403, it means the user is not authorized (not a student)
+      // We handle this silently to avoid annoying error overlays for non-student users
+      if (error.status === 403) {
+        setIsLoading(false);
+        return;
+      }
+      console.error('Streak fetch error:', error.message || error); // eslint-disable-line no-console
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, user?.role]);
+  }, [authLoading, isAuthenticated, user]);
 
   useEffect(() => {
     fetchStreak();

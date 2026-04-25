@@ -124,3 +124,9 @@ input:-webkit-autofill:active {
   background-color: #ffffff !important;
   -webkit-text-fill-color: inherit !important;
 }
+
+/* Hide browser default password reveal button */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}

@@ -578,14 +578,16 @@ export default function Page() {
       <ScrollToTopButton />
       <Container maxWidth="lg">
         {/* -------- Title Section --------- */}
-        <Box sx={uploadReadingStyles.cardTitle}>
-          <Typography variant="h3" sx={uploadReadingStyles.mainTitleHeading}>
-            Create New Reading Test
-          </Typography>
-          <Typography variant="body1" sx={uploadReadingStyles.description}>
-            Fill in details below to create a new reading test for your students.
-          </Typography>
-        </Box>
+        {!showInlinePreview && (
+          <Box sx={uploadReadingStyles.cardTitle}>
+            <Typography variant="h3" sx={uploadReadingStyles.mainTitleHeading}>
+              Create New Reading Test
+            </Typography>
+            <Typography variant="body1" sx={uploadReadingStyles.description}>
+              Fill in details below to create a new reading test for your students.
+            </Typography>
+          </Box>
+        )}
         {/* -------- Function Buttons Section --------- */}
         <Box
           sx={{

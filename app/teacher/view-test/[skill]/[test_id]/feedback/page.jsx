@@ -150,7 +150,7 @@ async function transformReadingData(data) {
             question_number: q.question_number,
             explanation: q.explanation || '',
             score: q.score,
-            content: !['I', 'J'].includes(format) ? q.content || '' : undefined,
+            content: !['I'].includes(format) ? q.content || '' : undefined,
           };
 
           if (newQ.content?.startsWith?.('http')) {

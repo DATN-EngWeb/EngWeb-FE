@@ -7,8 +7,15 @@ import Footer from '../../components/TeacherHome/Footer';
 
 export default function TeacherLayout({ children }) {
   const pathname = usePathname();
-  const isPreviewPage = pathname?.includes('/reading/preview');
-  const hideFooter = pathname.includes('/upload-test/') || pathname.includes('/update-test/');
+  const [isPreviewPage, setIsPreviewPage] = React.useState(false);
+  const [hideFooter, setHideFooter] = React.useState(false);
+
+  React.useEffect(() => {
+    if (pathname) {
+      setIsPreviewPage(pathname.includes('/reading/preview'));
+      setHideFooter(pathname.includes('/upload-test/') || pathname.includes('/update-test/'));
+    }
+  }, [pathname]);
 
   return (
     <>

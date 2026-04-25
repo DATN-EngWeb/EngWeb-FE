@@ -155,8 +155,8 @@ export default function Page() {
                     question_number: q.question_number,
                     explanation: q.explanation,
                     score: q.score,
-                    // I và J ko có content
-                    ...(!['I', 'J'].includes(format) && { content: q.content }),
+                    // I ko có content
+                    ...(!['I'].includes(format) && { content: q.content }),
                   };
 
                   if (newQ.content?.startsWith?.('http')) {
@@ -804,14 +804,16 @@ export default function Page() {
       </Snackbar>
       <Container maxWidth="lg">
         {/* -------- Title Section --------- */}
-        <Box sx={uploadReadingStyles.cardTitle}>
-          <Typography variant="h3" sx={uploadReadingStyles.mainTitleHeading}>
-            Create New Reading Test
-          </Typography>
-          <Typography variant="body1" sx={uploadReadingStyles.description}>
-            Fill in detail beloxw to create a new reading test for your students.
-          </Typography>
-        </Box>
+        {!showInlinePreview && (
+          <Box sx={uploadReadingStyles.cardTitle}>
+            <Typography variant="h3" sx={uploadReadingStyles.mainTitleHeading}>
+              Create New Reading Test
+            </Typography>
+            <Typography variant="body1" sx={uploadReadingStyles.description}>
+              Fill in detail beloxw to create a new reading test for your students.
+            </Typography>
+          </Box>
+        )}
         {/* -------- Function Buttons Section --------- */}
         <Box
           sx={{
