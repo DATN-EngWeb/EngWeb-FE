@@ -191,40 +191,41 @@ export default function ProductiveTestEditor({
                 />
               )}
 
-            {showTestSettings && settingOpen && (
-              <TestSettingComponent
-                {...settings}
-                onChange={(field, value) => setSettings((prev) => ({ ...prev, [field]: value }))}
-                errors={errors?.settings}
-              />
-            )}
+              {showTestSettings && settingOpen && (
+                <TestSettingComponent
+                  {...settings}
+                  onChange={(field, value) => setSettings((prev) => ({ ...prev, [field]: value }))}
+                  errors={errors?.settings}
+                />
+              )}
 
-            {(!basicOpen || (showTestSettings && !settingOpen)) && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  gap: 1,
-                  mb: 2,
-                  position: 'sticky',
-                  top: 0,
-                  zIndex: 5,
-                  bgcolor: 'background.paper',
-                  py: 1,
-                }}
-              >
-                {!basicOpen && (
-                  <Button size="small" variant="outlined" onClick={() => setBasicOpen(true)}>
-                    Basic Info
-                  </Button>
-                )}
-                {showTestSettings && !settingOpen && (
-                  <Button size="small" variant="outlined" onClick={() => setSettingOpen(true)}>
-                    Test Settings
-                  </Button>
-                )}
-              </Box>
-            )}
-          </Box>
+              {(!basicOpen || (showTestSettings && !settingOpen)) && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: 1,
+                    mb: 2,
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 5,
+                    bgcolor: 'background.paper',
+                    py: 1,
+                  }}
+                >
+                  {!basicOpen && (
+                    <Button size="small" variant="outlined" onClick={() => setBasicOpen(true)}>
+                      Basic Info
+                    </Button>
+                  )}
+                  {showTestSettings && !settingOpen && (
+                    <Button size="small" variant="outlined" onClick={() => setSettingOpen(true)}>
+                      Test Settings
+                    </Button>
+                  )}
+                </Box>
+              )}
+            </Box>
+          )}
           {/* </Panel>
 
           <PanelResizeHandle

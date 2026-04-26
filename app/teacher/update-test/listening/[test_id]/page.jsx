@@ -1,6 +1,5 @@
+'use client';
 import { useParams } from 'next/navigation';
-('use client');
-
 import { Suspense } from 'react';
 import ListeningTestEditor from '../../../../../components/ListeningTest/ListeningTestEditor';
 import { useEffect } from 'react';
