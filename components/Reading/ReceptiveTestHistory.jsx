@@ -21,7 +21,7 @@ import VisibilityIcon from '@mui/icons-material/VisibilityRounded';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { levelTheme } from '../TestCard';
-import * as styles from '../../styles/student/HistoryTestStyles';
+import * as styles from '@/styles/Student/HistoryTestStyles';
 import ProgressTrackingCard from '../Writing-Speaking/ProgressTrackingCard';
 import { SidebarForum } from '../Writing-Speaking/SidebarForum';
 

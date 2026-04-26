@@ -11,7 +11,7 @@ export default function InstructionIcon() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'background.default',
+        backgroundColor: '#FFF5F5',
         padding: '8px',
         borderRadius: '0.5rem',
       }}

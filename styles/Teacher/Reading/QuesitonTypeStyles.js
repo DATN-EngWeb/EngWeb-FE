@@ -175,7 +175,7 @@ export const multipleChoiceStyles = {
     },
   },
   optionLabel: {
-    fontSize: { xs: '0.8rem', md: '1rem' },
+    fontSize: { xs: '0.9rem', md: '1rem' },
     color: 'text.primary',
     fontWeight: 600,
     wordBreak: 'break-word',

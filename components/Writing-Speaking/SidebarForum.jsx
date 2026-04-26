@@ -1,7 +1,7 @@
 'use client';
 
 import ForumIcon from '@mui/icons-material/Forum';
-import * as styles from './../../styles/student/HistoryTestStyles';
+import * as styles from '@/styles/Student/HistoryTestStyles';
 import { Box, Button, Typography, Stack, Paper } from '@mui/material';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 

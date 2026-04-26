@@ -18,7 +18,7 @@ import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import { listeningtestStyles } from '@/styles/student/Listening/listeningTestStyles';
+import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';

@@ -473,10 +473,6 @@ export const validateReadingPartUpdatePayload = (transformedParts, originalParts
         ) {
           return `Question ${displayQuestionNum} in Part ${displayPartNum} is missing content.`;
         }
-
-        if (!tQuestion.explanation || String(tQuestion.explanation).trim() === '') {
-          return `Question ${displayQuestionNum} in Part ${displayPartNum} is missing an explanation.`;
-        }
       }
 
       const originalAnswers = originalQuestion.answers || [];

@@ -4,7 +4,7 @@ import { Box, Button, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
 
-import { listeningtestStyles } from '../../../styles/student/Listening/listeningTestStyles';
+import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
 
 export default function TestHeading({
   testName = '',

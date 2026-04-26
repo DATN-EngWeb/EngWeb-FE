@@ -32,7 +32,7 @@ import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'reac
 import { getProductiveTestDetails, createProductiveTest, getSpeakingAIFeedback } from '@/api/test';
 import ProductivePreview from '../Writing-Speaking/ProductivePreview';
 import { levelTheme } from '../TestCard';
-import * as styles from '../../styles/student/Writing/WritingTestStyles';
+import * as styles from '@/styles/Student/Writing/WritingTestStyles';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SendIcon from '@mui/icons-material/Send';
