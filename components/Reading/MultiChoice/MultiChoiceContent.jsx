@@ -46,6 +46,7 @@ import TestTimer from '../Common/TestTimer';
 
 const MultiChoiceContent = ({
   testName = 'Practice Test Name',
+  partLabel,
   parts = ['Part 1', 'Part 2', 'Part 3', 'Part 4', 'Part 5'],
   currentPart = 1,
   passage = '',
@@ -192,6 +193,7 @@ const MultiChoiceContent = ({
       {!embedded && (
         <TestHeading
           testName={testName}
+          partLabel={partLabel}
           onSubmit={showResults ? null : () => onSubmit(selectedAnswers)}
           isTeacher={isTeacher || showResults}
           timerNode={timerNode || (!isTeacher && !showResults ? <TestTimer /> : null)}

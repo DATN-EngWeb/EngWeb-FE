@@ -28,13 +28,7 @@ import AddIcon from '@mui/icons-material/Add';
 import ArticleOutlined from '@mui/icons-material/ArticleOutlined';
 import EditNoteOutlined from '@mui/icons-material/EditNoteOutlined';
 import BorderColorOutlined from '@mui/icons-material/BorderColorOutlined';
-import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';
-import SendRounded from '@mui/icons-material/SendRounded';
-import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
-import FileUploadIcon from '@mui/icons-material/FileUpload';
 import Link from '@mui/icons-material/Link';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
-import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import { uploadReadingStyles } from '../../../../../styles/Teacher/Reading/UploadReadingStyles';
 import MultipleChoiceForm from '../../../../../components/Teacher/ReadingTest/multipleChoice';
 import MatchingForm from '../../../../../components/Teacher/ReadingTest/matching';
@@ -56,6 +50,7 @@ import {
 import { getPresignedUrl, uploadToObjectStorage, confirmUpload } from '../../../../../api/test';
 import { validateReadingPartUpdatePayload } from '../../../../../utils/testValidation';
 import ScrollToTopButton from '../../../../../components/CreateTest/ScrollToTopButton';
+import TestEditorHeader from '../../../../../components/UploadTest/TestEditorHeader';
 
 export default function Page() {
   const { test_id } = useParams();
@@ -113,6 +108,26 @@ export default function Page() {
 
       try {
         const svData = await getReceptiveTestDetails(test_id);
+
+        if (!svData.is_owner) {
+          setSnackbar({
+            open: true,
+            message: 'You do not have permission to edit this test',
+            severity: 'error',
+          });
+          setTimeout(() => router.push('/teacher/upload-test/reading'), 1500);
+          return;
+        }
+
+        if (svData.status !== 'D' && svData.status !== 'I') {
+          setSnackbar({
+            open: true,
+            message: 'Only draft tests can be edited',
+            severity: 'error',
+          });
+          setTimeout(() => router.push('/teacher/upload-test/reading'), 1500);
+          return;
+        }
 
         setTest({
           id: svData.id ?? '',
@@ -550,6 +565,8 @@ export default function Page() {
   };
 
   const handleDeleteOption = (partId, questionId, optionLabel) => {
+    let deleteBlocked = false;
+
     setParts((prevParts) =>
       prevParts.map((p) => {
         if (p.id !== partId) return p;
@@ -558,6 +575,14 @@ export default function Page() {
           ...p,
           questions: p.questions.map((q) => {
             if (q.id !== questionId) return q;
+
+            const activeAnswersCount = (q.answers || []).filter(
+              (a) => a.action !== 'delete',
+            ).length;
+            if (activeAnswersCount <= 2) {
+              deleteBlocked = true;
+              return q;
+            }
 
             let updatedAnswers;
             if (test?.flag === 'update') {
@@ -593,6 +618,14 @@ export default function Page() {
         };
       }),
     );
+
+    if (deleteBlocked) {
+      setSnackbar({
+        open: true,
+        message: 'Each question must keep at least 2 answer options.',
+        severity: 'warning',
+      });
+    }
   };
 
   const handleSelectType = (partId, format) => {
@@ -805,51 +838,24 @@ export default function Page() {
       </Snackbar>
       <Container maxWidth="lg">
         {/* -------- Title Section --------- */}
-        {!showInlinePreview && (
-          <Box sx={uploadReadingStyles.cardTitle}>
-            <Typography variant="h3" sx={uploadReadingStyles.mainTitleHeading}>
-              Create New Reading Test
-            </Typography>
-            <Typography variant="body1" sx={uploadReadingStyles.description}>
-              Fill in detail beloxw to create a new reading test for your students.
-            </Typography>
-          </Box>
-        )}
+        <TestEditorHeader
+          title="Update Reading Test"
+          description="Fill in the details below to update the reading test for your students"
+          sx={{ mb: 2.5 }}
+        />
         {/* -------- Function Buttons Section --------- */}
         <Box
           sx={{
-            ...uploadReadingStyles.functionButtonsWrapper,
-            ...(canShowFeedback && {
-              gridTemplateAreas: {
-                xs: `
-                "item1 item5"
-                "item2 item3"
-                "item4 item4"
-              `,
-                sm: `
-                "item1 item5 item2 item3 item4"
-              `,
-                md: `
-                "item1 item5 item2 item3 item4"
-              `,
-              },
-              gridTemplateColumns: {
-                xs: '1fr 1fr',
-                sm: '1fr auto auto auto auto',
-                md: '1fr auto auto auto auto',
-              },
-            }),
+            top: 0,
+            zIndex: 1100,
+            backgroundColor: '#FFF4E9',
+            pt: 0.5,
+            pb: 0.5,
+            px: 2,
           }}
         >
-          <Button
-            variant="outlined"
-            startIcon={
-              <VisibilityOutlined
-                sx={{ transform: { xs: 'translateY(0px)', md: 'translateY(3px)' } }}
-              />
-            }
-            sx={{ ...uploadReadingStyles.previewButton, gridArea: 'item1' }}
-            onClick={() => {
+          <TestEditorActions
+            onPreview={() => {
               setShowInlinePreview((prev) => {
                 const next = !prev;
                 if (next) {
@@ -858,53 +864,26 @@ export default function Page() {
                 return next;
               });
             }}
-          >
-            {showInlinePreview ? 'Hide Preview' : 'Show Preview'}
-          </Button>
-          {canShowFeedback && (
-            <Button
-              variant="outlined"
-              startIcon={showFeedbackPanel ? <ChatBubbleIcon /> : <ChatBubbleOutlineIcon />}
-              sx={{ ...uploadReadingStyles.previewButton, gridArea: 'item5' }}
-              onClick={() => {
-                setShowFeedbackPanel((prev) => {
-                  const next = !prev;
-                  if (next) {
-                    setShowInlinePreview(false);
+            isPreviewActive={showInlinePreview}
+            onFeedback={
+              canShowFeedback
+                ? () => {
+                    setShowFeedbackPanel((prev) => {
+                      const next = !prev;
+                      if (next) {
+                        setShowInlinePreview(false);
+                      }
+                      return next;
+                    });
                   }
-                  return next;
-                });
-              }}
-            >
-              {showFeedbackPanel ? 'Hide Feedback' : 'Show Feedback'}
-            </Button>
-          )}
-          <Button
-            startIcon={
-              <SendRounded sx={{ transform: 'rotate(-45deg) translateY(2px) translateX(7px)' }} />
+                : undefined
             }
-            sx={{ ...uploadReadingStyles.rightButton, gridArea: 'item2' }}
-            onClick={() => handleUploadParts('I')}
-            disabled={isLoading}
-          >
-            Send For Review
-          </Button>
-          <Button
-            startIcon={<DescriptionOutlined sx={{ fontSize: 20, transform: 'translateY(0px)' }} />}
-            sx={{ ...uploadReadingStyles.rightButton, gridArea: 'item3' }}
-            onClick={() => handleUploadParts('D')}
-            disabled={isLoading}
-          >
-            Save Draft
-          </Button>
-          <Button
-            startIcon={<FileUploadIcon sx={{ fontSize: 20, transform: 'translateY(0px)' }} />}
-            sx={{ ...uploadReadingStyles.publicButton, gridArea: 'item4' }}
-            onClick={() => handleUploadParts('P')}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Uploading...' : 'Public'}
-          </Button>
+            isFeedbackActive={showFeedbackPanel}
+            onSendReview={() => handleUploadParts('I')}
+            onSaveDraft={() => handleUploadParts('D')}
+            onPublish={() => handleUploadParts('P')}
+            isLoading={isLoading}
+          />
         </Box>
 
         {showInlinePreview && (

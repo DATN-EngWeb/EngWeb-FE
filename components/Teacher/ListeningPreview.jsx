@@ -69,17 +69,24 @@ export default function ListeningPreview({
         newParts.map(async (part) => {
           resourcesMap[part.id] = {
             audioSrc: null,
+            shouldRevokeAudioSrc: false,
             imageSrcs: {},
+            shouldRevokeImageSrcs: {},
             audioSrcs: {},
+            shouldRevokeAudioSrcs: {},
             passageSrc: '',
           };
 
           const res = resourcesMap[part.id];
           const partAudio = part.audio?.url || part.resources?.audio;
           if (partAudio) {
-            res.audioSrc = partAudio.startsWith('blob:')
-              ? partAudio
-              : await loadAudioSource(partAudio);
+            if (partAudio.startsWith('blob:')) {
+              res.audioSrc = partAudio;
+            } else {
+              const loadedAudio = await loadAudioSource(partAudio);
+              res.audioSrc = loadedAudio;
+              res.shouldRevokeAudioSrc = Boolean(loadedAudio?.startsWith('blob:'));
+            }
           }
 
           if (part.content) {
@@ -95,9 +102,13 @@ export default function ListeningPreview({
                 const imageUrl = opt.image?.url || opt.resources?.image;
                 if (imageUrl) {
                   imageTasks.push(async () => {
-                    res.imageSrcs[opt.id] = imageUrl.startsWith('blob:')
-                      ? imageUrl
-                      : await loadImageSource(imageUrl);
+                    if (imageUrl.startsWith('blob:')) {
+                      res.imageSrcs[opt.id] = imageUrl;
+                    } else {
+                      const loadedImage = await loadImageSource(imageUrl);
+                      res.imageSrcs[opt.id] = loadedImage;
+                      res.shouldRevokeImageSrcs[opt.id] = Boolean(loadedImage?.startsWith('blob:'));
+                    }
                   });
                 }
               });
@@ -111,9 +122,15 @@ export default function ListeningPreview({
               const qAudio = q.audio?.url || q.resources?.audio;
               if (qAudio) {
                 audioTasks.push(async () => {
-                  res.audioSrcs[q.id] = qAudio.startsWith('blob:')
-                    ? qAudio
-                    : await loadAudioSource(qAudio);
+                  if (qAudio.startsWith('blob:')) {
+                    res.audioSrcs[q.id] = qAudio;
+                  } else {
+                    const loadedQuestionAudio = await loadAudioSource(qAudio);
+                    res.audioSrcs[q.id] = loadedQuestionAudio;
+                    res.shouldRevokeAudioSrcs[q.id] = Boolean(
+                      loadedQuestionAudio?.startsWith('blob:'),
+                    );
+                  }
                 });
               }
             });
@@ -134,12 +151,18 @@ export default function ListeningPreview({
     return () => {
       mounted = false;
       Object.values(loadedResources).forEach((res) => {
-        if (res.audioSrc?.startsWith('blob:')) URL.revokeObjectURL(res.audioSrc);
-        Object.values(res.imageSrcs || {}).forEach((url) => {
-          if (url?.startsWith('blob:')) URL.revokeObjectURL(url);
+        if (res.shouldRevokeAudioSrc && res.audioSrc?.startsWith('blob:')) {
+          URL.revokeObjectURL(res.audioSrc);
+        }
+        Object.entries(res.imageSrcs || {}).forEach(([id, url]) => {
+          if (res.shouldRevokeImageSrcs?.[id] && url?.startsWith('blob:')) {
+            URL.revokeObjectURL(url);
+          }
         });
-        Object.values(res.audioSrcs || {}).forEach((url) => {
-          if (url?.startsWith('blob:')) URL.revokeObjectURL(url);
+        Object.entries(res.audioSrcs || {}).forEach(([id, url]) => {
+          if (res.shouldRevokeAudioSrcs?.[id] && url?.startsWith('blob:')) {
+            URL.revokeObjectURL(url);
+          }
         });
       });
     };

@@ -15,6 +15,23 @@ import FillBlanksContent from '../../Reading/FillBlanks/FillBlanksContent';
 import MatchingContent from '../../Reading/Matching/MatchingContent';
 import MultiChoiceContent from '../../Reading/MultiChoice/MultiChoiceContent';
 
+const getReadingPartTypeLabel = (format) => {
+  switch (format) {
+    case 'F':
+      return 'Multiple Choice (Short Text)';
+    case 'G':
+      return 'Multiple Choice (Long Text)';
+    case 'H':
+      return 'Fill In The Blanks (Multiple Choice)';
+    case 'I':
+      return 'Fill In The Blanks (Text)';
+    case 'J':
+      return 'Matching';
+    default:
+      return 'Unknown Test Type';
+  }
+};
+
 const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButton = true }) => {
   const router = useRouter();
   const [currentPartIndex, setCurrentPartIndex] = useState(0);
@@ -34,13 +51,15 @@ const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButto
     if (!currentPart) return null;
 
     const commonProps = {
-      testName: testData?.test?.title || testData?.title || 'Preview Test',
+      testName: testData?.test?.title || testData?.title || '',
+      partLabel: `Part ${currentPartIndex + 1}: ${getReadingPartTypeLabel(currentPart.format)}`,
       parts: partTitles,
       currentPart: currentPartIndex + 1,
       passage: currentPart.content || '',
       passageTitle: currentPart.description || '',
       onPartChange: handlePartChange,
       isTeacher: true,
+      onSubmit: null,
       onBack: () => handlePartChange(currentPartIndex - 1),
       onNext: () => handlePartChange(currentPartIndex + 1),
       currentSection: currentPartIndex + 1,

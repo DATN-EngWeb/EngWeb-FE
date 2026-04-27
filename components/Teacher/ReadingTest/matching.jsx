@@ -229,8 +229,8 @@ export default function MatchingForm({
         <Box
           sx={{
             display: 'flex',
-            flexDirection: { xs: 'column', lg: 'row' },
-            gap: 4,
+            flexDirection: 'column',
+            gap: 2,
             width: '100%',
             maxWidth: '100%',
             alignSelf: 'stretch',
@@ -238,7 +238,7 @@ export default function MatchingForm({
           }}
         >
           {/* -------------- Left Column: Score & Passage -------------- */}
-          <Box sx={{ ...uploadReadingStyles.partEditorColumn, flex: 1, minWidth: 0 }}>
+          <Box sx={{ ...uploadReadingStyles.partEditorColumn, width: '100%', minWidth: 0, mb: 0 }}>
             {/* -------------- Total Each Score -------------- */}
             <FormControl fullWidth sx={{ ...uploadReadingStyles.formControl, mb: 3 }}>
               <FormLabel sx={uploadReadingStyles.labelInput}>
@@ -278,7 +278,7 @@ export default function MatchingForm({
           <Box
             sx={{
               ...uploadReadingStyles.partEditorColumn,
-              flex: 1.2,
+              width: '100%',
               minWidth: 0,
               display: 'flex',
               flexDirection: 'column',

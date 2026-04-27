@@ -19,10 +19,7 @@ export default function FeedbackListeningTestPage({ params }) {
     const fetchData = async () => {
       try {
         const data = await getReceptiveTestDetails(test_id);
-        const currentUserId = localStorage.getItem('userId');
-        const isOwner =
-          String(data.created_by_id ?? data.teacher_id ?? '') === String(currentUserId);
-        if (data.status !== 'I' || isOwner) {
+        if (data.status !== 'I' || data.is_owner) {
           setForbidden(true);
           setLoading(false);
           return;

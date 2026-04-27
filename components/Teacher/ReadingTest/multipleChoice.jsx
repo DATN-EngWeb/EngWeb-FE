@@ -237,8 +237,8 @@ export default function MultipleChoiceForm({
         <Box
           sx={{
             display: 'flex',
-            flexDirection: { xs: 'column', lg: 'row' },
-            gap: 4,
+            flexDirection: 'column',
+            gap: 2,
             width: '100%',
             maxWidth: '100%',
             alignSelf: 'stretch',
@@ -246,9 +246,12 @@ export default function MultipleChoiceForm({
           }}
         >
           {/* -------------- Left Column: Score & Passage -------------- */}
-          <Box sx={{ ...uploadReadingStyles.partEditorColumn, flex: 1, minWidth: 0 }}>
+          <Box sx={{ ...uploadReadingStyles.partEditorColumn, width: '100%', minWidth: 0, mb: 0 }}>
             {/* -------------- Total Each Score -------------- */}
-            <FormControl fullWidth sx={{ ...uploadReadingStyles.formControl, mb: 3 }}>
+            <FormControl
+              fullWidth
+              sx={{ ...uploadReadingStyles.formControl, mb: part.format === 'F' ? 1 : 3 }}
+            >
               <FormLabel sx={uploadReadingStyles.labelInput}>
                 The score for each question
                 <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
@@ -264,7 +267,7 @@ export default function MultipleChoiceForm({
               />
             </FormControl>
             {/* -------------- Description Section -------------- */}
-            {part.format === 'G' ? (
+            {part.format === 'G' && (
               <FormControl fullWidth sx={uploadReadingStyles.formControl}>
                 <Box
                   sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}
@@ -283,28 +286,11 @@ export default function MultipleChoiceForm({
                   startingBlankId={1}
                 />
               </FormControl>
-            ) : (
-              <FormControl fullWidth sx={uploadReadingStyles.formControl}>
-                <FormLabel sx={uploadReadingStyles.labelInput}>
-                  Description
-                  <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
-                    *
-                  </Box>
-                </FormLabel>
-                <OutlinedInput
-                  multiline
-                  placeholder="Enter description here"
-                  defaultValue={part.description}
-                  error={!!errors.description && !part.description}
-                  sx={uploadReadingStyles.inputMultiline}
-                  onBlur={(e) => handleUpdateDescriptionPart(partId, e.target.value)}
-                />
-              </FormControl>
             )}
           </Box>
 
           {/* -------------- Right Column: Questions -------------- */}
-          <Box sx={{ ...uploadReadingStyles.partEditorColumn, flex: 1.2, minWidth: 0 }}>
+          <Box sx={{ ...uploadReadingStyles.partEditorColumn, width: '100%', minWidth: 0, mb: 0 }}>
             <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
               <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                 <FormLabel sx={uploadReadingStyles.labelInput}>
@@ -385,6 +371,7 @@ export default function MultipleChoiceForm({
                                     sx={{
                                       ...uploadReadingStyles.formControl,
                                       position: 'relative',
+                                      mb: 1,
                                     }}
                                   >
                                     <ClientSideCustomEditor

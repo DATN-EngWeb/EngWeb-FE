@@ -5,6 +5,7 @@ import ProductiveEditor from './../Writing-Speaking/ProductiveEditor';
 import ProductivePreview from './../Writing-Speaking/ProductivePreview';
 import { createTest, submitProductiveTest } from '../../api/test';
 import { uploadHtmlContent } from '../../utils/uploadHelpers';
+import { validateProductiveTestData, parseApiError } from '../../utils/productiveTestValidation';
 import { useRouter } from 'next/navigation';
 
 export default function WritingTestEditor() {
@@ -44,6 +45,17 @@ export default function WritingTestEditor() {
   if (!mounted) return null;
 
   const handleSubmit = async (status) => {
+    // Client-side validation
+    const validationError = validateProductiveTestData(testData, settings, question);
+    if (validationError) {
+      setSnackbar({
+        open: true,
+        message: validationError,
+        severity: 'error',
+      });
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -91,10 +103,11 @@ export default function WritingTestEditor() {
       setErrors(null);
       setIsSaving(false);
       setTimeout(() => {
-        router.push(`/teacher/upload-test`);
+        router.push(`/teacher`);
       }, 1000);
     } catch (error) {
-      setSnackbar({ open: true, message: `Submit failed: ${error.message}`, severity: 'error' });
+      const errorMsg = parseApiError(error);
+      setSnackbar({ open: true, message: `Submit failed: ${errorMsg}`, severity: 'error' });
       setIsSaving(false);
     }
   };

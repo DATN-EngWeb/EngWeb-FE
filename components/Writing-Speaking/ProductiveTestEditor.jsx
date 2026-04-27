@@ -88,6 +88,7 @@ export default function ProductiveTestEditor({
   onFeedback,
   isFeedbackActive,
   feedbackContent,
+  showTestSettings = true,
 }) {
   const isFeedbackMode = Boolean(feedbackContent && isFeedbackActive);
 
@@ -190,7 +191,7 @@ export default function ProductiveTestEditor({
                 />
               )}
 
-              {settingOpen && (
+              {showTestSettings && settingOpen && (
                 <TestSettingComponent
                   {...settings}
                   onChange={(field, value) => setSettings((prev) => ({ ...prev, [field]: value }))}
@@ -198,7 +199,7 @@ export default function ProductiveTestEditor({
                 />
               )}
 
-              {(!basicOpen || !settingOpen) && (
+              {(!basicOpen || (showTestSettings && !settingOpen)) && (
                 <Box
                   sx={{
                     display: 'flex',
@@ -216,7 +217,7 @@ export default function ProductiveTestEditor({
                       Basic Info
                     </Button>
                   )}
-                  {!settingOpen && (
+                  {showTestSettings && !settingOpen && (
                     <Button size="small" variant="outlined" onClick={() => setSettingOpen(true)}>
                       Test Settings
                     </Button>
@@ -251,8 +252,7 @@ export default function ProductiveTestEditor({
           >
             {children}
           </Box>
-
-          {isFeedbackMode && (
+          {feedbackContent && isFeedbackActive && (
             <Box
               sx={{
                 width: '320px',

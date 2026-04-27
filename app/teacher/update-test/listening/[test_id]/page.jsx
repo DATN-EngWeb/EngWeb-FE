@@ -1,57 +1,21 @@
 'use client';
-
-import { Suspense, useEffect, useState, use } from 'react';
-import { useRouter } from 'next/navigation';
-import { CircularProgress, Box, Alert } from '@mui/material';
+import { useParams } from 'next/navigation';
+import { Suspense } from 'react';
 import ListeningTestEditor from '../../../../../components/ListeningTest/ListeningTestEditor';
-import { getReceptiveTestDetails } from '../../../../../api/test';
+import { useEffect } from 'react';
 
-export default function EditListeningTestPage({ params }) {
-  const { test_id } = use(params);
-  const router = useRouter();
-  const [isValidating, setIsValidating] = useState(true);
-  const [error, setError] = useState(null);
-
+export default function EditListeningTestPage() {
+  const { test_id: testId } = useParams();
   useEffect(() => {
-    const validateTest = async () => {
-      try {
-        const data = await getReceptiveTestDetails(test_id);
-
-        if (data.status !== 'D' && data.status !== 'I') {
-          setError('Only draft tests can be edited');
-          setTimeout(() => router.push('/teacher/upload-test/listening'), 1500);
-          return;
-        }
-
-        setIsValidating(false);
-      } catch (err) {
-        setError(`Failed to load test: ${err.message}`);
-        setTimeout(() => router.push('/teacher/upload-test/listening'), 2000);
-      }
-    };
-
-    validateTest();
-  }, [test_id, router]);
-
-  if (isValidating) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
-        <Alert severity="error">{error}</Alert>
-      </Box>
-    );
-  }
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  }, [testId]);
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <ListeningTestEditor testId={test_id} />
+      <ListeningTestEditor testId={testId} />
     </Suspense>
   );
 }
