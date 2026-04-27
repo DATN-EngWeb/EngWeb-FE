@@ -559,6 +559,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
             width: '100%',
             position: 'relative',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            border: '1px solid #d7ccc8',
           },
         }}
       >
@@ -568,8 +569,8 @@ export default function ListeningTestContent({ test_id, initialData }) {
             position: 'absolute',
             right: 16,
             top: 16,
-            color: '#64748b',
-            '&:hover': { backgroundColor: '#f1f5f9' },
+            color: 'primary.dark',
+            '&:hover': { backgroundColor: '#efebe9' },
           }}
           disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
         >
@@ -583,15 +584,15 @@ export default function ListeningTestContent({ test_id, initialData }) {
                 width: '90px',
                 height: '90px',
                 borderRadius: '50%',
-                backgroundColor: submitType === 'S' ? '#f0fdf4' : '#fffbeb',
+                backgroundColor: '#efebe9', // Brown 50
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                border: `1px solid ${submitType === 'S' ? '#dcfce7' : '#fef3c7'}`,
+                border: '2px solid #a1887f', // Brown 300
               }}
             >
               <InfoOutlinedIcon
-                sx={{ fontSize: 48, color: submitType === 'S' ? '#16a34a' : '#f59e0b' }}
+                sx={{ fontSize: 48, color: 'primary.dark' }} // Brown 800
               />
             </Box>
 
@@ -599,40 +600,41 @@ export default function ListeningTestContent({ test_id, initialData }) {
               sx={{
                 fontSize: '1.25rem',
                 fontWeight: 700,
-                color: '#1e293b',
-                lineHeight: 1.2,
+                color: 'primary.main', // Brown 900
+                lineHeight: 1.4,
                 px: 3,
                 fontFamily: '"Outfit", sans-serif',
               }}
             >
+              {/* Logic kiểm tra nộp bài chưa xong */}
               {submitType === 'S'
-                ? 'Are you sure you want to submit?'
+                ? checkCompletionStatus(testData, allAnswers) === 'S'
+                  ? 'Are you sure you want to submit your test?'
+                  : 'You have not finished all questions. Are you sure you want to submit your test?'
                 : 'Do you want to save your progress as a draft?'}
             </Typography>
           </Stack>
         </DialogContent>
 
-        <DialogActions
-          sx={{ 界面: 'center', gap: 3, pb: 6, pt: 2, px: 4, justifyContent: 'center' }}
-        >
+        <DialogActions sx={{ gap: 2, pb: 6, pt: 2, px: 4, justifyContent: 'center' }}>
           <Button
             onClick={() => setOpenConfirm(false)}
             variant="outlined"
             disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
             sx={{
               borderRadius: '50px',
-              px: 5,
-              py: 1.5,
+              px: 4,
+              py: 1.2,
               textTransform: 'none',
               fontWeight: 700,
               fontSize: '0.875rem',
-              color: '#475569',
-              borderColor: '#e2e8f0',
+              color: '#6d4c41',
+              borderColor: '#d7ccc8',
               borderWidth: '1.5px',
               fontFamily: '"Outfit", sans-serif',
               '&:hover': {
-                backgroundColor: '#f8fafc',
-                borderColor: '#cbd5e1',
+                backgroundColor: '#fbe9e7',
+                borderColor: '#bcaaa4',
                 borderWidth: '1.5px',
               },
             }}
@@ -646,31 +648,25 @@ export default function ListeningTestContent({ test_id, initialData }) {
             disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
             sx={{
               borderRadius: '50px',
-              px: submitStatus === 'submitting' || draftStatus === 'saving' ? 6 : 4,
-              py: 1.5,
+              px: 4,
+              py: 1.2,
               textTransform: 'none',
               fontWeight: 700,
               fontSize: '0.875rem',
-              backgroundColor: submitType === 'S' ? '#166534' : '#f59e0b',
+              backgroundColor: 'primary.main',
               color: '#ffffff',
               fontFamily: '"Outfit", sans-serif',
-              boxShadow: `0 4px 14px 0 ${submitType === 'S' ? 'rgba(22, 101, 52, 0.39)' : 'rgba(245, 158, 11, 0.39)'}`,
+              boxShadow: '0 4px 14px 0 rgba(93, 64, 55, 0.39)',
               '&:hover': {
-                backgroundColor: submitType === 'S' ? '#14532d' : '#d97706',
-                boxShadow: `0 6px 20px ${submitType === 'S' ? 'rgba(22, 101, 52, 0.23)' : 'rgba(245, 158, 11, 0.23)'}`,
-              },
-              '&.Mui-disabled': {
-                backgroundColor: submitType === 'S' ? '#166534' : '#f59e0b',
-                opacity: 0.7,
+                backgroundColor: 'primary.dark',
+                boxShadow: '0 6px 20px rgba(93, 64, 55, 0.23)',
               },
             }}
           >
-            {submitStatus === 'submitting' || draftStatus === 'saving' ? (
+            {submitStatus === 'submitting' ? (
               <CircularProgress size={24} color="inherit" />
-            ) : submitType === 'S' ? (
-              'SUBMIT'
             ) : (
-              'SAVE DRAFT'
+              'SUBMIT NOW'
             )}
           </Button>
         </DialogActions>

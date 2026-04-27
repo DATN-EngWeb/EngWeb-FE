@@ -340,12 +340,13 @@ export default function AIFeedback() {
             >
               {categories.length > 0 ? (
                 <Button
+                  disabled={turns.weekly_ai_turn + turns.bonus_ai_turn === 0}
                   variant="contained"
                   onClick={() => setOpenFeedback(true)}
                   startIcon={<AutoAwesomeIcon sx={{ color: '#fbc02d' }} />}
                   sx={{
-                    bgcolor: '#4e342e',
-                    '&:hover': { bgcolor: '#3e2723' },
+                    bgcolor: 'primary.main',
+                    '&:hover': { bgcolor: 'primary.dark' },
                     borderRadius: 2,
                     px: 4,
                     py: 1.5,
@@ -356,9 +357,6 @@ export default function AIFeedback() {
                 </Button>
               ) : (
                 <>
-                  <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                    Remaining AI Turns: {turns.weekly_ai_turn + turns.bonus_ai_turn}
-                  </Typography>
                   <Button
                     variant="contained"
                     onClick={async () => {
