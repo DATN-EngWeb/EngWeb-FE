@@ -296,7 +296,7 @@ export default function AIFeedback() {
                 <Typography variant="body1" color="text.primary">
                   {!isSpeaking && `${context.wordCount} words`}
                   {!isSpeaking && context.duration ? ' - ' : ''}
-                  {context.duration ? formatTime(context.duration) : ''}
+                  {context.duration ? formatTime(context.duration) + ' mins' : ''}
                 </Typography>
               </Box>
             </Stack>

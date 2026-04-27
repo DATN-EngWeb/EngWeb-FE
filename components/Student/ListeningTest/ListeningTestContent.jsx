@@ -41,6 +41,8 @@ import Matching from './part/matching';
 import Skeleton from './skeleton';
 import ReceptiveTestResult from '../ReceptiveTestResult/ReceptiveTestResult';
 import { useStreakContext } from '@/context/streakContext';
+import SubmitLoadingDialog from '../../Writing-Speaking/SubmitLoadingDialog';
+import SaveDraftToast from '../../Writing-Speaking/SaveDraftToast';
 
 export default function ListeningTestContent({ test_id, initialData }) {
   const router = useRouter();
@@ -66,7 +68,8 @@ export default function ListeningTestContent({ test_id, initialData }) {
     answer_histories: [],
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState('idle');
+  const [draftStatus, setDraftStatus] = useState('idle');
 
   const [submittedHistoryId, setSubmittedHistoryId] = useState(null);
   const { refreshStreak } = useStreakContext();
@@ -130,7 +133,13 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
   const handleSubmit = async () => {
     try {
-      setIsSubmitting(true);
+      if (submitType === 'S') {
+        setSubmitStatus('submitting');
+      } else {
+        setDraftStatus('saving');
+      }
+      setOpenConfirm(false);
+
       const formattedHistories = transformAnswers(allAnswers);
 
       const payload = {
@@ -142,36 +151,45 @@ export default function ListeningTestContent({ test_id, initialData }) {
         answer_histories: formattedHistories,
       };
 
-      const response = await createReceptiveTest(payload);
-
-      setOpenConfirm(false);
-      setSnackbar({
-        open: true,
-        message: submitType === 'S' ? 'Test submitted successfully!' : 'Draft saved successfully!',
-        severity: 'success',
-      });
+      const [response] = await Promise.all([
+        createReceptiveTest(payload),
+        submitType === 'S'
+          ? new Promise((resolve) => setTimeout(resolve, 1500))
+          : Promise.resolve(),
+      ]);
 
       if (submitType === 'S') {
+        setSubmitStatus('idle'); // Just close it, because we instantly show the results
         setSubmittedHistoryId(response.id);
         await refreshStreak();
       } else {
-        setTimeout(() => {
-          if (typeof window !== 'undefined') {
-            window.sessionStorage.removeItem('current_receptive_attempt');
-          }
-          router.push(`/student/listening/${test_id}`);
-        }, 1000);
+        setDraftStatus('saved');
       }
     } catch (error) {
       console.error('Submission error:', error);
-      setSnackbar({
-        open: true,
-        message: 'Failed to submit test. Please try again.',
-        severity: 'error',
-      });
-    } finally {
-      setIsSubmitting(false);
+      if (submitType === 'S') {
+        setSubmitStatus('error');
+      } else {
+        setDraftStatus('error');
+      }
     }
+  };
+
+  const handleCloseSubmitDialog = () => {
+    setSubmitStatus('idle');
+  };
+
+  const handleCloseDraftToast = () => {
+    setDraftStatus('idle');
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem('current_receptive_attempt');
+    }
+    router.push(`/student/listening/${test_id}`);
+  };
+
+  const handleSaveDraftRetry = () => {
+    setDraftStatus('idle');
+    handleSubmit();
   };
 
   useEffect(() => {
@@ -385,6 +403,23 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
   return (
     <Box sx={{ ...listeningtestStyles.mainContainer, position: 'relative' }}>
+      <SubmitLoadingDialog
+        status={submitStatus}
+        testType="listening"
+        onClose={handleCloseSubmitDialog}
+        onRetry={() => {
+          setSubmitStatus('idle');
+          handleSubmit();
+        }}
+      />
+
+      <SaveDraftToast
+        status={draftStatus}
+        testType="listening"
+        onClose={handleCloseDraftToast}
+        onRetry={handleSaveDraftRetry}
+      />
+
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
@@ -400,7 +435,9 @@ export default function ListeningTestContent({ test_id, initialData }) {
       </Snackbar>
       <Dialog
         open={openConfirm}
-        onClose={() => !isSubmitting && setOpenConfirm(false)}
+        onClose={() =>
+          !(submitStatus === 'submitting' || draftStatus === 'saving') && setOpenConfirm(false)
+        }
         PaperProps={{
           sx: {
             borderRadius: '20px',
@@ -421,7 +458,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
             color: '#64748b',
             '&:hover': { backgroundColor: '#f1f5f9' },
           }}
-          disabled={isSubmitting}
+          disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
         >
           <CloseIcon fontSize="small" />
         </IconButton>
@@ -468,7 +505,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
           <Button
             onClick={() => setOpenConfirm(false)}
             variant="outlined"
-            disabled={isSubmitting}
+            disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
             sx={{
               borderRadius: '50px',
               px: 5,
@@ -493,10 +530,10 @@ export default function ListeningTestContent({ test_id, initialData }) {
           <Button
             onClick={handleSubmit}
             variant="contained"
-            disabled={isSubmitting}
+            disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
             sx={{
               borderRadius: '50px',
-              px: isSubmitting ? 6 : 4,
+              px: submitStatus === 'submitting' || draftStatus === 'saving' ? 6 : 4,
               py: 1.5,
               textTransform: 'none',
               fontWeight: 700,
@@ -515,7 +552,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
               },
             }}
           >
-            {isSubmitting ? (
+            {submitStatus === 'submitting' || draftStatus === 'saving' ? (
               <CircularProgress size={24} color="inherit" />
             ) : submitType === 'S' ? (
               'SUBMIT'

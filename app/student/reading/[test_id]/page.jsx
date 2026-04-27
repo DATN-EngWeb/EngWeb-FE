@@ -29,6 +29,8 @@ import {
   transformMatchingTest,
 } from '@/utils/testDataTransform';
 import ReceptiveTestHistory from '@/components/Student/Reading_Listening/ReceptiveTestHistory';
+import SaveDraftToast from '@/components/Writing-Speaking/SaveDraftToast';
+import SubmitLoadingDialog from '@/components/Writing-Speaking/SubmitLoadingDialog';
 
 export default function ReadingTestPage() {
   const params = useParams();
@@ -44,7 +46,10 @@ export default function ReadingTestPage() {
   const [startTime] = useState(new Date().toISOString());
   const [openSubmitDialog, setOpenSubmitDialog] = useState(false);
   const [openWarningDialog, setOpenWarningDialog] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitType, setSubmitType] = useState('D');
+
+  const [submitStatus, setSubmitStatus] = useState('idle');
+  const [draftStatus, setDraftStatus] = useState('idle');
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -139,25 +144,52 @@ export default function ReadingTestPage() {
   };
 
   const handleSubmit = () => {
-    const hasAnswer = Object.values(answers).some(
-      (val) => val !== '' && val !== null && val !== undefined,
-    );
+    let totalQuestions = 0;
+    testData.parts.forEach((part) => {
+      part.rawPart.receptive_questions.forEach(() => {
+        totalQuestions += 1;
+      });
+    });
+
+    let totalAnswered = 0;
+    Object.values(answers).forEach((val) => {
+      if (
+        val !== '' &&
+        val !== null &&
+        val !== undefined &&
+        (typeof val === 'string' ? val.trim() !== '' : true) &&
+        (Array.isArray(val) ? val.length > 0 : true)
+      ) {
+        totalAnswered += 1;
+      }
+    });
+
+    const hasAnswer = totalAnswered > 0;
 
     if (!hasAnswer) {
       setOpenWarningDialog(true);
       return;
     }
 
+    const type = totalAnswered === totalQuestions ? 'S' : 'D';
+    setSubmitType(type);
     setOpenSubmitDialog(true);
   };
 
   const handleConfirmSubmit = async () => {
     try {
-      setIsSubmitting(true);
+      if (submitType === 'S') {
+        setSubmitStatus('submitting');
+      } else {
+        setDraftStatus('saving');
+      }
+      setOpenSubmitDialog(false);
+
       const token = localStorage.getItem('accessToken');
       if (!token) {
         alert('Please login to submit your test.');
-        setIsSubmitting(false);
+        setSubmitStatus('idle');
+        setDraftStatus('idle');
         return;
       }
 
@@ -190,21 +222,48 @@ export default function ReadingTestPage() {
 
       const payload = {
         receptive_test: testData.id,
-        type: 'S',
+        type: submitType,
         start_time: startTime,
         end_time: endTime,
         total_time: Math.floor((new Date(endTime) - new Date(startTime)) / 1000),
         answer_histories,
       };
 
-      const historyRes = await submitReceptiveTest(payload, token);
-      setOpenSubmitDialog(false);
-      router.push(`/student/reading/${testId}/results/${historyRes.id}`);
+      const [historyRes] = await Promise.all([
+        submitReceptiveTest(payload, token),
+        submitType === 'S'
+          ? new Promise((resolve) => setTimeout(resolve, 1500))
+          : Promise.resolve(),
+      ]);
+
+      if (submitType === 'S') {
+        setSubmitStatus('idle');
+        router.push(`/student/reading/${testId}/results/${historyRes.id}`);
+      } else {
+        setDraftStatus('saved');
+      }
     } catch (err) {
-      alert('Failed to submit test: ' + (err.message || 'Unknown error'));
-    } finally {
-      setIsSubmitting(false);
+      if (submitType === 'S') {
+        setSubmitStatus('error');
+      } else {
+        setDraftStatus('error');
+      }
+      console.error('Failed to submit test:', err);
     }
+  };
+
+  const handleCloseSubmitDialog = () => {
+    setSubmitStatus('idle');
+  };
+
+  const handleCloseDraftToast = () => {
+    setDraftStatus('idle');
+    router.push(`/student/reading/${testId}`);
+  };
+
+  const handleSaveDraftRetry = () => {
+    setDraftStatus('idle');
+    handleConfirmSubmit();
   };
 
   const handlePartChange = (newPartIndex) => {
@@ -375,12 +434,31 @@ export default function ReadingTestPage() {
 
   return (
     <>
+      <SubmitLoadingDialog
+        status={submitStatus}
+        testType="reading"
+        onClose={handleCloseSubmitDialog}
+        onRetry={() => {
+          setSubmitStatus('idle');
+          handleConfirmSubmit();
+        }}
+      />
+
+      <SaveDraftToast
+        status={draftStatus}
+        testType="reading"
+        onClose={handleCloseDraftToast}
+        onRetry={handleSaveDraftRetry}
+      />
+
       {renderPartComponent()}
 
       {/* Submit Confirmation Dialog */}
       <Dialog
         open={openSubmitDialog}
-        onClose={() => !isSubmitting && setOpenSubmitDialog(false)}
+        onClose={() =>
+          !(submitStatus === 'submitting' || draftStatus === 'saving') && setOpenSubmitDialog(false)
+        }
         PaperProps={{
           sx: {
             borderRadius: '20px',
@@ -401,7 +479,7 @@ export default function ReadingTestPage() {
             color: '#64748b',
             '&:hover': { backgroundColor: '#f1f5f9' },
           }}
-          disabled={isSubmitting}
+          disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
         >
           <CloseIcon fontSize="small" />
         </IconButton>
@@ -413,14 +491,16 @@ export default function ReadingTestPage() {
                 width: '90px',
                 height: '90px',
                 borderRadius: '50%',
-                backgroundColor: '#f0fdf4',
+                backgroundColor: submitType === 'S' ? '#f0fdf4' : '#fffbeb',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                border: '1px solid #dcfce7',
+                border: `1px solid ${submitType === 'S' ? '#dcfce7' : '#fef3c7'}`,
               }}
             >
-              <InfoOutlinedIcon sx={{ fontSize: 48, color: '#16a34a' }} />
+              <InfoOutlinedIcon
+                sx={{ fontSize: 48, color: submitType === 'S' ? '#16a34a' : '#f59e0b' }}
+              />
             </Box>
 
             <Typography
@@ -433,7 +513,9 @@ export default function ReadingTestPage() {
                 fontFamily: '"Outfit", sans-serif',
               }}
             >
-              Are you sure you want to submit?
+              {submitType === 'S'
+                ? 'Are you sure you want to submit?'
+                : 'Do you want to save your progress as a draft?'}
             </Typography>
           </Stack>
         </DialogContent>
@@ -442,7 +524,7 @@ export default function ReadingTestPage() {
           <Button
             onClick={() => setOpenSubmitDialog(false)}
             variant="outlined"
-            disabled={isSubmitting}
+            disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
             sx={{
               borderRadius: '50px',
               px: 5,
@@ -467,29 +549,35 @@ export default function ReadingTestPage() {
           <Button
             onClick={handleConfirmSubmit}
             variant="contained"
-            disabled={isSubmitting}
+            disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
             sx={{
               borderRadius: '50px',
-              px: isSubmitting ? 6 : 4,
+              px: submitStatus === 'submitting' || draftStatus === 'saving' ? 6 : 4,
               py: 1.5,
               textTransform: 'none',
               fontWeight: 700,
               fontSize: '0.875rem',
-              backgroundColor: '#166534',
+              backgroundColor: submitType === 'S' ? '#166534' : '#f59e0b',
               color: '#ffffff',
               fontFamily: '"Outfit", sans-serif',
-              boxShadow: '0 4px 14px 0 rgba(22, 101, 52, 0.39)',
+              boxShadow: `0 4px 14px 0 ${submitType === 'S' ? 'rgba(22, 101, 52, 0.39)' : 'rgba(245, 158, 11, 0.39)'}`,
               '&:hover': {
-                backgroundColor: '#14532d',
-                boxShadow: '0 6px 20px rgba(22, 101, 52, 0.23)',
+                backgroundColor: submitType === 'S' ? '#14532d' : '#d97706',
+                boxShadow: `0 6px 20px ${submitType === 'S' ? 'rgba(22, 101, 52, 0.23)' : 'rgba(245, 158, 11, 0.23)'}`,
               },
               '&.Mui-disabled': {
-                backgroundColor: '#166534',
+                backgroundColor: submitType === 'S' ? '#166534' : '#f59e0b',
                 opacity: 0.7,
               },
             }}
           >
-            {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'SUBMIT'}
+            {submitStatus === 'submitting' || draftStatus === 'saving' ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : submitType === 'S' ? (
+              'SUBMIT'
+            ) : (
+              'SAVE DRAFT'
+            )}
           </Button>
         </DialogActions>
       </Dialog>

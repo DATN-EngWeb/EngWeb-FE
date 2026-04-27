@@ -14,7 +14,7 @@ import {
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import { QUOTES, fadeUp, ConfettiCanvas, LoadingOrb } from './SharedDialogUtils';
+import { getQuotesForTestType, fadeUp, ConfettiCanvas, LoadingOrb } from './SharedDialogUtils';
 
 // ─── Saving state ─────────────────────────────────────────────────────────────
 
@@ -250,7 +250,7 @@ function ErrorState({ onClose, onRetry }) {
 
 // ─── Main Dialog ──────────────────────────────────────────────────────────────
 
-export default function SaveDraftToast({ status, onClose, onRetry }) {
+export default function SaveDraftToast({ status, onClose, onRetry, testType }) {
   const [savedAt, setSavedAt] = useState('');
   const [quote, setQuote] = useState('');
 
@@ -258,9 +258,10 @@ export default function SaveDraftToast({ status, onClose, onRetry }) {
   useEffect(() => {
     if (status === 'saved') {
       setSavedAt(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
-      setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
+      const quotes = getQuotesForTestType(testType);
+      setQuote(quotes[Math.floor(Math.random() * quotes.length)]);
     }
-  }, [status]);
+  }, [status, testType]);
 
   const open = status !== 'idle' && status != null;
 

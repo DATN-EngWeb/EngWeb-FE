@@ -57,6 +57,8 @@ export default function SpeakingTest() {
   const [submitStatus, setSubmitStatus] = useState('idle');
   const [submitMode, setSubmitMode] = useState('');
   const [bonusPoint, setBonusPoint] = useState(0);
+  const [levelData, setLevelData] = useState(null);
+  const [finalTimeStr, setFinalTimeStr] = useState('');
   const [historyID, setHistoryID] = useState(0);
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -200,9 +202,6 @@ export default function SpeakingTest() {
         is_shared: true,
       });
 
-      // Delay to ensure the "Submitting..." spinner state is visible
-      await new Promise((resolve) => setTimeout(resolve, 600));
-
       // eslint-disable-next-line no-console
       console.log('Submission response:', response);
       if (response && response.earned_bonus_point) {
@@ -210,6 +209,8 @@ export default function SpeakingTest() {
       } else {
         setBonusPoint(0);
       }
+      setLevelData(response?.level_notice || null);
+      setFinalTimeStr(formatTime(secondsElapsed));
       setIsDraftSaved(true);
       setSubmitMode('final');
       setSubmitStatus('submitted');
@@ -217,12 +218,7 @@ export default function SpeakingTest() {
       setRecordingTime(0);
       setSecondsElapsed(0);
       setStartTime(new Date().toISOString());
-      setSnackbar({ open: true, message: 'Test submitted successfully!', severity: 'success' });
       await refreshStreak();
-      setTimeout(() => {
-        sessionStorage.removeItem('current_productive_attempt');
-        router.push(`/student/speaking/${testId}`);
-      }, 1000);
     } catch (error) {
       if (
         error?.status >= 500 ||
@@ -231,7 +227,6 @@ export default function SpeakingTest() {
       ) {
         setServerErrorOpen(true);
       } else {
-        await new Promise((resolve) => setTimeout(resolve, 400));
         setSubmitStatus('error');
       }
     }
@@ -264,14 +259,13 @@ export default function SpeakingTest() {
         is_shared: true,
       });
 
-      // Delay để thấy spinner Submitting
-      await new Promise((resolve) => setTimeout(resolve, 600));
-
       if (response && response.earned_bonus_point) {
         setBonusPoint(response.earned_bonus_point);
       } else {
         setBonusPoint(0);
       }
+      setLevelData(response?.level_notice || null);
+      setFinalTimeStr(formatTime(secondsElapsed));
       setHistoryID(response.id);
 
       setIsDraftSaved(true);
@@ -291,7 +285,6 @@ export default function SpeakingTest() {
       ) {
         setServerErrorOpen(true);
       } else {
-        await new Promise((resolve) => setTimeout(resolve, 400));
         setSubmitStatus('error');
       }
       return;
@@ -807,7 +800,17 @@ export default function SpeakingTest() {
         <SubmitLoadingDialog
           status={submitStatus}
           bonusPoint={bonusPoint}
+          timeTaken={finalTimeStr}
+          currentXP={levelData ? levelData.current_exp - bonusPoint : undefined}
+          levelMaxXP={levelData ? levelData.current_level?.max_xp : undefined}
+          level={levelData ? levelData.current_level?.level_number : undefined}
+          levelIcon={levelData ? levelData.current_level?.level_icon : undefined}
+          levelTitle={levelData ? levelData.current_level?.level_title : undefined}
+          leveledUp={levelData ? levelData.leveled_up : false}
+          testType="speaking"
           onClose={handleCloseSubmitDialog}
+          onViewResults={submitMode === 'ai' ? handleCloseSubmitDialog : undefined}
+          onContinue={handleCloseSubmitDialog}
         />
 
         <Dialog

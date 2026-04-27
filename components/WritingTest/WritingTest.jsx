@@ -207,10 +207,6 @@ export default function WritingTest() {
       setStartTime(new Date().toISOString());
       setSnackbar({ open: true, message: 'Test submitted successfully!', severity: 'success' });
       await refreshStreak();
-      setTimeout(() => {
-        sessionStorage.removeItem('current_productive_attempt');
-        router.push(`/student/writing/${testId}`);
-      }, 1000);
     } catch (error) {
       await new Promise((resolve) => setTimeout(resolve, 400));
       setSubmitStatus('error');
@@ -717,6 +713,10 @@ export default function WritingTest() {
           currentXP={levelData ? levelData.current_exp - bonusPoint : undefined}
           levelMaxXP={levelData ? levelData.current_level?.max_xp : undefined}
           level={levelData ? levelData.current_level?.level_number : undefined}
+          levelIcon={levelData ? levelData.current_level?.level_icon : undefined}
+          levelTitle={levelData ? levelData.current_level?.level_title : undefined}
+          leveledUp={levelData ? levelData.leveled_up : false}
+          testType="writing"
           onClose={handleGlobalClose}
           onViewResults={handleViewResultAction}
           onContinue={handleGlobalClose}
@@ -726,6 +726,7 @@ export default function WritingTest() {
           status={draftStatus}
           onClose={handleCloseDraftToast}
           onRetry={handleSaveDraft}
+          testType="writing"
         />
 
         <Dialog
