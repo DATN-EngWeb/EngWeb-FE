@@ -5,7 +5,7 @@ import { Paper, Stack, Box, Typography, Chip, Button, IconButton } from '@mui/ma
 import StarIcon from '@mui/icons-material/Star';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import DescriptionIcon from '@mui/icons-material/Description';
-import * as styles from '../../../styles/student/HistoryTestStyles';
+import * as styles from '@/styles/Student/HistoryTestStyles';
 import { useRouter } from 'next/navigation';
 import { formatDate } from '../../../utils/stringFormat';
 

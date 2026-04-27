@@ -150,7 +150,7 @@ async function transformReadingData(data) {
             question_number: q.question_number,
             explanation: q.explanation || '',
             score: q.score,
-            content: !['I', 'J'].includes(format) ? q.content || '' : undefined,
+            content: !['I'].includes(format) ? q.content || '' : undefined,
           };
 
           if (newQ.content?.startsWith?.('http')) {
@@ -263,6 +263,9 @@ export default function ViewTestFeedbackPage({ params }) {
         }
 
         const details = await detailFetcher(test_id);
+        if (!details.is_owner) {
+          throw new Error('You do not have permission to view feedback for this test.');
+        }
         setTestTitle(details?.title || `${skillLabel} Test Feedback`);
         setTestStatus(details?.status || null);
 

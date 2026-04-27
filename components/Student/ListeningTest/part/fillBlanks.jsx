@@ -5,7 +5,9 @@ import { Container, Box, Typography, TextField } from '@mui/material';
 import CustomAudioPlayer from '../../../Test/customAudioPlayer';
 import InstructionIcon from '../../../Test/instructionIcon';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
-import { listeningPartStyles } from '../../../../styles/student/Listening/listeningTestStyles';
+import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
+import SumaryPartTab from './sumaryPartTab';
+import { usePathname } from 'next/navigation';
 
 export default function FillBlankPart({
   dataPart,
@@ -13,7 +15,15 @@ export default function FillBlankPart({
   userAnswers,
   onUpdateAnswers,
   media = {},
+  disabled,
+  detailAnswers,
+  onNavigateToQuestion,
 }) {
+  const pathname = usePathname();
+  const isTeacherView = pathname?.includes('/teacher/view-test/');
+
+  const showSummary = disabled && !isTeacherView;
+
   const { audioSrc = '', passageSrc = '' } = media;
   const [leftWidth, setLeftWidth] = useState(40); // percentage width
   const [isDragging, setIsDragging] = useState(false);
@@ -45,7 +55,6 @@ export default function FillBlankPart({
     const handleMouseMove = (event) => {
       event.preventDefault();
 
-      // 3. Sử dụng ref thay vì querySelector
       const container = containerRef.current;
       if (!container) return;
 
@@ -55,11 +64,9 @@ export default function FillBlankPart({
 
       if (!containerWidth || containerWidth === 0) return;
 
-      // Tính toán vị trí chuột tương đối trong khung
       const relativeX = event.clientX - containerLeft;
       const newLeftWidth = (relativeX / containerWidth) * 100;
 
-      // Giới hạn vùng kéo (25% - 75%)
       const clamped = Math.min(75, Math.max(25, newLeftWidth));
       setLeftWidth(clamped);
     };
@@ -84,16 +91,32 @@ export default function FillBlankPart({
     };
   }, [isDragging]);
 
-  return (
-    <Container
+  // Chuẩn bị dữ liệu trạng thái cho SumaryPartTab
+  const questionsArray =
+    dataPart?.type === 'fill_in_the_blanks' ? dataPart?.answers : dataPart?.receptive_questions;
+  const partQuestions =
+    isActive && questionsArray
+      ? questionsArray.map((question) => {
+          const questionResult = Array.isArray(detailAnswers)
+            ? detailAnswers.find((ans) => ans.question_id === question.id)
+            : null;
+          return {
+            id: question.id,
+            isCorrect: questionResult?.is_correct || false,
+            isAnswered: !!questionResult,
+          };
+        })
+      : [];
+
+  const mainContent = (
+    <Box
       ref={containerRef}
-      maxWidth="lg"
       sx={{
         ...listeningPartStyles.containerColRow,
-        display: isActive ? 'flex' : 'none',
         height: { xs: 'auto', md: '100vh' },
         maxHeight: { xs: 'none', md: '100vh' },
         overflow: { xs: 'visible', md: 'hidden' },
+        width: '100%',
       }}
     >
       {/* -------- Audio and Passage Section --------- */}
@@ -174,15 +197,15 @@ export default function FillBlankPart({
           height: '100%',
           overflowY: 'auto',
           minHeight: 0,
+          containerType: 'inline-size',
+          containerName: 'rightPanel',
         }}
       >
         {/* -------- Instruction --------- */}
         <Box sx={listeningPartStyles.instructionContainer}>
           <InstructionIcon />
           <Box sx={listeningPartStyles.instructionWrapper}>
-            <Typography
-              sx={{ color: 'secondary.main', fontSize: '1rem', fontWeight: 600, mb: 0.5 }}
-            >
+            <Typography sx={{ color: 'red.text', fontSize: '1rem', fontWeight: 600, mb: 0.5 }}>
               Instruction
             </Typography>
             <Typography
@@ -212,42 +235,190 @@ export default function FillBlankPart({
               {dataPart.description}
             </Typography>
           </Box>
-          <Box sx={listeningPartStyles.listQuestionContainerGrid}>
+          <Box
+            sx={{
+              ...listeningPartStyles.listQuestionContainerGrid,
+              // Ở mức 460px trở lên sẽ dùng cols-2 mặc định, 459px trở xuống sẽ dùng grid-cols-1
+              '@container rightPanel (max-width: 400px)': {
+                display: 'grid',
+                gridTemplateColumns: '1fr !important',
+              },
+            }}
+          >
             {dataPart.type === 'fill_in_the_blanks'
-              ? dataPart?.answers?.map((answer, index) => (
-                  <Box key={answer.id} sx={listeningPartStyles.questionContainerRow}>
-                    {/* -------- Question Name Section --------- */}
-                    <Typography sx={listeningPartStyles.questionLabelCircle}>
-                      {index + 1}
-                    </Typography>
-                    <TextField
-                      variant="standard"
-                      multiline
-                      placeholder="Type answer ..."
-                      defaultValue={''}
-                      sx={listeningPartStyles.inputQuestion}
-                    />
-                  </Box>
-                ))
-              : dataPart?.receptive_questions?.map((question, index) => (
-                  <Box key={question.id} sx={listeningPartStyles.questionContainerRow}>
-                    {/* -------- Question Name Section --------- */}
-                    <Typography sx={listeningPartStyles.questionLabelCircle}>
-                      {index + 1}
-                    </Typography>
-                    <TextField
-                      variant="standard"
-                      multiline
-                      placeholder="Type answer ..."
-                      defaultValue={userAnswers[question.id] || ''}
-                      sx={listeningPartStyles.inputQuestion}
-                      onBlur={(e) => handleUpdateUserAnswers(question.id, e.target.value)}
-                    />
-                  </Box>
-                ))}
+              ? dataPart?.answers?.map((answer, index) => {
+                  const questionResult =
+                    disabled && Array.isArray(detailAnswers)
+                      ? detailAnswers.find((ans) => ans.question_id === answer.id)
+                      : null;
+                  const isCorrect = questionResult?.is_correct;
+
+                  return (
+                    <Box
+                      key={answer.id}
+                      id={`question-${answer.id}`}
+                      sx={{ display: 'flex', flexDirection: 'column', width: '100%', mb: 1 }}
+                    >
+                      <Box
+                        sx={{
+                          ...listeningPartStyles.questionContainerRow,
+                          mb: questionResult ? 1 : 0,
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            ...listeningPartStyles.questionLabelCircle,
+                            ...(questionResult && {
+                              backgroundColor: isCorrect ? 'success.main' : 'error.main',
+                              color: '#fff',
+                              border: 'none',
+                            }),
+                          }}
+                        >
+                          {index + 1}
+                        </Typography>
+                        <TextField
+                          disabled={disabled}
+                          variant="standard"
+                          multiline
+                          placeholder="Type answer ..."
+                          defaultValue={userAnswers[answer.id] || ''}
+                          sx={{
+                            ...listeningPartStyles.inputQuestion,
+                            ...(questionResult && {
+                              backgroundColor: isCorrect
+                                ? 'rgba(76, 175, 80, 0.05)'
+                                : 'rgba(244, 67, 54, 0.05)',
+                              borderRadius: '4px',
+                              padding: '2px 8px',
+                              '& .MuiInputBase-input': {
+                                color: isCorrect ? '#4caf50' : '#f44336',
+                                fontWeight: 600,
+                                WebkitTextFillColor: isCorrect ? '#4caf50' : '#f44336',
+                              },
+                              '& .MuiInput-underline:before, & .MuiInput-underline:after, & .MuiInputBase-root.Mui-disabled:before':
+                                {
+                                  borderBottomColor: isCorrect ? '#4caf50' : '#f44336',
+                                  borderBottomStyle: 'solid',
+                                },
+                            }),
+                          }}
+                          onBlur={(e) => handleUpdateUserAnswers(answer.id, e.target.value)}
+                        />
+                      </Box>
+                    </Box>
+                  );
+                })
+              : dataPart?.receptive_questions?.map((question, index) => {
+                  const questionResult =
+                    disabled && Array.isArray(detailAnswers)
+                      ? detailAnswers.find((ans) => ans.question_id === question.id)
+                      : null;
+                  const isCorrect = questionResult?.is_correct;
+
+                  const correctAnswerText = question.receptive_answers?.find(
+                    (a) => a.is_correct,
+                  )?.answer_text;
+
+                  return (
+                    <Box
+                      key={question.id}
+                      id={`question-${question.id}`}
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        width: '100%',
+                        mb: questionResult ? 3 : 1,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          ...listeningPartStyles.questionContainerRow,
+                          mb: questionResult ? 1 : 0,
+                        }}
+                      >
+                        {/* -------- Question Name Section --------- */}
+                        <Typography
+                          sx={{
+                            ...listeningPartStyles.questionLabelCircle,
+                            ...(questionResult && {
+                              backgroundColor: isCorrect ? 'success.main' : 'error.main',
+                              color: '#fff',
+                              border: 'none',
+                            }),
+                          }}
+                        >
+                          {index + 1}
+                        </Typography>
+                        <TextField
+                          disabled={disabled}
+                          variant="standard"
+                          multiline
+                          placeholder="Type answer ..."
+                          defaultValue={userAnswers[question.id] || ''}
+                          sx={{
+                            ...listeningPartStyles.inputQuestion,
+                            ...(questionResult && {
+                              borderRadius: '4px',
+                              padding: '2px 8px',
+                              '& .MuiInputBase-input': {
+                                color: isCorrect ? '#4caf50' : '#f44336',
+                                fontWeight: 600,
+                                WebkitTextFillColor: isCorrect ? '#4caf50' : '#f44336',
+                              },
+                              '& .MuiInput-underline:before, & .MuiInput-underline:after, & .MuiInputBase-root.Mui-disabled:before':
+                                {
+                                  borderBottomColor: isCorrect ? '#4caf50' : '#f44336',
+                                  borderBottomStyle: 'solid',
+                                },
+                            }),
+                          }}
+                          onBlur={(e) => handleUpdateUserAnswers(question.id, e.target.value)}
+                        />
+                      </Box>
+                      {/* -------- Explanation Section --------- */}
+                      {disabled && !isTeacherView && (
+                        <Box sx={listeningPartStyles.explanationContainer}>
+                          <Typography sx={listeningPartStyles.correctText}>
+                            Correct Answer: {correctAnswerText}
+                          </Typography>
+                          {question.explanation && (
+                            <Typography sx={listeningPartStyles.explanationText}>
+                              <strong>Explanation:</strong> {question.explanation}
+                            </Typography>
+                          )}
+                        </Box>
+                      )}
+                    </Box>
+                  );
+                })}
           </Box>
         </Box>
       </Box>
-    </Container>
+    </Box>
+  );
+
+  return (
+    <Box sx={{ display: isActive ? 'block' : 'none', width: '100%' }}>
+      {showSummary ? (
+        <Container
+          maxWidth="xl"
+          disableGutters
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            alignItems: 'flex-start',
+            pr: 2,
+          }}
+        >
+          <Box maxWidth="lg" sx={{ flex: { xs: 1, md: 4 }, width: '100%', pt: 2 }}>
+            {mainContent}
+          </Box>
+          <SumaryPartTab questions={partQuestions} onNavigateToQuestion={onNavigateToQuestion} />
+        </Container>
+      ) : (
+        <Container maxWidth="lg">{mainContent}</Container>
+      )}
+    </Box>
   );
 }

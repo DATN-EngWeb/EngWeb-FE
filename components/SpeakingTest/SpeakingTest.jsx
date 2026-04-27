@@ -32,15 +32,15 @@ import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'reac
 import { getProductiveTestDetails, createProductiveTest, getSpeakingAIFeedback } from '@/api/test';
 import ProductivePreview from '../Writing-Speaking/ProductivePreview';
 import { levelTheme } from '../TestCard';
-import * as styles from '../../styles/student/Writing/WritingTestStyles';
+import * as styles from '@/styles/Student/Writing/WritingTestStyles';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SendIcon from '@mui/icons-material/Send';
 import { uploadMediaFile } from '../../utils/uploadHelpers';
 import CustomAudioPlayer from '../Test/customAudioPlayer';
+import { useStreakContext } from '../../context/streakContext';
 import AIGradingLoading from '../Writing-Speaking/AIGradingLoading';
 import SubmitLoadingDialog from '../Writing-Speaking/SubmitLoadingDialog';
-import { useStreakContext } from '../../context/streakContext';
 
 export default function SpeakingTest() {
   const params = useParams();

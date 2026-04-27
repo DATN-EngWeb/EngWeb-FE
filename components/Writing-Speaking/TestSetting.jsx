@@ -44,33 +44,30 @@ export default function TestSetting({ skill, timeLimit, minWords, score, onChang
               </Typography>
               <TextField
                 id="minWords"
+                type="number"
+                InputProps={{ inputProps: { min: 0 } }}
                 fullWidth
                 sx={textInput}
                 placeholder="200"
-                type={'number'}
                 value={minWords ?? 200}
-                onChange={(e) => onChange('minWords', e.target.value)}
+                onChange={(e) => {
+                  const { value } = e.target;
+
+                  if (value === '') {
+                    onChange('minWords', '');
+                    return;
+                  }
+
+                  const parsedValue = Number(value);
+                  if (Number.isNaN(parsedValue)) return;
+
+                  onChange('minWords', Math.max(0, parsedValue));
+                }}
                 size="small"
                 error={errors?.minWords}
               />
             </Box>
           )}
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" mb={1}>
-              Score <span style={{ color: 'red' }}>*</span>
-            </Typography>
-            <TextField
-              id="score"
-              fullWidth
-              sx={textInput}
-              placeholder="30"
-              type={'number'}
-              value={score ?? 30}
-              onChange={(e) => onChange('score', e.target.value)}
-              size="small"
-              error={errors?.score}
-            />
-          </Box>
         </Box>
       </Collapse>
     </Paper>

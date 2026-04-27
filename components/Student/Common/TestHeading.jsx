@@ -4,7 +4,7 @@ import { Box, Button, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
 
-import { listeningtestStyles } from '../../../styles/student/Listening/listeningTestStyles';
+import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
 
 export default function TestHeading({
   testName = '',
@@ -27,9 +27,15 @@ export default function TestHeading({
       >
         {/* Left: Timer or Back/Exit */}
         <Box
-          sx={{ width: { xs: 'auto', md: '320px' }, display: 'flex', alignItems: 'center', gap: 1 }}
+          sx={{
+            width: { xs: 'auto', md: '320px' },
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            gap: 0.5,
+          }}
         >
-          {isTeacher && onExit && (
+          {onExit && (
             <Button
               onClick={onExit}
               size="small"

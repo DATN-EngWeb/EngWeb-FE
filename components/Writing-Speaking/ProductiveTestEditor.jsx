@@ -88,7 +88,10 @@ export default function ProductiveTestEditor({
   onFeedback,
   isFeedbackActive,
   feedbackContent,
+  showTestSettings = true,
 }) {
+  const isFeedbackMode = Boolean(feedbackContent && isFeedbackActive);
+
   return (
     <Container
       maxWidth="lg"
@@ -160,67 +163,69 @@ export default function ProductiveTestEditor({
         {/* <PanelGroup direction="horizontal">
           <Panel defaultSize={40} minSize={20}> */}
         <Box sx={{ display: 'flex', gap: 2, height: '100%' }}>
-          <Box
-            sx={{
-              width: feedbackContent && isFeedbackActive ? '35%' : '40%',
-              height: '100%',
-              overflowY: 'auto',
-              pr: 2,
-              ...(isReadOnly && {
-                '& .MuiInputBase-root': { pointerEvents: 'none' },
-                '& .ck-editor': { pointerEvents: 'none', opacity: 0.8 },
-              }),
-            }}
-          >
-            {basicOpen && (
-              <BasicInformation
-                {...testData}
-                timeLimit={settings.timeLimit}
-                onChange={(field, value) => {
-                  if (field === 'timeLimit') {
-                    setSettings((prev) => ({ ...prev, [field]: value }));
-                  } else {
-                    setTestData((prev) => ({ ...prev, [field]: value }));
-                  }
-                }}
-                errors={{ ...errors?.testData, ...errors?.settings }}
-              />
-            )}
+          {!isFeedbackMode && (
+            <Box
+              sx={{
+                width: '40%',
+                height: '100%',
+                overflowY: 'auto',
+                pr: 2,
+                ...(isReadOnly && {
+                  '& .MuiInputBase-root': { pointerEvents: 'none' },
+                  '& .ck-editor': { pointerEvents: 'none', opacity: 0.8 },
+                }),
+              }}
+            >
+              {basicOpen && (
+                <BasicInformation
+                  {...testData}
+                  timeLimit={settings.timeLimit}
+                  onChange={(field, value) => {
+                    if (field === 'timeLimit') {
+                      setSettings((prev) => ({ ...prev, [field]: value }));
+                    } else {
+                      setTestData((prev) => ({ ...prev, [field]: value }));
+                    }
+                  }}
+                  errors={{ ...errors?.testData, ...errors?.settings }}
+                />
+              )}
 
-            {settingOpen && (
-              <TestSettingComponent
-                {...settings}
-                onChange={(field, value) => setSettings((prev) => ({ ...prev, [field]: value }))}
-                errors={errors?.settings}
-              />
-            )}
+              {showTestSettings && settingOpen && (
+                <TestSettingComponent
+                  {...settings}
+                  onChange={(field, value) => setSettings((prev) => ({ ...prev, [field]: value }))}
+                  errors={errors?.settings}
+                />
+              )}
 
-            {(!basicOpen || !settingOpen) && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  gap: 1,
-                  mb: 2,
-                  position: 'sticky',
-                  top: 0,
-                  zIndex: 5,
-                  bgcolor: 'background.paper',
-                  py: 1,
-                }}
-              >
-                {!basicOpen && (
-                  <Button size="small" variant="outlined" onClick={() => setBasicOpen(true)}>
-                    Basic Info
-                  </Button>
-                )}
-                {!settingOpen && (
-                  <Button size="small" variant="outlined" onClick={() => setSettingOpen(true)}>
-                    Test Settings
-                  </Button>
-                )}
-              </Box>
-            )}
-          </Box>
+              {(!basicOpen || (showTestSettings && !settingOpen)) && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: 1,
+                    mb: 2,
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 5,
+                    bgcolor: 'background.paper',
+                    py: 1,
+                  }}
+                >
+                  {!basicOpen && (
+                    <Button size="small" variant="outlined" onClick={() => setBasicOpen(true)}>
+                      Basic Info
+                    </Button>
+                  )}
+                  {showTestSettings && !settingOpen && (
+                    <Button size="small" variant="outlined" onClick={() => setSettingOpen(true)}>
+                      Test Settings
+                    </Button>
+                  )}
+                </Box>
+              )}
+            </Box>
+          )}
           {/* </Panel>
 
           <PanelResizeHandle
@@ -235,7 +240,7 @@ export default function ProductiveTestEditor({
           <Panel defaultSize={60} minSize={30}> */}
           <Box
             sx={{
-              width: feedbackContent && isFeedbackActive ? '45%' : '60%',
+              width: isFeedbackMode ? 'calc(100% - 336px)' : '60%',
               height: '100%',
               overflowY: 'auto',
               pl: 1,
@@ -247,7 +252,6 @@ export default function ProductiveTestEditor({
           >
             {children}
           </Box>
-
           {feedbackContent && isFeedbackActive && (
             <Box
               sx={{

@@ -15,6 +15,23 @@ import FillBlanksContent from '../../Reading/FillBlanks/FillBlanksContent';
 import MatchingContent from '../../Reading/Matching/MatchingContent';
 import MultiChoiceContent from '../../Reading/MultiChoice/MultiChoiceContent';
 
+const getReadingPartTypeLabel = (format) => {
+  switch (format) {
+    case 'F':
+      return 'Multiple Choice (Short Text)';
+    case 'G':
+      return 'Multiple Choice (Long Text)';
+    case 'H':
+      return 'Fill In The Blanks (Multiple Choice)';
+    case 'I':
+      return 'Fill In The Blanks (Text)';
+    case 'J':
+      return 'Matching';
+    default:
+      return 'Unknown Test Type';
+  }
+};
+
 const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButton = true }) => {
   const router = useRouter();
   const [currentPartIndex, setCurrentPartIndex] = useState(0);
@@ -34,13 +51,15 @@ const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButto
     if (!currentPart) return null;
 
     const commonProps = {
-      testName: testData?.test?.title || testData?.title || 'Preview Test',
+      testName: testData?.test?.title || testData?.title || '',
+      partLabel: `Part ${currentPartIndex + 1}: ${getReadingPartTypeLabel(currentPart.format)}`,
       parts: partTitles,
       currentPart: currentPartIndex + 1,
       passage: currentPart.content || '',
       passageTitle: currentPart.description || '',
       onPartChange: handlePartChange,
       isTeacher: true,
+      onSubmit: null,
       onBack: () => handlePartChange(currentPartIndex - 1),
       onNext: () => handlePartChange(currentPartIndex + 1),
       currentSection: currentPartIndex + 1,
@@ -90,34 +109,21 @@ const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButto
         };
 
       case 'J': {
-        const sentences = [];
-        const seenOptions = new Set();
+        const activeQuestions = currentPart.questions.filter((q) => q.action !== 'delete');
+        const sentences = activeQuestions.map((q) => ({
+          id: q.id,
+          text: q.content || q.text || q.explanation || '', // Support both content and text, fallback to explanation
+        }));
 
-        currentPart.questions.forEach((q) => {
-          q.answers.forEach((a, index) => {
-            if (!seenOptions.has(a.option_label)) {
-              seenOptions.add(a.option_label);
-              sentences.push({
-                id:
-                  a.option_label && a.option_label !== 'undefined'
-                    ? a.option_label
-                    : String.fromCharCode(65 + index),
-                text: a.answer_text,
-              });
-            }
-          });
-        });
-
-        let passageWithGaps = currentPart.content || '';
-        const gaps = currentPart.questions.map((q) => q.question_number).sort((a, b) => a - b);
+        const gaps = activeQuestions.map((q) => q.question_number).sort((a, b) => a - b);
 
         return {
           component: MatchingContent,
           props: {
             ...commonProps,
-            sentences: sentences.sort((a, b) => a.id.localeCompare(b.id)),
+            sentences: sentences,
             gaps: gaps,
-            passage: passageWithGaps,
+            passage: currentPart.content || '',
           },
         };
       }

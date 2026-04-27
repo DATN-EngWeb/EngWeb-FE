@@ -4,7 +4,7 @@ import React, { use } from 'react';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import InfoIcon from '@mui/icons-material/Info';
-import * as styles from '../../styles/student/HistoryTestStyles';
+import * as styles from '@/styles/Student/HistoryTestStyles';
 import HistoryTable from '../Student/HistoryTable';
 import HistoryAIFeedbackModal from '../WritingTest/HistoryAIFeedbackModal';
 import { levelTheme } from '../TestCard';

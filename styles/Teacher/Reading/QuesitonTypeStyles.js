@@ -96,7 +96,7 @@ export const multipleChoiceStyles = {
     height: 'auto',
     display: 'flex',
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'flex-start',
     gap: 1,
   },
@@ -175,7 +175,7 @@ export const multipleChoiceStyles = {
     },
   },
   optionLabel: {
-    fontSize: { xs: '0.8rem', md: '1rem' },
+    fontSize: { xs: '0.9rem', md: '1rem' },
     color: 'text.primary',
     fontWeight: 600,
     wordBreak: 'break-word',

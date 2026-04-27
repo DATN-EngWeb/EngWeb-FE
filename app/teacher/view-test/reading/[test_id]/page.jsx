@@ -39,7 +39,7 @@ async function transformReadingData(data) {
             question_number: q.question_number,
             explanation: q.explanation || '',
             score: q.score,
-            content: !['I', 'J'].includes(format) ? q.content || '' : undefined,
+            content: !['I'].includes(format) ? q.content || '' : undefined,
           };
 
           if (newQ.content?.startsWith?.('http')) {
@@ -76,9 +76,26 @@ export default function ViewReadingTestPage({ params }) {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  }, []);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const data = await getReceptiveTestDetails(test_id);
+        if (!data.is_owner) {
+          setSnackbar({
+            open: true,
+            message: 'You do not have permission to view this test',
+            severity: 'error',
+          });
+          setTimeout(() => router.push('/teacher'), 1500);
+          setLoading(false);
+          return;
+        }
         setStatus(data.status);
 
         const parts = await transformReadingData(data);

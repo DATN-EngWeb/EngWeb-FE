@@ -13,7 +13,7 @@ import {
 } from 'recharts';
 
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import * as styles from '../../styles/student/HistoryTestStyles';
+import * as styles from '@/styles/Student/HistoryTestStyles';
 export default function ProgressTrackingCard({ historyData, type }) {
   const submissions = historyData?.filter((h) => h.type === 'S') || [];
 

@@ -5,6 +5,7 @@ import ProductiveEditor from './../Writing-Speaking/ProductiveEditor';
 import ProductivePreview from './../Writing-Speaking/ProductivePreview';
 import { createTest, submitProductiveTest } from '../../api/test';
 import { uploadHtmlContent, uploadMediaFile } from '../../utils/uploadHelpers';
+import { validateProductiveTestData, parseApiError } from '../../utils/productiveTestValidation';
 import { useRouter } from 'next/navigation';
 
 export default function SpeakingTestEditor() {
@@ -20,7 +21,6 @@ export default function SpeakingTestEditor() {
   const [settings, setSettings] = useState({
     skill: 'S',
     timeLimit: 30,
-    minWords: 100,
     score: 10,
   });
   const [question, setQuestion] = useState({
@@ -43,6 +43,17 @@ export default function SpeakingTestEditor() {
   if (!mounted) return null;
 
   const handleSubmit = async (status) => {
+    // Client-side validation
+    const validationError = validateProductiveTestData(testData, settings, question);
+    if (validationError) {
+      setSnackbar({
+        open: true,
+        message: validationError,
+        severity: 'error',
+      });
+      return;
+    }
+
     setIsSaving(true);
     try {
       const basicInfo = {
@@ -85,7 +96,7 @@ export default function SpeakingTestEditor() {
       setSnackbar({ open: true, message: 'Test submitted successfully', severity: 'success' });
       setIsSaving(false);
       setTestData({ skill: 'S', testName: '', level: '', topics: '', format: '' });
-      setSettings({ timeLimit: 30, minWords: 200, score: 10 });
+      setSettings({ timeLimit: 30, score: 10 });
       setQuestion({ description: '', suggestion: '', audio: null });
       setErrors(null);
       setIsSaving(false);
@@ -93,7 +104,8 @@ export default function SpeakingTestEditor() {
         router.push(`/teacher`);
       }, 1000);
     } catch (error) {
-      setSnackbar({ open: true, message: `Submit failed: ${error.message}`, severity: 'error' });
+      const errorMsg = parseApiError(error);
+      setSnackbar({ open: true, message: `Submit failed: ${errorMsg}`, severity: 'error' });
       setIsSaving(false);
     }
   };
@@ -113,6 +125,7 @@ export default function SpeakingTestEditor() {
       setBasicOpen={setBasicOpen}
       settingOpen={settingOpen}
       setSettingOpen={setSettingOpen}
+      showTestSettings={false}
       snackbar={snackbar}
       setSnackbar={setSnackbar}
       previewContent={

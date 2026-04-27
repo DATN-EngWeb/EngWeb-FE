@@ -41,7 +41,7 @@ import {
 import DiffViewer from './DiffViewer';
 import CustomAudioPlayer from '../Test/customAudioPlayer';
 import AIGradingLoading from './AIGradingLoading';
-import * as styles from '../../styles/student/Writing/AIFeedbackStyles';
+import * as styles from '@/styles/Student/Writing/AIFeedbackStyles';
 
 function CustomTooltip({ active, payload }) {
   if (active && payload && payload.length) {

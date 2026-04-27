@@ -27,11 +27,12 @@ import {
 } from '../../styles/Home/HeaderStyles';
 import { useAuth } from '../../hooks/useAuth';
 import { logout as logoutAPI } from '../../api/accounts';
+import NotificationBell from '../Notifications/NotificationBell';
 
 export default function TeacherHeader() {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, logout: logoutHook } = useAuth(null);
+  const { isAuthenticated, user, logout: logoutHook } = useAuth(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [userAvatar, setUserAvatar] = useState(null);
 
@@ -121,70 +122,75 @@ export default function TeacherHeader() {
           </Box>
 
           <Box sx={actionBoxStyles}>
-            <Box
-              id="user-menu-button"
-              role="button"
-              tabIndex={0}
-              aria-label="User menu"
-              aria-haspopup="true"
-              aria-expanded={Boolean(anchorEl)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handleMenuOpen(e);
-                }
-              }}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                cursor: 'pointer',
-              }}
-              onClick={handleMenuOpen}
-            >
-              <Avatar
-                src={userAvatar || undefined}
-                alt={user?.username || 'User'}
-                sx={{ width: 32, height: 32 }}
-              >
-                {user?.username?.[0]?.toUpperCase() || 'U'}
-              </Avatar>
-              <Typography
-                sx={{
-                  color: 'primary.dark',
-                  fontWeight: 600,
-                  display: { xs: 'none', sm: 'block' },
-                }}
-              >
-                {user?.username || 'User'}
-              </Typography>
-            </Box>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleMenuClose}
-              onClick={handleMenuClose}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-            >
-              <MenuItem
-                onClick={() => {
-                  handleMenuClose();
-                  router.push('/teacher/profile');
-                }}
-              >
-                <Typography>Profile</Typography>
-              </MenuItem>
-              <MenuItem onClick={handleLogout}>
-                <Typography color="error">Logout</Typography>
-              </MenuItem>
-            </Menu>
+            {isAuthenticated && user ? (
+              <>
+                <NotificationBell />
+                <Box
+                  id="user-menu-button"
+                  role="button"
+                  tabIndex={0}
+                  aria-label="User menu"
+                  aria-haspopup="true"
+                  aria-expanded={Boolean(anchorEl)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleMenuOpen(e);
+                    }
+                  }}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    cursor: 'pointer',
+                  }}
+                  onClick={handleMenuOpen}
+                >
+                  <Avatar
+                    src={userAvatar || undefined}
+                    alt={user?.username || 'User'}
+                    sx={{ width: 32, height: 32 }}
+                  >
+                    {user?.username?.[0]?.toUpperCase() || 'U'}
+                  </Avatar>
+                  <Typography
+                    sx={{
+                      color: 'primary.dark',
+                      fontWeight: 600,
+                      display: { xs: 'none', sm: 'block' },
+                    }}
+                  >
+                    {user?.username || 'User'}
+                  </Typography>
+                </Box>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={handleMenuClose}
+                  onClick={handleMenuClose}
+                  anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                  }}
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                >
+                  <MenuItem
+                    onClick={() => {
+                      handleMenuClose();
+                      router.push('/teacher/profile');
+                    }}
+                  >
+                    <Typography>Profile</Typography>
+                  </MenuItem>
+                  <MenuItem onClick={handleLogout}>
+                    <Typography color="error">Logout</Typography>
+                  </MenuItem>
+                </Menu>
+              </>
+            ) : null}
           </Box>
         </Toolbar>
       </Container>

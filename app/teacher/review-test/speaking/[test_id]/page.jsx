@@ -18,10 +18,7 @@ export default function FeedbackSpeakingTestPage({ params }) {
     const fetchData = async () => {
       try {
         const response = await getProductiveTestDetails(test_id);
-        const currentUserId = localStorage.getItem('userId');
-        const isOwner =
-          String(response.created_by_id ?? response.teacher_id ?? '') === String(currentUserId);
-        if (response.status !== 'I' || isOwner) {
+        if (response.status !== 'I' || response.is_owner) {
           setForbidden(true);
           setLoading(false);
           return;

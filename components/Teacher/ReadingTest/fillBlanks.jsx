@@ -308,8 +308,8 @@ export default function FillBlankForm({
         <Box
           sx={{
             display: 'flex',
-            flexDirection: { xs: 'column', lg: 'row' },
-            gap: 4,
+            flexDirection: 'column',
+            gap: 2,
             width: '100%',
             maxWidth: '100%',
             alignSelf: 'stretch',
@@ -317,7 +317,7 @@ export default function FillBlankForm({
           }}
         >
           {/* -------------- Left Column: Config & Passage -------------- */}
-          <Box sx={{ ...uploadReadingStyles.partEditorColumn, flex: 1, minWidth: 0, mb: 0 }}>
+          <Box sx={{ ...uploadReadingStyles.partEditorColumn, width: '100%', minWidth: 0, mb: 0 }}>
             {/* -------------- Total Each Score and Answer Type -------------- */}
             <Box sx={{ ...fillBlankStyles.scoreAndCheckbox, gridTemplateColumns: '1fr', gap: 2 }}>
               {/* -------------- CỘT TRÁI: Nhập điểm -------------- */}
@@ -420,7 +420,7 @@ export default function FillBlankForm({
           </Box>
 
           {/* -------------- Right Column: Questions -------------- */}
-          <Box sx={{ ...uploadReadingStyles.partEditorColumn, flex: 1.2, minWidth: 0, mb: 0 }}>
+          <Box sx={{ ...uploadReadingStyles.partEditorColumn, width: '100%', minWidth: 0, mb: 0 }}>
             <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
               {/* --------- Heading of Question Section --------- */}
               <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>

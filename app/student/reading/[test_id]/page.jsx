@@ -28,6 +28,7 @@ import {
   transformFillBlanksTest,
   transformMatchingTest,
 } from '@/utils/testDataTransform';
+import TestTimer from '@/components/Reading/Common/TestTimer';
 import ReceptiveTestHistory from '@/components/Student/Reading_Listening/ReceptiveTestHistory';
 import SaveDraftToast from '@/components/Writing-Speaking/SaveDraftToast';
 import SubmitLoadingDialog from '@/components/Writing-Speaking/SubmitLoadingDialog';
@@ -50,6 +51,17 @@ export default function ReadingTestPage() {
 
   const [submitStatus, setSubmitStatus] = useState('idle');
   const [draftStatus, setDraftStatus] = useState('idle');
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  useEffect(() => {
+    if (!isPracticing || submitStatus === 'submitting') return;
+
+    const interval = setInterval(() => {
+      setElapsedSeconds((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isPracticing, submitStatus]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -206,9 +218,48 @@ export default function ReadingTestPage() {
 
             if (['F', 'G', 'A', 'B', 'C', 'H', 'E', 'J'].includes(part.format)) {
               // Multiple choice or Matching: find the answer ID corresponding to the selected label/option
-              const selectedAnswer = q.receptive_answers.find((a) => a.option_label === userAnswer);
+              let selectedAnswer = q.receptive_answers.find((a) => a.option_label === userAnswer);
+
+              if (!selectedAnswer && (part.format === 'J' || part.format === 'E')) {
+                // Collect all unique answers across all questions in this part
+                const allPossibleAnswers = [];
+                const seenAnswerIds = new Set();
+
+                part.rawPart.receptive_questions.forEach((rq) => {
+                  (rq.receptive_answers || []).forEach((ra) => {
+                    if (!seenAnswerIds.has(ra.id)) {
+                      seenAnswerIds.add(ra.id);
+                      allPossibleAnswers.push(ra);
+                    }
+                  });
+                });
+
+                // Sort answers to ensure consistent A, B, C mapping
+                // First try to sort by option_label, then by some internal order if labels are missing
+                allPossibleAnswers.sort((a, b) => {
+                  if (a.option_label && b.option_label) {
+                    return a.option_label.localeCompare(b.option_label);
+                  }
+                  return 0; // Keep original order if labels are missing
+                });
+
+                // Try to find by label in the global pool
+                selectedAnswer = allPossibleAnswers.find((a) => a.option_label === userAnswer);
+
+                // If still not found, fallback to index in the global pool (A=0, B=1...)
+                if (!selectedAnswer) {
+                  const answerIndex = userAnswer.charCodeAt(0) - 65;
+                  if (answerIndex >= 0 && answerIndex < allPossibleAnswers.length) {
+                    selectedAnswer = allPossibleAnswers[answerIndex];
+                  }
+                }
+              }
+
               if (selectedAnswer) {
                 entry.receptive_answer = selectedAnswer.id;
+              } else {
+                // Fallback to text if answer ID not found (e.g. for wrong answers in some MC formats)
+                entry.user_answer_text = userAnswer;
               }
             } else if (part.format === 'I' || part.format === 'D') {
               // Open text fill in the blanks
@@ -248,6 +299,7 @@ export default function ReadingTestPage() {
       } else {
         setDraftStatus('error');
       }
+      // eslint-disable-next-line no-console
       console.error('Failed to submit test:', err);
     }
   };
@@ -370,6 +422,7 @@ export default function ReadingTestPage() {
       onNext: handleNext,
       currentSection: currentPartIndex + 1,
       totalSections: testData.parts.length,
+      timerNode: <TestTimer initialSeconds={elapsedSeconds} />,
     };
 
     switch (currentPart.componentType) {
@@ -402,6 +455,7 @@ export default function ReadingTestPage() {
             passageTitle={currentPart.data.passageTitle}
             sentences={currentPart.data.sentences}
             gaps={currentPart.data.gaps}
+            questions={currentPart.data.questions}
           />
         );
 

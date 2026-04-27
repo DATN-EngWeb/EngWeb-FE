@@ -9,13 +9,18 @@ import { usePathname } from 'next/navigation';
 
 export default function StudentLayout({ children }) {
   const pathname = usePathname();
+  const [isTestPage, setIsTestPage] = React.useState(false);
 
-  // Hide footer on test pages to allow full-screen experience and prevent scrolling
-  const isTestPage =
-    pathname?.includes('/student/writing/') ||
-    pathname?.includes('/student/listening/') ||
-    pathname?.includes('/student/speaking/') ||
-    pathname?.includes('/student/reading/');
+  React.useEffect(() => {
+    if (pathname) {
+      setIsTestPage(
+        pathname.includes('/student/writing/') ||
+          pathname.includes('/student/listening/') ||
+          pathname.includes('/student/speaking/') ||
+          pathname.includes('/student/reading/'),
+      );
+    }
+  }, [pathname]);
 
   return (
     <>

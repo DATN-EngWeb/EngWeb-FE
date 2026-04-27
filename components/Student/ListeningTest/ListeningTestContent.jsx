@@ -24,9 +24,10 @@ import CloseIcon from '@mui/icons-material/Close';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import { getReceptiveTestDetails } from '../../../api/teacher/upload-reading';
 import { createReceptiveTest } from '../../../api/test';
-import { listeningtestStyles } from '../../../styles/student/Listening/listeningTestStyles';
+import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import {
   loadAudioSource,
   loadImageSource,
@@ -39,10 +40,11 @@ import MultipleChoiceSingleAudio from './part/multipleChoiceSingleAudio';
 import MultipleChoiceQuestionAudio from './part/multipleChoiceMultiQuestionAudio';
 import Matching from './part/matching';
 import Skeleton from './skeleton';
-import ReceptiveTestResult from '../ReceptiveTestResult/ReceptiveTestResult';
+import SummaryTab from './part/sumaryTab';
 import { useStreakContext } from '@/context/streakContext';
 import SubmitLoadingDialog from '../../Writing-Speaking/SubmitLoadingDialog';
 import SaveDraftToast from '../../Writing-Speaking/SaveDraftToast';
+import { ChevronLeftRounded } from '@mui/icons-material';
 
 export default function ListeningTestContent({ test_id, initialData }) {
   const router = useRouter();
@@ -55,6 +57,15 @@ export default function ListeningTestContent({ test_id, initialData }) {
   const [indexPart, setIndexPart] = useState(0);
   const [startTime, setStartTime] = useState(testData?.total_time || 0);
   const [allAnswers, setAllAnswers] = useState({});
+
+  const [isReadOnly, setIsReadOnly] = useState(false);
+  const [detailAnswers, setDetailAnswers] = useState([]);
+  const [staticData, setStaticData] = useState({
+    bonus_point: 0,
+    earned_bonus_point: 0,
+    total_score: 0,
+    feedback_message: '',
+  });
 
   const [openConfirm, setOpenConfirm] = useState(false);
   const [submitType, setSubmitType] = useState('D');
@@ -70,8 +81,8 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
   const [submitStatus, setSubmitStatus] = useState('idle');
   const [draftStatus, setDraftStatus] = useState('idle');
+  const [targetQuestionId, setTargetQuestionId] = useState(null);
 
-  const [submittedHistoryId, setSubmittedHistoryId] = useState(null);
   const { refreshStreak } = useStreakContext();
 
   const transformAnswers = (answersObj) => {
@@ -126,8 +137,12 @@ export default function ListeningTestContent({ test_id, initialData }) {
   };
 
   const handlePreSubmit = () => {
-    const currentType = checkCompletionStatus(testData, allAnswers);
-    setSubmitType(currentType);
+    setSubmitType('S');
+    setOpenConfirm(true);
+  };
+
+  const handlePreSaveDraft = () => {
+    setSubmitType('D');
     setOpenConfirm(true);
   };
 
@@ -151,8 +166,9 @@ export default function ListeningTestContent({ test_id, initialData }) {
         answer_histories: formattedHistories,
       };
 
+      const token = localStorage.getItem('accessToken');
       const [response] = await Promise.all([
-        createReceptiveTest(payload),
+        createReceptiveTest(payload, token),
         submitType === 'S'
           ? new Promise((resolve) => setTimeout(resolve, 1500))
           : Promise.resolve(),
@@ -160,7 +176,22 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
       if (submitType === 'S') {
         setSubmitStatus('idle'); // Just close it, because we instantly show the results
-        setSubmittedHistoryId(response.id);
+        const dataToSave = {
+          answer_histories: response.answer_histories || [],
+          attempt: response.attempt || 1,
+          isReadOnly: response.type === 'S',
+          startTime: response.start_time,
+          totalTime: response.total_time,
+          bonus_point: response.bonus_point,
+          earned_bonus_point: response.earned_bonus_point,
+          total_score: response.total_score,
+          feedback_message: response.feedback_message,
+        };
+
+        const stringifiedData = JSON.stringify(dataToSave);
+        window.sessionStorage.setItem('current_receptive_attempt', stringifiedData);
+        setIsInitial(true);
+        setIndexPart(0);
         await refreshStreak();
       } else {
         setDraftStatus('saved');
@@ -198,7 +229,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
     const fetchTestData = async () => {
       if (!test_id) return;
       try {
-        setIsInitial(true);
         const svData = await getReceptiveTestDetails(test_id);
         const parts = svData.receptive_test.receptive_parts || [];
 
@@ -296,7 +326,18 @@ export default function ListeningTestContent({ test_id, initialData }) {
               answer_histories: transformAnswers(restoredAnswers),
             });
 
+            setIsReadOnly(savedData.isReadOnly);
+            setDetailAnswers(savedData.answer_histories);
             setStartTime(savedData.totalTime || 0);
+            setStaticData({
+              bonus_point: savedData.bonus_point,
+              earned_bonus_point: savedData.earned_bonus_point,
+              total_score: savedData.total_score,
+              feedback_message: savedData.feedback_message,
+            });
+            if (savedData.isReadOnly) {
+              setIndexPart(-1);
+            }
           } else {
             setTestHistory({
               receptive_test: svData.id,
@@ -324,10 +365,12 @@ export default function ListeningTestContent({ test_id, initialData }) {
         });
       });
     };
-  }, [test_id]);
+  }, [test_id, isInitial]);
 
   // Timer
   useEffect(() => {
+    if (isReadOnly) return;
+
     const timer = setInterval(() => {
       setStartTime((prev) => {
         const current = Number(prev) || 0;
@@ -336,7 +379,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [isReadOnly]);
 
   const goNextPart = () => {
     if (indexPart < receptiveParts.length - 1) {
@@ -346,10 +389,17 @@ export default function ListeningTestContent({ test_id, initialData }) {
   };
 
   const goPrevPart = () => {
-    if (indexPart > 0) {
+    if (indexPart === 0 && isReadOnly) {
+      window.scrollTo({ top: 64, behavior: 'smooth' });
+      setIndexPart(-1);
+    } else if (indexPart > 0) {
       window.scrollTo({ top: 64, behavior: 'smooth' });
       setIndexPart(indexPart - 1);
     }
+  };
+
+  const handleBack = () => {
+    window.history.back();
   };
 
   // Hàm cập nhật câu trả lời người dùng
@@ -359,6 +409,67 @@ export default function ListeningTestContent({ test_id, initialData }) {
       [partId]: answers,
     }));
   };
+
+  const handleNavigateToQuestion = (partIndex, questionId) => {
+    setIndexPart(partIndex);
+    setTargetQuestionId(questionId);
+  };
+
+  // Logic cuộn trang và nảy Container Question
+  useEffect(() => {
+    if (targetQuestionId && indexPart !== -1) {
+      let retryCount = 0;
+      const maxRetries = 15;
+
+      const attemptScroll = () => {
+        const element = document.getElementById(`question-${targetQuestionId}`);
+
+        if (element && element.getBoundingClientRect().height > 0) {
+          window.requestAnimationFrame(() => {
+            // 1. Cuộn vào giữa màn hình
+            element.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+            });
+
+            // 2. CSS an toàn: CHỈ ĐẨY LÊN, KHÔNG ĐỔI MÀU
+            if (!document.getElementById('safe-bounce-style')) {
+              const style = document.createElement('style');
+              style.id = 'safe-bounce-style';
+              style.innerHTML = `
+                @keyframes slightBounce {
+                  0%, 100% { transform: translateY(0); }
+                  50% { transform: translateY(-2px); } /* Đổi thành -1px nếu muốn nảy siêu nhẹ */
+                }
+                .safe-element-bounce {
+                  animation: slightBounce 0.3s ease-in-out 2; /* Nảy 2 lần trong 0.6s */
+                }
+              `;
+              document.head.appendChild(style);
+            }
+
+            // 3. Kịch bản nảy lên
+            setTimeout(() => {
+              element.classList.add('safe-element-bounce');
+
+              // Dọn dẹp class sau khi animation hoàn thành (0.3s * 2 lần = 600ms)
+              setTimeout(() => {
+                element.classList.remove('safe-element-bounce');
+              }, 600);
+            }, 300); // Đợi cuộn ổn định rồi mới nảy
+          });
+
+          setTargetQuestionId(null);
+        } else if (retryCount < maxRetries) {
+          retryCount++;
+          setTimeout(attemptScroll, 100);
+        }
+      };
+
+      const timer = setTimeout(attemptScroll, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [indexPart, targetQuestionId]);
 
   const renderPart = (part, index) => {
     // - 'A': Listening - Multiple choice images
@@ -375,6 +486,9 @@ export default function ListeningTestContent({ test_id, initialData }) {
       userAnswers: allAnswers[part.id] || {},
       onUpdateAnswers: (answers) => handleUpdateAnswers(part.id, answers),
       media: mediaResources[part.id] || {},
+      disabled: isReadOnly,
+      detailAnswers: detailAnswers,
+      onNavigateToQuestion: (questionId) => handleNavigateToQuestion(index, questionId),
     };
 
     switch (part.format) {
@@ -392,10 +506,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
         return null;
     }
   };
-
-  if (submittedHistoryId) {
-    return <ReceptiveTestResult historyId={submittedHistoryId} />;
-  }
 
   if (isInitial) {
     return <Skeleton />;
@@ -433,6 +543,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
           {snackbar.message}
         </Alert>
       </Snackbar>
+      {/* --------- Confirm Section --------- */}
       <Dialog
         open={openConfirm}
         onClose={() =>
@@ -562,75 +673,162 @@ export default function ListeningTestContent({ test_id, initialData }) {
           </Button>
         </DialogActions>
       </Dialog>
-      <Container maxWidth="lg">
-        {/* -------- Test Heading Section --------- */}
-        <Box sx={listeningtestStyles.testHeadingContainer}>
-          <Box sx={listeningtestStyles.timeLeft}>
-            <AccessTimeIcon
-              sx={{
-                fontSize: 28,
-                mr: 0.5,
-              }}
-            />
-            {formatTimeFromMinutes(startTime / 60)}
-          </Box>
-          <Box sx={listeningtestStyles.nameTestAndFormatPart}>
-            <Typography sx={listeningtestStyles.nameTest}>{testData?.title}</Typography>
-            <Typography sx={listeningtestStyles.formatName}>
-              {`Part ${indexPart + 1}: `}
-              {getListeningTestTypeLabel(receptiveParts[indexPart]?.format)}
-            </Typography>
-          </Box>
-          <Box sx={listeningtestStyles.summitButtonWrapper}>
-            <Button
-              startIcon={<SendIcon />}
-              sx={listeningtestStyles.submitButton}
-              onClick={handlePreSubmit}
-            >
-              Submit Test
-            </Button>
-          </Box>
+      {/* -------- Test Heading Section --------- */}
+      <Box
+        maxWidth="lg"
+        sx={{
+          ...listeningtestStyles.testHeadingContainer,
+          mx: 'auto',
+        }}
+      >
+        {/* Back Button */}
+        <Box
+          sx={{
+            ...listeningtestStyles.summitButtonWrapper,
+            justifyContent: 'flex-start',
+            order: { xs: 2, md: 1 },
+            ...(!isReadOnly && {
+              display: 'none',
+            }),
+          }}
+        >
+          <Button
+            startIcon={<ChevronLeftRounded />}
+            sx={{
+              ...listeningtestStyles.backButton,
+              width: 'auto',
+              '& .MuiButton-startIcon': {
+                '& svg': {
+                  fontSize: { xs: '1.5rem', md: '1.75rem' },
+                },
+              },
+            }}
+            onClick={() => handleBack()}
+          >
+            Back
+          </Button>
         </Box>
-        <Box sx={listeningtestStyles.separatorLine}></Box>
-        {/* -------- List Part Selection --------- */}
-        <Box sx={listeningtestStyles.listPartContainer}>
-          {receptiveParts.map((part, index) => (
-            <Box
-              sx={{
-                ...listeningtestStyles.boxPart,
-                ...(index === indexPart && {
-                  backgroundColor: 'background.default',
-                  borderColor: 'orange.light',
-                  color: 'orange.dark',
-                }),
-                ...((index < indexPart - 1 || index > indexPart + 1) && {
-                  display: { xs: 'none', sm: 'flex' },
-                }),
-                ...(((index === indexPart - 2 && indexPart === receptiveParts.length - 1) ||
-                  (index === indexPart + 2 && indexPart === 0)) && {
-                  display: 'flex',
-                }),
-              }}
-              key={part.id}
-              onClick={() => setIndexPart(index)}
-            >
-              Part {index + 1}
-            </Box>
-          ))}
+        {/* Time Left */}
+        <Box sx={{ ...listeningtestStyles.timeLeft, ...(isReadOnly && { display: 'none' }) }}>
+          <AccessTimeIcon
+            sx={{
+              fontSize: 28,
+              mr: 0.5,
+            }}
+          />
+          {formatTimeFromMinutes(startTime / 60)}
         </Box>
-        <Box sx={{ ...listeningtestStyles.separatorLine, backgroundColor: 'gray.main' }}></Box>
-      </Container>
+        {/* Name Test and Format Part */}
+        <Box sx={listeningtestStyles.nameTestAndFormatPart}>
+          <Typography sx={listeningtestStyles.nameTest}>{testData?.title}</Typography>
+          <Typography sx={listeningtestStyles.formatName}>
+            {indexPart === -1
+              ? 'Summary'
+              : `Part ${indexPart + 1}: ${getListeningTestTypeLabel(
+                  receptiveParts[indexPart]?.format,
+                )}`}
+          </Typography>
+        </Box>
+        {/* Submit và Draft Button */}
+        <Box
+          sx={{
+            ...listeningtestStyles.summitButtonWrapper,
+            ...(isReadOnly && { visibility: 'hidden' }),
+          }}
+        >
+          <Button
+            startIcon={<SaveOutlinedIcon />}
+            sx={listeningtestStyles.draftButton}
+            onClick={handlePreSaveDraft}
+            disabled={isReadOnly}
+          >
+            Save Draft
+          </Button>
+          <Button
+            startIcon={<SendIcon />}
+            sx={listeningtestStyles.submitButton}
+            onClick={handlePreSubmit}
+            disabled={isReadOnly}
+          >
+            Submit Test
+          </Button>
+        </Box>
+      </Box>
+      <Box sx={listeningtestStyles.separatorLine}></Box>
+      {/* -------- List Part Selection --------- */}
+      <Box maxWidth="lg" sx={{ ...listeningtestStyles.listPartContainer, mx: 'auto' }}>
+        {/* -------- Summary Tab -------- */}
+        {isReadOnly && (
+          <Box
+            sx={{
+              ...listeningtestStyles.boxPart,
+              width: 'auto',
+              px: 2,
+              ...(indexPart === -1 && {
+                backgroundColor: 'background.default',
+                borderColor: 'orange.light',
+                color: 'orange.dark',
+              }),
+            }}
+            onClick={() => setIndexPart(-1)}
+          >
+            Summary
+          </Box>
+        )}
+        {/* -------- Receptive Test Parts -------- */}
+        {receptiveParts.map((part, index) => (
+          <Box
+            sx={{
+              ...listeningtestStyles.boxPart,
+              ...(index === indexPart && {
+                backgroundColor: 'background.default',
+                borderColor: 'orange.light',
+                color: 'orange.dark',
+              }),
+              ...((index < indexPart - 1 || index > indexPart + 1) && {
+                display: { xs: 'none', sm: 'flex' },
+              }),
+              ...(((index === indexPart - 2 && indexPart === receptiveParts.length - 1) ||
+                (index === indexPart + 2 && indexPart === 0)) && {
+                display: 'flex',
+              }),
+            }}
+            key={part.id}
+            onClick={() => setIndexPart(index)}
+          >
+            Part {index + 1}
+          </Box>
+        ))}
+      </Box>
+      <Box sx={{ ...listeningtestStyles.separatorLine, backgroundColor: 'gray.main' }}></Box>
       {/* -------- Part Content Section --------- */}
       <Box sx={{ width: '100%', height: 'auto', backgroundColor: 'background.gray' }}>
-        {receptiveParts.map((part, index) => renderPart(part, index))}
+        {indexPart === -1 ? (
+          <SummaryTab
+            staticData={staticData}
+            startTime={startTime}
+            allAnswers={allAnswers}
+            detailAnswers={detailAnswers}
+            receptiveParts={receptiveParts}
+            onNavigateToQuestion={handleNavigateToQuestion}
+          />
+        ) : (
+          receptiveParts.map((part, index) => renderPart(part, index))
+        )}
       </Box>
       {/* -------- Stepper Section --------- */}
-      <Box sx={{ width: '100%', height: 'auto', backgroundColor: 'background.gray' }}>
+      <Box sx={{ width: '100%', height: 'auto', backgroundColor: 'background.gray', pb: 4 }}>
         <Container maxWidth="lg" sx={listeningtestStyles.stepperContainer}>
           <Typography
             sx={{
               ...listeningtestStyles.backButton,
-              visibility: indexPart === 0 ? 'hidden' : 'visible',
+              // Thêm logic display: Ẩn hẳn (none) trên mobile (xs) khi ở trang đầu để chữ Section dạt ra sát mép trái
+              display:
+                indexPart === -1 || (!isReadOnly && indexPart === 0)
+                  ? { xs: 'none', md: 'flex' }
+                  : 'flex',
+              visibility:
+                indexPart === -1 || (!isReadOnly && indexPart === 0) ? 'hidden' : 'visible',
             }}
             onClick={goPrevPart}
           >
@@ -644,22 +842,52 @@ export default function ListeningTestContent({ test_id, initialData }) {
             />
             Back
           </Typography>
+
           <Typography sx={{ fontSize: '1rem' }}>
             Section {indexPart + 1} of {receptiveParts.length}
           </Typography>
-          <Box sx={listeningtestStyles.summitButtonWrapper}>
+
+          <Box
+            sx={{
+              ...listeningtestStyles.summitButtonWrapper,
+              // Thêm logic display: Ẩn hẳn Box wrapper này trên mobile (xs) khi ở trang cuối để chữ Section dạt ra sát mép phải
+              display:
+                indexPart === receptiveParts.length - 1 ? { xs: 'none', md: 'flex' } : 'flex',
+            }}
+          >
             {indexPart !== receptiveParts.length - 1 ? (
               <Button sx={listeningtestStyles.nextButton} onClick={goNextPart}>
                 Next
               </Button>
             ) : (
-              <Button
-                startIcon={<SendIcon />}
-                sx={{ ...listeningtestStyles.submitButton, px: 3, py: 0.5 }}
-                onClick={handlePreSubmit}
-              >
-                Submit
-              </Button>
+              <Stack direction="row" spacing={1.5} sx={{ display: { xs: 'none', md: 'flex' } }}>
+                <Button
+                  startIcon={<SaveOutlinedIcon />}
+                  sx={{
+                    ...listeningtestStyles.draftButton,
+                    px: 3,
+                    py: 0.5,
+                    ...(isReadOnly && { display: 'none' }),
+                  }}
+                  onClick={handlePreSaveDraft}
+                  disabled={isReadOnly}
+                >
+                  Save Draft
+                </Button>
+                <Button
+                  startIcon={<SendIcon />}
+                  sx={{
+                    ...listeningtestStyles.submitButton,
+                    px: 3,
+                    py: 0.5,
+                    ...(isReadOnly && { visibility: 'hidden' }),
+                  }}
+                  onClick={handlePreSubmit}
+                  disabled={isReadOnly}
+                >
+                  Submit
+                </Button>
+              </Stack>
             )}
           </Box>
         </Container>

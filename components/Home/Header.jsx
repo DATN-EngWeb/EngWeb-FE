@@ -3,7 +3,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { AppBar, Toolbar, Button, Box, Container, Avatar, Typography } from '@mui/material';
+import {
+  AppBar,
+  Toolbar,
+  Button,
+  Box,
+  Container,
+  Avatar,
+  Typography,
+  Badge,
+  Tooltip,
+} from '@mui/material';
 import Logo from '../../assets/img/logo.png';
 import Image from 'next/image';
 import {
@@ -52,6 +62,8 @@ import { logout as logoutAPI, getStudentProfile } from '../../api/accounts';
 import AnimatedStreakBadge from '../Streak/animatedStreakBadge';
 import StreakBadge from '../Streak/streakBadge';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import NotificationBell from '../Notifications/NotificationBell';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 // Icon components
 const ProfileIcon = () => (
@@ -232,34 +244,76 @@ function UserPopup({ user, studentProfile, userAvatar, onClose, onLogout, onNavi
               </Typography>
               <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                 {/* Weekly Turns */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, px: 1 }}>
-                  <Box sx={{ color: 'info.dark', display: 'flex' }}>
-                    <AutoAwesomeIcon sx={{ fontSize: 16 }} />
-                  </Box>
-                  <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'info.dark' }}>
-                    {weeklyTurns}
-                  </Typography>
-                </Box>
-                {/* Bonus Turns with popout color */}
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.4,
-                    background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
-                    px: 1,
-                    py: 0.3,
-                    borderRadius: '15px',
-                    border: '1px solid #fde68a',
-                    boxShadow: '0 2px 8px rgba(245, 158, 11, 0.2)',
+                <Tooltip
+                  slotProps={{
+                    box: {
+                      backgroundColor: 'info.pastel',
+                      color: 'text.primary',
+                    },
+                    popper: {
+                      sx: {
+                        '& .MuiTooltip-tooltip': {
+                          backgroundColor: 'info.pastel',
+                          color: 'text.primary',
+                        },
+                      },
+                    },
                   }}
+                  title="Weekly AI turns. These reset to a fixed amount every week."
+                  placement="top"
+                  arrow
                 >
-                  <Typography
-                    sx={{ fontSize: '0.85rem', fontWeight: 800, color: 'secondary.main' }}
+                  <Box
+                    sx={{ display: 'flex', alignItems: 'center', gap: 0.4, px: 1, cursor: 'help' }}
                   >
-                    +{bonusTurns}
-                  </Typography>
-                </Box>
+                    <Box sx={{ color: 'info.dark', display: 'flex' }}>
+                      <AutoAwesomeIcon sx={{ fontSize: 16 }} />
+                    </Box>
+                    <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'info.dark' }}>
+                      {weeklyTurns}
+                    </Typography>
+                  </Box>
+                </Tooltip>
+                {/* Bonus Turns with popout color */}
+                <Tooltip
+                  slotProps={{
+                    box: {
+                      backgroundColor: 'warning.pastel',
+                    },
+                    popper: {
+                      sx: {
+                        '& .MuiTooltip-tooltip': {
+                          backgroundColor: 'warning.pastel',
+                          color: 'text.primary',
+                        },
+                      },
+                    },
+                  }}
+                  title="Bonus AI turns. Earned by leveling up with XP or reaching streak milestones."
+                  placement="top"
+                  arrow
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.4,
+                      background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+                      px: 1,
+                      py: 0.3,
+                      borderRadius: '15px',
+                      border: '1px solid #fde68a',
+                      boxShadow: '0 2px 8px rgba(245, 158, 11, 0.2)',
+                      cursor: 'help',
+                    }}
+                  >
+                    <Typography
+                      sx={{ fontSize: '0.85rem', fontWeight: 800, color: 'secondary.main' }}
+                    >
+                      +{bonusTurns}
+                    </Typography>
+                  </Box>
+                </Tooltip>
               </Box>
             </Box>
           </Box>
@@ -432,6 +486,7 @@ export default function Header() {
                     <>
                       <AnimatedStreakBadge />
                       <StreakBadge />
+                      <NotificationBell />
 
                       {/* Avatar button + Popup wrapper */}
                       <Box
@@ -459,21 +514,41 @@ export default function Header() {
                             cursor: 'pointer',
                           }}
                         >
-                          <Avatar
-                            src={isValidAvatar ? userAvatar : undefined}
-                            alt={user.username || 'User'}
-                            sx={{
-                              backgroundColor: 'primary.main',
-                              width: 36,
-                              height: 36,
-                              border: '2px solid',
-                              borderColor: popupOpen ? 'warning.main' : 'secondary.main',
-                              transition: 'border-color 0.2s',
-                            }}
+                          <Badge
+                            overlap="circular"
+                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                            badgeContent={
+                              <Box
+                                sx={{
+                                  backgroundColor: 'background.default',
+                                  borderRadius: '50%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  width: 16,
+                                  height: 16,
+                                }}
+                              >
+                                <ExpandMoreIcon sx={{ fontSize: 14, color: 'primary.main' }} />
+                              </Box>
+                            }
                           >
-                            {user.username?.[0]?.toUpperCase() || 'U'}
-                          </Avatar>
-                          <Typography
+                            <Avatar
+                              src={isValidAvatar ? userAvatar : undefined}
+                              alt={user.username || 'User'}
+                              sx={{
+                                backgroundColor: 'primary.main',
+                                width: 40,
+                                height: 40,
+                                border: '2px solid',
+                                borderColor: popupOpen ? 'warning.main' : 'secondary.main',
+                                transition: 'border-color 0.2s',
+                              }}
+                            >
+                              {user.username?.[0]?.toUpperCase() || 'U'}
+                            </Avatar>
+                          </Badge>
+                          {/* <Typography
                             sx={{
                               color: 'primary.dark',
                               fontWeight: 600,
@@ -485,7 +560,7 @@ export default function Header() {
                             }}
                           >
                             {user.username || 'User'}
-                          </Typography>
+                          </Typography> */}
                         </Box>
 
                         {/* Custom Popup */}

@@ -25,11 +25,12 @@ export const listeningtestStyles = {
     backgroundColor: '#fff',
     display: 'flex',
     flexDirection: 'row',
+    flexWrap: { xs: 'wrap', md: 'nowrap' },
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 2,
+    gap: { xs: 1.5, md: 2 },
     px: { xs: 1, md: 3 },
-    py: 1,
+    py: { xs: 1.5, md: 1 },
   },
   separatorLine: {
     height: '2px',
@@ -38,9 +39,9 @@ export const listeningtestStyles = {
     border: 'none',
   },
   backButton: {
-    width: { xs: 'auto', md: '200px' },
+    width: { xs: 'auto', md: '300px' },
     color: 'gray.main',
-    fontSize: '1rem',
+    fontSize: { xs: '1rem', md: '1.2rem' },
     fontWeight: 500,
     cursor: 'pointer',
     display: 'flex',
@@ -51,39 +52,74 @@ export const listeningtestStyles = {
     transform: 'translateX(-10px)',
   },
   summitButtonWrapper: {
-    width: { xs: 'auto', sm: '320px' },
+    order: { xs: 3, md: 3 },
+    width: { xs: 'auto', md: '300px' }, // Nới rộng lên 300px
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    gap: 1.5,
+    gap: 1.5, // Trả lại khoảng cách gap thoải mái hơn giữa 2 nút
   },
   submitButton: {
-    backgroundColor: '#f5f5f5',
-    color: '#9e9e9e',
+    flex: 1, // Vẫn giữ flex: 1 để 2 nút chia đều cái khung 300px
+    minWidth: 0,
+    backgroundColor: 'yellow.main',
+    color: 'primary.main',
     borderRadius: '12px',
-    fontSize: { xs: '0.7rem', md: '1rem' },
+    fontSize: { xs: '0.8rem', md: '0.9rem' }, // Tăng lại cỡ chữ cho dễ đọc
     fontWeight: 700,
     textTransform: 'none',
     whiteSpace: 'nowrap',
+    px: 1.5, // Tăng lại padding ngang
+    py: 0.75, // Tăng lại padding dọc
+    '& .MuiButton-startIcon': {
+      marginRight: '6px',
+      marginLeft: '-4px',
+      '& svg': { fontSize: '1.2rem' }, // Icon to hơn một chút
+    },
     '&:hover': {
-      backgroundColor: '#eeeeee',
+      filter: 'brightness(0.9)',
       color: 'primary.main',
     },
-    px: 2.5,
+  },
+  draftButton: {
+    flex: 1,
+    minWidth: 0,
+    backgroundColor: 'transparent',
+    color: 'primary.main',
+    borderRadius: '12px',
+    border: '2px solid',
+    borderColor: 'gray.main',
+    fontSize: { xs: '0.8rem', md: '0.9rem' }, // Tăng lại cỡ chữ
+    fontWeight: 700,
+    textTransform: 'none',
+    whiteSpace: 'nowrap',
+    px: 1.5,
+    py: 0.75,
+    '& .MuiButton-startIcon': {
+      marginRight: '6px',
+      marginLeft: '-4px',
+      '& svg': { fontSize: '1.2rem' },
+    },
+    '&:hover': {
+      backgroundColor: 'background.gray',
+      color: 'primary.main',
+    },
   },
   nameTestAndFormatPart: {
+    order: { xs: 1, md: 2 },
+    width: { xs: '100%', md: 'auto' },
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 0,
-    flex: 1,
+    flex: { xs: 'none', md: 1 },
     overflow: 'hidden',
-    px: 1,
+    px: { md: 1 },
   },
   nameTest: {
-    fontSize: { xs: '0.85rem', md: '1.1rem' },
+    fontSize: { xs: '1rem', sm: '1.2rem', md: '1.2rem' },
     fontWeight: 600,
     color: 'primary.main',
     textAlign: 'center',
@@ -100,7 +136,7 @@ export const listeningtestStyles = {
     display: 'inline-block',
   },
   formatName: {
-    fontSize: { xs: '0.8rem', md: '1rem' },
+    fontSize: { xs: '1rem', md: '1.2rem' },
     fontWeight: 500,
     color: 'red.text',
     textAlign: 'center',
@@ -154,6 +190,7 @@ export const listeningtestStyles = {
     borderColor: 'gray.main',
   },
   timeLeft: {
+    order: { xs: 2, md: 1 },
     userSelect: 'none',
     display: 'flex',
     alignItems: 'center',
@@ -162,8 +199,8 @@ export const listeningtestStyles = {
     px: 0,
     py: 0.5,
     fontWeight: 700,
-    fontSize: '1.25rem',
-    minWidth: { xs: '0', sm: '320px' },
+    fontSize: { xs: '1rem', md: '1.25rem' },
+    minWidth: { xs: '0', md: '300px' },
   },
   timeLeftSkeleton: {
     ...skeletonBase,
@@ -285,7 +322,6 @@ export const listeningPartStyles = {
   instructionWrapper: {
     width: '100%',
     height: 'auto',
-    backgroundColor: 'background.paper',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-start',
@@ -345,6 +381,8 @@ export const listeningPartStyles = {
     cursor: 'pointer',
     px: 2,
     py: 1,
+    overflow: 'hidden',
+    flexShrink: 0,
   },
   questionContainerCol: {
     width: '100%',
@@ -407,7 +445,7 @@ export const listeningPartStyles = {
     fontWeight: 500,
   },
   questionText: {
-    fontSize: { xs: '0.8rem', md: '1rem' },
+    fontSize: { xs: '1rem', md: '1rem' },
     fontWeight: 400,
     color: 'dark.main',
     wordBreak: 'break-word',
@@ -462,7 +500,7 @@ export const listeningPartStyles = {
     fontWeight: 500,
     textTransform: 'none',
     '&:hover': {
-      backgroundColor: 'warning.dark',
+      filter: 'brightness(0.9)',
       boxShadow: 'none',
     },
     px: 2.5,
@@ -498,8 +536,9 @@ export const listeningPartStyles = {
     flexDirection: 'column',
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
-    gap: 3,
-    px: 4,
+    gap: { xs: 2, md: 3 },
+    pl: { xs: 4, md: 4 },
+    pr: { xs: 0, md: 4 },
   },
   matchingQuestionAnswerContainerGrid: {
     width: '100%',
@@ -509,4 +548,20 @@ export const listeningPartStyles = {
     alignItems: 'start',
     gap: 1,
   },
+  // -------- Explanation Section ---------
+  explanationContainer: {
+    width: '100%',
+    mt: { xs: 1, md: 2 },
+    p: 1.5,
+    backgroundColor: '#f9f9f9',
+    borderRadius: '8px',
+    border: '1px solid #e0e0e0',
+  },
+  correctText: {
+    fontSize: '1rem',
+    color: 'success.main',
+    fontWeight: 600,
+    mb: 0.5,
+  },
+  explanationText: { fontSize: '1rem', color: 'text.secondary' },
 };

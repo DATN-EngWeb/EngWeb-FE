@@ -164,7 +164,7 @@ export const sectionInfoStyles = {
 };
 
 export const nextButtonStyles = {
-  backgroundColor: 'darkGrey.main',
+  backgroundColor: 'primary.main',
   color: 'background.paper',
   textTransform: 'none',
   fontSize: '0.875rem',

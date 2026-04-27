@@ -37,7 +37,8 @@ export default function MatchingForm({
     if (localAnswers && localAnswers.length > 0) {
       return localAnswers;
     }
-    return questions.map((_, i) => ({
+    const count = questions.filter((q) => q.action !== 'delete').length;
+    return Array.from({ length: Math.max(1, count) }, (_, i) => ({
       id: i,
       option_label: String.fromCharCode(65 + i),
       answer_text: '',
@@ -47,8 +48,9 @@ export default function MatchingForm({
   const activeCount = questions.filter((q) => q.action !== 'delete').length;
 
   useEffect(() => {
-    const activeQuestions = questions.filter((q) => q.action !== 'delete');
-    const activeLabels = activeQuestions.map((_, i) => String.fromCharCode(65 + i));
+    const activeLabels = Array.from({ length: Math.max(1, activeCount) }, (_, i) =>
+      String.fromCharCode(65 + i),
+    );
 
     const nextAnswers = activeLabels.map((label, i) => {
       const existingAnswer = answers.find((a) => a.option_label === label);
@@ -93,6 +95,7 @@ export default function MatchingForm({
     const newQuestion = {
       id: Date.now(),
       question_number: activeQs.length + 1,
+      content: '',
       explanation: '',
       answers: [
         {
@@ -130,24 +133,17 @@ export default function MatchingForm({
         };
       }
 
-      if (q.answers && q.answers[0] && q.answers[0].option_label === selectedLabel) {
-        const otherAns = q.answers[0];
-        return {
-          ...q,
-          ...(flag === 'update' && !q.action && { action: 'update' }),
-          answers: [
-            {
-              ...otherAns,
-              option_label: '',
-              answer_text: '',
-              ...(flag === 'update' && !otherAns.action && { action: 'update' }),
-            },
-          ],
-        };
-      }
-
       return q;
     });
+    setQuestions(updatedQuestions);
+  };
+
+  const handleUpdateQuestionContent = (questionId, value) => {
+    const updatedQuestions = questions.map((q) =>
+      q.id === questionId
+        ? { ...q, content: value, ...(flag === 'update' && !q.action && { action: 'update' }) }
+        : q,
+    );
     setQuestions(updatedQuestions);
   };
 
@@ -158,33 +154,6 @@ export default function MatchingForm({
         : q,
     );
     setQuestions(updatedQuestions);
-  };
-
-  const handleUpdateAnswer = (optionLabel, newContent) => {
-    const nextLocalAnswers = answers.map((a) =>
-      a.option_label === optionLabel ? { ...a, answer_text: newContent } : a,
-    );
-    setLocalAnswersProp(nextLocalAnswers);
-    setLocalAnswers(nextLocalAnswers);
-
-    const nextQuestions = questions.map((q) => {
-      if (q.answers && q.answers.length > 0 && q.answers[0].option_label === optionLabel) {
-        const currentAns = q.answers[0];
-        return {
-          ...q,
-          ...(flag === 'update' && !q.action && { action: 'update' }),
-          answers: [
-            {
-              ...currentAns,
-              answer_text: newContent,
-              ...(flag === 'update' && !currentAns.action && { action: 'update' }),
-            },
-          ],
-        };
-      }
-      return q;
-    });
-    setQuestions(nextQuestions);
   };
 
   return (
@@ -260,8 +229,8 @@ export default function MatchingForm({
         <Box
           sx={{
             display: 'flex',
-            flexDirection: { xs: 'column', lg: 'row' },
-            gap: 4,
+            flexDirection: 'column',
+            gap: 2,
             width: '100%',
             maxWidth: '100%',
             alignSelf: 'stretch',
@@ -269,7 +238,7 @@ export default function MatchingForm({
           }}
         >
           {/* -------------- Left Column: Score & Passage -------------- */}
-          <Box sx={{ ...uploadReadingStyles.partEditorColumn, flex: 1, minWidth: 0 }}>
+          <Box sx={{ ...uploadReadingStyles.partEditorColumn, width: '100%', minWidth: 0, mb: 0 }}>
             {/* -------------- Total Each Score -------------- */}
             <FormControl fullWidth sx={{ ...uploadReadingStyles.formControl, mb: 3 }}>
               <FormLabel sx={uploadReadingStyles.labelInput}>
@@ -309,7 +278,7 @@ export default function MatchingForm({
           <Box
             sx={{
               ...uploadReadingStyles.partEditorColumn,
-              flex: 1.2,
+              width: '100%',
               minWidth: 0,
               display: 'flex',
               flexDirection: 'column',
@@ -342,7 +311,7 @@ export default function MatchingForm({
                       justifyContent: 'center',
                     }}
                   >
-                    <AddIcon sx={{ fontSize: { xs: '1rem', md: '1.4rem' } }} />
+                    <AddRoundedIcon sx={{ fontSize: { xs: '1rem', md: '1.4rem' } }} />
                     Add your first question
                   </Typography>
                 </Box>
@@ -356,14 +325,26 @@ export default function MatchingForm({
                         <Box key={question.id} sx={multipleChoiceStyles.questionsContainer}>
                           <Box sx={multipleChoiceStyles.labelQuestionsContainer}>
                             <Box sx={multipleChoiceStyles.questionLabel}>{qIndex + 1}</Box>
-                            <OutlinedInput
-                              size="small"
-                              multiline
-                              placeholder="Enter explanation here"
-                              defaultValue={question.explanation}
-                              onBlur={(e) => handleUpdateExplanation(question.id, e.target.value)}
-                              sx={uploadReadingStyles.inputMultiline}
-                            />
+                            <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 1 }}>
+                              <OutlinedInput
+                                size="small"
+                                multiline
+                                placeholder="Enter question here"
+                                defaultValue={question.content || question.text || ''}
+                                onBlur={(e) =>
+                                  handleUpdateQuestionContent(question.id, e.target.value)
+                                }
+                                sx={uploadReadingStyles.inputMultiline}
+                              />
+                              <OutlinedInput
+                                size="small"
+                                multiline
+                                placeholder="Enter explanation here"
+                                defaultValue={question.explanation}
+                                onBlur={(e) => handleUpdateExplanation(question.id, e.target.value)}
+                                sx={uploadReadingStyles.inputMultiline}
+                              />
+                            </Box>
                             <FormControl
                               size="small"
                               sx={{
@@ -413,39 +394,6 @@ export default function MatchingForm({
                 </>
               )}
             </Box>
-
-            {/* -------------- Answers Section -------------- */}
-            {answers.length > 0 && (
-              <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
-                <Box
-                  sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}
-                >
-                  <FormLabel sx={uploadReadingStyles.labelInput}>
-                    Answer
-                    <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
-                      *
-                    </Box>
-                  </FormLabel>
-                </Box>
-                <Box sx={matchingStyles.linkOptionContainer}>
-                  {answers.map((answer, _aIndex) => (
-                    <Box key={answer.option_label} sx={multipleChoiceStyles.optionContainer}>
-                      <Typography sx={multipleChoiceStyles.optionLabel}>
-                        {answer.option_label}
-                      </Typography>
-                      <OutlinedInput
-                        multiline
-                        placeholder="Enter an answer here"
-                        error={!answer.answer_text && !!errors.matchingAnswers}
-                        sx={multipleChoiceStyles.optionInput}
-                        defaultValue={answer.answer_text}
-                        onBlur={(e) => handleUpdateAnswer(answer.option_label, e.target.value)}
-                      />
-                    </Box>
-                  ))}
-                </Box>
-              </Box>
-            )}
           </Box>
         </Box>
       )}

@@ -21,5 +21,5 @@ export default function ReceptiveResultsPage({ params }) {
     }
   }, [test_id]);
 
-  return <ReceptiveTestResult historyId={history_id} />;
+  return <ReceptiveTestResult historyId={history_id} testId={test_id} />;
 }

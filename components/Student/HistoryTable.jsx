@@ -19,7 +19,7 @@ import StarIcon from '@mui/icons-material/Star';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import DescriptionIcon from '@mui/icons-material/Description';
 import ShareIcon from '@mui/icons-material/Share';
-import * as styles from '@/styles/student/HistoryTestStyles';
+import * as styles from '@/styles/Student/HistoryTestStyles';
 import { formatDate } from '../../utils/stringFormat';
 
 const formatTime = (totalSeconds) => {
@@ -40,8 +40,17 @@ export default function HistoryTable({ data, skill, onViewDetail, onShare, onOpe
         <TableHead sx={styles.tableHead}>
           <TableRow>
             <TableCell>DATE</TableCell>
-            <TableCell>STATUS</TableCell>
-            <TableCell>BONUS POINT</TableCell>
+            {skill === 'L' ? (
+              <>
+                <TableCell>SCORE</TableCell>
+                <TableCell>XP</TableCell>
+              </>
+            ) : (
+              <>
+                <TableCell>STATUS</TableCell>
+                <TableCell>BONUS POINT</TableCell>
+              </>
+            )}
             <TableCell>DETAILS</TableCell>
             <TableCell align="right">ACTIONS</TableCell>
           </TableRow>
@@ -55,38 +64,49 @@ export default function HistoryTable({ data, skill, onViewDetail, onShare, onOpe
                     {item.end_time && formatDate(item.end_time)}
                   </Typography>
                 </TableCell>
-                <TableCell>
-                  <Stack direction="row" spacing={1}>
-                    {item.is_shared && (
-                      <Chip
-                        label="SHARED"
-                        size="small"
-                        sx={{
-                          height: 20,
-                          fontSize: '0.6rem',
-                          fontWeight: 800,
-                          bgcolor: '#e3f2fd',
-                          color: '#1976d2',
-                        }}
-                      />
-                    )}
-                    {item.ai_feedback && (
-                      <Chip
-                        label="AI REVIEWED"
-                        size="small"
-                        onClick={onOpenAIReviewed ? () => onOpenAIReviewed(item) : undefined}
-                        sx={{
-                          height: 20,
-                          fontSize: '0.6rem',
-                          fontWeight: 800,
-                          bgcolor: '#f3e5f5',
-                          color: '#9c27b0',
-                          cursor: onOpenAIReviewed ? 'pointer' : 'default',
-                        }}
-                      />
-                    )}
-                  </Stack>
-                </TableCell>
+                {/* Conditional Column for Status or Total Score */}
+                {skill === 'L' ? (
+                  <TableCell>
+                    <Typography variant="subtitle2" fontWeight={800} color="primary">
+                      {item.total_score ?? 0}
+                    </Typography>
+                  </TableCell>
+                ) : (
+                  <TableCell>
+                    <Stack direction="row" spacing={1}>
+                      {item.is_shared && (
+                        <Chip
+                          label="SHARED"
+                          size="small"
+                          sx={{
+                            height: 20,
+                            fontSize: '0.6rem',
+                            fontWeight: 800,
+                            bgcolor: '#e3f2fd',
+                            color: '#1976d2',
+                          }}
+                        />
+                      )}
+                      {(item.ai_feedback || item.type === 'S') && (
+                        <Chip
+                          label="AI REVIEWED"
+                          size="small"
+                          onClick={onOpenAIReviewed ? () => onOpenAIReviewed(item) : undefined}
+                          sx={{
+                            height: 20,
+                            fontSize: '0.6rem',
+                            fontWeight: 800,
+                            bgcolor: '#f3e5f5',
+                            color: '#9c27b0',
+                            cursor: onOpenAIReviewed ? 'pointer' : 'default',
+                          }}
+                        />
+                      )}
+                    </Stack>
+                  </TableCell>
+                )}
+
+                {/* XP Column */}
                 <TableCell>
                   <Typography
                     variant="caption"
@@ -94,7 +114,7 @@ export default function HistoryTable({ data, skill, onViewDetail, onShare, onOpe
                     color="#ffb300"
                     sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.85rem' }}
                   >
-                    <StarIcon sx={{ fontSize: '1rem' }} /> {item.earned_bonus_point} XP
+                    <StarIcon sx={{ fontSize: '1rem' }} /> {item.earned_bonus_point || 0} XP
                   </Typography>
                 </TableCell>
                 <TableCell>

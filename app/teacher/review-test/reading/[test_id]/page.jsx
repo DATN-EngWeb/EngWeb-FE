@@ -28,7 +28,7 @@ async function transformReadingData(data) {
             question_number: q.question_number,
             explanation: q.explanation || '',
             score: q.score,
-            content: !['I', 'J'].includes(format) ? q.content || '' : undefined,
+            content: !['I'].includes(format) ? q.content || '' : undefined,
           };
           if (newQ.content?.startsWith?.('http')) {
             newQ.content = await fetchHtmlContent(newQ.content);
@@ -59,10 +59,7 @@ export default function FeedbackReadingTestPage({ params }) {
     const fetchData = async () => {
       try {
         const data = await getReceptiveTestDetails(test_id);
-        const currentUserId = localStorage.getItem('userId');
-        const isOwner =
-          String(data.created_by_id ?? data.teacher_id ?? '') === String(currentUserId);
-        if (data.status !== 'I' || isOwner) {
+        if (data.status !== 'I' || data.is_owner) {
           setForbidden(true);
           setLoading(false);
           return;

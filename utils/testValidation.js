@@ -265,7 +265,13 @@ export const validateTest = (basicInfo, parts) => {
 export const getValidationErrorMessage = (errors) => {
   if (!errors) return null;
 
+  // Always show Basic Information errors first.
+  if (errors.basicInfo?.testName) return 'Please enter the test title';
+  if (errors.basicInfo?.level) return 'Please select a level';
+  if (errors.basicInfo?.time) return 'Please enter a valid test time';
   if (errors.basicInfo?.timeNegative) return 'Test time cannot be negative';
+  if (errors.basicInfo?.description) return 'Please enter the test description';
+
   if (errors.parts?.some((p) => p?.totalScoreNegative)) return 'Score cannot be negative';
   if (errors.noParts) return 'Test must have at least 1 part';
   if (errors.parts?.some((p) => p?.noQuestions)) return 'Each part must have at least 1 question';
@@ -311,6 +317,10 @@ export const validateReadingPartPayload = (parts) => {
     return trimmed === '' || trimmed === '<p><br></p>' || trimmed === '<p></p>';
   };
 
+  const formatPartMessage = (partName, message) => `Part ${partName}: ${message}`;
+  const formatQuestionMessage = (partName, qNum, message) =>
+    `Part ${partName}, Question ${qNum}: ${message}`;
+
   if (!parts || parts.length === 0) {
     return 'The test has no parts.';
   }
@@ -320,20 +330,14 @@ export const validateReadingPartPayload = (parts) => {
     const partName = `Part ${part.order || i + 1}`;
     const format = part.format;
 
-    if (format === 'F') {
-      if (isEmptyText(part.description)) {
-        return `Error in ${partName}: Description is required.`;
-      }
-    }
-
     if (['G', 'H', 'I', 'J'].includes(format)) {
       if (isEmptyText(part.content)) {
-        return `Error in ${partName}: Passage content is required.`;
+        return formatPartMessage(partName, 'add the passage content.');
       }
     }
 
     if (!part.questions || part.questions.length === 0) {
-      return `Error in ${partName}: No questions have been created.`;
+      return formatPartMessage(partName, 'add at least one question.');
     }
 
     for (let j = 0; j < part.questions.length; j++) {
@@ -341,32 +345,27 @@ export const validateReadingPartPayload = (parts) => {
       const qNum = q.question_number || j + 1;
 
       if (!q.answers || q.answers.length === 0) {
-        return `Error in ${partName}, Question ${qNum}: No answers provided.`;
+        return formatQuestionMessage(partName, qNum, 'add at least one answer.');
       }
 
       if (['F', 'G', 'H'].includes(format)) {
         if (q.answers.length < 3) {
-          return `Error in ${partName}, Question ${qNum}: There must be at least 3 answers.`;
-        }
-      }
-
-      const hasCorrectAnswer = q.answers.some((ans) => ans.is_correct === true);
-      if (!hasCorrectAnswer) {
-        return `Error in ${partName}, Question ${qNum}: At least one correct answer must be selected.`;
-      }
-
-      if (['F', 'G', 'H'].includes(format)) {
-        if (isEmptyText(q.content)) {
-          return `Error in ${partName}, Question ${qNum}: Question content cannot be empty.`;
+          return formatQuestionMessage(partName, qNum, 'add at least 3 answer options.');
         }
       }
 
       if (['F', 'G', 'H', 'J'].includes(format)) {
+        if (isEmptyText(q.content)) {
+          return formatQuestionMessage(partName, qNum, 'add the question content.');
+        }
+      }
+
+      if (['F', 'G', 'H'].includes(format)) {
         for (let k = 0; k < q.answers.length; k++) {
           const ans = q.answers[k];
           if (isEmptyText(ans.answer_text)) {
             const label = ans.option_label ? `(${ans.option_label})` : `Option ${k + 1}`;
-            return `Error in ${partName}, Question ${qNum}: Content for answer ${label} cannot be empty.`;
+            return formatQuestionMessage(partName, qNum, `fill in answer ${label}.`);
           }
         }
       }
@@ -374,13 +373,18 @@ export const validateReadingPartPayload = (parts) => {
       if (format === 'I') {
         const correctAns = q.answers.find((a) => a.is_correct);
         if (correctAns && isEmptyText(correctAns.answer_text)) {
-          return `Error in ${partName}, Question ${qNum}: The correct answer (keyword) cannot be empty.`;
+          return formatQuestionMessage(partName, qNum, 'fill in the correct answer.');
         }
+      }
+
+      const hasCorrectAnswer = q.answers.some((ans) => ans.is_correct === true);
+      if (!hasCorrectAnswer) {
+        return formatQuestionMessage(partName, qNum, 'choose the correct answer.');
       }
 
       const parsedScore = parseInt(q.score, 10);
       if (isNaN(parsedScore) || Number(q.score) !== parsedScore || parsedScore <= 0) {
-        return `Error in ${partName}, Question ${qNum}: Score must be a positive integer greater than 0.`;
+        return formatQuestionMessage(partName, qNum, 'enter a score greater than 0.');
       }
     }
   }
@@ -437,12 +441,6 @@ export const validateReadingPartUpdatePayload = (transformedParts, originalParts
       if (partFormat !== 'F' && (!tPart.content || String(tPart.content).trim() === '')) {
         return `Part ${displayPartNum} is missing content.`;
       }
-      if (
-        !['G', 'H', 'I', 'J'].includes(partFormat) &&
-        (!tPart.description || String(tPart.description).trim() === '')
-      ) {
-        return `Part ${displayPartNum} is missing a description.`;
-      }
     }
 
     const originalQuestions = originalPart.questions || [];
@@ -468,14 +466,10 @@ export const validateReadingPartUpdatePayload = (transformedParts, originalParts
 
       if (tQuestion.action === 'create' || tQuestion.action === 'update') {
         if (
-          !['I', 'J'].includes(partFormat) &&
+          !['I'].includes(partFormat) &&
           (!tQuestion.content || String(tQuestion.content).trim() === '')
         ) {
-          return `Question ${displayQuestionNum} in Part ${displayPartNum} is missing content.`;
-        }
-
-        if (!tQuestion.explanation || String(tQuestion.explanation).trim() === '') {
-          return `Question ${displayQuestionNum} in Part ${displayPartNum} is missing an explanation.`;
+          return `Part ${displayPartNum}, Question ${displayQuestionNum}: add the question content.`;
         }
       }
 
@@ -493,11 +487,6 @@ export const validateReadingPartUpdatePayload = (transformedParts, originalParts
           if (activeAnswers.length < 3) {
             return `Question ${displayQuestionNum} in Part ${displayPartNum} must have at least 3 answer options.`;
           }
-
-          const hasCorrectAnswer = activeAnswers.some((a) => a.is_correct);
-          if (!hasCorrectAnswer) {
-            return `Question ${displayQuestionNum} in Part ${displayPartNum} must have at least one correct answer selected.`;
-          }
         }
       }
 
@@ -513,7 +502,7 @@ export const validateReadingPartUpdatePayload = (transformedParts, originalParts
             partFormat !== 'I' &&
             (!tAns.option_label || String(tAns.option_label).trim() === '')
           ) {
-            return `An answer in Question ${displayQuestionNum}, Part ${displayPartNum} is missing an option label (A, B, C...).`;
+            return `Part ${displayPartNum}, Question ${displayQuestionNum}: choose an option label (A, B, C...).`;
           }
 
           if (!tAns.answer_text || String(tAns.answer_text).trim() === '') {
@@ -521,9 +510,16 @@ export const validateReadingPartUpdatePayload = (transformedParts, originalParts
             const optionLabel = tAns.option_label ? ` (${tAns.option_label})` : '';
 
             return isMultipleChoice
-              ? `Option${optionLabel} in Question ${displayQuestionNum}, Part ${displayPartNum} is missing answer text.`
-              : `An answer in Question ${displayQuestionNum}, Part ${displayPartNum} is missing answer text.`;
+              ? `Part ${displayPartNum}, Question ${displayQuestionNum}: fill in option${optionLabel}.`
+              : `Part ${displayPartNum}, Question ${displayQuestionNum}: fill in the answer.`;
           }
+        }
+      }
+
+      if (['F', 'G', 'H'].includes(partFormat)) {
+        const hasCorrectAnswer = tQuestion.answers?.some((a) => a.is_correct === true);
+        if (!hasCorrectAnswer) {
+          return `Part ${displayPartNum}, Question ${displayQuestionNum}: choose the correct answer.`;
         }
       }
     }

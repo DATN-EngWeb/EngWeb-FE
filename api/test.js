@@ -211,11 +211,12 @@ export const getReceptiveTestHistoryByTestId = async (test_id) => {
 
 // Duplicate function removed
 
-export const createReceptiveTest = async (data) => {
+export const createReceptiveTest = async (data, token) => {
   return apiFetch(`${TEST_HISTORIES_BASE_URL}/receptive`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
     },
     body: JSON.stringify(data),
   });

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Box, Container, Typography, Button } from '@mui/material';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import { listeningtestStyles } from '../../styles/student/Listening/listeningTestStyles';
+import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import { getListeningTestTypeLabel } from '../../utils/stringFormat';
 import MultipleChoiceImagePart from '../Student/ListeningTest/part/multipleChoiceImage';
 import FillBlankPart from '../Student/ListeningTest/part/fillBlanks';
@@ -69,17 +69,24 @@ export default function ListeningPreview({
         newParts.map(async (part) => {
           resourcesMap[part.id] = {
             audioSrc: null,
+            shouldRevokeAudioSrc: false,
             imageSrcs: {},
+            shouldRevokeImageSrcs: {},
             audioSrcs: {},
+            shouldRevokeAudioSrcs: {},
             passageSrc: '',
           };
 
           const res = resourcesMap[part.id];
           const partAudio = part.audio?.url || part.resources?.audio;
           if (partAudio) {
-            res.audioSrc = partAudio.startsWith('blob:')
-              ? partAudio
-              : await loadAudioSource(partAudio);
+            if (partAudio.startsWith('blob:')) {
+              res.audioSrc = partAudio;
+            } else {
+              const loadedAudio = await loadAudioSource(partAudio);
+              res.audioSrc = loadedAudio;
+              res.shouldRevokeAudioSrc = Boolean(loadedAudio?.startsWith('blob:'));
+            }
           }
 
           if (part.content) {
@@ -95,9 +102,13 @@ export default function ListeningPreview({
                 const imageUrl = opt.image?.url || opt.resources?.image;
                 if (imageUrl) {
                   imageTasks.push(async () => {
-                    res.imageSrcs[opt.id] = imageUrl.startsWith('blob:')
-                      ? imageUrl
-                      : await loadImageSource(imageUrl);
+                    if (imageUrl.startsWith('blob:')) {
+                      res.imageSrcs[opt.id] = imageUrl;
+                    } else {
+                      const loadedImage = await loadImageSource(imageUrl);
+                      res.imageSrcs[opt.id] = loadedImage;
+                      res.shouldRevokeImageSrcs[opt.id] = Boolean(loadedImage?.startsWith('blob:'));
+                    }
                   });
                 }
               });
@@ -111,9 +122,15 @@ export default function ListeningPreview({
               const qAudio = q.audio?.url || q.resources?.audio;
               if (qAudio) {
                 audioTasks.push(async () => {
-                  res.audioSrcs[q.id] = qAudio.startsWith('blob:')
-                    ? qAudio
-                    : await loadAudioSource(qAudio);
+                  if (qAudio.startsWith('blob:')) {
+                    res.audioSrcs[q.id] = qAudio;
+                  } else {
+                    const loadedQuestionAudio = await loadAudioSource(qAudio);
+                    res.audioSrcs[q.id] = loadedQuestionAudio;
+                    res.shouldRevokeAudioSrcs[q.id] = Boolean(
+                      loadedQuestionAudio?.startsWith('blob:'),
+                    );
+                  }
                 });
               }
             });
@@ -134,12 +151,18 @@ export default function ListeningPreview({
     return () => {
       mounted = false;
       Object.values(loadedResources).forEach((res) => {
-        if (res.audioSrc?.startsWith('blob:')) URL.revokeObjectURL(res.audioSrc);
-        Object.values(res.imageSrcs || {}).forEach((url) => {
-          if (url?.startsWith('blob:')) URL.revokeObjectURL(url);
+        if (res.shouldRevokeAudioSrc && res.audioSrc?.startsWith('blob:')) {
+          URL.revokeObjectURL(res.audioSrc);
+        }
+        Object.entries(res.imageSrcs || {}).forEach(([id, url]) => {
+          if (res.shouldRevokeImageSrcs?.[id] && url?.startsWith('blob:')) {
+            URL.revokeObjectURL(url);
+          }
         });
-        Object.values(res.audioSrcs || {}).forEach((url) => {
-          if (url?.startsWith('blob:')) URL.revokeObjectURL(url);
+        Object.entries(res.audioSrcs || {}).forEach(([id, url]) => {
+          if (res.shouldRevokeAudioSrcs?.[id] && url?.startsWith('blob:')) {
+            URL.revokeObjectURL(url);
+          }
         });
       });
     };
@@ -186,71 +209,71 @@ export default function ListeningPreview({
         },
       }}
     >
-      <Container maxWidth="lg" className="no-print">
-        <Box sx={listeningtestStyles.testHeadingContainer}>
-          {showHeaderActions ? (
-            <Typography
-              sx={{ ...listeningtestStyles.backButton, fontSize: { xs: '0.8rem', md: '1rem' } }}
-              onClick={onPreview}
-            >
-              <ExpandLessIcon
-                sx={{
-                  cursor: 'pointer',
-                  fontSize: { xs: '1.6rem', md: '1.8rem' },
-                  color: 'gray.main',
-                  transform: 'rotate(270deg)',
-                }}
-              />
-              Back
-            </Typography>
-          ) : (
-            <Box sx={{ minWidth: 80 }} />
-          )}
-          <Box sx={listeningtestStyles.nameTestAndFormatPart}>
-            <Typography sx={listeningtestStyles.nameTest}>{basicInfo?.testName}</Typography>
-            <Typography sx={listeningtestStyles.formatName}>
-              {`Part ${indexPart + 1}: `}
-              {getListeningTestTypeLabel(parts[indexPart]?.format || parts[indexPart]?.type)}
-            </Typography>
-          </Box>
-          {showHeaderActions ? (
-            <Box sx={{ ...listeningtestStyles.summitButtonWrapper, display: 'flex', gap: 1 }}>
-              <Button sx={listeningtestStyles.submitButton} disabled>
-                Submit Test
-              </Button>
-            </Box>
-          ) : (
-            <Box sx={{ minWidth: 120 }} />
-          )}
-        </Box>
-        <Box sx={listeningtestStyles.separatorLine}></Box>
-        <Box sx={listeningtestStyles.listPartContainer}>
-          {parts.map((part, index) => (
-            <Box
+      <Box sx={listeningtestStyles.testHeadingContainer}>
+        {showHeaderActions ? (
+          <Typography
+            sx={{ ...listeningtestStyles.backButton, fontSize: { xs: '0.8rem', md: '1rem' } }}
+            onClick={onPreview}
+          >
+            <ExpandLessIcon
               sx={{
-                ...listeningtestStyles.boxPart,
-                ...(index === indexPart && {
-                  backgroundColor: 'background.default',
-                  borderColor: 'orange.light',
-                  color: 'orange.dark',
-                }),
-                ...((index < indexPart - 1 || index > indexPart + 1) && {
-                  display: { xs: 'none', sm: 'flex' },
-                }),
-                ...(((index === indexPart - 2 && indexPart === parts.length - 1) ||
-                  (index === indexPart + 2 && indexPart === 0)) && {
-                  display: 'flex',
-                }),
+                cursor: 'pointer',
+                fontSize: { xs: '1.6rem', md: '1.8rem' },
+                color: 'gray.main',
+                transform: 'rotate(270deg)',
               }}
-              key={part.id}
-              onClick={() => setIndexPart(index)}
-            >
-              Part {index + 1}
-            </Box>
-          ))}
+            />
+            Back
+          </Typography>
+        ) : (
+          <Box sx={{ minWidth: 120 }} />
+        )}
+        <Box sx={{ ...listeningtestStyles.nameTestAndFormatPart, order: 0 }}>
+          <Typography sx={listeningtestStyles.nameTest}>{basicInfo?.testName}</Typography>
+          <Typography sx={listeningtestStyles.formatName}>
+            {`Part ${indexPart + 1}: `}
+            {getListeningTestTypeLabel(parts[indexPart]?.format || parts[indexPart]?.type)}
+          </Typography>
         </Box>
-        <Box sx={{ ...listeningtestStyles.separatorLine, backgroundColor: 'gray.main' }}></Box>
-      </Container>
+        {showHeaderActions ? (
+          <Box
+            sx={{ ...listeningtestStyles.summitButtonWrapper, display: 'flex', gap: 1, order: 0 }}
+          >
+            <Button sx={listeningtestStyles.submitButton} disabled>
+              Submit Test
+            </Button>
+          </Box>
+        ) : (
+          <Box sx={{ minWidth: 120 }} />
+        )}
+      </Box>
+      <Box sx={listeningtestStyles.separatorLine}></Box>
+      <Box sx={listeningtestStyles.listPartContainer}>
+        {parts.map((part, index) => (
+          <Box
+            sx={{
+              ...listeningtestStyles.boxPart,
+              ...(index === indexPart && {
+                backgroundColor: 'background.default',
+                borderColor: 'orange.light',
+                color: 'orange.dark',
+              }),
+              ...((index < indexPart - 1 || index > indexPart + 1) && {
+                display: { xs: 'none', sm: 'flex' },
+              }),
+              ...(((index === indexPart - 2 && indexPart === parts.length - 1) ||
+                (index === indexPart + 2 && indexPart === 0)) && {
+                display: 'flex',
+              }),
+            }}
+            key={part.id}
+            onClick={() => setIndexPart(index)}
+          >
+            Part {index + 1}
+          </Box>
+        ))}
+      </Box>
+      <Box sx={{ ...listeningtestStyles.separatorLine, backgroundColor: 'gray.main' }}></Box>
       <Box
         className="no-print"
         sx={{ width: '100%', height: 'auto', backgroundColor: 'background.gray' }}

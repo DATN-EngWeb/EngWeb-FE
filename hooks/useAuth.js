@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 export function useAuth(redirectTo = '/login') {
   const router = useRouter();
+  const pathname = usePathname();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
@@ -25,6 +27,7 @@ export function useAuth(redirectTo = '/login') {
       localStorage.removeItem('username');
       localStorage.removeItem('avatar');
       localStorage.removeItem('userStatus');
+      localStorage.removeItem('userRole');
       document.cookie = 'userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
     }
     setIsAuthenticated(false);
@@ -103,7 +106,7 @@ export function useAuth(redirectTo = '/login') {
     };
 
     checkAuth();
-  }, [router]);
+  }, [pathname, router]);
 
   return { isAuthenticated, isLoading, user, logout };
 }
