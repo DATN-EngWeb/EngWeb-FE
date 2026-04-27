@@ -31,8 +31,6 @@ import {
   userPopupHeaderStyles,
   userPopupAvatarNameBoxStyles,
   userPopupAvatarWrapperStyles,
-  userPopupAvatarImgStyles,
-  userPopupAvatarFallbackStyles,
   userPopupUsernameStyles,
   userPopupLevelStyles,
   userPopupXpRowStyles,
@@ -40,16 +38,6 @@ import {
   userPopupXpValueStyles,
   userPopupXpBarContainerStyles,
   getUserPopupXpBarFillStyles,
-  userPopupAiTerminalStyles,
-  userPopupAiTitleStyles,
-  userPopupAiBoxStyles,
-  userPopupTurnsCardStyles,
-  userPopupTurnsLabelStyles,
-  userPopupTurnsValueStyles,
-  userPopupMaxTurnsStyles,
-  userPopupBonusValueBoxStyles,
-  userPopupBonusValueStyles,
-  userPopupBonusIconStyles,
   userPopupDividerStyles,
   userPopupMenuContainerStyles,
   userPopupMenuItemStyles,
@@ -114,12 +102,6 @@ const LogoutIcon = () => (
     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
     <polyline points="16 17 21 12 16 7" />
     <line x1="21" y1="12" x2="9" y2="12" />
-  </svg>
-);
-
-const BonusStarIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
   </svg>
 );
 
@@ -388,17 +370,14 @@ export default function Header() {
   };
 
   useEffect(() => {
-    if (user?.avatar && typeof window !== 'undefined') {
-      setUserAvatar(user.avatar);
-    }
     fetchProfile();
   }, [user]);
 
   useEffect(() => {
-    if (popupOpen) {
-      fetchProfile();
+    if (studentProfile?.avatar_url && typeof window !== 'undefined') {
+      setUserAvatar(studentProfile.avatar_url);
     }
-  }, [popupOpen, user]);
+  }, [studentProfile]);
 
   const handleOpenModal = (type) => {
     setActionType(type);
@@ -568,7 +547,7 @@ export default function Header() {
                           <UserPopup
                             user={user}
                             studentProfile={studentProfile}
-                            userAvatar={userAvatar}
+                            userAvatar={studentProfile?.avatar_url}
                             onClose={() => setPopupOpen(false)}
                             onLogout={handleLogout}
                             onNavigate={handleNavigate}
