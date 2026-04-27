@@ -143,12 +143,14 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
   const handlePreSaveDraft = () => {
     setSubmitType('D');
-    setOpenConfirm(true);
+    handleSubmit('D');
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (overrideType) => {
+    const finalSubmitType = typeof overrideType === 'string' ? overrideType : submitType;
+
     try {
-      if (submitType === 'S') {
+      if (finalSubmitType === 'S') {
         setSubmitStatus('submitting');
       } else {
         setDraftStatus('saving');
@@ -159,7 +161,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
       const payload = {
         receptive_test: testHistory.receptive_test || test_id,
-        type: submitType,
+        type: finalSubmitType,
         start_time: testHistory.start_time,
         end_time: new Date().toISOString(),
         total_time: startTime,
@@ -169,12 +171,12 @@ export default function ListeningTestContent({ test_id, initialData }) {
       const token = localStorage.getItem('accessToken');
       const [response] = await Promise.all([
         createReceptiveTest(payload, token),
-        submitType === 'S'
+        finalSubmitType === 'S'
           ? new Promise((resolve) => setTimeout(resolve, 1500))
           : Promise.resolve(),
       ]);
 
-      if (submitType === 'S') {
+      if (finalSubmitType === 'S') {
         setSubmitStatus('idle'); // Just close it, because we instantly show the results
         const dataToSave = {
           answer_histories: response.answer_histories || [],
@@ -198,7 +200,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
       }
     } catch (error) {
       console.error('Submission error:', error);
-      if (submitType === 'S') {
+      if (finalSubmitType === 'S') {
         setSubmitStatus('error');
       } else {
         setDraftStatus('error');
