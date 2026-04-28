@@ -30,12 +30,14 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import { getProductiveTestDetails, createProductiveTest, getAIFeedback } from '@/api/test';
+import { getStudentProfile } from '../../api/accounts';
 import ProductivePreview from '../Writing-Speaking/ProductivePreview';
 import AIGradingLoading from '../Writing-Speaking/AIGradingLoading';
 import SaveDraftToast from '../Writing-Speaking/SaveDraftToast';
 import SubmitLoadingDialog from '../Writing-Speaking/SubmitLoadingDialog';
 import { levelTheme } from '../TestCard';
 import * as styles from '@/styles/Student/Writing/WritingTestStyles';
+import { useAuth } from '../../hooks/useAuth';
 import { useStreakContext } from '@/context/streakContext';
 
 export default function WritingTest() {
@@ -43,6 +45,7 @@ export default function WritingTest() {
   const testId = params.test_id;
   const attempt = params.attempt;
   const router = useRouter();
+  const { user } = useAuth(null);
   const { refreshStreak } = useStreakContext();
 
   // States
@@ -67,6 +70,7 @@ export default function WritingTest() {
   const [historyID, setHistoryID] = useState(0);
   const [serverErrorOpen, setServerErrorOpen] = useState(false);
   const [isFetchingFeedback, setIsFetchingFeedback] = useState(false);
+  const [remainingAITurns, setRemainingAITurns] = useState({ weekly_ai_turn: 0, bonus_ai_turn: 0 });
 
   const handleServerErrorClose = () => {
     setServerErrorOpen(false);
@@ -84,6 +88,45 @@ export default function WritingTest() {
     const secs = totalSeconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+  const normalizeAITurns = (turns) => ({
+    weekly_ai_turn: Number(turns?.weekly_ai_turn) || 0,
+    bonus_ai_turn: Number(turns?.bonus_ai_turn) || 0,
+  });
+  const totalAITurns = remainingAITurns.weekly_ai_turn + remainingAITurns.bonus_ai_turn;
+
+  useEffect(() => {
+    const savedTurns = localStorage.getItem('remainAIturns');
+
+    if (!savedTurns) {
+      return;
+    }
+
+    try {
+      setRemainingAITurns(normalizeAITurns(JSON.parse(savedTurns)));
+    } catch (error) {
+      setRemainingAITurns(normalizeAITurns());
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user?.id || user?.role !== 'S') {
+        return;
+      }
+
+      try {
+        const profile = await getStudentProfile(user.id);
+        const nextTurns = normalizeAITurns(profile);
+        setRemainingAITurns(nextTurns);
+        localStorage.setItem('remainAIturns', JSON.stringify(nextTurns));
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to fetch student profile:', error);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
 
   // Fetch Data
   useEffect(() => {
@@ -286,7 +329,9 @@ export default function WritingTest() {
       console.log('Fetching feedback for ID:', targetID);
       const category = await getAIFeedback({ id: targetID });
       localStorage.setItem('category', JSON.stringify(category.ai_feedback));
-      localStorage.setItem('remainAIturns', category.remaining_turns);
+      const nextTurns = normalizeAITurns(category.remaining_turns);
+      setRemainingAITurns(nextTurns);
+      localStorage.setItem('remainAIturns', JSON.stringify(nextTurns));
       // eslint-disable-next-line no-console
       console.log('Fetched AI feedback:', category);
       router.push(`/student/writing/${testId}/${attempt}/AI-feedback`);
@@ -484,7 +529,18 @@ export default function WritingTest() {
             variant="contained"
             fullWidth
             startIcon={<AutoAwesomeIcon />}
-            onClick={handleAIFeedback}
+            onClick={() => {
+              if (totalAITurns <= 0) {
+                setSnackbar({
+                  open: true,
+                  message: 'You have exhausted your AI feedback turns.',
+                  severity: 'warning',
+                });
+                return;
+              }
+              handleAIFeedback();
+            }}
+            title={totalAITurns <= 0 ? 'AI feedback turns exhausted' : ''}
             sx={{
               ...styles.aiButton,
               py: 1,
@@ -495,7 +551,7 @@ export default function WritingTest() {
               textTransform: 'none',
               fontWeight: 700,
             }}
-            disabled={wordCount < settings.minWords}
+            disabled={wordCount < settings.minWords || totalAITurns <= 0 || isFetchingFeedback}
           >
             AI Feedback
           </Button>

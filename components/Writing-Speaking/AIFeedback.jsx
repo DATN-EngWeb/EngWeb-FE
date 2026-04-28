@@ -152,6 +152,21 @@ export default function AIFeedback() {
     const secs = Math.floor(totalSeconds % 60);
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+  const normalizeTurns = (value) => {
+    if (typeof value === 'number') {
+      return { weekly_ai_turn: value, bonus_ai_turn: 0 };
+    }
+
+    if (value && typeof value === 'object') {
+      return {
+        weekly_ai_turn: Number(value.weekly_ai_turn) || 0,
+        bonus_ai_turn: Number(value.bonus_ai_turn) || 0,
+      };
+    }
+
+    return { weekly_ai_turn: 0, bonus_ai_turn: 0 };
+  };
+  const totalTurns = turns.weekly_ai_turn + turns.bonus_ai_turn;
 
   useEffect(() => {
     setOpenFeedback(true);
@@ -178,7 +193,8 @@ export default function AIFeedback() {
 
     try {
       const rawTurns = localStorage.getItem('remainAIturns');
-      if (rawTurns && rawTurns !== '[object Object]') remainAIturns = JSON.parse(rawTurns);
+      if (rawTurns && rawTurns !== '[object Object]')
+        remainAIturns = normalizeTurns(JSON.parse(rawTurns));
     } catch (e) {
       console.warn('Failed to parse remainAIturns', e);
     }
@@ -340,7 +356,6 @@ export default function AIFeedback() {
             >
               {categories.length > 0 ? (
                 <Button
-                  disabled={turns.weekly_ai_turn + turns.bonus_ai_turn === 0}
                   variant="contained"
                   onClick={() => setOpenFeedback(true)}
                   startIcon={<AutoAwesomeIcon sx={{ color: '#fbc02d' }} />}
@@ -386,7 +401,7 @@ export default function AIFeedback() {
                         setIsFetchingFeedback(false);
                       }
                     }}
-                    disabled={isFetchingFeedback}
+                    disabled={isFetchingFeedback || totalTurns <= 0}
                     startIcon={
                       isFetchingFeedback ? <> </> : <AutoAwesomeIcon sx={{ color: '#fbc02d' }} />
                     }
@@ -669,19 +684,36 @@ export default function AIFeedback() {
                   >
                     REMAINING TURNS
                   </Typography>
-                  <Box sx={styles.dotsContainer}>
-                    {[1, 2, 3].map((i) => (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={styles.dotsContainer}>
                       <Box
-                        key={`solid-${i}`}
-                        sx={{ width: 12, height: 6, bgcolor: '#8B5A2B', borderRadius: 4 }}
+                        sx={{
+                          width: 12,
+                          height: 12,
+                          bgcolor: totalTurns > 0 ? '#8B5A2B' : '#e0e0e0',
+                          borderRadius: '50%',
+                        }}
                       />
-                    ))}
-                    {[1, 2].map((i) => (
                       <Box
-                        key={`empty-${i}`}
-                        sx={{ width: 12, height: 6, bgcolor: '#e0e0e0', borderRadius: 4 }}
+                        sx={{
+                          width: 12,
+                          height: 12,
+                          bgcolor: turns.weekly_ai_turn > 0 ? '#8B5A2B' : '#e0e0e0',
+                          borderRadius: '50%',
+                        }}
                       />
-                    ))}
+                      <Box
+                        sx={{
+                          width: 12,
+                          height: 12,
+                          bgcolor: turns.bonus_ai_turn > 0 ? '#8B5A2B' : '#e0e0e0',
+                          borderRadius: '50%',
+                        }}
+                      />
+                    </Box>
+                    <Typography variant="body2" fontWeight="800" color="text.primary">
+                      {totalTurns} left
+                    </Typography>
                   </Box>
                 </Stack>
                 <Button

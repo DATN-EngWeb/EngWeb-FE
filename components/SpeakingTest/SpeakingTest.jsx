@@ -30,6 +30,7 @@ import TimerIcon from '@mui/icons-material/Timer';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 import { getProductiveTestDetails, createProductiveTest, getSpeakingAIFeedback } from '@/api/test';
+import { getStudentProfile } from '../../api/accounts';
 import ProductivePreview from '../Writing-Speaking/ProductivePreview';
 import { levelTheme } from '../TestCard';
 import * as styles from '@/styles/Student/Writing/WritingTestStyles';
@@ -38,6 +39,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SendIcon from '@mui/icons-material/Send';
 import { uploadMediaFile } from '../../utils/uploadHelpers';
 import CustomAudioPlayer from '../Test/customAudioPlayer';
+import { useAuth } from '../../hooks/useAuth';
 import { useStreakContext } from '../../context/streakContext';
 import AIGradingLoading from '../Writing-Speaking/AIGradingLoading';
 import SubmitLoadingDialog from '../Writing-Speaking/SubmitLoadingDialog';
@@ -47,6 +49,7 @@ export default function SpeakingTest() {
   const testId = params.test_id;
   const attempt = params.attempt;
   const router = useRouter();
+  const { user } = useAuth(null);
   const { refreshStreak } = useStreakContext();
 
   // States
@@ -67,6 +70,7 @@ export default function SpeakingTest() {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [serverErrorOpen, setServerErrorOpen] = useState(false);
   const [isFetchingFeedback, setIsFetchingFeedback] = useState(false);
+  const [remainingAITurns, setRemainingAITurns] = useState({ weekly_ai_turn: 0, bonus_ai_turn: 0 });
 
   const handleServerErrorClose = () => {
     setServerErrorOpen(false);
@@ -87,6 +91,11 @@ export default function SpeakingTest() {
     const secs = totalSeconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+  const normalizeAITurns = (turns) => ({
+    weekly_ai_turn: Number(turns?.weekly_ai_turn) || 0,
+    bonus_ai_turn: Number(turns?.bonus_ai_turn) || 0,
+  });
+  const totalAITurns = remainingAITurns.weekly_ai_turn + remainingAITurns.bonus_ai_turn;
   const getAudioDuration = (url) => {
     return new Promise((resolve, reject) => {
       const audio = new Audio(url);
@@ -102,6 +111,40 @@ export default function SpeakingTest() {
   };
 
   // Fetch Data
+  useEffect(() => {
+    const savedTurns = localStorage.getItem('remainAIturns');
+
+    if (!savedTurns) {
+      return;
+    }
+
+    try {
+      setRemainingAITurns(normalizeAITurns(JSON.parse(savedTurns)));
+    } catch (error) {
+      setRemainingAITurns(normalizeAITurns());
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user?.id || user?.role !== 'S') {
+        return;
+      }
+
+      try {
+        const profile = await getStudentProfile(user.id);
+        const nextTurns = normalizeAITurns(profile);
+        setRemainingAITurns(nextTurns);
+        localStorage.setItem('remainAIturns', JSON.stringify(nextTurns));
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to fetch student profile:', error);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
+
   useEffect(() => {
     setIsMounted(true);
     const fetchData = async () => {
@@ -297,7 +340,9 @@ export default function SpeakingTest() {
       setIsFetchingFeedback(true);
       const category = await getSpeakingAIFeedback({ id: historyID });
       localStorage.setItem('category', JSON.stringify(category.ai_feedback));
-      localStorage.setItem('remainAIturns', category.remaining_turns);
+      const nextTurns = normalizeAITurns(category.remaining_turns);
+      setRemainingAITurns(nextTurns);
+      localStorage.setItem('remainAIturns', JSON.stringify(nextTurns));
       router.push(`/student/speaking/${testId}/${attempt}/AI-feedback`);
     } catch (error) {
       if (
@@ -498,8 +543,19 @@ export default function SpeakingTest() {
         >
           <Button
             variant="contained"
-            disabled={!hasRecorded || isRecording || isReadOnly}
-            onClick={() => handleAIFeedback()}
+            disabled={!hasRecorded || isRecording || isReadOnly || totalAITurns <= 0}
+            onClick={() => {
+              if (totalAITurns <= 0) {
+                setSnackbar({
+                  open: true,
+                  message: 'You have exhausted your AI feedback turns.',
+                  severity: 'warning',
+                });
+                return;
+              }
+              handleAIFeedback();
+            }}
+            title={totalAITurns <= 0 ? 'AI feedback turns exhausted' : ''}
             startIcon={<AutoAwesomeIcon />}
             sx={{
               ...styles.aiButton,
