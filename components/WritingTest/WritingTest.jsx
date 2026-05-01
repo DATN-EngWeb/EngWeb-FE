@@ -17,6 +17,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Tooltip,
 } from '@mui/material';
 import { useParams, useRouter } from 'next/navigation';
 import SendIcon from '@mui/icons-material/Send';
@@ -46,7 +47,7 @@ export default function WritingTest() {
   const attempt = params.attempt;
   const router = useRouter();
   const { user } = useAuth(null);
-  const { refreshStreak } = useStreakContext();
+  const { refreshStreak, setGlobalRewardData } = useStreakContext();
 
   // States
   const [text, setText] = useState('');
@@ -250,6 +251,9 @@ export default function WritingTest() {
       setStartTime(new Date().toISOString());
       setSnackbar({ open: true, message: 'Test submitted successfully!', severity: 'success' });
       await refreshStreak();
+      if (response?.streak_reward_notice) {
+        setGlobalRewardData(response.streak_reward_notice);
+      }
     } catch (error) {
       await new Promise((resolve) => setTimeout(resolve, 400));
       setSubmitStatus('error');
@@ -276,6 +280,10 @@ export default function WritingTest() {
       setLevelData(response?.level_notice || null);
       setSubmitMode('ai');
       setFinalTimeStr(formatDuration(secondsElapsed));
+
+      if (response?.streak_reward_notice) {
+        setGlobalRewardData(response.streak_reward_notice);
+      }
 
       // eslint-disable-next-line no-console
       console.log('Submit Success:', response);
@@ -525,36 +533,51 @@ export default function WritingTest() {
           </Stack>
 
           {/* Row 2: AI Feedback */}
-          <Button
-            variant="contained"
-            fullWidth
-            startIcon={<AutoAwesomeIcon />}
-            onClick={() => {
-              if (totalAITurns <= 0) {
-                setSnackbar({
-                  open: true,
-                  message: 'You have exhausted your AI feedback turns.',
-                  severity: 'warning',
-                });
-                return;
-              }
-              handleAIFeedback();
-            }}
-            title={totalAITurns <= 0 ? 'AI feedback turns exhausted' : ''}
-            sx={{
-              ...styles.aiButton,
-              py: 1,
-              px: 2,
-              borderRadius: '12px',
-              fontSize: '0.8125rem',
-              minWidth: 'auto',
-              textTransform: 'none',
-              fontWeight: 700,
-            }}
-            disabled={wordCount < settings.minWords || totalAITurns <= 0 || isFetchingFeedback}
+          <Tooltip
+            title={
+              totalAITurns <= 0 ? 'You have run out of AI turns. Cannot use this feature.' : ''
+            }
+            placement="top"
           >
-            AI Feedback
-          </Button>
+            <span
+              style={{
+                display: 'block',
+                width: '100%',
+                cursor: totalAITurns <= 0 ? 'not-allowed' : 'pointer',
+              }}
+            >
+              <Button
+                variant="contained"
+                fullWidth
+                startIcon={<AutoAwesomeIcon />}
+                onClick={() => {
+                  if (totalAITurns <= 0) {
+                    setSnackbar({
+                      open: true,
+                      message: 'You have run out of AI turns. Cannot use this feature right now.',
+                      severity: 'warning',
+                    });
+                    return;
+                  }
+                  handleAIFeedback();
+                }}
+                sx={{
+                  ...styles.aiButton,
+                  py: 1,
+                  px: 2,
+                  borderRadius: '12px',
+                  fontSize: '0.8125rem',
+                  minWidth: 'auto',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  pointerEvents: totalAITurns <= 0 ? 'none' : 'auto',
+                }}
+                disabled={wordCount < settings.minWords || totalAITurns <= 0 || isFetchingFeedback}
+              >
+                AI Feedback
+              </Button>
+            </span>
+          </Tooltip>
         </Box>
       </Box>
 

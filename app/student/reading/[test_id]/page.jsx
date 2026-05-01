@@ -32,6 +32,7 @@ import TestTimer from '@/components/Reading/Common/TestTimer';
 import ReceptiveTestHistory from '@/components/Student/Reading_Listening/ReceptiveTestHistory';
 import SaveDraftToast from '@/components/Writing-Speaking/SaveDraftToast';
 import SubmitLoadingDialog from '@/components/Writing-Speaking/SubmitLoadingDialog';
+import { useStreakContext } from '@/context/streakContext';
 
 export default function ReadingTestPage() {
   const params = useParams();
@@ -52,6 +53,8 @@ export default function ReadingTestPage() {
   const [submitStatus, setSubmitStatus] = useState('idle');
   const [draftStatus, setDraftStatus] = useState('idle');
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  const { refreshStreak, setGlobalRewardData } = useStreakContext();
 
   useEffect(() => {
     if (!isPracticing || submitStatus === 'submitting') return;
@@ -289,6 +292,10 @@ export default function ReadingTestPage() {
 
       if (submitType === 'S') {
         setSubmitStatus('idle');
+        await refreshStreak();
+        if (historyRes?.streak_reward_notice) {
+          setGlobalRewardData(historyRes.streak_reward_notice);
+        }
         router.push(`/student/reading/${testId}/results/${historyRes.id}`);
       } else {
         setDraftStatus('saved');

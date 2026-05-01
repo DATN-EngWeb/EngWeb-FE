@@ -108,6 +108,14 @@ const theme = createTheme({
       questionNumberBg: '#1A202C',
       questionNumberText: '#FFFFFF',
     },
+    streak: {
+      level1: '#f27b0c',
+      level2: '#ffbb00',
+      level3: '#ff3333',
+      level4: '#ff0066',
+      level5: '#d966ff',
+      gray: '#9e9e9e',
+    },
   },
   typography: {
     fontFamily:

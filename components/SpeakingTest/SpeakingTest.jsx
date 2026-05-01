@@ -18,6 +18,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Tooltip,
 } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
@@ -50,7 +51,7 @@ export default function SpeakingTest() {
   const attempt = params.attempt;
   const router = useRouter();
   const { user } = useAuth(null);
-  const { refreshStreak } = useStreakContext();
+  const { refreshStreak, setGlobalRewardData } = useStreakContext();
 
   // States
   const [isRecording, setIsRecording] = useState(false);
@@ -262,6 +263,9 @@ export default function SpeakingTest() {
       setSecondsElapsed(0);
       setStartTime(new Date().toISOString());
       await refreshStreak();
+      if (response?.streak_reward_notice) {
+        setGlobalRewardData(response.streak_reward_notice);
+      }
     } catch (error) {
       if (
         error?.status >= 500 ||
@@ -317,6 +321,10 @@ export default function SpeakingTest() {
       setSecondsElapsed(0);
       setStartTime(new Date().toISOString());
       sessionStorage.removeItem('current_productive_attempt');
+
+      if (response?.streak_reward_notice) {
+        setGlobalRewardData(response.streak_reward_notice);
+      }
 
       setSubmitMode('ai');
       setSubmitStatus('submitted');
@@ -541,35 +549,53 @@ export default function SpeakingTest() {
             gap: 1.5,
           }}
         >
-          <Button
-            variant="contained"
-            disabled={!hasRecorded || isRecording || isReadOnly || totalAITurns <= 0}
-            onClick={() => {
-              if (totalAITurns <= 0) {
-                setSnackbar({
-                  open: true,
-                  message: 'You have exhausted your AI feedback turns.',
-                  severity: 'warning',
-                });
-                return;
-              }
-              handleAIFeedback();
-            }}
-            title={totalAITurns <= 0 ? 'AI feedback turns exhausted' : ''}
-            startIcon={<AutoAwesomeIcon />}
-            sx={{
-              ...styles.aiButton,
-              py: 1,
-              px: 2,
-              borderRadius: '12px',
-              fontSize: '0.8125rem',
-              minWidth: 'auto',
-              textTransform: 'none',
-              fontWeight: 700,
-            }}
+          <Tooltip
+            title={
+              totalAITurns <= 0 ? 'You have run out of AI turns. Cannot use this feature.' : ''
+            }
+            placement="top"
           >
-            AI Feedback
-          </Button>
+            <span
+              style={{
+                cursor:
+                  !hasRecorded || isRecording || isReadOnly
+                    ? 'default'
+                    : totalAITurns <= 0
+                      ? 'not-allowed'
+                      : 'pointer',
+              }}
+            >
+              <Button
+                variant="contained"
+                disabled={!hasRecorded || isRecording || isReadOnly || totalAITurns <= 0}
+                onClick={() => {
+                  if (totalAITurns <= 0) {
+                    setSnackbar({
+                      open: true,
+                      message: 'You have run out of AI turns. Cannot use this feature.',
+                      severity: 'warning',
+                    });
+                    return;
+                  }
+                  handleAIFeedback();
+                }}
+                startIcon={<AutoAwesomeIcon />}
+                sx={{
+                  ...styles.aiButton,
+                  py: 1,
+                  px: 2,
+                  borderRadius: '12px',
+                  fontSize: '0.8125rem',
+                  minWidth: 'auto',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  pointerEvents: totalAITurns <= 0 ? 'none' : 'auto',
+                }}
+              >
+                AI Feedback
+              </Button>
+            </span>
+          </Tooltip>
           <Button
             variant="contained"
             sx={{

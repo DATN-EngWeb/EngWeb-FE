@@ -4,7 +4,7 @@ import React from 'react';
 import { Box, Typography, Tooltip, CircularProgress } from '@mui/material';
 import { useStreakContext } from '../../context/streakContext';
 
-const StreakSvgDefs = () => (
+export const StreakSvgDefs = () => (
   <svg
     aria-hidden="true"
     style={{

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { getUserStreak } from '../api/dashboard';
+import StreakRewardOverlay from '../components/Streak/StreakRewardOverlay';
 
 const StreakContext = createContext();
 
@@ -13,6 +14,7 @@ export const StreakProvider = ({ children }) => {
     is_streak_lit_today: false,
     last_submitted_date: null,
   });
+  const [globalRewardData, setGlobalRewardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchStreak = useCallback(async () => {
@@ -48,8 +50,14 @@ export const StreakProvider = ({ children }) => {
   }, [fetchStreak]);
 
   return (
-    <StreakContext.Provider value={{ streakData, isLoading, refreshStreak: fetchStreak }}>
+    <StreakContext.Provider
+      value={{ streakData, isLoading, refreshStreak: fetchStreak, setGlobalRewardData }}
+    >
       {children}
+      <StreakRewardOverlay
+        rewardData={globalRewardData}
+        onClose={() => setGlobalRewardData(null)}
+      />
     </StreakContext.Provider>
   );
 };

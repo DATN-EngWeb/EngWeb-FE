@@ -83,7 +83,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
   const [draftStatus, setDraftStatus] = useState('idle');
   const [targetQuestionId, setTargetQuestionId] = useState(null);
 
-  const { refreshStreak } = useStreakContext();
+  const { refreshStreak, setGlobalRewardData } = useStreakContext();
 
   const transformAnswers = (answersObj) => {
     const result = [];
@@ -178,6 +178,11 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
       if (finalSubmitType === 'S') {
         setSubmitStatus('idle'); // Just close it, because we instantly show the results
+
+        if (response?.streak_reward_notice) {
+          setGlobalRewardData(response.streak_reward_notice);
+        }
+
         const dataToSave = {
           answer_histories: response.answer_histories || [],
           attempt: response.attempt || 1,
