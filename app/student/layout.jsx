@@ -2,16 +2,19 @@
 
 'use client';
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import Header from '../../components/Home/Header';
 import Footer from '../../components/Home/Footer';
+import AIAssistantWidget from '../../components/Student/AIAssistantWidget';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function StudentLayout({ children }) {
   const pathname = usePathname();
-  const [isTestPage, setIsTestPage] = React.useState(false);
+  const [isTestPage, setIsTestPage] = useState(false);
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (pathname) {
       setIsTestPage(
         pathname.includes('/student/writing/') ||
@@ -28,6 +31,7 @@ export default function StudentLayout({ children }) {
         <Header />
       </Suspense>
       <main style={{ minHeight: isTestPage ? 'auto' : '60vh' }}>{children}</main>
+      {!isAuthLoading && isAuthenticated && <AIAssistantWidget />}
       <Suspense fallback={null}>{!isTestPage && <Footer />}</Suspense>
     </>
   );

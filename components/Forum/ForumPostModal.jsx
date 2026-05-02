@@ -346,7 +346,7 @@ export default function ForumPostModal({
                               Edit
                             </MenuItem>
                             <MenuItem
-                              onClick={handleDeleteComment(c)}
+                              onClick={() => handleDeleteComment(c)}
                               sx={{ color: 'error.main' }}
                               disabled={deleteLoadingId === c.id}
                             >
@@ -371,7 +371,7 @@ export default function ForumPostModal({
                             size="small"
                             variant="contained"
                             disabled={editLoading || !editCommentText.trim()}
-                            onClick={handleEditComment(c)}
+                            onClick={() => handleEditComment(c)}
                             sx={{ minWidth: 0, px: 1.5, borderRadius: 2 }}
                           >
                             Save

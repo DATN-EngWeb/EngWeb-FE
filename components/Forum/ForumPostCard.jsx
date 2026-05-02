@@ -22,7 +22,7 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import CustomAudioPlayer from '../Test/customAudioPlayer';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Snackbar from '@mui/material/Snackbar';
 import { useAuth } from '../../hooks/useAuth';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -39,10 +39,9 @@ export default function ForumPostCard({ post, initialOpen = false }) {
   const [commentCount, setCommentCount] = useState(post.comment_count ?? 0);
   const [modalOpen, setModalOpen] = useState(initialOpen);
   const [anchorEl, setAnchorEl] = useState(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editTitle, setEditTitle] = useState(post.title);
-  const [editDescription, setEditDescription] = useState(post.description);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const router = useRouter();
@@ -51,13 +50,17 @@ export default function ForumPostCard({ post, initialOpen = false }) {
   const debounceRef = useRef(null);
   const pendingLikedRef = useRef(post.is_liked ?? false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const titleInputRef = useRef(null);
+
+  useEffect(() => {
+    if (isEditingTitle) titleInputRef.current?.focus();
+  }, [isEditingTitle]);
 
   const handleMoreClick = (e) => setAnchorEl(e.currentTarget);
   const handleMoreClose = () => setAnchorEl(null);
   const handleEditClick = () => {
     setEditTitle(post.title);
-    setEditDescription(post.description);
-    setEditDialogOpen(true);
+    setIsEditingTitle(true);
     handleMoreClose();
   };
   const handleDeleteClick = () => {
@@ -68,19 +71,15 @@ export default function ForumPostCard({ post, initialOpen = false }) {
   const handleEditSave = async () => {
     setEditLoading(true);
     try {
-      const data = {};
-      if (editTitle !== post.title) data.title = editTitle;
-      if (editDescription !== post.description) data.description = editDescription;
-      if (Object.keys(data).length === 0) {
-        setEditDialogOpen(false);
+      if (editTitle === post.title) {
+        setIsEditingTitle(false);
         setEditLoading(false);
         return;
       }
-      await editPost(data, post.id);
-      setEditDialogOpen(false);
-      if (data.title) post.title = data.title;
-      if (data.description) post.description = data.description;
-      setSnackbar({ open: true, message: 'Post updated successfully!', severity: 'success' });
+      await editPost({ title: editTitle }, post.id);
+      post.title = editTitle;
+      setIsEditingTitle(false);
+      setSnackbar({ open: true, message: 'Post title updated!', severity: 'success' });
     } catch (err) {
       setSnackbar({ open: true, message: 'Failed to update post.', severity: 'error' });
       // eslint-disable-next-line no-console
@@ -88,6 +87,11 @@ export default function ForumPostCard({ post, initialOpen = false }) {
     } finally {
       setEditLoading(false);
     }
+  };
+
+  const handleCancelEdit = () => {
+    setEditTitle(post.title);
+    setIsEditingTitle(false);
   };
 
   const handleDeleteConfirm = async () => {
@@ -195,9 +199,31 @@ export default function ForumPostCard({ post, initialOpen = false }) {
           </Snackbar>
         </Box>
 
-        <Typography mt={2} fontWeight={700}>
-          {post.title}
-        </Typography>
+        {isEditingTitle ? (
+          <TextField
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            onBlur={handleEditSave}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleEditSave();
+              }
+              if (e.key === 'Escape') {
+                handleCancelEdit();
+              }
+            }}
+            inputRef={titleInputRef}
+            fullWidth
+            variant="standard"
+            sx={{ mt: 2 }}
+            InputProps={{ disableUnderline: true, style: { fontWeight: 700, fontSize: '1rem' } }}
+          />
+        ) : (
+          <Typography mt={2} fontWeight={700}>
+            {post.title}
+          </Typography>
+        )}
         <Typography color="text.secondary" mt={1}>
           {post.description}
         </Typography>
@@ -298,54 +324,7 @@ export default function ForumPostCard({ post, initialOpen = false }) {
         onCommentAdded={() => setCommentCount((c) => c + 1)}
       />
 
-      <Dialog
-        open={editDialogOpen}
-        onClose={() => setEditDialogOpen(false)}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>Edit Post</DialogTitle>
-        <DialogContent>
-          <TextField
-            label="Title"
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            fullWidth
-            margin="dense"
-            autoFocus
-            sx={{ mb: 2, borderRadius: 2, background: '#fafbfc' }}
-            InputProps={{ style: { borderRadius: 10 } }}
-          />
-          <TextField
-            label="Description"
-            value={editDescription}
-            onChange={(e) => setEditDescription(e.target.value)}
-            fullWidth
-            margin="dense"
-            multiline
-            minRows={3}
-            sx={{ borderRadius: 2, background: '#fafbfc' }}
-            InputProps={{ style: { borderRadius: 10 } }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => setEditDialogOpen(false)}
-            disabled={editLoading}
-            sx={{ borderRadius: 2 }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleEditSave}
-            disabled={editLoading || (!editTitle.trim() && !editDescription.trim())}
-            variant="contained"
-            sx={{ borderRadius: 2, boxShadow: 'none', fontWeight: 600 }}
-          >
-            {editLoading ? 'Saving...' : 'Save'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Inline title editing replaces previous edit dialog */}
 
       <Dialog
         open={deleteDialogOpen}
