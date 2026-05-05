@@ -1,7 +1,7 @@
-/* global setInterval, clearInterval */
+/* global setInterval, clearInterval, performance, requestAnimationFrame, cancelAnimationFrame */
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Box,
   Button,
@@ -21,7 +21,95 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined';
 import PercentIcon from '@mui/icons-material/Percent';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
-import { QUOTES, fadeUp, ConfettiCanvas, LoadingOrb } from './SharedDialogUtils';
+import { getQuotesForTestType, fadeUp, ConfettiCanvas, LoadingOrb } from './SharedDialogUtils';
+
+// ─── Level-up confetti burst (canvas, local to the progress bar area) ─────────
+
+function LevelUpConfetti() {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.offsetWidth;
+    const H = canvas.offsetHeight;
+    canvas.width = W;
+    canvas.height = H;
+
+    const COLORS = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#3b82f6', '#ec4899', '#fff'];
+    const TOTAL = 80;
+
+    const particles = Array.from({ length: TOTAL }, () => ({
+      x: Math.random() * W,
+      y: H + Math.random() * 20,
+      r: Math.random() * 5 + 2,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      vx: (Math.random() - 0.5) * 3,
+      vy: -(Math.random() * 5 + 3),
+      alpha: 1,
+      rotation: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 0.2,
+      shape: Math.random() > 0.5 ? 'rect' : 'circle',
+    }));
+
+    let frame;
+    const startTime = performance.now();
+    const delay = 1200; // wait 1.2s for the progress bar to finish animating
+
+    const draw = (now) => {
+      if (now - startTime < delay) {
+        frame = requestAnimationFrame(draw);
+        return;
+      }
+      ctx.clearRect(0, 0, W, H);
+      let alive = false;
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.12; // gravity
+        p.alpha -= 0.012;
+        p.rotation += p.rotSpeed;
+        if (p.alpha <= 0) continue;
+        alive = true;
+        ctx.save();
+        ctx.globalAlpha = Math.max(p.alpha, 0);
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation);
+        ctx.fillStyle = p.color;
+        if (p.shape === 'rect') {
+          ctx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r);
+        } else {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+      if (alive) frame = requestAnimationFrame(draw);
+    };
+
+    frame = requestAnimationFrame(draw);
+
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        borderRadius: 4,
+      }}
+    />
+  );
+}
 
 // ─── Submitting state ─────────────────────────────────────────────────────────
 
@@ -79,12 +167,20 @@ function SubmittedState({
   currentXP,
   levelMaxXP,
   level,
+  levelIcon,
+  levelTitle,
+  leveledUp = false,
+  testType,
   onViewResults,
   onContinue,
+  onClose,
 }) {
   const [xpCount, setXpCount] = useState(0);
   const [showProgress, setShowProgress] = useState(false);
-  const [quote] = useState(() => QUOTES[Math.floor(Math.random() * QUOTES.length)]);
+  const [quote] = useState(() => {
+    const quotes = getQuotesForTestType(testType);
+    return quotes[Math.floor(Math.random() * quotes.length)];
+  });
 
   const actualEarned = xpEarned || 0;
   const actualBonus = xpBonus > 0 ? xpBonus : 0;
@@ -108,9 +204,16 @@ function SubmittedState({
     return () => clearInterval(id);
   }, [totalXP]);
 
+  // Show progress after first paint to trigger CSS transition
   useEffect(() => {
-    const id = setTimeout(() => setShowProgress(true), 900);
-    return () => clearTimeout(id);
+    let frame2;
+    const frame1 = requestAnimationFrame(() => {
+      frame2 = requestAnimationFrame(() => setShowProgress(true));
+    });
+    return () => {
+      cancelAnimationFrame(frame1);
+      cancelAnimationFrame(frame2);
+    };
   }, []);
 
   const stats = [];
@@ -237,7 +340,7 @@ function SubmittedState({
                 <Typography variant="h6" fontWeight={600} sx={{ fontFamily: 'monospace' }}>
                   {xpCount} XP
                 </Typography>
-                {actualBonus > 0 && (
+                {/* {actualBonus > 0 && (
                   <Chip
                     label={`+${actualBonus} bonus`}
                     size="small"
@@ -249,7 +352,7 @@ function SubmittedState({
                       height: 20,
                     }}
                   />
-                )}
+                )} */}
               </Stack>
             </Box>
           </Paper>
@@ -291,28 +394,64 @@ function SubmittedState({
         {/* Level progress */}
         {level !== undefined && levelMaxXP !== undefined && currentXP !== undefined && (
           <Box sx={{ width: '100%', ...fadeUp(900, '0.4s', '10px') }}>
-            <Stack direction="row" justifyContent="space-between" mb={0.75}>
-              <Typography variant="caption" color="text.secondary">
-                Level {level} progress
-              </Typography>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={0.75}>
+              <Stack direction="row" alignItems="center" spacing={0.75}>
+                {levelIcon && (
+                  <Box
+                    component="img"
+                    src={levelIcon}
+                    alt={levelTitle || `Level ${level}`}
+                    sx={{ width: 18, height: 18, objectFit: 'contain' }}
+                  />
+                )}
+                <Typography variant="caption" color="text.secondary">
+                  Level {level} {levelTitle ? `- ${levelTitle}` : ''}
+                </Typography>
+                {/* Level-up badge */}
+                {leveledUp && (
+                  <Chip
+                    label="🎉 Level Up!"
+                    size="small"
+                    sx={{
+                      bgcolor: alpha(theme.palette.warning.main, 0.15),
+                      color: 'warning.dark',
+                      fontWeight: 700,
+                      fontSize: 11,
+                      height: 20,
+                      animation: 'badgePop 0.5s cubic-bezier(0.34,1.56,0.64,1) both',
+                      animationDelay: '1.2s',
+                      '@keyframes badgePop': {
+                        from: { transform: 'scale(0)', opacity: 0 },
+                        to: { transform: 'scale(1)', opacity: 1 },
+                      },
+                    }}
+                  />
+                )}
+              </Stack>
               <Typography variant="caption" color="text.secondary">
                 {Math.min(currentXP + totalXP, levelMaxXP)} / {levelMaxXP} XP
               </Typography>
             </Stack>
-            <LinearProgress
-              variant="determinate"
-              value={showProgress ? progressAfter : (currentXP / levelMaxXP) * 100}
-              sx={{
-                height: 7,
-                borderRadius: 4,
-                bgcolor: 'action.hover',
-                '& .MuiLinearProgress-bar': {
-                  bgcolor: 'primary.main',
+
+            {/* Progress bar wrapper — confetti is positioned relative to this */}
+            <Box sx={{ position: 'relative' }}>
+              <LinearProgress
+                variant="determinate"
+                value={showProgress ? progressAfter : (currentXP / levelMaxXP) * 100}
+                sx={{
+                  height: 7,
                   borderRadius: 4,
-                  transition: 'transform 1.2s cubic-bezier(0.16,1,0.3,1) !important',
-                },
-              }}
-            />
+                  bgcolor: 'action.hover',
+                  '& .MuiLinearProgress-bar': {
+                    bgcolor: leveledUp ? 'warning.main' : 'primary.main',
+                    borderRadius: 4,
+                    transition: 'transform 1.2s cubic-bezier(0.16,1,0.3,1) !important',
+                  },
+                }}
+              />
+              {/* Confetti burst fires immediately when leveledUp */}
+              {leveledUp && <LevelUpConfetti />}
+            </Box>
           </Box>
         )}
 
@@ -469,6 +608,10 @@ export default function SubmitLoadingDialog({
   currentXP,
   levelMaxXP,
   level,
+  levelIcon,
+  levelTitle,
+  leveledUp = false,
+  testType,
   onViewResults,
   onContinue,
   onClose,
@@ -524,6 +667,10 @@ export default function SubmitLoadingDialog({
               currentXP={currentXP}
               levelMaxXP={levelMaxXP}
               level={level}
+              levelIcon={levelIcon}
+              levelTitle={levelTitle}
+              leveledUp={leveledUp}
+              testType={testType}
               onViewResults={onViewResults}
               onContinue={onContinue || onClose}
             />

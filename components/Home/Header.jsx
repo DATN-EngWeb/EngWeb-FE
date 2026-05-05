@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import {
@@ -10,9 +10,9 @@ import {
   Box,
   Container,
   Avatar,
-  Menu,
-  MenuItem,
   Typography,
+  Badge,
+  Tooltip,
 } from '@mui/material';
 import Logo from '../../assets/img/logo.png';
 import Image from 'next/image';
@@ -26,32 +26,358 @@ import {
   loginButtonStyles,
   logoLinkStyles,
   navLinkStyles,
+  userPopupBackdropStyles,
+  userPopupContainerStyles,
+  userPopupHeaderStyles,
+  userPopupAvatarNameBoxStyles,
+  userPopupAvatarWrapperStyles,
+  userPopupUsernameStyles,
+  userPopupLevelStyles,
+  userPopupXpRowStyles,
+  userPopupXpLabelStyles,
+  userPopupXpValueStyles,
+  userPopupXpBarContainerStyles,
+  getUserPopupXpBarFillStyles,
+  userPopupDividerStyles,
+  userPopupMenuContainerStyles,
+  userPopupMenuItemStyles,
+  userPopupMenuItemLogoutStyles,
+  userPopupMenuItemIconStyles,
 } from '../../styles/Home/HeaderStyles';
 import RoleSelectionModal from '../Auth/RoleSelectionModal';
 import { useAuth } from '../../hooks/useAuth';
-import { logout as logoutAPI } from '../../api/accounts';
+import { logout as logoutAPI, getStudentProfile } from '../../api/accounts';
 import AnimatedStreakBadge from '../Streak/animatedStreakBadge';
 import StreakBadge from '../Streak/streakBadge';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import NotificationBell from '../Notifications/NotificationBell';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+
+// Icon components
+const ProfileIcon = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+);
+
+const DashboardIcon = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="3" y="3" width="7" height="7" />
+    <rect x="14" y="3" width="7" height="7" />
+    <rect x="3" y="14" width="7" height="7" />
+    <rect x="14" y="14" width="7" height="7" />
+  </svg>
+);
+
+const LogoutIcon = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <polyline points="16 17 21 12 16 7" />
+    <line x1="21" y1="12" x2="9" y2="12" />
+  </svg>
+);
+
+// User Popup Component
+function UserPopup({ user, studentProfile, userAvatar, onClose, onLogout, onNavigate }) {
+  const popupRef = useRef(null);
+
+  const isTeacher = user?.role === 'T';
+
+  // Lấy dữ liệu thực từ studentProfile, nếu chưa có thì dùng giá trị mặc định
+  const level = studentProfile?.level?.level_number || 1;
+  const levelTitle = studentProfile?.level?.level_title || 'Beginner';
+  const currentXP = studentProfile?.cumulative_point || 0;
+  const maxXP = studentProfile?.level?.max_xp || 100;
+
+  // Hiện tại weeklyTurns, bonusTurns có thể chưa có ở API nên tạm giữ số fallback
+  const weeklyTurns = studentProfile?.weekly_ai_turn ?? 0;
+  const bonusTurns = studentProfile?.bonus_ai_turn ?? 0;
+
+  const xpPercent = Math.min((currentXP / maxXP) * 100, 100);
+  const isValidAvatar = userAvatar && userAvatar !== 'null' && userAvatar !== 'undefined';
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (popupRef.current && !popupRef.current.contains(e.target)) {
+        onClose();
+      }
+    };
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [onClose]);
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div style={userPopupBackdropStyles} />
+
+      {/* Popup */}
+      <div ref={popupRef} style={userPopupContainerStyles}>
+        <style>{`
+          @keyframes popupFadeIn {
+            from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+          }
+        `}</style>
+
+        {/* Header section */}
+        <div style={userPopupHeaderStyles}>
+          {/* Avatar + Name */}
+          <div style={userPopupAvatarNameBoxStyles}>
+            <div style={userPopupAvatarWrapperStyles}>
+              <Avatar
+                src={isValidAvatar ? userAvatar : undefined}
+                alt={user?.username}
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  bgcolor: 'primary.dark',
+                  fontSize: 24,
+                  fontWeight: 700,
+                }}
+              >
+                {user?.username?.[0]?.toUpperCase() || 'U'}
+              </Avatar>
+            </div>
+            <div>
+              <div style={userPopupUsernameStyles}>{user?.username || 'User'}</div>
+              {!isTeacher && (
+                <div style={userPopupLevelStyles}>
+                  LEVEL {level} • {levelTitle.toUpperCase()}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* XP Bar */}
+          {!isTeacher && (
+            <div>
+              <div style={userPopupXpRowStyles}>
+                <span style={userPopupXpLabelStyles}>EXPERIENCE</span>
+                <span style={userPopupXpValueStyles}>
+                  {currentXP} / {maxXP} XP
+                </span>
+              </div>
+              <div style={userPopupXpBarContainerStyles}>
+                <div style={getUserPopupXpBarFillStyles(xpPercent)} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* AI Credits Terminal */}
+        {!isTeacher && (
+          <Box sx={{ px: 2.5, pt: 1.5, pb: 0.5 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                bgcolor: '#f8f9fa',
+                borderRadius: '10px',
+                p: '8px 12px',
+                border: '1px solid #e2e8f0',
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: '0.7rem',
+                  fontWeight: 800,
+                  color: '#64748b',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                AI CREDITS
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                {/* Weekly Turns */}
+                <Tooltip
+                  slotProps={{
+                    box: {
+                      backgroundColor: 'info.pastel',
+                      color: 'text.primary',
+                    },
+                    popper: {
+                      sx: {
+                        '& .MuiTooltip-tooltip': {
+                          backgroundColor: 'info.pastel',
+                          color: 'text.primary',
+                        },
+                      },
+                    },
+                  }}
+                  title="Weekly AI turns. These reset to a fixed amount every week."
+                  placement="top"
+                  arrow
+                >
+                  <Box
+                    sx={{ display: 'flex', alignItems: 'center', gap: 0.4, px: 1, cursor: 'help' }}
+                  >
+                    <Box sx={{ color: 'info.dark', display: 'flex' }}>
+                      <AutoAwesomeIcon sx={{ fontSize: 16 }} />
+                    </Box>
+                    <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'info.dark' }}>
+                      {weeklyTurns}
+                    </Typography>
+                  </Box>
+                </Tooltip>
+                {/* Bonus Turns with popout color */}
+                <Tooltip
+                  slotProps={{
+                    box: {
+                      backgroundColor: 'warning.pastel',
+                    },
+                    popper: {
+                      sx: {
+                        '& .MuiTooltip-tooltip': {
+                          backgroundColor: 'warning.pastel',
+                          color: 'text.primary',
+                        },
+                      },
+                    },
+                  }}
+                  title="Bonus AI turns. Earned by leveling up with XP or reaching streak milestones."
+                  placement="top"
+                  arrow
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.4,
+                      background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+                      px: 1,
+                      py: 0.3,
+                      borderRadius: '15px',
+                      border: '1px solid #fde68a',
+                      boxShadow: '0 2px 8px rgba(245, 158, 11, 0.2)',
+                      cursor: 'help',
+                    }}
+                  >
+                    <Typography
+                      sx={{ fontSize: '0.85rem', fontWeight: 800, color: 'secondary.main' }}
+                    >
+                      +{bonusTurns}
+                    </Typography>
+                  </Box>
+                </Tooltip>
+              </Box>
+            </Box>
+          </Box>
+        )}
+
+        {/* Divider */}
+        <div style={userPopupDividerStyles} />
+
+        {/* Menu Items */}
+        <div style={userPopupMenuContainerStyles}>
+          <button
+            onClick={() => onNavigate(user?.role === 'T' ? '/teacher/profile' : '/student/profile')}
+            style={userPopupMenuItemStyles}
+            onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f5')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+          >
+            <span style={userPopupMenuItemIconStyles}>
+              <ProfileIcon />
+            </span>
+            My Profile
+          </button>
+
+          {user?.role !== 'T' && (
+            <button
+              onClick={() => onNavigate('/student/dashboard')}
+              style={userPopupMenuItemStyles}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f5')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+            >
+              <span style={userPopupMenuItemIconStyles}>
+                <DashboardIcon />
+              </span>
+              Learning Dashboard
+            </button>
+          )}
+
+          <button
+            onClick={onLogout}
+            style={userPopupMenuItemLogoutStyles}
+            onMouseEnter={(e) => (e.currentTarget.style.background = '#fff5f5')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+          >
+            <LogoutIcon />
+            Logout
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
 
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, user, logout: logoutHook } = useAuth(null);
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [popupOpen, setPopupOpen] = useState(false);
   const [userAvatar, setUserAvatar] = useState(null);
+  const [studentProfile, setStudentProfile] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [actionType, setActionType] = useState('register');
+  const avatarWrapperRef = useRef(null);
+
+  const fetchProfile = async () => {
+    if (user && user.role !== 'T') {
+      try {
+        const profile = await getStudentProfile(user.id);
+        setStudentProfile(profile);
+      } catch (error) {
+        console.error('Failed to fetch student profile:', error);
+      }
+    }
+  };
 
   useEffect(() => {
-    if (user?.avatar && typeof window !== 'undefined') {
-      setUserAvatar(user.avatar);
-    }
+    fetchProfile();
   }, [user]);
 
-  const handleMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
+  useEffect(() => {
+    if (studentProfile?.avatar_url && typeof window !== 'undefined') {
+      setUserAvatar(studentProfile.avatar_url);
+    }
+  }, [studentProfile]);
 
   const handleOpenModal = (type) => {
     setActionType(type);
@@ -70,20 +396,8 @@ export default function Header() {
     }
   };
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    if (typeof window !== 'undefined') {
-      setTimeout(() => {
-        const button = document.getElementById('user-menu-button');
-        if (button) {
-          button.focus();
-        }
-      }, 0);
-    }
-  };
-
   const handleLogout = async () => {
-    handleMenuClose();
+    setPopupOpen(false);
     try {
       const refreshToken = localStorage.getItem('refreshToken');
       const accessToken = localStorage.getItem('accessToken');
@@ -91,13 +405,33 @@ export default function Header() {
         await logoutAPI(refreshToken, accessToken);
       }
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error('Logout API error:', err);
     } finally {
       logoutHook();
       router.push('/');
     }
   };
+
+  const handleNavigate = (path) => {
+    setPopupOpen(false);
+    router.push(path);
+  };
+
+  const navItemStyle = (segment) => ({
+    ...navButtonStyles,
+    borderRadius: 0,
+    backgroundColor: 'transparent',
+    color: pathname?.includes(segment) ? 'secondary.main' : 'primary.main',
+    fontWeight: pathname?.includes(segment) ? 700 : 500,
+    borderBottom: '3px solid',
+    borderColor: pathname?.includes(segment) ? 'secondary.main' : 'transparent',
+    px: 1,
+    pt: 1.5,
+    pb: 0.5,
+    marginX: '15px',
+    transition: 'all 0.2s',
+    '&:hover': { backgroundColor: 'transparent' },
+  });
 
   return (
     <>
@@ -108,194 +442,121 @@ export default function Header() {
               <Link href="/" style={logoLinkStyles}>
                 <Image src={Logo} alt="NENS" width={32} height={24} />
               </Link>
-              <Link href="/student/reading" style={navLinkStyles}>
-                <Button
-                  color="inherit"
-                  sx={{
-                    ...navButtonStyles,
-                    borderRadius: 0,
-                    backgroundColor: 'transparent',
-                    color: pathname?.includes('/reading') ? 'secondary.main' : 'primary.main',
-                    fontWeight: pathname?.includes('/reading') ? 700 : 500,
-                    borderBottom: '3px solid',
-                    borderColor: pathname?.includes('/reading') ? 'secondary.main' : 'transparent',
-                    px: 1,
-                    pt: 1.5,
-                    pb: 0.5,
-                    marginX: '15px',
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      backgroundColor: 'transparent',
-                    },
-                  }}
-                >
-                  Reading
-                </Button>
-              </Link>
-              <Link href="/student/listening" style={navLinkStyles}>
-                <Button
-                  color="inherit"
-                  sx={{
-                    ...navButtonStyles,
-                    borderRadius: 0,
-                    backgroundColor: 'transparent',
-                    color: pathname?.includes('/listening') ? 'secondary.main' : 'primary.main',
-                    fontWeight: pathname?.includes('/listening') ? 700 : 500,
-                    borderBottom: '3px solid',
-                    borderColor: pathname?.includes('/listening')
-                      ? 'secondary.main'
-                      : 'transparent',
-                    px: 1,
-                    pt: 1.5,
-                    pb: 0.5,
-                    marginX: '15px',
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      backgroundColor: 'transparent',
-                    },
-                  }}
-                >
-                  Listening
-                </Button>
-              </Link>
-              <Link href="/student/writing" style={navLinkStyles}>
-                <Button
-                  color="inherit"
-                  sx={{
-                    ...navButtonStyles,
-                    borderRadius: 0,
-                    backgroundColor: 'transparent',
-                    color: pathname?.includes('/writing') ? 'secondary.main' : 'primary.main',
-                    fontWeight: pathname?.includes('/writing') ? 700 : 500,
-                    borderBottom: '3px solid',
-                    borderColor: pathname?.includes('/writing') ? 'secondary.main' : 'transparent',
-                    px: 1,
-                    pt: 1.5,
-                    pb: 0.5,
-                    marginX: '15px',
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      backgroundColor: 'transparent',
-                    },
-                  }}
-                >
-                  Writing
-                </Button>
-              </Link>
-              <Link href="/student/speaking" style={navLinkStyles}>
-                <Button
-                  color="inherit"
-                  sx={{
-                    ...navButtonStyles,
-                    borderRadius: 0,
-                    backgroundColor: 'transparent',
-                    color: pathname?.includes('/speaking') ? 'secondary.main' : 'primary.main',
-                    fontWeight: pathname?.includes('/speaking') ? 700 : 500,
-                    borderBottom: '3px solid',
-                    borderColor: pathname?.includes('/speaking') ? 'secondary.main' : 'transparent',
-                    px: 1,
-                    pt: 1.5,
-                    pb: 0.5,
-                    marginX: '15px',
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      backgroundColor: 'transparent',
-                    },
-                  }}
-                >
-                  Speaking
-                </Button>
-              </Link>
+              {[
+                { href: '/student/reading', label: 'Reading', seg: '/reading' },
+                { href: '/student/listening', label: 'Listening', seg: '/listening' },
+                { href: '/student/writing', label: 'Writing', seg: '/writing' },
+                { href: '/student/speaking', label: 'Speaking', seg: '/speaking' },
+              ].map(({ href, label, seg }) => (
+                <Link key={seg} href={href} style={navLinkStyles}>
+                  <Button color="inherit" sx={navItemStyle(seg)}>
+                    {label}
+                  </Button>
+                </Link>
+              ))}
             </Box>
 
             <Box sx={actionBoxStyles}>
               {isAuthenticated && user ? (
-                <>
-                  <AnimatedStreakBadge />
-                  <StreakBadge />
-                  <NotificationBell />
-                  <Box
-                    id="user-menu-button"
-                    role="button"
-                    tabIndex={0}
-                    aria-label="User menu"
-                    aria-haspopup="true"
-                    aria-expanded={Boolean(anchorEl)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        handleMenuOpen(e);
-                      }
-                    }}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                      cursor: 'pointer',
-                    }}
-                    onClick={handleMenuOpen}
-                  >
-                    <Avatar
-                      src={userAvatar || undefined}
-                      alt={user.username || 'User'}
-                      sx={{ width: 32, height: 32 }}
-                    >
-                      {user.username?.[0]?.toUpperCase() || 'U'}
-                    </Avatar>
-                    <Typography
-                      sx={{
-                        color: 'primary.dark',
-                        fontWeight: 600,
-                        display: { xs: 'none', sm: 'block' },
-                        maxWidth: '150px',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
-                      {user.username || 'User'}
-                    </Typography>
-                  </Box>
-                  <Menu
-                    anchorEl={anchorEl}
-                    open={Boolean(anchorEl)}
-                    onClose={handleMenuClose}
-                    onClick={handleMenuClose}
-                    anchorOrigin={{
-                      vertical: 'bottom',
-                      horizontal: 'right',
-                    }}
-                    transformOrigin={{
-                      vertical: 'top',
-                      horizontal: 'right',
-                    }}
-                    MenuListProps={{
-                      'aria-labelledby': 'user-menu-button',
-                    }}
-                  >
-                    <MenuItem
-                      onClick={() => {
-                        handleMenuClose();
-                        router.push(user?.role === 'T' ? '/teacher/profile' : '/student/profile');
-                      }}
-                    >
-                      <Typography>Profile</Typography>
-                    </MenuItem>
-                    {user?.role !== 'T' && (
-                      <MenuItem
-                        onClick={() => {
-                          handleMenuClose();
-                          router.push('/student/dashboard');
-                        }}
+                (() => {
+                  const isValidAvatar =
+                    userAvatar && userAvatar !== 'null' && userAvatar !== 'undefined';
+                  return (
+                    <>
+                      <AnimatedStreakBadge />
+                      <StreakBadge />
+                      <NotificationBell />
+
+                      {/* Avatar button + Popup wrapper */}
+                      <Box
+                        ref={avatarWrapperRef}
+                        sx={{ position: 'relative', display: 'flex', alignItems: 'center' }}
                       >
-                        <Typography>Dashboard</Typography>
-                      </MenuItem>
-                    )}
-                    <MenuItem onClick={handleLogout}>
-                      <Typography color="error">Logout</Typography>
-                    </MenuItem>
-                  </Menu>
-                </>
+                        <Box
+                          id="user-menu-button"
+                          role="button"
+                          tabIndex={0}
+                          aria-label="User menu"
+                          aria-haspopup="true"
+                          aria-expanded={popupOpen}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              setPopupOpen((v) => !v);
+                            }
+                          }}
+                          onClick={() => setPopupOpen((v) => !v)}
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Badge
+                            overlap="circular"
+                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                            badgeContent={
+                              <Box
+                                sx={{
+                                  backgroundColor: 'background.default',
+                                  borderRadius: '50%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  width: 16,
+                                  height: 16,
+                                }}
+                              >
+                                <ExpandMoreIcon sx={{ fontSize: 14, color: 'primary.main' }} />
+                              </Box>
+                            }
+                          >
+                            <Avatar
+                              src={isValidAvatar ? userAvatar : undefined}
+                              alt={user.username || 'User'}
+                              sx={{
+                                backgroundColor: 'primary.main',
+                                width: 40,
+                                height: 40,
+                                border: '2px solid',
+                                borderColor: popupOpen ? 'warning.main' : 'secondary.main',
+                                transition: 'border-color 0.2s',
+                              }}
+                            >
+                              {user.username?.[0]?.toUpperCase() || 'U'}
+                            </Avatar>
+                          </Badge>
+                          {/* <Typography
+                            sx={{
+                              color: 'primary.dark',
+                              fontWeight: 600,
+                              display: { xs: 'none', sm: 'block' },
+                              maxWidth: '150px',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
+                          >
+                            {user.username || 'User'}
+                          </Typography> */}
+                        </Box>
+
+                        {/* Custom Popup */}
+                        {popupOpen && (
+                          <UserPopup
+                            user={user}
+                            studentProfile={studentProfile}
+                            userAvatar={studentProfile?.avatar_url}
+                            onClose={() => setPopupOpen(false)}
+                            onLogout={handleLogout}
+                            onNavigate={handleNavigate}
+                          />
+                        )}
+                      </Box>
+                    </>
+                  );
+                })()
               ) : (
                 <>
                   <Button

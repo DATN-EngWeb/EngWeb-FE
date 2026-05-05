@@ -1,9 +1,9 @@
-/* eslint-disable no-undef */
 'use client';
 
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import { gsap } from 'gsap';
+import theme from '../../theme/theme';
 import { useStreakContext } from '../../context/streakContext';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -16,12 +16,12 @@ const getStreakLevel = (count) => {
   return 0;
 };
 
-const levelConfigs = {
-  1: { sparkColor: '#f27b0c' },
-  2: { sparkColor: '#ffbb00' },
-  3: { sparkColor: '#ff3333' },
-  4: { sparkColor: '#ff0066' },
-  5: { sparkColor: '#d966ff' },
+export const levelConfigs = {
+  1: { sparkColor: theme.palette.streak.level1 },
+  2: { sparkColor: theme.palette.streak.level2 },
+  3: { sparkColor: theme.palette.streak.level3 },
+  4: { sparkColor: theme.palette.streak.level4 },
+  5: { sparkColor: theme.palette.streak.level5 },
 };
 
 export default function AnimatedStreakBadge({ size = 180 }) {
@@ -315,36 +315,6 @@ export default function AnimatedStreakBadge({ size = 180 }) {
               ref={sparkContainerRef}
               sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
             />
-          </Box>
-          {/* Text */}
-          <Box ref={textRef}>
-            <Typography
-              sx={{
-                mt: 4,
-                fontWeight: 900,
-                fontSize: { xs: '2rem', md: '3rem' },
-                textAlign: 'center',
-                textTransform: 'uppercase',
-                letterSpacing: '2px',
-                background: `linear-gradient(to right, #fff, ${config.sparkColor})`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                filter: 'drop-shadow(0px 4px 10px rgba(0,0,0,0.5))',
-              }}
-            >
-              {streak_count} NGÀY LIÊN TIẾP!
-            </Typography>
-            <Typography
-              sx={{
-                color: '#aaa',
-                fontSize: '1.2rem',
-                mt: 1,
-                fontWeight: 500,
-                textAlign: 'center',
-              }}
-            >
-              Bạn thật sự là một chiến thần!
-            </Typography>
           </Box>
         </Box>
       </Box>

@@ -120,8 +120,10 @@ export default function ProductiveTestHistory() {
         localStorage.removeItem('category');
       }
 
-      if (item.remaining_turns) {
+      if (item.remaining_turns !== undefined && item.remaining_turns !== null) {
         localStorage.setItem('remainAIturns', JSON.stringify(item.remaining_turns));
+      } else {
+        localStorage.removeItem('remainAIturns');
       }
       const wordCount = item.user_answer_text
         ? item.user_answer_text.trim().split(/\s+/).length

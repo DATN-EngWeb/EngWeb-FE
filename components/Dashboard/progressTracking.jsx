@@ -22,7 +22,6 @@ export default function ProgressTracking({ historyData, type, activeTab }) {
 
   const handleViewDetail = async (historyId) => {
     if (!historyId) return;
-    console.log('Fetching ID:', historyId);
     let res;
     if (type === 'R') {
       res = await getReceptiveTestHistory(historyId);

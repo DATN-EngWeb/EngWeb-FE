@@ -6,6 +6,7 @@ import {
   Box,
   Typography,
   Button,
+  Tooltip as MuiTooltip,
   Stack,
   CircularProgress,
   Dialog,
@@ -28,9 +29,10 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import { getProductiveTestDetails, getAIFeedback, getSpeakingAIFeedback } from '@/api/test';
+import { getStudentProfile } from '@/api/accounts';
 import ProductivePreview from './ProductivePreview';
 import {
-  Tooltip,
+  Tooltip as RechartsTooltip,
   Radar,
   RadarChart,
   PolarGrid,
@@ -42,6 +44,7 @@ import DiffViewer from './DiffViewer';
 import CustomAudioPlayer from '../Test/customAudioPlayer';
 import AIGradingLoading from './AIGradingLoading';
 import * as styles from '@/styles/Student/Writing/AIFeedbackStyles';
+import { useAuth } from '../../hooks/useAuth';
 
 function CustomTooltip({ active, payload }) {
   if (active && payload && payload.length) {
@@ -132,6 +135,7 @@ export default function AIFeedback() {
   const [revised_text, setRevisedText] = useState('');
   const [isFetchingFeedback, setIsFetchingFeedback] = useState(false);
   const [turns, setTurns] = useState({ weekly_ai_turn: 0, bonus_ai_turn: 0 });
+  const { user } = useAuth(null);
 
   const params = useParams();
   const testId = params.test_id;
@@ -152,6 +156,21 @@ export default function AIFeedback() {
     const secs = Math.floor(totalSeconds % 60);
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+  const normalizeTurns = (value) => {
+    if (typeof value === 'number') {
+      return { weekly_ai_turn: value, bonus_ai_turn: 0 };
+    }
+
+    if (value && typeof value === 'object') {
+      return {
+        weekly_ai_turn: Number(value.weekly_ai_turn) || 0,
+        bonus_ai_turn: Number(value.bonus_ai_turn) || 0,
+      };
+    }
+
+    return { weekly_ai_turn: 0, bonus_ai_turn: 0 };
+  };
+  const totalTurns = turns.weekly_ai_turn + turns.bonus_ai_turn;
 
   useEffect(() => {
     setOpenFeedback(true);
@@ -178,14 +197,14 @@ export default function AIFeedback() {
 
     try {
       const rawTurns = localStorage.getItem('remainAIturns');
-      if (rawTurns && rawTurns !== '[object Object]') remainAIturns = JSON.parse(rawTurns);
+      if (rawTurns && rawTurns !== '[object Object]')
+        remainAIturns = normalizeTurns(JSON.parse(rawTurns));
     } catch (e) {
       console.warn('Failed to parse remainAIturns', e);
     }
 
     setContext(ctx);
     setTurns(remainAIturns);
-
     const { revised_text, overall: overallData, ...categoriesOnly } = data;
 
     if (revised_text) {
@@ -212,6 +231,24 @@ export default function AIFeedback() {
 
     setCategories(catArray);
   }, []);
+
+  useEffect(() => {
+    const fetchLatestTurns = async () => {
+      if (!user?.id || user?.role !== 'S') return;
+
+      try {
+        const profile = await getStudentProfile(user.id);
+        const latestTurns = normalizeTurns(profile);
+        setTurns(latestTurns);
+        localStorage.setItem('remainAIturns', JSON.stringify(latestTurns));
+        console.log('Synced remainAIturns from profile:', latestTurns);
+      } catch (error) {
+        console.error('Failed to sync remainAIturns from profile:', error);
+      }
+    };
+
+    fetchLatestTurns();
+  }, [user]);
 
   useEffect(() => {
     const fetchTestData = async () => {
@@ -296,7 +333,7 @@ export default function AIFeedback() {
                 <Typography variant="body1" color="text.primary">
                   {!isSpeaking && `${context.wordCount} words`}
                   {!isSpeaking && context.duration ? ' - ' : ''}
-                  {context.duration ? formatTime(context.duration) : ''}
+                  {context.duration ? formatTime(context.duration) + ' mins' : ''}
                 </Typography>
               </Box>
             </Stack>
@@ -344,8 +381,8 @@ export default function AIFeedback() {
                   onClick={() => setOpenFeedback(true)}
                   startIcon={<AutoAwesomeIcon sx={{ color: '#fbc02d' }} />}
                   sx={{
-                    bgcolor: '#4e342e',
-                    '&:hover': { bgcolor: '#3e2723' },
+                    bgcolor: 'primary.main',
+                    '&:hover': { bgcolor: 'primary.dark' },
                     borderRadius: 2,
                     px: 4,
                     py: 1.5,
@@ -356,53 +393,73 @@ export default function AIFeedback() {
                 </Button>
               ) : (
                 <>
-                  <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                    Remaining AI Turns: {turns.weekly_ai_turn + turns.bonus_ai_turn}
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    onClick={async () => {
-                      if (!context.historyId) return;
-                      setIsFetchingFeedback(true);
-                      try {
-                        const feedbackRes = isSpeaking
-                          ? await getSpeakingAIFeedback({ id: context.historyId })
-                          : await getAIFeedback({ id: context.historyId });
-                        localStorage.setItem('category', JSON.stringify(feedbackRes.ai_feedback));
-                        localStorage.setItem(
-                          'remainAIturns',
-                          JSON.stringify(feedbackRes.remaining_turns),
-                        );
-                        window.location.reload();
-                      } catch (error) {
-                        if (
-                          error?.status >= 500 ||
-                          error?.response?.status >= 500 ||
-                          error?.message?.includes('500')
-                        ) {
-                          setServerErrorOpen(true);
-                        } else {
-                          alert('Failed to get AI Feedback. Please try again.');
-                        }
-                      } finally {
-                        setIsFetchingFeedback(false);
-                      }
-                    }}
-                    disabled={isFetchingFeedback}
-                    startIcon={
-                      isFetchingFeedback ? <> </> : <AutoAwesomeIcon sx={{ color: '#fbc02d' }} />
+                  <MuiTooltip
+                    title={
+                      totalTurns <= 0
+                        ? 'You have run out of AI turns. Cannot use this feature.'
+                        : ''
                     }
-                    sx={{
-                      bgcolor: 'primary.main',
-                      '&:hover': { bgcolor: 'primary.dark' },
-                      borderRadius: 2,
-                      px: 4,
-                      py: 1.5,
-                      fontWeight: 'bold',
-                    }}
+                    placement="top"
                   >
-                    {isFetchingFeedback ? 'Evaluating...' : 'Request AI Feedback'}
-                  </Button>
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        cursor: totalTurns <= 0 ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      <Button
+                        variant="contained"
+                        onClick={async () => {
+                          if (!context.historyId) return;
+                          setIsFetchingFeedback(true);
+                          try {
+                            const feedbackRes = isSpeaking
+                              ? await getSpeakingAIFeedback({ id: context.historyId })
+                              : await getAIFeedback({ id: context.historyId });
+                            localStorage.setItem(
+                              'category',
+                              JSON.stringify(feedbackRes.ai_feedback),
+                            );
+                            const nextTurns = normalizeTurns(feedbackRes.remaining_turns);
+                            setTurns(nextTurns);
+                            localStorage.setItem('remainAIturns', JSON.stringify(nextTurns));
+                            window.location.reload();
+                          } catch (error) {
+                            if (
+                              error?.status >= 500 ||
+                              error?.response?.status >= 500 ||
+                              error?.message?.includes('500')
+                            ) {
+                              setServerErrorOpen(true);
+                            } else {
+                              alert('Failed to get AI Feedback. Please try again.');
+                            }
+                          } finally {
+                            setIsFetchingFeedback(false);
+                          }
+                        }}
+                        disabled={isFetchingFeedback || totalTurns <= 0}
+                        startIcon={
+                          isFetchingFeedback ? (
+                            <> </>
+                          ) : (
+                            <AutoAwesomeIcon sx={{ color: '#fbc02d' }} />
+                          )
+                        }
+                        sx={{
+                          bgcolor: 'primary.main',
+                          '&:hover': { bgcolor: 'primary.dark' },
+                          borderRadius: 2,
+                          px: 4,
+                          py: 1.5,
+                          fontWeight: 'bold',
+                          pointerEvents: totalTurns <= 0 ? 'none' : 'auto',
+                        }}
+                      >
+                        {isFetchingFeedback ? 'Evaluating...' : 'Request AI Feedback'}
+                      </Button>
+                    </span>
+                  </MuiTooltip>
                 </>
               )}
             </Box>
@@ -518,7 +575,7 @@ export default function AIFeedback() {
                         tick={false}
                         axisLine={false}
                       />
-                      <Tooltip content={<CustomTooltip />} />
+                      <RechartsTooltip content={<CustomTooltip />} />
                       <Radar
                         name="Score"
                         dataKey="score"
@@ -671,19 +728,23 @@ export default function AIFeedback() {
                   >
                     REMAINING TURNS
                   </Typography>
-                  <Box sx={styles.dotsContainer}>
-                    {[1, 2, 3].map((i) => (
-                      <Box
-                        key={`solid-${i}`}
-                        sx={{ width: 12, height: 6, bgcolor: '#8B5A2B', borderRadius: 4 }}
-                      />
-                    ))}
-                    {[1, 2].map((i) => (
-                      <Box
-                        key={`empty-${i}`}
-                        sx={{ width: 12, height: 6, bgcolor: '#e0e0e0', borderRadius: 4 }}
-                      />
-                    ))}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ display: 'flex', gap: '6px' }}>
+                      {Array.from({ length: Math.max(3, totalTurns) }).map((_, idx) => (
+                        <Box
+                          key={idx}
+                          sx={{
+                            width: 12,
+                            height: 12,
+                            bgcolor: idx < totalTurns ? '#8B5A2B' : '#e0e0e0',
+                            borderRadius: '50%',
+                          }}
+                        />
+                      ))}
+                    </Box>
+                    <Typography variant="body2" fontWeight="800" color="text.primary">
+                      {totalTurns} left
+                    </Typography>
                   </Box>
                 </Stack>
                 <Button

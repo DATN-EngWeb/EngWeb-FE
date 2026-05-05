@@ -21,3 +21,16 @@ export const getUserProgressLevels = async (params = {}) => {
     cache: 'no-store',
   });
 };
+
+export const getStreakRewardRules = async (params = {}) => {
+  const query = new URLSearchParams(params).toString();
+
+  const url = query
+    ? `${USER_PROGRESS_BASE_URL}/streak-reward-rules?${query}`
+    : `${USER_PROGRESS_BASE_URL}/streak-reward-rules`;
+
+  return apiFetch(url, {
+    method: 'GET',
+    cache: 'no-store',
+  });
+};

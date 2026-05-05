@@ -1,10 +1,12 @@
 'use client';
 
-import React from 'react';
-import { Box, Typography, Tooltip, CircularProgress } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Typography, Tooltip, CircularProgress, IconButton } from '@mui/material';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useStreakContext } from '../../context/streakContext';
+import StreakRulesModal from './StreakRulesModal';
 
-const StreakSvgDefs = () => (
+export const StreakSvgDefs = () => (
   <svg
     aria-hidden="true"
     style={{
@@ -216,6 +218,7 @@ const getLevelStyle = (level, isActive) => {
 
 export default function StreakBadge({ isHaveText = true }) {
   const { streakData, isLoading } = useStreakContext();
+  const [openModal, setOpenModal] = useState(false);
 
   if (isLoading) return <CircularProgress size={20} />;
 
@@ -238,6 +241,7 @@ export default function StreakBadge({ isHaveText = true }) {
         }
       >
         <Box
+          onClick={() => setOpenModal(true)}
           sx={{
             display: 'flex',
             alignItems: 'flex-end',
@@ -304,6 +308,7 @@ export default function StreakBadge({ isHaveText = true }) {
           )}
         </Box>
       </Tooltip>
+      <StreakRulesModal open={openModal} onClose={() => setOpenModal(false)} />
     </>
   );
 }

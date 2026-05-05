@@ -18,6 +18,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Tooltip,
 } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
@@ -30,6 +31,7 @@ import TimerIcon from '@mui/icons-material/Timer';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 import { getProductiveTestDetails, createProductiveTest, getSpeakingAIFeedback } from '@/api/test';
+import { getStudentProfile } from '../../api/accounts';
 import ProductivePreview from '../Writing-Speaking/ProductivePreview';
 import { levelTheme } from '../TestCard';
 import * as styles from '@/styles/Student/Writing/WritingTestStyles';
@@ -38,6 +40,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SendIcon from '@mui/icons-material/Send';
 import { uploadMediaFile } from '../../utils/uploadHelpers';
 import CustomAudioPlayer from '../Test/customAudioPlayer';
+import { useAuth } from '../../hooks/useAuth';
 import { useStreakContext } from '../../context/streakContext';
 import AIGradingLoading from '../Writing-Speaking/AIGradingLoading';
 import SubmitLoadingDialog from '../Writing-Speaking/SubmitLoadingDialog';
@@ -47,7 +50,8 @@ export default function SpeakingTest() {
   const testId = params.test_id;
   const attempt = params.attempt;
   const router = useRouter();
-  const { refreshStreak } = useStreakContext();
+  const { user } = useAuth(null);
+  const { refreshStreak, setGlobalRewardData } = useStreakContext();
 
   // States
   const [isRecording, setIsRecording] = useState(false);
@@ -57,6 +61,8 @@ export default function SpeakingTest() {
   const [submitStatus, setSubmitStatus] = useState('idle');
   const [submitMode, setSubmitMode] = useState('');
   const [bonusPoint, setBonusPoint] = useState(0);
+  const [levelData, setLevelData] = useState(null);
+  const [finalTimeStr, setFinalTimeStr] = useState('');
   const [historyID, setHistoryID] = useState(0);
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -65,6 +71,7 @@ export default function SpeakingTest() {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [serverErrorOpen, setServerErrorOpen] = useState(false);
   const [isFetchingFeedback, setIsFetchingFeedback] = useState(false);
+  const [remainingAITurns, setRemainingAITurns] = useState({ weekly_ai_turn: 0, bonus_ai_turn: 0 });
 
   const handleServerErrorClose = () => {
     setServerErrorOpen(false);
@@ -85,6 +92,11 @@ export default function SpeakingTest() {
     const secs = totalSeconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+  const normalizeAITurns = (turns) => ({
+    weekly_ai_turn: Number(turns?.weekly_ai_turn) || 0,
+    bonus_ai_turn: Number(turns?.bonus_ai_turn) || 0,
+  });
+  const totalAITurns = remainingAITurns.weekly_ai_turn + remainingAITurns.bonus_ai_turn;
   const getAudioDuration = (url) => {
     return new Promise((resolve, reject) => {
       const audio = new Audio(url);
@@ -100,6 +112,40 @@ export default function SpeakingTest() {
   };
 
   // Fetch Data
+  useEffect(() => {
+    const savedTurns = localStorage.getItem('remainAIturns');
+
+    if (!savedTurns) {
+      return;
+    }
+
+    try {
+      setRemainingAITurns(normalizeAITurns(JSON.parse(savedTurns)));
+    } catch (error) {
+      setRemainingAITurns(normalizeAITurns());
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user?.id || user?.role !== 'S') {
+        return;
+      }
+
+      try {
+        const profile = await getStudentProfile(user.id);
+        const nextTurns = normalizeAITurns(profile);
+        setRemainingAITurns(nextTurns);
+        localStorage.setItem('remainAIturns', JSON.stringify(nextTurns));
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to fetch student profile:', error);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
+
   useEffect(() => {
     setIsMounted(true);
     const fetchData = async () => {
@@ -200,9 +246,6 @@ export default function SpeakingTest() {
         is_shared: true,
       });
 
-      // Delay to ensure the "Submitting..." spinner state is visible
-      await new Promise((resolve) => setTimeout(resolve, 600));
-
       // eslint-disable-next-line no-console
       console.log('Submission response:', response);
       if (response && response.earned_bonus_point) {
@@ -210,6 +253,8 @@ export default function SpeakingTest() {
       } else {
         setBonusPoint(0);
       }
+      setLevelData(response?.level_notice || null);
+      setFinalTimeStr(formatTime(secondsElapsed));
       setIsDraftSaved(true);
       setSubmitMode('final');
       setSubmitStatus('submitted');
@@ -217,12 +262,15 @@ export default function SpeakingTest() {
       setRecordingTime(0);
       setSecondsElapsed(0);
       setStartTime(new Date().toISOString());
-      setSnackbar({ open: true, message: 'Test submitted successfully!', severity: 'success' });
       await refreshStreak();
-      setTimeout(() => {
-        sessionStorage.removeItem('current_productive_attempt');
-        router.push(`/student/speaking/${testId}`);
-      }, 1000);
+      if (response?.streak_reward_notice) {
+        setGlobalRewardData(response.streak_reward_notice);
+      } else if (
+        response?.streak_notice?.current_streak === 1 &&
+        response?.streak_notice?.continued === true
+      ) {
+        setGlobalRewardData(response.streak_notice);
+      }
     } catch (error) {
       if (
         error?.status >= 500 ||
@@ -231,7 +279,6 @@ export default function SpeakingTest() {
       ) {
         setServerErrorOpen(true);
       } else {
-        await new Promise((resolve) => setTimeout(resolve, 400));
         setSubmitStatus('error');
       }
     }
@@ -264,14 +311,13 @@ export default function SpeakingTest() {
         is_shared: true,
       });
 
-      // Delay để thấy spinner Submitting
-      await new Promise((resolve) => setTimeout(resolve, 600));
-
       if (response && response.earned_bonus_point) {
         setBonusPoint(response.earned_bonus_point);
       } else {
         setBonusPoint(0);
       }
+      setLevelData(response?.level_notice || null);
+      setFinalTimeStr(formatTime(secondsElapsed));
       setHistoryID(response.id);
 
       setIsDraftSaved(true);
@@ -280,6 +326,15 @@ export default function SpeakingTest() {
       setSecondsElapsed(0);
       setStartTime(new Date().toISOString());
       sessionStorage.removeItem('current_productive_attempt');
+
+      if (response?.streak_reward_notice) {
+        setGlobalRewardData(response.streak_reward_notice);
+      } else if (
+        response?.streak_notice?.current_streak === 1 &&
+        response?.streak_notice?.continued === true
+      ) {
+        setGlobalRewardData(response.streak_notice);
+      }
 
       setSubmitMode('ai');
       setSubmitStatus('submitted');
@@ -291,7 +346,6 @@ export default function SpeakingTest() {
       ) {
         setServerErrorOpen(true);
       } else {
-        await new Promise((resolve) => setTimeout(resolve, 400));
         setSubmitStatus('error');
       }
       return;
@@ -304,7 +358,9 @@ export default function SpeakingTest() {
       setIsFetchingFeedback(true);
       const category = await getSpeakingAIFeedback({ id: historyID });
       localStorage.setItem('category', JSON.stringify(category.ai_feedback));
-      localStorage.setItem('remainAIturns', category.remaining_turns);
+      const nextTurns = normalizeAITurns(category.remaining_turns);
+      setRemainingAITurns(nextTurns);
+      localStorage.setItem('remainAIturns', JSON.stringify(nextTurns));
       router.push(`/student/speaking/${testId}/${attempt}/AI-feedback`);
     } catch (error) {
       if (
@@ -503,24 +559,48 @@ export default function SpeakingTest() {
             gap: 1.5,
           }}
         >
-          <Button
-            variant="contained"
-            disabled={!hasRecorded || isRecording || isReadOnly}
-            onClick={() => handleAIFeedback()}
-            startIcon={<AutoAwesomeIcon />}
-            sx={{
-              ...styles.aiButton,
-              py: 1,
-              px: 2,
-              borderRadius: '12px',
-              fontSize: '0.8125rem',
-              minWidth: 'auto',
-              textTransform: 'none',
-              fontWeight: 700,
-            }}
+          <Tooltip
+            title={
+              totalAITurns <= 0 ? 'You have run out of AI turns. Cannot use this feature.' : ''
+            }
+            placement="top"
           >
-            AI Feedback
-          </Button>
+            <span
+              style={{
+                cursor: totalAITurns <= 0 ? 'not-allowed' : 'pointer',
+              }}
+            >
+              <Button
+                variant="contained"
+                disabled={!hasRecorded || isRecording || isReadOnly || totalAITurns <= 0}
+                onClick={() => {
+                  if (totalAITurns <= 0) {
+                    setSnackbar({
+                      open: true,
+                      message: 'You have run out of AI turns. Cannot use this feature.',
+                      severity: 'warning',
+                    });
+                    return;
+                  }
+                  handleAIFeedback();
+                }}
+                startIcon={<AutoAwesomeIcon />}
+                sx={{
+                  ...styles.aiButton,
+                  py: 1,
+                  px: 2,
+                  borderRadius: '12px',
+                  fontSize: '0.8125rem',
+                  minWidth: 'auto',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  pointerEvents: totalAITurns <= 0 ? 'none' : 'auto',
+                }}
+              >
+                AI Feedback
+              </Button>
+            </span>
+          </Tooltip>
           <Button
             variant="contained"
             sx={{
@@ -807,7 +887,17 @@ export default function SpeakingTest() {
         <SubmitLoadingDialog
           status={submitStatus}
           bonusPoint={bonusPoint}
+          timeTaken={finalTimeStr}
+          currentXP={levelData ? levelData.current_exp - bonusPoint : undefined}
+          levelMaxXP={levelData ? levelData.current_level?.max_xp : undefined}
+          level={levelData ? levelData.current_level?.level_number : undefined}
+          levelIcon={levelData ? levelData.current_level?.level_icon : undefined}
+          levelTitle={levelData ? levelData.current_level?.level_title : undefined}
+          leveledUp={levelData ? levelData.leveled_up : false}
+          testType="speaking"
           onClose={handleCloseSubmitDialog}
+          onViewResults={submitMode === 'ai' ? handleCloseSubmitDialog : undefined}
+          onContinue={handleCloseSubmitDialog}
         />
 
         <Dialog

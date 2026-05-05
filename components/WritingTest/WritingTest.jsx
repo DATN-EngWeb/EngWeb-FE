@@ -17,6 +17,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Tooltip,
 } from '@mui/material';
 import { useParams, useRouter } from 'next/navigation';
 import SendIcon from '@mui/icons-material/Send';
@@ -30,12 +31,14 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import { getProductiveTestDetails, createProductiveTest, getAIFeedback } from '@/api/test';
+import { getStudentProfile } from '../../api/accounts';
 import ProductivePreview from '../Writing-Speaking/ProductivePreview';
 import AIGradingLoading from '../Writing-Speaking/AIGradingLoading';
 import SaveDraftToast from '../Writing-Speaking/SaveDraftToast';
 import SubmitLoadingDialog from '../Writing-Speaking/SubmitLoadingDialog';
 import { levelTheme } from '../TestCard';
 import * as styles from '@/styles/Student/Writing/WritingTestStyles';
+import { useAuth } from '../../hooks/useAuth';
 import { useStreakContext } from '@/context/streakContext';
 
 export default function WritingTest() {
@@ -43,7 +46,8 @@ export default function WritingTest() {
   const testId = params.test_id;
   const attempt = params.attempt;
   const router = useRouter();
-  const { refreshStreak } = useStreakContext();
+  const { user } = useAuth(null);
+  const { refreshStreak, setGlobalRewardData } = useStreakContext();
 
   // States
   const [text, setText] = useState('');
@@ -67,6 +71,7 @@ export default function WritingTest() {
   const [historyID, setHistoryID] = useState(0);
   const [serverErrorOpen, setServerErrorOpen] = useState(false);
   const [isFetchingFeedback, setIsFetchingFeedback] = useState(false);
+  const [remainingAITurns, setRemainingAITurns] = useState({ weekly_ai_turn: 0, bonus_ai_turn: 0 });
 
   const handleServerErrorClose = () => {
     setServerErrorOpen(false);
@@ -84,6 +89,45 @@ export default function WritingTest() {
     const secs = totalSeconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+  const normalizeAITurns = (turns) => ({
+    weekly_ai_turn: Number(turns?.weekly_ai_turn) || 0,
+    bonus_ai_turn: Number(turns?.bonus_ai_turn) || 0,
+  });
+  const totalAITurns = remainingAITurns.weekly_ai_turn + remainingAITurns.bonus_ai_turn;
+
+  useEffect(() => {
+    const savedTurns = localStorage.getItem('remainAIturns');
+
+    if (!savedTurns) {
+      return;
+    }
+
+    try {
+      setRemainingAITurns(normalizeAITurns(JSON.parse(savedTurns)));
+    } catch (error) {
+      setRemainingAITurns(normalizeAITurns());
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user?.id || user?.role !== 'S') {
+        return;
+      }
+
+      try {
+        const profile = await getStudentProfile(user.id);
+        const nextTurns = normalizeAITurns(profile);
+        setRemainingAITurns(nextTurns);
+        localStorage.setItem('remainAIturns', JSON.stringify(nextTurns));
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to fetch student profile:', error);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
 
   // Fetch Data
   useEffect(() => {
@@ -207,10 +251,14 @@ export default function WritingTest() {
       setStartTime(new Date().toISOString());
       setSnackbar({ open: true, message: 'Test submitted successfully!', severity: 'success' });
       await refreshStreak();
-      setTimeout(() => {
-        sessionStorage.removeItem('current_productive_attempt');
-        router.push(`/student/writing/${testId}`);
-      }, 1000);
+      if (response?.streak_reward_notice) {
+        setGlobalRewardData(response.streak_reward_notice);
+      } else if (
+        response?.streak_notice?.current_streak === 1 &&
+        response?.streak_notice?.continued === true
+      ) {
+        setGlobalRewardData(response.streak_notice);
+      }
     } catch (error) {
       await new Promise((resolve) => setTimeout(resolve, 400));
       setSubmitStatus('error');
@@ -237,6 +285,15 @@ export default function WritingTest() {
       setLevelData(response?.level_notice || null);
       setSubmitMode('ai');
       setFinalTimeStr(formatDuration(secondsElapsed));
+
+      if (response?.streak_reward_notice) {
+        setGlobalRewardData(response.streak_reward_notice);
+      } else if (
+        response?.streak_notice?.current_streak === 1 &&
+        response?.streak_notice?.continued === true
+      ) {
+        setGlobalRewardData(response.streak_notice);
+      }
 
       // eslint-disable-next-line no-console
       console.log('Submit Success:', response);
@@ -290,7 +347,9 @@ export default function WritingTest() {
       console.log('Fetching feedback for ID:', targetID);
       const category = await getAIFeedback({ id: targetID });
       localStorage.setItem('category', JSON.stringify(category.ai_feedback));
-      localStorage.setItem('remainAIturns', category.remaining_turns);
+      const nextTurns = normalizeAITurns(category.remaining_turns);
+      setRemainingAITurns(nextTurns);
+      localStorage.setItem('remainAIturns', JSON.stringify(nextTurns));
       // eslint-disable-next-line no-console
       console.log('Fetched AI feedback:', category);
       router.push(`/student/writing/${testId}/${attempt}/AI-feedback`);
@@ -484,25 +543,51 @@ export default function WritingTest() {
           </Stack>
 
           {/* Row 2: AI Feedback */}
-          <Button
-            variant="contained"
-            fullWidth
-            startIcon={<AutoAwesomeIcon />}
-            onClick={handleAIFeedback}
-            sx={{
-              ...styles.aiButton,
-              py: 1,
-              px: 2,
-              borderRadius: '12px',
-              fontSize: '0.8125rem',
-              minWidth: 'auto',
-              textTransform: 'none',
-              fontWeight: 700,
-            }}
-            disabled={wordCount < settings.minWords}
+          <Tooltip
+            title={
+              totalAITurns <= 0 ? 'You have run out of AI turns. Cannot use this feature.' : ''
+            }
+            placement="top"
           >
-            AI Feedback
-          </Button>
+            <span
+              style={{
+                display: 'block',
+                width: '100%',
+                cursor: totalAITurns <= 0 ? 'not-allowed' : 'pointer',
+              }}
+            >
+              <Button
+                variant="contained"
+                fullWidth
+                startIcon={<AutoAwesomeIcon />}
+                onClick={() => {
+                  if (totalAITurns <= 0) {
+                    setSnackbar({
+                      open: true,
+                      message: 'You have run out of AI turns. Cannot use this feature right now.',
+                      severity: 'warning',
+                    });
+                    return;
+                  }
+                  handleAIFeedback();
+                }}
+                sx={{
+                  ...styles.aiButton,
+                  py: 1,
+                  px: 2,
+                  borderRadius: '12px',
+                  fontSize: '0.8125rem',
+                  minWidth: 'auto',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  pointerEvents: totalAITurns <= 0 ? 'none' : 'auto',
+                }}
+                disabled={wordCount < settings.minWords || totalAITurns <= 0 || isFetchingFeedback}
+              >
+                AI Feedback
+              </Button>
+            </span>
+          </Tooltip>
         </Box>
       </Box>
 
@@ -717,6 +802,10 @@ export default function WritingTest() {
           currentXP={levelData ? levelData.current_exp - bonusPoint : undefined}
           levelMaxXP={levelData ? levelData.current_level?.max_xp : undefined}
           level={levelData ? levelData.current_level?.level_number : undefined}
+          levelIcon={levelData ? levelData.current_level?.level_icon : undefined}
+          levelTitle={levelData ? levelData.current_level?.level_title : undefined}
+          leveledUp={levelData ? levelData.leveled_up : false}
+          testType="writing"
           onClose={handleGlobalClose}
           onViewResults={handleViewResultAction}
           onContinue={handleGlobalClose}
@@ -726,6 +815,7 @@ export default function WritingTest() {
           status={draftStatus}
           onClose={handleCloseDraftToast}
           onRetry={handleSaveDraft}
+          testType="writing"
         />
 
         <Dialog

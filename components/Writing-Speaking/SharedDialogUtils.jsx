@@ -6,18 +6,43 @@ import { Box, useTheme, alpha } from '@mui/material';
 
 // ─── Shared Configurations ───────────────────────────────────────────────────
 
-export const QUOTES = [
-  'Keep writing! Every word counts towards your goal.',
-  'Great progress! Your draft is safe and sound.',
-  'Awesome! You can come back and finish this anytime.',
-  "Well done! You're one step closer to perfection.",
-  "Nice work! Rome wasn't built in a day.",
-  'Good job! Take a break if you need it.',
-  "You're doing great! Keep up the momentum.",
-  'Fantastic effort! Your hard work is paying off.',
-  'Excellent! Your dedication is inspiring.',
-  'Nice work! Every test makes you stronger.',
+export const SPEAKING_QUOTES = [
+  'Speech is silver, silence is gold, but action is diamond. — Proverb',
+  'It is not because things are difficult that we do not dare; it is because we do not dare that they are difficult. — Seneca',
+  'Courage is being scared to death, but saddling up anyway. — John Wayne',
+  'Everything you’ve ever wanted is on the other side of fear. — George Addair',
+  "Don't be afraid to be confused. Try to allow the confusion to sit and hover and breathe. — Martha Beck",
 ];
+
+export const WRITING_QUOTES = [
+  'A professional writer is an amateur who didn’t quit. — Richard Bach',
+  'Ink and paper are sometimes more patient than people. — Adapted from Anne Frank',
+  'Small daily improvements over time lead to stunning results. — Robin Sharma',
+  'Consistency is the playground of dull minds, but the secret of masters. — Adapted',
+  'The art of writing is the art of discovering what you believe. — Gustave Flaubert',
+];
+
+export const GENERAL_QUOTES = [
+  'To have another language is to possess a second soul. — Charlemagne',
+  'Language is the road map of a culture. — Rita Mae Brown',
+  'Knowledge of languages is the doorway to wisdom. — Roger Bacon',
+  'Words are, of course, the most powerful drug used by mankind. — Rudyard Kipling',
+  'The limits of my language mean the limits of my world. — Ludwig Wittgenstein',
+  'Do one thing every day that scares you. — Eleanor Roosevelt',
+  "Don't watch the clock; do what it does. Keep going. — Sam Levenson",
+  'The way to get started is to quit talking and begin doing. — Walt Disney',
+  "You don't have to be great to start, but you have to start to be great. — Zig Ziglar",
+  'Your only limit is your soul. — Ratatouille (Disney/Pixar)',
+];
+
+export const getQuotesForTestType = (type) => {
+  if (type === 'speaking' || type === 'S') {
+    return [...SPEAKING_QUOTES, ...GENERAL_QUOTES];
+  } else if (type === 'writing' || type === 'W') {
+    return [...WRITING_QUOTES, ...GENERAL_QUOTES];
+  }
+  return GENERAL_QUOTES;
+};
 
 export const fadeUp = (delay, duration = '0.5s', y = '12px') => ({
   animation: `fadeUp ${duration} ease-out ${delay}ms both`,
