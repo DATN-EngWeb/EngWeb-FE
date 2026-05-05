@@ -34,7 +34,6 @@ const wordCount = (data) => {
 };
 
 export default function HistoryTable({ data, skill, onViewDetail, onShare, onOpenAIReviewed }) {
-  console.log('HistoryTable data:', data);
   return (
     <TableContainer sx={styles.tableContainer}>
       <Table sx={{ minWidth: 650 }}>

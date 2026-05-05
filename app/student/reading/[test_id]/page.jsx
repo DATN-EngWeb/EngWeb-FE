@@ -295,6 +295,11 @@ export default function ReadingTestPage() {
         await refreshStreak();
         if (historyRes?.streak_reward_notice) {
           setGlobalRewardData(historyRes.streak_reward_notice);
+        } else if (
+          historyRes?.streak_notice?.current_streak === 1 &&
+          historyRes?.streak_notice?.continued === true
+        ) {
+          setGlobalRewardData(historyRes.streak_notice);
         }
         router.push(`/student/reading/${testId}/results/${historyRes.id}`);
       } else {

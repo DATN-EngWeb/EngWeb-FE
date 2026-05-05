@@ -265,6 +265,11 @@ export default function SpeakingTest() {
       await refreshStreak();
       if (response?.streak_reward_notice) {
         setGlobalRewardData(response.streak_reward_notice);
+      } else if (
+        response?.streak_notice?.current_streak === 1 &&
+        response?.streak_notice?.continued === true
+      ) {
+        setGlobalRewardData(response.streak_notice);
       }
     } catch (error) {
       if (
@@ -324,6 +329,11 @@ export default function SpeakingTest() {
 
       if (response?.streak_reward_notice) {
         setGlobalRewardData(response.streak_reward_notice);
+      } else if (
+        response?.streak_notice?.current_streak === 1 &&
+        response?.streak_notice?.continued === true
+      ) {
+        setGlobalRewardData(response.streak_notice);
       }
 
       setSubmitMode('ai');
@@ -557,12 +567,7 @@ export default function SpeakingTest() {
           >
             <span
               style={{
-                cursor:
-                  !hasRecorded || isRecording || isReadOnly
-                    ? 'default'
-                    : totalAITurns <= 0
-                      ? 'not-allowed'
-                      : 'pointer',
+                cursor: totalAITurns <= 0 ? 'not-allowed' : 'pointer',
               }}
             >
               <Button

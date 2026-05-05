@@ -253,6 +253,11 @@ export default function WritingTest() {
       await refreshStreak();
       if (response?.streak_reward_notice) {
         setGlobalRewardData(response.streak_reward_notice);
+      } else if (
+        response?.streak_notice?.current_streak === 1 &&
+        response?.streak_notice?.continued === true
+      ) {
+        setGlobalRewardData(response.streak_notice);
       }
     } catch (error) {
       await new Promise((resolve) => setTimeout(resolve, 400));
@@ -283,6 +288,11 @@ export default function WritingTest() {
 
       if (response?.streak_reward_notice) {
         setGlobalRewardData(response.streak_reward_notice);
+      } else if (
+        response?.streak_notice?.current_streak === 1 &&
+        response?.streak_notice?.continued === true
+      ) {
+        setGlobalRewardData(response.streak_notice);
       }
 
       // eslint-disable-next-line no-console

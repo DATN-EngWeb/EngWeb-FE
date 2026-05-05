@@ -316,36 +316,6 @@ export default function AnimatedStreakBadge({ size = 180 }) {
               sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
             />
           </Box>
-          {/* Text */}
-          <Box ref={textRef}>
-            <Typography
-              sx={{
-                mt: 4,
-                fontWeight: 900,
-                fontSize: { xs: '2rem', md: '3rem' },
-                textAlign: 'center',
-                textTransform: 'uppercase',
-                letterSpacing: '2px',
-                background: `linear-gradient(to right, #fff, ${config.sparkColor})`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                filter: 'drop-shadow(0px 4px 10px rgba(0,0,0,0.5))',
-              }}
-            >
-              {streak_count} NGÀY LIÊN TIẾP!
-            </Typography>
-            <Typography
-              sx={{
-                color: '#aaa',
-                fontSize: '1.2rem',
-                mt: 1,
-                fontWeight: 500,
-                textAlign: 'center',
-              }}
-            >
-              Bạn thật sự là một chiến thần!
-            </Typography>
-          </Box>
         </Box>
       </Box>
     </>

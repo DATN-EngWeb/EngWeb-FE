@@ -85,7 +85,12 @@ export default function StreakRewardOverlay({ rewardData, onClose }) {
   const lightRayRef = useRef(null);
 
   const quote = React.useMemo(() => {
-    const days = rewardData?.streak_day || 1;
+    const days = rewardData?.streak_day || rewardData?.current_streak || 1;
+
+    if (days === 1) {
+      return 'Congratulations on your first streak! Keep up the great work and try your best! 🚀';
+    }
+
     let pool = [];
 
     // 20% chance to pick a funny message
@@ -170,7 +175,8 @@ export default function StreakRewardOverlay({ rewardData, onClose }) {
 
   if (!rewardData) return null;
 
-  const currentLevel = rewardData.new_streak_milestone_id || 1;
+  const currentLevel =
+    rewardData.new_streak_milestone_id || rewardData.current_streak_milestone_id || 1;
   const shadow = getLevelShadow(currentLevel);
   const colors = getLevelColors(currentLevel);
 
@@ -254,7 +260,7 @@ export default function StreakRewardOverlay({ rewardData, onClose }) {
               textShadow: '0px 4px 20px rgba(0,0,0,0.5)',
             }}
           >
-            Milestone Reached!
+            {rewardData.current_streak === 1 ? 'First Streak Reached!' : 'Milestone Reached!'}
           </Typography>
           <Typography
             variant="h5"
@@ -264,7 +270,7 @@ export default function StreakRewardOverlay({ rewardData, onClose }) {
               fontFamily: '"Outfit", sans-serif',
             }}
           >
-            {rewardData.streak_day} Day Streak
+            {rewardData.streak_day || rewardData.current_streak} Day Streak
           </Typography>
           <Typography
             variant="body1"
