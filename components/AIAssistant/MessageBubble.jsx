@@ -20,6 +20,14 @@ export default function MessageBubble({ message }) {
   const isUser = message.role === 'user';
   const messageMode = message.mode;
   const messageContent = message.content;
+  const plainTextContent =
+    typeof messageContent === 'string'
+      ? messageContent
+      : messageContent &&
+          typeof messageContent === 'object' &&
+          typeof messageContent.message === 'string'
+        ? messageContent.message
+        : null;
   const createdAtValue = message.created_at ?? 0;
   const createdAtMs =
     typeof createdAtValue === 'number'
@@ -123,7 +131,11 @@ export default function MessageBubble({ message }) {
             boxShadow: isUser ? '0 10px 24px rgba(83, 40, 34, 0.14)' : 'none',
           }}
         >
-          {messageMode === 'grammar' ? (
+          {plainTextContent ? (
+            <Typography sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>
+              {plainTextContent}
+            </Typography>
+          ) : messageMode === 'grammar' ? (
             <GrammarResult answer={messageContent} />
           ) : messageMode === 'translate' ? (
             <TranslationResult answer={messageContent} />

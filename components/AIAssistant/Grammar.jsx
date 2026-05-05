@@ -92,143 +92,64 @@ function parseJsonSafely(value) {
   }
 }
 
-function decodeEscapedText(value) {
-  if (typeof value !== 'string') return '';
-
-  return value
-    .replace(/\\n/g, '\n')
-    .replace(/\\r/g, '\r')
-    .replace(/\\t/g, '\t')
-    .replace(/\\"/g, '"')
-    .replace(/\\\\/g, '\\');
-}
-
-function extractStringField(raw, key) {
-  if (typeof raw !== 'string') return '';
-
-  const pattern = new RegExp(`"${key}"\\s*:\\s*"((?:\\\\.|[^"\\\\])*)"`);
-  const match = raw.match(pattern);
-  if (!match) return '';
-
-  return decodeEscapedText(match[1]).trim();
-}
-
-function extractArrayField(raw, key) {
-  if (typeof raw !== 'string') return [];
-
-  const startPattern = new RegExp(`"${key}"\\s*:\\s*\\[`, 'm');
-  const startMatch = startPattern.exec(raw);
-  if (!startMatch) return [];
-
-  const startIndex = startMatch.index + startMatch[0].length;
-  let depth = 1;
-  let inString = false;
-  let escaped = false;
-  let endIndex = -1;
-
-  for (let i = startIndex; i < raw.length; i += 1) {
-    const ch = raw[i];
-
-    if (escaped) {
-      escaped = false;
-      continue;
-    }
-
-    if (ch === '\\') {
-      escaped = true;
-      continue;
-    }
-
-    if (ch === '"') {
-      inString = !inString;
-      continue;
-    }
-
-    if (inString) continue;
-
-    if (ch === '[') depth += 1;
-    if (ch === ']') {
-      depth -= 1;
-      if (depth === 0) {
-        endIndex = i;
-        break;
-      }
-    }
-  }
-
-  if (endIndex < 0) return [];
-
-  const content = raw.slice(startIndex, endIndex);
-  const values = [];
-  const valueRegex = /"((?:\\.|[^"\\])*)"/g;
-  let valueMatch;
-
-  while ((valueMatch = valueRegex.exec(content)) !== null) {
-    const text = decodeEscapedText(valueMatch[1]).trim();
-    if (text) values.push(text);
-  }
-
-  return values;
-}
-
 function normalizeTextList(value) {
   if (!value) return [];
-  return Array.isArray(value) ? value : [value];
+
+  if (Array.isArray(value)) return value;
+
+  if (typeof value === 'string') {
+    const parsed = parseJsonSafely(value);
+
+    if (Array.isArray(parsed)) return parsed;
+    if (typeof parsed === 'string') return [parsed];
+
+    return [value];
+  }
+
+  if (typeof value === 'object') {
+    return Object.values(value);
+  }
+
+  return [value];
 }
 
 function normalizeGrammarAnswer(answer) {
   let source = answer;
-  let rawTextPayload = '';
 
   // Case 1: answer itself is JSON string
   if (typeof source === 'string') {
-    rawTextPayload = source;
     source = parseJsonSafely(source) || {};
   }
 
   // Case 2: answer = { text: "{...}" }
   if (source && typeof source === 'object' && typeof source.text === 'string') {
-    rawTextPayload = source.text;
     source = parseJsonSafely(source.text) || source;
   }
 
   // Case 3: nested content.text shape
   if (source && typeof source === 'object' && typeof source?.content?.text === 'string') {
-    rawTextPayload = source.content.text;
     source = parseJsonSafely(source.content.text) || source;
   }
 
-  // Fallback: text is JSON-like but malformed, try extracting key fields directly
-  if (
-    rawTextPayload &&
-    (typeof source !== 'object' ||
-      !source ||
-      (!source.grammar_point && !source.explanation && !source.examples && !source.common_mistakes))
-  ) {
-    source = {
-      grammar_point: extractStringField(rawTextPayload, 'grammar_point'),
-      explanation: extractStringField(rawTextPayload, 'explanation'),
-      examples: extractArrayField(rawTextPayload, 'examples'),
-      common_mistakes: extractArrayField(rawTextPayload, 'common_mistakes'),
-    };
-  }
-
-  const rawGrammarPoint = source?.grammar_point ?? source?.title;
+  const rawGrammarPoint = source?.grammar_point;
 
   const grammarPoint = typeof rawGrammarPoint === 'string' ? rawGrammarPoint.trim() : '';
   const explanation = typeof source?.explanation === 'string' ? source.explanation.trim() : '';
   const examples = normalizeTextList(source?.examples)
     .map((item) => (typeof item === 'string' ? item.trim() : ''))
     .filter(Boolean);
-  const commonMistakes = normalizeTextList(source?.common_mistakes)
+  const rawCommonMistakes = source?.common_mistakes;
+  const commonMistakes = normalizeTextList(rawCommonMistakes)
     .map((item) => (typeof item === 'string' ? item.trim() : ''))
     .filter(Boolean);
+  const englishTip = typeof source?.english_tip === 'string' ? source.english_tip.trim() : '';
 
   return {
     grammar_point: grammarPoint,
     explanation,
     examples,
     common_mistakes: commonMistakes,
+    english_tip: englishTip,
   };
 }
 
@@ -257,43 +178,10 @@ function renderHighlightedExample(text) {
   const english = separatorIndex >= 0 ? trimmed.slice(0, separatorIndex) : trimmed;
   const vietnamese = separatorIndex >= 0 ? trimmed.slice(separatorIndex) : '';
 
-  const tokens = english.split(/(\s+)/);
-
   return (
     <Stack spacing={0.5}>
       <Typography fontSize={14} sx={{ lineHeight: 1.7 }}>
-        {tokens.map((token, index) => {
-          const normalized = token.toLowerCase().replace(/[.,!?;:]/g, '');
-          const isPrimaryGrammar =
-            /^(has|have)$/.test(normalized) ||
-            /^(since|for)$/.test(normalized) ||
-            /^(worked|known|studied|lived)$/.test(normalized);
-
-          if (token.trim().length === 0) {
-            return <span key={index}>{token}</span>;
-          }
-
-          if (isPrimaryGrammar) {
-            return (
-              <Box
-                key={index}
-                component="span"
-                sx={{
-                  px: 0.45,
-                  py: 0.15,
-                  borderRadius: 1,
-                  bgcolor: 'rgba(16, 185, 129, 0.14)',
-                  color: 'rgb(16, 185, 129)',
-                  fontWeight: 700,
-                }}
-              >
-                {token}
-              </Box>
-            );
-          }
-
-          return <span key={index}>{token}</span>;
-        })}
+        {renderInline(english)}
       </Typography>
 
       {vietnamese && (
@@ -306,7 +194,8 @@ function renderHighlightedExample(text) {
 }
 
 export function GrammarResult({ answer }) {
-  const { grammar_point, explanation, examples, common_mistakes } = normalizeGrammarAnswer(answer);
+  const { grammar_point, explanation, examples, common_mistakes, english_tip } =
+    normalizeGrammarAnswer(answer);
 
   return (
     <Box maxWidth={760} mx="auto">
@@ -433,6 +322,14 @@ export function GrammarResult({ answer }) {
                 </Paper>
               ))}
             </Stack>
+          </SectionCard>
+        )}
+
+        {english_tip && (
+          <SectionCard icon={GraduationCapIcon} label="Mẹo tiếng Anh" iconTone="green">
+            <Typography fontSize={14} color="text.secondary" sx={{ lineHeight: 1.75 }}>
+              {english_tip}
+            </Typography>
           </SectionCard>
         )}
       </Stack>

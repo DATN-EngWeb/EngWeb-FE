@@ -11,11 +11,11 @@ export function TranslationResult({ answer = {} }) {
   const translation = typeof answer?.translation === 'string' ? answer.translation.trim() : '';
   const literalTranslation =
     typeof answer?.literal_translation === 'string' ? answer.literal_translation.trim() : '';
-  const phrases = answer?.word_or_phrase || answer?.notes?.difficult_words_phrases || {};
-  const rawExplanation = answer?.explanation ?? answer?.notes?.explanation;
+  const phrases = answer?.word_or_phrase || {};
+  const rawExplanation = answer?.explanation;
 
   const explanation = typeof rawExplanation === 'string' ? rawExplanation.trim() : '';
-  const rawEnglishTip = answer?.english_tip ?? answer?.notes?.english_tip;
+  const rawEnglishTip = answer?.english_tip;
 
   const englishTip = typeof rawEnglishTip === 'string' ? rawEnglishTip.trim() : '';
   const phraseEntries = Object.entries(phrases).filter(([phrase, meaning]) => {

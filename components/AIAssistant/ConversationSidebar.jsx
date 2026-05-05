@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import {
-  Avatar,
   Box,
   Button,
   Dialog,
@@ -19,13 +18,11 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import AddCommentRoundedIcon from '@mui/icons-material/AddCommentRounded';
 import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
-import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import WavyDots from './WavyDots';
 
 const MODE_CONFIG_BY_ID = {
@@ -347,9 +344,8 @@ export default function ConversationSidebar({
                                   event.stopPropagation();
                                   onMenuEdit(event, conversation);
                                 }}
-                                sx={{ fontWeight: 600 }}
+                                sx={{ fontWeight: 600, fontSize: 14 }}
                               >
-                                <EditRoundedIcon sx={{ fontSize: 18, mr: 1 }} />
                                 Edit
                               </MenuItem>
                               <MenuItem
@@ -357,9 +353,8 @@ export default function ConversationSidebar({
                                   event.stopPropagation();
                                   handleRequestDelete(event, conversation);
                                 }}
-                                sx={{ fontWeight: 600, color: 'error.dark' }}
+                                sx={{ fontWeight: 600, fontSize: 14, color: 'error.dark' }}
                               >
-                                <DeleteOutlineRoundedIcon sx={{ fontSize: 18, mr: 1 }} />
                                 Delete
                               </MenuItem>
                             </Menu>

@@ -77,25 +77,12 @@ function OutlineBlock({ step, heading, points = [] }) {
   );
 }
 
-const LINKING_LABELS = {
-  adding_information: 'Bổ sung ý',
-  cause_and_effect: 'Nguyên nhân – kết quả',
-  contrast: 'Tương phản',
-  emphasis: 'Nhấn mạnh',
-  sequence: 'Trình tự',
-  conclusion: 'Kết luận',
-};
-
-const LINKING_COLORS = {
-  adding_information: 'rgba(56, 189, 248, 0.28)',
-  cause_and_effect: 'rgba(250, 204, 21, 0.34)',
-  contrast: 'rgba(196, 181, 253, 0.45)',
-  emphasis: 'rgba(252, 165, 165, 0.4)',
-  sequence: 'rgba(134, 239, 172, 0.42)',
-  conclusion: 'rgba(125, 211, 252, 0.4)',
-};
-
 export function BrainstormResult({ answer }) {
+  const source =
+    answer && typeof answer === 'object' && answer.content && typeof answer.content === 'object'
+      ? answer.content
+      : answer || {};
+
   const {
     ideas = [],
     outline,
@@ -103,7 +90,7 @@ export function BrainstormResult({ answer }) {
     linking_words,
     sample_thesis,
     topic_sentences = [],
-  } = answer || {};
+  } = source;
 
   const sampleThesis = typeof sample_thesis === 'string' ? sample_thesis.trim() : '';
 
@@ -119,114 +106,36 @@ export function BrainstormResult({ answer }) {
     .filter((idea) => idea.subtopic || idea.points.length > 0);
 
   const normalizedOutline = (() => {
-    if (!outline) return null;
+    if (!outline || typeof outline !== 'object') return null;
 
-    const introPoints = (
-      Array.isArray(outline.introduction)
-        ? outline.introduction
-        : outline.introduction?.points || []
-    )
+    const introduction = (Array.isArray(outline.introduction) ? outline.introduction : [])
       .map((point) => (typeof point === 'string' ? point.trim() : ''))
       .filter(Boolean);
 
-    let bodyParagraphs = [];
-    if (Array.isArray(outline.body_paragraphs)) {
-      bodyParagraphs = outline.body_paragraphs
-        .map((bp) => ({
-          heading:
-            typeof (bp.heading || bp.title) === 'string' ? (bp.heading || bp.title).trim() : '',
-          points: Array.isArray(bp.points)
-            ? bp.points
-            : bp.points
-              ? [bp.points]
-              : bp.body
-                ? [bp.body]
-                : [],
-        }))
-        .map((bp) => ({
-          ...bp,
-          points: bp.points
-            .map((point) => (typeof point === 'string' ? point.trim() : ''))
-            .filter(Boolean),
-        }))
-        .filter((bp) => bp.heading || bp.points.length > 0);
-    } else if (Array.isArray(outline.body)) {
-      bodyParagraphs = outline.body
-        .map((b, i) => ({
-          heading: `Thân bài ${i + 1}`,
-          points: (Array.isArray(b) ? b : [b])
-            .map((point) => (typeof point === 'string' ? point.trim() : ''))
-            .filter(Boolean),
-        }))
-        .filter((bp) => bp.points.length > 0);
-    }
-
-    const conclusionPoints = (
-      Array.isArray(outline.conclusion) ? outline.conclusion : outline.conclusion?.points || []
-    )
+    const body = (Array.isArray(outline.body) ? outline.body : [])
       .map((point) => (typeof point === 'string' ? point.trim() : ''))
       .filter(Boolean);
 
-    const hasOutlineContent =
-      introPoints.length > 0 || bodyParagraphs.length > 0 || conclusionPoints.length > 0;
+    const conclusion = (Array.isArray(outline.conclusion) ? outline.conclusion : [])
+      .map((point) => (typeof point === 'string' ? point.trim() : ''))
+      .filter(Boolean);
 
-    if (!hasOutlineContent) return null;
+    if (introduction.length === 0 && body.length === 0 && conclusion.length === 0) return null;
 
-    return {
-      introduction: { points: introPoints },
-      body_paragraphs: bodyParagraphs,
-      conclusion: { points: conclusionPoints },
-    };
+    return { introduction, body, conclusion };
   })();
 
-  const normalizedUsefulVocab = (() => {
-    if (!useful_vocabulary) return null;
-    if (Array.isArray(useful_vocabulary)) {
-      return {
-        nouns: useful_vocabulary
-          .map((item) => (typeof item === 'string' ? item.trim() : ''))
-          .filter(Boolean),
-      };
-    }
-    return useful_vocabulary;
-  })();
+  const normalizedUsefulVocab = (Array.isArray(useful_vocabulary) ? useful_vocabulary : [])
+    .map((item) => (typeof item === 'string' ? item.trim() : ''))
+    .filter(Boolean);
 
-  const normalizedLinking = (() => {
-    if (!linking_words) return null;
-    if (Array.isArray(linking_words)) {
-      return {
-        adding_information: linking_words
-          .map((item) => (typeof item === 'string' ? item.trim() : ''))
-          .filter(Boolean),
-      };
-    }
-    return linking_words;
-  })();
+  const normalizedLinking = (Array.isArray(linking_words) ? linking_words : [])
+    .map((item) => (typeof item === 'string' ? item.trim() : ''))
+    .filter(Boolean);
 
   const normalizedTopicSentences = (Array.isArray(topic_sentences) ? topic_sentences : [])
     .map((sentence) => (typeof sentence === 'string' ? sentence.trim() : ''))
     .filter(Boolean);
-
-  const vocabGroups = [
-    {
-      key: 'nouns',
-      label: 'Danh từ',
-      items: normalizedUsefulVocab?.nouns || [],
-      color: 'rgba(134, 239, 172, 0.45)',
-    },
-    {
-      key: 'verbs',
-      label: 'Động từ',
-      items: normalizedUsefulVocab?.verbs || [],
-      color: 'rgba(125, 211, 252, 0.45)',
-    },
-    {
-      key: 'adjectives',
-      label: 'Tính từ',
-      items: normalizedUsefulVocab?.adjectives || [],
-      color: 'rgba(250, 204, 21, 0.4)',
-    },
-  ].filter((g) => g.items.length > 0);
 
   return (
     <Box maxWidth={600} mx="auto">
@@ -295,7 +204,7 @@ export function BrainstormResult({ answer }) {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight: 700,
                         flexShrink: 0,
                       }}
@@ -303,7 +212,7 @@ export function BrainstormResult({ answer }) {
                       {i + 1}
                     </Box>
 
-                    <Typography fontWeight={700} fontSize={18} lineHeight={1.35}>
+                    <Typography fontWeight={700} fontSize={14} lineHeight={1.35}>
                       {idea.subtopic}
                     </Typography>
                   </Stack>
@@ -321,7 +230,7 @@ export function BrainstormResult({ answer }) {
                               flexShrink: 0,
                             }}
                           />
-                          <Typography fontSize={15} lineHeight={1.5}>
+                          <Typography fontSize={14} lineHeight={1.5}>
                             {p}
                           </Typography>
                         </Stack>
@@ -335,28 +244,13 @@ export function BrainstormResult({ answer }) {
         )}
 
         {normalizedOutline && (
-          <SectionCard icon={ListTreeIcon} label="Dàn bài đề xuất">
+          <SectionCard icon={ListTreeIcon} sx={{ fontSize: '14' }} label="Dàn bài đề xuất">
             <Stack spacing={1.5}>
-              <OutlineBlock
-                step="MB"
-                heading="Mở bài"
-                points={normalizedOutline.introduction.points}
-              />
+              <OutlineBlock step="MB" heading="Mở bài" points={normalizedOutline.introduction} />
 
-              {(normalizedOutline.body_paragraphs || []).map((bp, i) => (
-                <OutlineBlock
-                  key={i}
-                  step={`TB${i + 1}`}
-                  heading={bp.heading || `Thân bài ${i + 1}`}
-                  points={bp.points}
-                />
-              ))}
+              <OutlineBlock step="TB" heading="Thân bài" points={normalizedOutline.body} />
 
-              <OutlineBlock
-                step="KB"
-                heading="Kết bài"
-                points={normalizedOutline.conclusion.points}
-              />
+              <OutlineBlock step="KB" heading="Kết bài" points={normalizedOutline.conclusion} />
             </Stack>
           </SectionCard>
         )}
@@ -387,14 +281,14 @@ export function BrainstormResult({ answer }) {
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontWeight: 700,
-                        fontSize: 12,
+                        fontSize: 13,
                         flexShrink: 0,
                       }}
                     >
                       {i + 1}
                     </Box>
 
-                    <Typography flex={1} fontSize={13}>
+                    <Typography flex={1} fontSize={14}>
                       {s}
                     </Typography>
                     <CopyButton text={s} compact />
@@ -406,65 +300,17 @@ export function BrainstormResult({ answer }) {
         )}
 
         {/* Vocabulary */}
-        {vocabGroups.length > 0 && (
+        {normalizedUsefulVocab.length > 0 && (
           <SectionCard icon={BookMarkedIcon} label="Từ vựng gợi ý">
-            <Stack spacing={1}>
-              {vocabGroups.map((group) => (
-                <Box key={group.key}>
-                  <Typography
-                    fontSize={11}
-                    fontWeight={800}
-                    textTransform="uppercase"
-                    color="text.secondary"
-                    letterSpacing={0.5}
-                    mb={0.75}
-                  >
-                    {group.label}
-                  </Typography>
-
-                  <ChipList items={group.items} color={group.color} />
-                </Box>
-              ))}
-            </Stack>
+            <ChipList items={normalizedUsefulVocab} color="rgba(134, 239, 172, 0.45)" />
           </SectionCard>
         )}
 
-        {normalizedLinking &&
-          Object.entries(normalizedLinking).some(
-            ([, words]) => Array.isArray(words) && words.filter(Boolean).length > 0,
-          ) && (
-            <SectionCard icon={LinkIcon} label="Từ nối hữu ích">
-              <Stack spacing={1}>
-                {Object.entries(normalizedLinking).map(([key, words]) => {
-                  const normalizedWords = Array.isArray(words)
-                    ? words
-                        .map((item) => (typeof item === 'string' ? item.trim() : ''))
-                        .filter(Boolean)
-                    : [];
-
-                  return normalizedWords.length > 0 ? (
-                    <Box key={key}>
-                      <Typography
-                        fontSize={11}
-                        fontWeight={800}
-                        textTransform="uppercase"
-                        color="text.secondary"
-                        letterSpacing={0.5}
-                        mb={0.75}
-                      >
-                        {LINKING_LABELS[key] || key}
-                      </Typography>
-
-                      <ChipList
-                        items={normalizedWords}
-                        color={LINKING_COLORS[key] || 'rgba(226,232,240,0.9)'}
-                      />
-                    </Box>
-                  ) : null;
-                })}
-              </Stack>
-            </SectionCard>
-          )}
+        {normalizedLinking.length > 0 && (
+          <SectionCard icon={LinkIcon} label="Từ nối hữu ích">
+            <ChipList items={normalizedLinking} color="rgba(125, 211, 252, 0.4)" />
+          </SectionCard>
+        )}
       </Stack>
     </Box>
   );

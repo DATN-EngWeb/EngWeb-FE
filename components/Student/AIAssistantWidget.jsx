@@ -68,14 +68,13 @@ export default function AIAssistantWidget() {
   };
 
   const normalizeQuota = (value) => {
-    const quota = value?.quota ?? value?.data?.quota ?? value?.data ?? value;
+    const quota = value?.quota ?? value;
 
     if (!quota || typeof quota !== 'object') return null;
 
-    const remaining =
-      quota.remaining ?? quota.remaining_count ?? quota.available ?? quota.left ?? null;
-    const limit = quota.limit ?? quota.total ?? quota.max ?? null;
-    const resetAt = quota.reset_at ?? quota.resetAt ?? quota.expires_at ?? quota.expiresAt ?? null;
+    const remaining = quota.remaining ?? null;
+    const limit = quota.limit ?? null;
+    const resetAt = quota.reset_at ?? null;
 
     if (remaining == null && limit == null && !resetAt) return null;
 
@@ -107,6 +106,95 @@ export default function AIAssistantWidget() {
     return cleanedMessage.length > 48
       ? `${cleanedMessage.slice(0, 48).trimEnd()}...`
       : cleanedMessage;
+  };
+
+  const getPostAssistantMessageContent = (payload) => {
+    const resolvedPayload = payload?.data ?? payload;
+
+    if (!resolvedPayload) return null;
+
+    if (typeof resolvedPayload === 'string') {
+      return resolvedPayload;
+    }
+
+    if (typeof resolvedPayload !== 'object') {
+      return null;
+    }
+
+    const answerPayload = resolvedPayload.answer;
+    if (answerPayload && typeof answerPayload === 'object') {
+      return answerPayload.message ?? answerPayload.content ?? answerPayload.answer ?? null;
+    }
+
+    return (
+      resolvedPayload.content ??
+      resolvedPayload.answer ??
+      resolvedPayload.message ??
+      resolvedPayload.reply ??
+      null
+    );
+  };
+
+  const normalizeFetchedMessage = (message) => {
+    if (!message || typeof message !== 'object') return message;
+
+    const content = message.content;
+    if (
+      content &&
+      typeof content === 'object' &&
+      typeof content.message === 'string' &&
+      content.message.trim()
+    ) {
+      return {
+        ...message,
+        content: content.message,
+      };
+    }
+
+    return message;
+  };
+
+  const refreshConversationMessages = async (conversationId, fallbackConversation) => {
+    const limit = fallbackConversation?.messages_meta?.limit || 30;
+    const details = await getConversationMessages(conversationId, { limit });
+    const normalizedMessages = Array.isArray(details?.messages)
+      ? details.messages.map(normalizeFetchedMessage)
+      : [];
+    const normalizedQuota = normalizeQuota(details?.quota);
+    const normalizedMessagesMeta = normalizeMessagesMeta(
+      {
+        ...details,
+        messages: normalizedMessages,
+      },
+      limit,
+    );
+
+    if (normalizedQuota) setWorkspaceQuota(normalizedQuota);
+
+    let refreshedConversation = null;
+
+    setConversations((prev) =>
+      prev.map((conversation) => {
+        const isTarget =
+          conversation.id === conversationId || conversation.localId === conversationId;
+
+        if (!isTarget) return conversation;
+
+        refreshedConversation = {
+          ...conversation,
+          ...details,
+          id: details?.id || conversation.id || conversationId,
+          localId: conversation.localId,
+          messages: normalizedMessages,
+          messages_meta: normalizedMessagesMeta,
+          isDraft: false,
+        };
+
+        return refreshedConversation;
+      }),
+    );
+
+    return refreshedConversation;
   };
 
   const fetchWorkspaceQuota = async () => {
@@ -169,7 +257,6 @@ export default function AIAssistantWidget() {
       level: selectedLevel,
       messages: [],
       isDraft: true,
-      quota: workspaceQuota,
     };
 
     setConversations((prev) => [draftConversation, ...prev]);
@@ -177,31 +264,23 @@ export default function AIAssistantWidget() {
     setSelectedMode(mode || 'general');
     setSelectedLevel(selectedLevel || 'all');
     setOpen(true);
-
-    setConversations((prev) =>
-      prev.map((conversation) =>
-        conversation.localId === localId
-          ? {
-              ...conversation,
-              quota: workspaceQuota,
-            }
-          : conversation,
-      ),
-    );
   };
 
   const handleOpenConversation = async (conv) => {
     try {
-      const details = await getConversationMessages(conv.id, { limit: 10 });
-      const normalizedQuota = normalizeQuota(details?.quota) || workspaceQuota;
+      const details = await getConversationMessages(conv.id);
+      const normalizedQuota = normalizeQuota(details?.quota);
       const normalizedMessagesMeta = normalizeMessagesMeta(details, 30);
+
+      // update global workspaceQuota if server returned quota
+      if (normalizedQuota) setWorkspaceQuota(normalizedQuota);
+
       setConversations((prev) =>
         prev.map((c) =>
           c.id === conv.id
             ? {
                 ...c,
                 ...details,
-                quota: normalizedQuota || c.quota,
                 messages_meta: normalizedMessagesMeta,
               }
             : c,
@@ -413,104 +492,8 @@ export default function AIAssistantWidget() {
     );
   };
 
-  const mergeConversationResponse = (conversationId, fallbackConversation, response) => {
-    const responseReceivedAt = Date.now();
-
-    if (response && Array.isArray(response.messages)) {
-      const incomingMessages = response.messages || [];
-
-      let mergedConversation = null;
-
-      setConversations((prev) =>
-        prev.map((conversation) => {
-          const isTarget =
-            conversation.id === conversationId || conversation.localId === conversationId;
-
-          if (!isTarget) return conversation;
-
-          const currentMessages = conversation.messages || [];
-          const currentMessageKeys = new Set(
-            currentMessages.map((message) => message?.id).filter(Boolean),
-          );
-          const nextMessages = [
-            ...currentMessages,
-            ...incomingMessages
-              .filter((message) => !message?.id || !currentMessageKeys.has(message.id))
-              .map((message) => ({
-                ...message,
-                created_at: message?.created_at ?? message?.createdAt ?? responseReceivedAt,
-              })),
-          ];
-
-          const normalizedQuota =
-            normalizeQuota(response) || normalizeQuota(response?.quota) || conversation.quota;
-
-          mergedConversation = {
-            ...conversation,
-            ...response,
-            id: response.id || conversation.id || conversationId,
-            localId: conversation.localId,
-            quota: normalizedQuota,
-            messages: nextMessages,
-            isDraft: false,
-          };
-
-          return mergedConversation;
-        }),
-      );
-
-      return mergedConversation || fallbackConversation;
-    }
-
-    const assistantContent =
-      response?.content ?? response?.answer ?? response?.message ?? response?.reply ?? null;
-
-    const assistantMessage = assistantContent
-      ? {
-          id: response?.messageId || response?.message_id || `assistant-${Date.now()}`,
-          role: response?.role || 'assistant',
-          mode: response?.mode || fallbackConversation?.mode || selectedMode || 'general',
-          content: assistantContent,
-          created_at: response?.created_at || response?.createdAt || responseReceivedAt,
-        }
-      : null;
-
-    let mergedConversation = null;
-
-    setConversations((prev) =>
-      prev.map((conversation) => {
-        const isTarget =
-          conversation.id === conversationId || conversation.localId === conversationId;
-
-        if (!isTarget) return conversation;
-
-        const nextMessages = assistantMessage
-          ? [...(conversation.messages || []), assistantMessage]
-          : conversation.messages || [];
-
-        const normalizedQuota =
-          normalizeQuota(response) || normalizeQuota(response?.quota) || conversation.quota;
-
-        mergedConversation = {
-          ...conversation,
-          ...response,
-          id: response?.id || conversation.id || conversationId,
-          localId: conversation.localId,
-          quota: normalizedQuota,
-          isDraft: false,
-          messages: nextMessages,
-        };
-
-        return mergedConversation;
-      }),
-    );
-
-    return mergedConversation || fallbackConversation;
-  };
-
   const handleSend = async () => {
-    const quotaRemaining =
-      activeConversation?.quota?.remaining ?? workspaceQuota?.remaining ?? null;
+    const quotaRemaining = workspaceQuota?.remaining ?? null;
     if (quotaRemaining != null && quotaRemaining <= 0) {
       setError('Quota exceeded. Please wait until reset time.');
       return;
@@ -534,7 +517,7 @@ export default function AIAssistantWidget() {
           level: selectedLevel !== 'all' ? selectedLevel : undefined,
         });
         const nextTitle = buildConversationTitle(text);
-        const initialQuota = conversation?.quota || workspaceQuota || (await fetchWorkspaceQuota());
+        if (!workspaceQuota) await fetchWorkspaceQuota();
         const mergedConversation = {
           ...conversation,
           ...newConv,
@@ -544,8 +527,6 @@ export default function AIAssistantWidget() {
             conversation?.title && conversation.title !== 'New conversation'
               ? conversation.title
               : nextTitle,
-          quota:
-            normalizeQuota(conversation?.quota) || normalizeQuota(newConv?.quota) || initialQuota,
           messages: conversation?.messages || [],
         };
 
@@ -593,12 +574,16 @@ export default function AIAssistantWidget() {
         context: selectedLevel !== 'all' ? { level: selectedLevel } : undefined,
       });
 
-      const mergedConversation = mergeConversationResponse(conversation.id, conversation, response);
-      const respQuota = normalizeQuota(response) || normalizeQuota(response?.quota) || null;
+      const respQuota = normalizeQuota(response?.quota);
       if (respQuota) setWorkspaceQuota(respQuota);
 
-      if (mergedConversation?.id) {
-        setActiveConversationId(mergedConversation.id);
+      const refreshedConversation = await refreshConversationMessages(
+        conversation.id,
+        conversation,
+      );
+
+      if (refreshedConversation?.id) {
+        setActiveConversationId(refreshedConversation.id);
       } else {
         setActiveConversationId(conversation.id);
       }
@@ -744,10 +729,8 @@ export default function AIAssistantWidget() {
                   (activeConversation?.messages_meta?.limit || 30))
             }
             isLoadingMoreMessages={isLoadingMoreMessages}
-            quota={activeConversation?.quota ?? workspaceQuota}
-            quotaRemaining={
-              activeConversation?.quota?.remaining ?? workspaceQuota?.remaining ?? null
-            }
+            quota={workspaceQuota}
+            quotaRemaining={workspaceQuota?.remaining ?? null}
             inputRef={inputRef}
             onDraftChange={setDraft}
             onKeyDown={handleKeyDown}
