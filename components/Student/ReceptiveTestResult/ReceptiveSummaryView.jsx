@@ -9,15 +9,71 @@ import {
   Grid,
   Button,
   Chip,
-  Divider,
   Stack,
+  useTheme,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import TimerIcon from '@mui/icons-material/Timer';
-import StarIcon from '@mui/icons-material/Star';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import TrackChangesIcon from '@mui/icons-material/TrackChanges';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import HighlightOffIcon from '@mui/icons-material/HighlightOff';
-import CustomAudioPlayer from '../../Test/customAudioPlayer';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import FlashOnIcon from '@mui/icons-material/FlashOn';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
+
+const secondsToMinutesValue = (seconds) => {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}m ${s}s`;
+};
+
+function StatCard({ icon, label, value, iconColor, bgcolor, borderColor }) {
+  const theme = useTheme();
+
+  return (
+    <Box
+      sx={{
+        width: '100%',
+        p: 3,
+        borderRadius: '1rem',
+        bgcolor: bgcolor,
+        border: `1px solid ${borderColor}`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        textAlign: 'center',
+        height: '100%',
+      }}
+    >
+      <Box
+        sx={{
+          mb: 1.5,
+          p: 1.5,
+          bgcolor: `${theme.palette.background.paper}`,
+          borderRadius: '50%',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+          display: 'flex',
+          color: iconColor,
+        }}
+      >
+        {icon}
+      </Box>
+      <Typography variant="h5" sx={{ fontWeight: 800, color: iconColor, mb: 0.5 }}>
+        {value}
+      </Typography>
+      <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main' }}>
+        {label}
+      </Typography>
+    </Box>
+  );
+}
 
 const ReceptiveSummaryView = ({
   testData,
@@ -29,557 +85,426 @@ const ReceptiveSummaryView = ({
   testId,
   skillColor,
 }) => {
+  const theme = useTheme();
+
+  const score = history.total_score || 0;
+  const bonusExp = history.earned_bonus_point || 0;
+  const feedback = history.feedback_message || 'Test Completed!';
+
+  const totalQuestions = stats.totalQuestions || 0;
+  const correctCount = stats.correctCount || 0;
+  const accuracy = stats.accuracy || 0;
+  const startTime = history.total_time || 0;
+
+  const timeFormatted = startTime > 60 ? secondsToMinutesValue(startTime) : `${startTime}s`;
+  const avgTimePerQuestion = totalQuestions > 0 ? Math.round(startTime / totalQuestions) : 0;
+
+  const receptiveParts = testData.receptive_test?.receptive_parts || [];
+  const detailAnswers = history.answer_histories || [];
+  const accentColor = '#ea580c';
+
+  const partsData =
+    receptiveParts.map((part, index) => {
+      const questions = part.receptive_questions || [];
+
+      const qDetails = questions.map((q, qIdx) => {
+        const detail = detailAnswers.find((d) => d.question_id.toString() === q.id.toString());
+        return {
+          id: q.id,
+          num: q.question_number || qIdx + 1,
+          isCorrect: detail?.is_correct || false,
+          isAnswered: !!detail,
+        };
+      });
+
+      const correctInPart = qDetails.filter((q) => q.isCorrect).length;
+
+      return {
+        name: `Part ${part.order || index + 1}`,
+        actualIndex: index,
+        correctCount: correctInPart,
+        totalCount: qDetails.length,
+        questions: qDetails,
+      };
+    }) || [];
+
   return (
-    <Box sx={{ bgcolor: '#f8fafc', minHeight: '100vh', pb: 8, fontFamily: '"Outfit", sans-serif' }}>
-      {/* Header / Hero Section */}
-      <Box sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', pt: 4, pb: 6 }}>
-        <Container maxWidth="lg">
-          {/* Back Button */}
-          <Button
-            startIcon={<ChevronLeftIcon />}
-            onClick={() => router.push('/student/reading')}
+    <Box sx={{ minHeight: '100vh', pb: 8, fontFamily: '"Outfit", sans-serif' }}>
+      {/* Main Content (Similar to SummaryTab) */}
+      <Container maxWidth="lg" sx={{ mt: 4 }}>
+        <Box sx={{ maxWidth: '900px', mx: 'auto' }}>
+          {/* --- HERO CARD --- */}
+          <Paper
+            elevation={4}
             sx={{
+              position: 'relative',
+              overflow: 'hidden',
+              borderRadius: '1rem',
+              p: { xs: 2, md: 4 },
+              bgcolor: theme.palette.background.default,
+              border: `1px solid ${alpha(theme.palette.primary.main, 0.5)}`,
               mb: 3,
-              color: '#64748b',
-              textTransform: 'none',
-              fontWeight: 600,
-              fontFamily: '"Outfit", sans-serif',
             }}
           >
-            {testData.skill === 'L' ? 'Back to Listening Hub' : 'Back to Reading Hub'}
-          </Button>
-          {/* Test Title */}
-          <Grid container spacing={3} alignItems="center">
-            <Grid item xs={12}>
-              <Typography
-                variant="h3"
-                sx={{
-                  fontWeight: 800,
-                  color: '#1e293b',
-                  mb: 1,
-                  letterSpacing: '-0.02em',
-                  fontFamily: '"Outfit", sans-serif',
-                }}
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              spacing={{ xs: 2, md: 4 }}
+              alignItems={{ xs: 'center', md: 'flex-start' }}
+              justifyContent="space-between"
+              position="relative"
+              zIndex={1}
+            >
+              {/* Text Section */}
+              <Stack
+                spacing={1}
+                direction="column"
+                justifyContent="center"
+                alignItems={{ xs: 'center', md: 'flex-start' }}
+                sx={{ textAlign: { xs: 'center', md: 'left' } }}
               >
-                {testData.title}
-              </Typography>
-              <Stack direction="row" spacing={2} alignItems="center">
                 <Chip
-                  label={`Level ${testData.level}`}
+                  icon={
+                    <EmojiEventsIcon
+                      sx={{ color: `${theme.palette.primary.main} !important`, fontSize: '1.2rem' }}
+                    />
+                  }
+                  label="Test Completed"
                   sx={{
+                    width: 'fit-content',
+                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                    color: theme.palette.primary.main,
                     fontWeight: 700,
-                    bgcolor: '#f1f5f9',
-                    color: '#475569',
-                    borderRadius: '8px',
-                    fontFamily: '"Outfit", sans-serif',
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
                   }}
                 />
                 <Typography
-                  variant="body1"
-                  color="text.secondary"
-                  sx={{ fontFamily: '"Outfit", sans-serif' }}
+                  sx={{
+                    fontSize: { xs: '1rem', md: '1.2rem' },
+                    fontWeight: 900,
+                    color: 'primary.main',
+                    letterSpacing: '-0.5px',
+                  }}
                 >
-                  Completed on {new Date(history.end_time).toLocaleDateString()}
+                  Message Feedback
+                </Typography>
+                <Typography
+                  sx={{
+                    color: 'primary.main',
+                    fontWeight: 400,
+                    fontSize: '1rem',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {feedback}
                 </Typography>
               </Stack>
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
-      {/* Main Content */}
-      <Container maxWidth="lg" sx={{ mt: 6 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            gap: 4,
-            alignItems: 'flex-start',
-            flexDirection: { xs: 'column', sm: 'row' },
-          }}
-        >
-          {/* Summary Cards Sidebar */}
-          <Box sx={{ width: { xs: '100%', sm: '33.333%' }, flexShrink: 0 }}>
-            <Paper
-              sx={{
-                p: 4,
-                borderRadius: '24px',
-                position: 'sticky',
-                top: 24,
-                border: '1px solid #e2e8f0',
-                fontFamily: '"Outfit", sans-serif',
-              }}
-              elevation={0}
-            >
-              <Typography
-                variant="h6"
+              {/* Score Section */}
+              <Box
                 sx={{
-                  fontWeight: 700,
-                  mb: 3,
-                  color: '#1e293b',
-                  fontFamily: '"Outfit", sans-serif',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 1,
+                  bgcolor: theme.palette.yellow?.main || '#ffd700',
+                  backdropFilter: 'blur(10px)',
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                  p: 2,
+                  borderRadius: '1rem',
+                  minWidth: '200px',
                 }}
               >
-                Performance Analysis
+                <Typography
+                  sx={{
+                    color: alpha(theme.palette.primary.main, 0.6),
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    letterSpacing: '2px',
+                    fontSize: '0.75rem',
+                  }}
+                >
+                  Total Score
+                </Typography>
+                <Stack
+                  direction="row"
+                  alignItems="baseline"
+                  spacing={0.5}
+                  sx={{ color: theme.palette.primary.main }}
+                >
+                  <Typography
+                    sx={{ fontSize: { xs: '2rem', md: '3rem' }, fontWeight: 900, lineHeight: 1 }}
+                  >
+                    {score}
+                  </Typography>
+                  <Typography
+                    sx={{ fontSize: { xs: '1rem', md: '1.5rem' }, fontWeight: 700, opacity: 0.6 }}
+                  >
+                    /{maxScore}
+                  </Typography>
+                </Stack>
+              </Box>
+            </Stack>
+          </Paper>
+
+          {/* --- QUICK STATS GRID --- */}
+          <Grid
+            container
+            spacing={2}
+            sx={{
+              mb: 3,
+              '& .MuiGrid-item': {
+                display: 'flex',
+              },
+            }}
+          >
+            <Grid size={{ xs: 6, md: 3 }}>
+              <StatCard
+                icon={<TrackChangesIcon sx={{ fontSize: 32 }} />}
+                label="Accuracy"
+                value={`${accuracy}%`}
+                iconColor={theme.palette.info.main}
+                bgcolor={theme.palette.info?.pastel || '#e3f2fd'}
+                borderColor={theme.palette.info.light}
+              />
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <StatCard
+                icon={<CheckCircleOutlineIcon sx={{ fontSize: 32 }} />}
+                label="Correct"
+                value={`${correctCount}/${totalQuestions}`}
+                iconColor={theme.palette.success.main}
+                bgcolor={theme.palette.success?.pastel || '#e8f5e9'}
+                borderColor={theme.palette.success.light}
+              />
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <StatCard
+                icon={<AccessTimeIcon sx={{ fontSize: 32 }} />}
+                label="Time Taken"
+                value={timeFormatted}
+                iconColor={theme.palette.warning.dark}
+                bgcolor={theme.palette.warning?.pastel || '#fff8e1'}
+                borderColor={theme.palette.warning.light}
+              />
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <StatCard
+                icon={<FlashOnIcon sx={{ fontSize: 32 }} />}
+                label="Bonus XP"
+                value={`+${bonusExp}`}
+                iconColor={theme.palette.red?.text || '#d32f2f'}
+                bgcolor={theme.palette.background.default}
+                borderColor={theme.palette.orange?.light || '#ffcc80'}
+              />
+            </Grid>
+          </Grid>
+
+          {/* --- DETAILED BREAKDOWN CARD --- */}
+          <Paper
+            elevation={0}
+            sx={{
+              borderRadius: '24px',
+              p: { xs: 3, md: 4 },
+              border: `1px solid ${theme.palette.reading?.borderLight || '#e0e0e0'}`,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+            }}
+          >
+            <Stack direction="row" alignItems="center" spacing={2}>
+              <Box
+                sx={{
+                  p: 1,
+                  bgcolor: theme.palette.gray?.light || '#f5f5f5',
+                  borderRadius: 2,
+                  display: 'flex',
+                }}
+              >
+                <BarChartIcon sx={{ color: theme.palette.darkGrey?.light || '#757575' }} />
+              </Box>
+              <Typography
+                sx={{
+                  fontSize: { xs: '1rem', md: '1.2rem' },
+                  fontWeight: 700,
+                  color: theme.palette.text.primary,
+                }}
+              >
+                Performance Breakdown
               </Typography>
-              <Stack spacing={3}>
-                {/* Correct Answers */}
-                <Box>
-                  <Stack direction="row" justifyContent="space-between" mb={1}>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      fontWeight={600}
-                      sx={{ fontFamily: '"Outfit", sans-serif' }}
-                    >
-                      Correct Answers
+            </Stack>
+
+            {/* Insights */}
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={12}>
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  sx={{
+                    p: 2,
+                    bgcolor: theme.palette.background.gray || '#f8f9fa',
+                    borderRadius: '16px',
+                    border: `1px solid`,
+                    borderColor: theme.palette.gray?.main || '#e0e0e0',
+                    height: '100%',
+                  }}
+                >
+                  <Box sx={{ mt: 0.5 }}>
+                    <AccessTimeIcon sx={{ color: 'info.light' }} />
+                  </Box>
+                  <Box>
+                    <Typography variant="body1" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                      Pacing Analysis
                     </Typography>
                     <Typography
                       variant="body2"
-                      fontWeight={700}
-                      color="#16a34a"
-                      sx={{ fontFamily: '"Outfit", sans-serif' }}
+                      sx={{
+                        fontWeight: { xs: 400, md: 600 },
+                        color: theme.palette.text?.gray || '#757575',
+                      }}
                     >
-                      {stats.correctCount} / {stats.totalQuestions}
+                      You spent an average of{' '}
+                      <Box component="span" sx={{ color: 'info.main' }}>
+                        {avgTimePerQuestion}s
+                      </Box>{' '}
+                      per question.
                     </Typography>
-                  </Stack>
-                  <Box
+                  </Box>
+                </Stack>
+              </Grid>
+            </Grid>
+
+            <Grid container spacing={2} alignItems="flex-start">
+              {partsData.map((part, idx) => (
+                <Grid item xs={12} md={6} key={idx}>
+                  <Accordion
+                    disableGutters
+                    elevation={0}
                     sx={{
-                      width: '100%',
-                      height: 8,
-                      bgcolor: '#f1f5f9',
-                      borderRadius: 4,
+                      bgcolor: theme.palette.background.gray || '#f8f9fa',
+                      borderRadius: '16px !important',
+                      border: `1px solid ${theme.palette.gray?.light || '#e0e0e0'}`,
+                      '&:before': { display: 'none' },
                       overflow: 'hidden',
                     }}
                   >
-                    <Box sx={{ width: `${stats.accuracy}%`, height: '100%', bgcolor: '#16a34a' }} />
-                  </Box>
-                </Box>
-                {/* Divider */}
-                <Divider />
-                {/* Earned Points && Pace */}
-                <Stack spacing={2}>
-                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    <Box sx={{ p: 1, bgcolor: '#f0fdf4', borderRadius: '12px' }}>
-                      <StarIcon sx={{ color: '#16a34a' }} />
-                    </Box>
-                    <Box>
-                      <Typography
-                        variant="body2"
-                        fontWeight={700}
-                        sx={{ fontFamily: '"Outfit", sans-serif' }}
-                      >
-                        Earned Points
-                      </Typography>
-                      <Typography
-                        variant="h6"
-                        color="#16a34a"
-                        fontWeight={800}
-                        sx={{ fontFamily: '"Outfit", sans-serif' }}
-                      >
-                        +{history.earned_bonus_point} EXP
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    <Box sx={{ p: 1, bgcolor: '#f0f9ff', borderRadius: '12px' }}>
-                      <TimerIcon sx={{ color: '#0284c7' }} />
-                    </Box>
-                    <Box>
-                      <Typography
-                        variant="body2"
-                        fontWeight={700}
-                        sx={{ fontFamily: '"Outfit", sans-serif' }}
-                      >
-                        Pace
-                      </Typography>
-                      <Typography
-                        variant="h6"
-                        fontWeight={800}
-                        sx={{ fontFamily: '"Outfit", sans-serif' }}
-                      >
-                        {(history.total_time / stats.totalQuestions).toFixed(1)}s{' '}
-                        <Typography
-                          component="span"
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{ fontFamily: '"Outfit", sans-serif' }}
-                        >
-                          / question
-                        </Typography>
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Stack>
-                {/* Try Again Button */}
-                <Button
-                  variant="contained"
-                  onClick={navigateToReview}
-                  sx={{
-                    bgcolor: skillColor,
-                    borderRadius: '12px',
-                    px: 3,
-                    py: 1.5,
-                    fontWeight: 700,
-                    textTransform: 'none',
-                    fontSize: '0.9rem',
-                    boxShadow: 'none',
-                    whiteSpace: 'nowrap',
-                    '&:hover': { bgcolor: '#14532d' },
-                  }}
-                >
-                  Review Detailed Answers
-                </Button>
-
-                <Button
-                  variant="outlined"
-                  onClick={() =>
-                    router.push(
-                      `/student/${testData.skill === 'L' ? 'listening' : 'reading'}/${testId}`,
-                    )
-                  }
-                  sx={{
-                    borderColor: '#e2e8f0',
-                    color: '#64748b',
-                    borderRadius: '12px',
-                    px: 3,
-                    py: 1.5,
-                    fontWeight: 700,
-                    textTransform: 'none',
-                    fontSize: '0.9rem',
-                    whiteSpace: 'nowrap',
-                    '&:hover': { bgcolor: '#f8fafc' },
-                  }}
-                >
-                  Try Again
-                </Button>
-              </Stack>
-            </Paper>
-          </Box>
-
-          {/* Answer Breakdown Content */}
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            {/* Score && Accuracy && Time */}
-            <Paper
-              elevation={0}
-              sx={{
-                bgcolor: '#14532d',
-                color: 'white',
-                p: 3,
-                borderRadius: '24px',
-                display: 'flex',
-                justifyContent: 'space-around',
-                textAlign: 'center',
-                mb: 4,
-              }}
-            >
-              <Box>
-                <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 700 }}>
-                  SCORE
-                </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 800 }}>
-                  {history.total_score} / {maxScore}
-                </Typography>
-              </Box>
-              <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255,255,255,0.2)' }} />
-              <Box>
-                <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 700 }}>
-                  ACCURACY
-                </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 800 }}>
-                  {stats.accuracy}%
-                </Typography>
-              </Box>
-              <Divider orientation="vertical" flexItem sx={{ bgcolor: '#326b48' }} />
-              <Box>
-                <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 700 }}>
-                  TIME
-                </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 800 }}>
-                  {stats.timeStr}
-                </Typography>
-              </Box>
-            </Paper>
-
-            <Typography variant="h4" sx={{ fontWeight: 800, color: '#1e293b', mb: 1 }}>
-              {testData.title}
-            </Typography>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Chip
-                label={`${stats.totalQuestions} questions`}
-                size="small"
-                sx={{ fontWeight: 700, fontFamily: '"Outfit", sans-serif' }}
-              />
-            </Stack>
-            {/* Part Display */}
-            <Stack spacing={3} sx={{ mt: 3 }}>
-              {testData.receptive_test.receptive_parts
-                .sort((a, b) => a.order - b.order)
-                .map((part, pIdx) => (
-                  <Box key={part.id}>
-                    <Typography
-                      variant="subtitle1"
+                    <AccordionSummary
+                      expandIcon={
+                        <ExpandMoreIcon sx={{ fontSize: '1.8rem', color: 'text.secondary' }} />
+                      }
                       sx={{
-                        fontWeight: 700,
-                        mb: 2,
-                        color: '#64748b',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                        fontFamily: '"Outfit", sans-serif',
+                        p: 2,
+                        minHeight: 'unset',
+                        '& .MuiAccordionSummary-content': { m: 0 },
                       }}
                     >
-                      Part {part.order}: {part.description}
-                    </Typography>
-                    <Stack spacing={2}>
-                      {part.receptive_questions.map((q, index) => {
-                        const userAns = history.answer_histories.find(
-                          (ah) => ah.question_id === q.id,
-                        );
-                        const isCorrect = userAns?.is_correct;
-                        const correctAns = q.receptive_answers.find((a) => a.is_correct);
-
-                        return (
-                          <Paper
-                            key={q.id}
-                            elevation={0}
+                      <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        sx={{ width: '100%', pr: 1 }}
+                      >
+                        <Typography sx={{ fontWeight: 700, color: 'primary.main' }}>
+                          {part.name}
+                        </Typography>
+                        <Box
+                          sx={{
+                            bgcolor: `${theme.palette.background.paper}`,
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: 1.5,
+                            border: `1px solid ${theme.palette.gray?.main || '#e0e0e0'}`,
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                            display: 'flex',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <Typography
+                            component="span"
                             sx={{
-                              p: 3,
-                              borderRadius: '16px',
-                              border: '1px solid',
-                              borderColor: isCorrect ? '#dcfce7' : '#fee2e2',
-                              bgcolor: isCorrect ? '#ffffff' : '#fffafb',
-                              transition: 'all 0.2s',
-                              fontFamily: '"Outfit", sans-serif',
-                              '&:hover': { boxShadow: '0 10px 15px -3px rgba(0,0,0,0.05)' },
+                              fontWeight: 700,
+                              fontSize: '0.875rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.5,
                             }}
                           >
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                              {isCorrect ? (
-                                <CheckCircleOutlineIcon sx={{ color: '#16a34a', fontSize: 28 }} />
-                              ) : (
-                                <HighlightOffIcon sx={{ color: '#dc2626', fontSize: 28 }} />
-                              )}
-                              <Typography
-                                variant="subtitle2"
-                                sx={{
-                                  fontWeight: 700,
-                                  color: '#1e293b',
-                                  fontSize: '1rem',
-                                  fontFamily: '"Outfit", sans-serif',
-                                }}
-                              >
-                                Question {q.question_number || index + 1}
+                            <Box
+                              component="span"
+                              sx={{
+                                color:
+                                  part.correctCount > 0
+                                    ? theme.palette.success.main
+                                    : theme.palette.error.main,
+                              }}
+                            >
+                              {part.correctCount}
+                            </Box>
+                            <Box component="span" sx={{ color: theme.palette.text.disabled }}>
+                              / {part.totalCount}
+                            </Box>
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </AccordionSummary>
+
+                    <AccordionDetails sx={{ pt: 0, px: 2, pb: 2 }}>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {part.questions.map((q, qIdx) => {
+                          const isUnanswered = !q.isAnswered;
+
+                          return (
+                            <Box
+                              key={qIdx}
+                              onClick={() => navigateToReview(idx)}
+                              sx={{
+                                cursor: 'pointer',
+                                transition: 'transform 0.1s',
+                                '&:hover': {
+                                  transform: 'scale(1.05)',
+                                },
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.5,
+                                px: 1.25,
+                                py: 0.5,
+                                borderRadius: 2,
+                                border: '1px solid',
+                                borderColor: isUnanswered
+                                  ? theme.palette.darkGrey?.light || '#e0e0e0'
+                                  : q.isCorrect
+                                    ? theme.palette.success.dark
+                                    : theme.palette.error.dark,
+                                bgcolor: isUnanswered
+                                  ? theme.palette.gray?.light || '#f5f5f5'
+                                  : q.isCorrect
+                                    ? theme.palette.success.pastel || '#e8f5e9'
+                                    : theme.palette.error.pastel || '#ffebee',
+                                color: isUnanswered
+                                  ? theme.palette.gray?.main || '#9e9e9e'
+                                  : q.isCorrect
+                                    ? theme.palette.success.main
+                                    : theme.palette.error.main,
+                              }}
+                            >
+                              <Typography sx={{ fontSize: '0.875rem', fontWeight: 700 }}>
+                                Q{q.num}
                               </Typography>
+                              {isUnanswered ? (
+                                <RemoveCircleOutlineIcon sx={{ fontSize: 16 }} />
+                              ) : q.isCorrect ? (
+                                <CheckCircleIcon sx={{ fontSize: 16 }} />
+                              ) : (
+                                <CancelOutlinedIcon sx={{ fontSize: 16 }} />
+                              )}
                             </Box>
-
-                            <Box sx={{ pl: 5.5 }}>
-                              <Stack spacing={2}>
-                                {/* Question Content */}
-                                <Typography
-                                  variant="body1"
-                                  sx={{
-                                    color: '#475569',
-                                    mb: 1,
-                                    fontSize: '1rem',
-                                    fontFamily: '"Outfit", sans-serif',
-                                  }}
-                                  dangerouslySetInnerHTML={{ __html: q.content }}
-                                />
-                                {/* Audio Player */}
-                                {q.resources.audio && <CustomAudioPlayer src={q.resources.audio} />}
-                                {/* Answer Options */}
-                                <Grid container spacing={2}>
-                                  <Grid item xs={6}>
-                                    <Box
-                                      sx={{
-                                        p: 1.5,
-                                        borderRadius: '10px',
-                                        bgcolor: isCorrect ? '#f0fdf4' : '#fef2f2',
-                                        border: '1px solid',
-                                        borderColor: isCorrect ? '#dcfce7' : '#fecaca',
-                                      }}
-                                    >
-                                      <Typography
-                                        variant="caption"
-                                        display="block"
-                                        color="text.secondary"
-                                        fontWeight={700}
-                                        sx={{ fontFamily: '"Outfit", sans-serif' }}
-                                      >
-                                        YOUR ANSWER
-                                      </Typography>
-                                      <Typography
-                                        variant="body2"
-                                        fontWeight={600}
-                                        color={isCorrect ? '#166534' : '#991b1b'}
-                                        sx={{ fontFamily: '"Outfit", sans-serif' }}
-                                      >
-                                        {userAns?.selected_answer_id
-                                          ? // Xử lí đặc biệt cho format E do cấu trúc matching
-                                            (part.format === 'E'
-                                              ? part.receptive_questions.flatMap(
-                                                  (qu) => qu.receptive_answers,
-                                                )
-                                              : q.receptive_answers
-                                            ).find((a) => a.id === userAns.selected_answer_id)
-                                            ? (() => {
-                                                const a = (
-                                                  part.format === 'E'
-                                                    ? part.receptive_questions.flatMap(
-                                                        (qu) => qu.receptive_answers,
-                                                      )
-                                                    : q.receptive_answers
-                                                ).find(
-                                                  (ans) => ans.id === userAns.selected_answer_id,
-                                                );
-                                                if (part.format === 'A') {
-                                                  const imgUrl = a.resources?.image;
-                                                  return (
-                                                    <span
-                                                      style={{
-                                                        display: 'inline-flex',
-                                                        alignItems: 'flex-start',
-                                                        gap: '8px',
-                                                        lineHeight: '1.2',
-                                                      }}
-                                                    >
-                                                      <span style={{ marginTop: '2px' }}>
-                                                        {a.option_label ? `${a.option_label}.` : ''}
-                                                      </span>
-                                                      {imgUrl && (
-                                                        <img
-                                                          src={imgUrl}
-                                                          alt={`Option ${a.option_label}`}
-                                                          style={{
-                                                            maxWidth: '100px',
-                                                            borderRadius: '4px',
-                                                            objectFit: 'contain',
-                                                            display: 'block',
-                                                          }}
-                                                        />
-                                                      )}
-                                                    </span>
-                                                  );
-                                                }
-                                                const label = a.option_label
-                                                  ? `${a.option_label}. `
-                                                  : '';
-                                                return `${label}${a.answer_text || ''}`;
-                                              })()
-                                            : 'N/A'
-                                          : userAns?.user_answer_text || 'No answer'}
-                                      </Typography>
-                                    </Box>
-                                  </Grid>
-                                  {!isCorrect && (
-                                    <Grid item xs={6}>
-                                      <Box
-                                        sx={{
-                                          p: 1.5,
-                                          borderRadius: '10px',
-                                          bgcolor: '#f0fdf4',
-                                          border: '1px solid #dcfce7',
-                                        }}
-                                      >
-                                        <Typography
-                                          variant="caption"
-                                          display="block"
-                                          color="text.secondary"
-                                          fontWeight={700}
-                                          sx={{ fontFamily: '"Outfit", sans-serif' }}
-                                        >
-                                          CORRECT ANSWER
-                                        </Typography>
-                                        <Typography
-                                          variant="body2"
-                                          fontWeight={600}
-                                          color="#166534"
-                                          sx={{ fontFamily: '"Outfit", sans-serif' }}
-                                        >
-                                          {correctAns
-                                            ? (() => {
-                                                const imgUrl = correctAns.resources?.image;
-                                                // Format A: Hiển thị Label + Ảnh
-                                                if (part.format === 'A') {
-                                                  return (
-                                                    <span
-                                                      style={{
-                                                        display: 'inline-flex',
-                                                        alignItems: 'flex-start',
-                                                        gap: '8px',
-                                                        lineHeight: '1.2',
-                                                      }}
-                                                    >
-                                                      <span style={{ marginTop: '2px' }}>
-                                                        {correctAns.option_label}.
-                                                      </span>
-
-                                                      {imgUrl && (
-                                                        <img
-                                                          src={imgUrl}
-                                                          alt={`Correct Option ${correctAns.option_label}`}
-                                                          style={{
-                                                            maxWidth: '100px',
-                                                            borderRadius: '4px',
-                                                            objectFit: 'contain',
-                                                            display: 'block',
-                                                          }}
-                                                        />
-                                                      )}
-                                                    </span>
-                                                  );
-                                                }
-                                                // Format D, I thì không hiện label, các format khác hiện "A. Text" nếu có label
-                                                const label =
-                                                  !['D', 'I'].includes(part.format) &&
-                                                  correctAns.option_label
-                                                    ? `${correctAns.option_label}. `
-                                                    : '';
-                                                return `${label}${correctAns.answer_text || ''}`;
-                                              })()
-                                            : 'N/A'}
-                                        </Typography>
-                                      </Box>
-                                    </Grid>
-                                  )}
-                                </Grid>
-
-                                {q.explanation && (
-                                  <Box
-                                    sx={{
-                                      mt: 2,
-                                      p: 2,
-                                      bgcolor: '#f8fafc',
-                                      borderRadius: '12px',
-                                      borderLeft: '4px solid #cbd5e1',
-                                    }}
-                                  >
-                                    <Typography
-                                      variant="caption"
-                                      display="block"
-                                      color="text.secondary"
-                                      fontWeight={700}
-                                      sx={{ mb: 0.5, fontFamily: '"Outfit", sans-serif' }}
-                                    >
-                                      EXPLANATION
-                                    </Typography>
-                                    <Typography
-                                      variant="body2"
-                                      color="#475569"
-                                      sx={{ fontFamily: '"Outfit", sans-serif' }}
-                                    >
-                                      {q.explanation}
-                                    </Typography>
-                                  </Box>
-                                )}
-                              </Stack>
-                            </Box>
-                          </Paper>
-                        );
-                      })}
-                    </Stack>
-                  </Box>
-                ))}
-            </Stack>
-          </Box>
+                          );
+                        })}
+                      </Box>
+                    </AccordionDetails>
+                  </Accordion>
+                </Grid>
+              ))}
+            </Grid>
+          </Paper>
         </Box>
       </Container>
     </Box>

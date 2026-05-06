@@ -119,24 +119,19 @@ export default function ReceptiveTestHistory({ onPracticeNow }) {
   };
 
   const handlePracticeNow = () => {
-    if (testData.skill === 'R') {
-      onPracticeNow();
-    } else {
-      if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('accessToken');
-        if (!token) {
-          const skillPath = testData.skill === 'L' ? 'listening' : 'reading';
-          const currentUrl = `/student/${skillPath}/${test_id}`;
-          router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`);
-          return;
-        }
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        const skillPath = testData.skill === 'L' ? 'listening' : 'reading';
+        const currentUrl = `/student/${skillPath}/${test_id}`;
+        router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`);
+        return;
       }
-
-      window.sessionStorage.removeItem('current_receptive_attempt');
-      testData.skill === 'L'
-        ? router.push(`/student/listening/${test_id}/${submissions.length + 1}`)
-        : router.push(`/student/reading/${test_id}/${submissions.length + 1}`);
     }
+
+    window.sessionStorage.removeItem('current_receptive_attempt');
+    const skillPath = testData.skill === 'L' ? 'listening' : 'reading';
+    router.push(`/student/${skillPath}/${test_id}/${submissions.length + 1}`);
   };
 
   return (

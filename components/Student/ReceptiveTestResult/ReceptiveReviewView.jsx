@@ -40,6 +40,7 @@ const ReceptiveReviewView = ({
     currentSection: currentPartIndex + 1,
     timerNode: <TestTimer isActive={false} initialSeconds={history?.total_time || 0} />,
     onExit: onExit,
+    embedded: true,
   };
 
   switch (currentPart.componentType) {
