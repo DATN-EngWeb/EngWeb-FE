@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Box, Container, Typography, CircularProgress, Button } from '@mui/material';
+import { Box, Container, Typography, CircularProgress, Button, Stack } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { getReceptiveTestHistory } from '@/api/test';
 import { getFullReceptiveTest } from '@/api/tests';
 import {
@@ -37,15 +39,19 @@ export default function ReceptiveTestResult({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPartIndex, setCurrentPartIndex] = useState(0);
+  const [viewMode, setViewMode] = useState(mode);
 
-  const showReview = mode === 'review';
+  const showReview = viewMode === 'review';
 
-  const navigateToReview = () => {
-    router.push(`/student/reading/${testId}/results/${historyId}/review`);
+  const navigateToReview = (index = 0) => {
+    if (typeof index === 'number') {
+      setCurrentPartIndex(index);
+    }
+    setViewMode('review');
   };
 
   const navigateToSummary = () => {
-    router.push(`/student/reading/${testId}/results/${historyId}`);
+    setViewMode('summary');
   };
 
   useEffect(() => {
@@ -220,6 +226,9 @@ export default function ReceptiveTestResult({
     };
   }, [history, testData]);
 
+  const skillColor = testData?.skill === 'R' ? '#166534' : '#1e40af';
+  const accentColor = '#ea580c';
+
   if (loading) {
     return (
       <Box
@@ -253,31 +262,157 @@ export default function ReceptiveTestResult({
     );
   }
 
-  const skillColor = testData.skill === 'R' ? '#166534' : '#1e40af';
-
-  if (showReview) {
-    return (
-      <ReceptiveReviewView
-        testData={testData}
-        currentPartIndex={currentPartIndex}
-        setCurrentPartIndex={setCurrentPartIndex}
-        userAnswers={userAnswers}
-        history={history}
-        onExit={navigateToSummary}
-      />
-    );
-  }
+  const receptiveParts = testData.receptive_test?.receptive_parts || [];
 
   return (
-    <ReceptiveSummaryView
-      testData={testData}
-      history={history}
-      stats={stats}
-      maxScore={maxScore}
-      navigateToReview={navigateToReview}
-      router={router}
-      testId={testId}
-      skillColor={skillColor}
-    />
+    <Box sx={{ bgcolor: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Shared Header Section */}
+      <Box
+        sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', pt: 2.5, pb: 0, zIndex: 1100 }}
+      >
+        <Container maxWidth="lg">
+          <Box
+            sx={{
+              minHeight: 72,
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              pb: 2,
+            }}
+          >
+            <Button
+              startIcon={<ChevronLeftIcon />}
+              onClick={() =>
+                router.push(`/student/${testData.skill === 'L' ? 'listening' : 'reading'}`)
+              }
+              sx={{
+                position: 'absolute',
+                left: 0,
+                color: '#64748b',
+                textTransform: 'none',
+                fontWeight: 600,
+                fontFamily: '"Outfit", sans-serif',
+              }}
+            >
+              Back
+            </Button>
+
+            <Stack spacing={0.25} alignItems="center" sx={{ px: { xs: 0, md: 12 } }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: 700,
+                  color: '#1e293b',
+                  letterSpacing: '-0.01em',
+                  textAlign: 'center',
+                  fontFamily: '"Outfit", sans-serif',
+                }}
+              >
+                {testData.title}
+              </Typography>
+              <Typography
+                sx={{
+                  color: accentColor,
+                  fontWeight: 600,
+                  fontSize: '1rem',
+                  fontFamily: '"Outfit", sans-serif',
+                }}
+              >
+                {showReview ? `Review - Part ${currentPartIndex + 1}` : 'Summary'}
+              </Typography>
+            </Stack>
+          </Box>
+        </Container>
+
+        <Box sx={{ borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9' }}>
+          <Container maxWidth="lg" sx={{ py: 1.5 }}>
+            <Stack
+              direction="row"
+              spacing={1.2}
+              alignItems="center"
+              justifyContent="center"
+              flexWrap="wrap"
+            >
+              <Box
+                onClick={navigateToSummary}
+                sx={{
+                  px: 2.25,
+                  py: 0.7,
+                  borderRadius: '10px',
+                  border: `1px solid ${!showReview ? alpha(accentColor, 0.45) : '#e2e8f0'}`,
+                  bgcolor: !showReview ? alpha(accentColor, 0.08) : '#ffffff',
+                  color: !showReview ? accentColor : '#64748b',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    borderColor: alpha(accentColor, 0.35),
+                    color: accentColor,
+                    bgcolor: alpha(accentColor, 0.04),
+                  },
+                }}
+              >
+                Summary
+              </Box>
+              {receptiveParts.map((part, index) => (
+                <Box
+                  key={part.id || index}
+                  onClick={() => navigateToReview(index)}
+                  sx={{
+                    px: 2.25,
+                    py: 0.7,
+                    borderRadius: '10px',
+                    border: `1px solid ${showReview && currentPartIndex === index ? alpha(accentColor, 0.45) : '#e2e8f0'}`,
+                    bgcolor:
+                      showReview && currentPartIndex === index
+                        ? alpha(accentColor, 0.08)
+                        : '#ffffff',
+                    color: showReview && currentPartIndex === index ? accentColor : '#64748b',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      borderColor: alpha(accentColor, 0.35),
+                      color: accentColor,
+                      bgcolor: alpha(accentColor, 0.04),
+                    },
+                  }}
+                >
+                  Part {part.order || index + 1}
+                </Box>
+              ))}
+            </Stack>
+          </Container>
+        </Box>
+      </Box>
+
+      {/* View Content Section */}
+      <Box sx={{ flex: 1, overflow: showReview ? 'hidden' : 'auto' }}>
+        {showReview ? (
+          <ReceptiveReviewView
+            testData={testData}
+            currentPartIndex={currentPartIndex}
+            setCurrentPartIndex={setCurrentPartIndex}
+            userAnswers={userAnswers}
+            history={history}
+            onExit={navigateToSummary}
+          />
+        ) : (
+          <ReceptiveSummaryView
+            testData={testData}
+            history={history}
+            stats={stats}
+            maxScore={maxScore}
+            navigateToReview={navigateToReview}
+            router={router}
+            testId={testId}
+            skillColor={skillColor}
+          />
+        )}
+      </Box>
+    </Box>
   );
 }

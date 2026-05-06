@@ -1,19 +1,19 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import {
   CircularProgress,
   Box,
   Alert,
   Button,
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Typography,
   IconButton,
   Stack,
+  Snackbar,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -22,21 +22,16 @@ import MultiChoiceReading from '@/components/Reading/MultiChoice/MultiChoiceRead
 import FillBlanksReading from '@/components/Reading/FillBlanks/FillBlanksReading';
 import MatchingReading from '@/components/Reading/Matching/MatchingReading';
 import { getFullReceptiveTest } from '@/api/tests';
-import { submitReceptiveTest } from '@/api/test';
+import { createReceptiveTest } from '@/api/test';
 import {
   transformMultiChoiceTest,
   transformFillBlanksTest,
   transformMatchingTest,
 } from '@/utils/testDataTransform';
 import TestTimer from '@/components/Reading/Common/TestTimer';
-import ReceptiveTestHistory from '@/components/Student/Reading_Listening/ReceptiveTestHistory';
-import SaveDraftToast from '@/components/Writing-Speaking/SaveDraftToast';
-import SubmitLoadingDialog from '@/components/Writing-Speaking/SubmitLoadingDialog';
-import { useStreakContext } from '@/context/streakContext';
+import ReceptiveTestResult from '@/components/Student/ReceptiveTestResult/ReceptiveTestResult';
 
-export default function ReadingTestPage() {
-  const params = useParams();
-  const testId = params?.test_id;
+export default function ReadingTestContent({ testId }) {
   const router = useRouter();
 
   const [testData, setTestData] = useState(null);
@@ -44,27 +39,25 @@ export default function ReadingTestPage() {
   const [error, setError] = useState(null);
   const [answers, setAnswers] = useState({});
   const [currentPartIndex, setCurrentPartIndex] = useState(0);
-  const [isPracticing, setIsPracticing] = useState(false);
-  const [startTime] = useState(new Date().toISOString());
+  const [startTime, setStartTime] = useState(new Date().toISOString());
   const [openSubmitDialog, setOpenSubmitDialog] = useState(false);
   const [openWarningDialog, setOpenWarningDialog] = useState(false);
-  const [submitType, setSubmitType] = useState('D');
-
-  const [submitStatus, setSubmitStatus] = useState('idle');
-  const [draftStatus, setDraftStatus] = useState('idle');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitType, setSubmitType] = useState('S');
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-
-  const { refreshStreak, setGlobalRewardData } = useStreakContext();
+  const [isReadOnly, setIsReadOnly] = useState(false);
+  const [historyId, setHistoryId] = useState(null);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
 
   useEffect(() => {
-    if (!isPracticing || submitStatus === 'submitting') return;
+    if (isSubmitting || isReadOnly) return;
 
     const interval = setInterval(() => {
       setElapsedSeconds((prev) => prev + 1);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isPracticing, submitStatus]);
+  }, [isSubmitting, isReadOnly]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -144,6 +137,51 @@ export default function ReadingTestPage() {
           time: backendTest.time,
           parts,
         });
+
+        // Load draft/result from sessionStorage if available
+        if (typeof window !== 'undefined') {
+          const saved = window.sessionStorage.getItem('current_receptive_attempt');
+          if (saved) {
+            const savedData = JSON.parse(saved);
+            setIsReadOnly(savedData.isReadOnly || false);
+            setHistoryId(savedData.history_id || null);
+
+            if (savedData.answer_histories) {
+              const restoredAnswers = {};
+
+              // Helper to find answer label by ID from backendTest data
+              const findLabelById = (answerId) => {
+                if (!answerId || !backendTest?.receptive_test?.receptive_parts) return null;
+                for (const part of backendTest.receptive_test.receptive_parts) {
+                  for (const q of part.receptive_questions) {
+                    const found = q.receptive_answers?.find(
+                      (a) => a.id === answerId || a.id === parseInt(answerId),
+                    );
+                    if (found) return found.option_label;
+                  }
+                }
+                return null;
+              };
+
+              savedData.answer_histories.forEach((hist) => {
+                const questionId = hist.receptive_question || hist.question_id;
+                let value =
+                  hist.receptive_answer || hist.selected_answer_id || hist.user_answer_text;
+
+                // If we have an answer ID, try to map it back to a label for UI components
+                if (hist.receptive_answer || hist.selected_answer_id) {
+                  const label = findLabelById(hist.receptive_answer || hist.selected_answer_id);
+                  if (label) value = label;
+                }
+
+                restoredAnswers[questionId] = value;
+              });
+              setAnswers(restoredAnswers);
+              if (savedData.startTime) setStartTime(savedData.startTime);
+              if (savedData.totalTime) setElapsedSeconds(savedData.totalTime);
+            }
+          }
+        }
       } catch (err) {
         setError(err.message || 'Failed to load test data');
       } finally {
@@ -158,53 +196,34 @@ export default function ReadingTestPage() {
     setAnswers(newAnswers);
   };
 
-  const handleSubmit = () => {
-    let totalQuestions = 0;
-    testData.parts.forEach((part) => {
-      part.rawPart.receptive_questions.forEach(() => {
-        totalQuestions += 1;
-      });
-    });
+  const handleSubmit = (type = 'S') => {
+    const hasAnswer = Object.values(answers).some(
+      (val) => val !== '' && val !== null && val !== undefined,
+    );
 
-    let totalAnswered = 0;
-    Object.values(answers).forEach((val) => {
-      if (
-        val !== '' &&
-        val !== null &&
-        val !== undefined &&
-        (typeof val === 'string' ? val.trim() !== '' : true) &&
-        (Array.isArray(val) ? val.length > 0 : true)
-      ) {
-        totalAnswered += 1;
-      }
-    });
-
-    const hasAnswer = totalAnswered > 0;
-
-    if (!hasAnswer) {
+    if (!hasAnswer && type === 'S') {
       setOpenWarningDialog(true);
       return;
     }
 
-    const type = totalAnswered === totalQuestions ? 'S' : 'D';
     setSubmitType(type);
     setOpenSubmitDialog(true);
   };
 
   const handleConfirmSubmit = async () => {
     try {
-      if (submitType === 'S') {
-        setSubmitStatus('submitting');
-      } else {
-        setDraftStatus('saving');
-      }
-      setOpenSubmitDialog(false);
-
+      setIsSubmitting(true);
       const token = localStorage.getItem('accessToken');
       if (!token) {
-        alert('Please login to submit your test.');
-        setSubmitStatus('idle');
-        setDraftStatus('idle');
+        setSnackbar({
+          open: true,
+          message: 'Please login to submit your test.',
+          severity: 'warning',
+        });
+        setTimeout(() => {
+          router.push(`/student/reading/${testId}`);
+        }, 1500);
+        setIsSubmitting(false);
         return;
       }
 
@@ -214,17 +233,35 @@ export default function ReadingTestPage() {
       // Structure answer_histories based on parts and formats using the 'answers' state
       testData.parts.forEach((part) => {
         part.rawPart.receptive_questions.forEach((q) => {
-          const userAnswer = answers[q.id] || answers[q.question_number];
+          const userAnswer = answers[q.id];
 
-          if (userAnswer) {
+          if (userAnswer !== null && userAnswer !== undefined && userAnswer !== '') {
             const entry = { receptive_question: q.id };
 
             if (['F', 'G', 'A', 'B', 'C', 'H', 'E', 'J'].includes(part.format)) {
-              // Multiple choice or Matching: find the answer ID corresponding to the selected label/option
-              let selectedAnswer = q.receptive_answers.find((a) => a.option_label === userAnswer);
+              // Multiple choice or Matching: find the answer ID corresponding to the selected label/option/ID
+              let selectedAnswer = q.receptive_answers.find(
+                (a) =>
+                  a.option_label === userAnswer ||
+                  a.id === userAnswer ||
+                  a.id === parseInt(userAnswer),
+              );
 
+              // If not found by label or ID, and it's a single letter (A, B, C...), try mapping by index
+              if (!selectedAnswer && typeof userAnswer === 'string' && userAnswer.length === 1) {
+                const allAnswers = [...(q.receptive_answers || [])].sort((a, b) => {
+                  if (a.option_label && b.option_label)
+                    return a.option_label.localeCompare(b.option_label);
+                  return a.id - b.id;
+                });
+                const answerIndex = userAnswer.toUpperCase().charCodeAt(0) - 65;
+                if (answerIndex >= 0 && answerIndex < allAnswers.length) {
+                  selectedAnswer = allAnswers[answerIndex];
+                }
+              }
+
+              // Special handling for global pool matching (formats J, E)
               if (!selectedAnswer && (part.format === 'J' || part.format === 'E')) {
-                // Collect all unique answers across all questions in this part
                 const allPossibleAnswers = [];
                 const seenAnswerIds = new Set();
 
@@ -237,21 +274,21 @@ export default function ReadingTestPage() {
                   });
                 });
 
-                // Sort answers to ensure consistent A, B, C mapping
-                // First try to sort by option_label, then by some internal order if labels are missing
                 allPossibleAnswers.sort((a, b) => {
-                  if (a.option_label && b.option_label) {
+                  if (a.option_label && b.option_label)
                     return a.option_label.localeCompare(b.option_label);
-                  }
-                  return 0; // Keep original order if labels are missing
+                  return a.id - b.id;
                 });
 
-                // Try to find by label in the global pool
-                selectedAnswer = allPossibleAnswers.find((a) => a.option_label === userAnswer);
+                selectedAnswer = allPossibleAnswers.find(
+                  (a) =>
+                    a.option_label === userAnswer ||
+                    a.id === userAnswer ||
+                    a.id === parseInt(userAnswer),
+                );
 
-                // If still not found, fallback to index in the global pool (A=0, B=1...)
-                if (!selectedAnswer) {
-                  const answerIndex = userAnswer.charCodeAt(0) - 65;
+                if (!selectedAnswer && typeof userAnswer === 'string' && userAnswer.length === 1) {
+                  const answerIndex = userAnswer.toUpperCase().charCodeAt(0) - 65;
                   if (answerIndex >= 0 && answerIndex < allPossibleAnswers.length) {
                     selectedAnswer = allPossibleAnswers[answerIndex];
                   }
@@ -261,12 +298,14 @@ export default function ReadingTestPage() {
               if (selectedAnswer) {
                 entry.receptive_answer = selectedAnswer.id;
               } else {
-                // Fallback to text if answer ID not found (e.g. for wrong answers in some MC formats)
-                entry.user_answer_text = userAnswer;
+                // If we absolutely can't find an ID but the format requires it,
+                // we should probably NOT send user_answer_text as it might cause a backend error
+                // but let's keep it as a last-resort fallback for now
+                entry.user_answer_text = String(userAnswer);
               }
-            } else if (part.format === 'I' || part.format === 'D') {
-              // Open text fill in the blanks
-              entry.user_answer_text = userAnswer;
+            } else {
+              // Open text formats (I, D)
+              entry.user_answer_text = String(userAnswer);
             }
 
             answer_histories.push(entry);
@@ -279,55 +318,56 @@ export default function ReadingTestPage() {
         type: submitType,
         start_time: startTime,
         end_time: endTime,
-        total_time: Math.floor((new Date(endTime) - new Date(startTime)) / 1000),
+        total_time: elapsedSeconds,
         answer_histories,
       };
 
-      const [historyRes] = await Promise.all([
-        submitReceptiveTest(payload, token),
-        submitType === 'S'
-          ? new Promise((resolve) => setTimeout(resolve, 1500))
-          : Promise.resolve(),
-      ]);
+      const response = await createReceptiveTest(payload, token);
+      setOpenSubmitDialog(false);
+
+      setSnackbar({
+        open: true,
+        message: submitType === 'S' ? 'Test submitted successfully!' : 'Draft saved successfully!',
+        severity: 'success',
+      });
 
       if (submitType === 'S') {
-        setSubmitStatus('idle');
-        await refreshStreak();
-        if (historyRes?.streak_reward_notice) {
-          setGlobalRewardData(historyRes.streak_reward_notice);
-        } else if (
-          historyRes?.streak_notice?.current_streak === 1 &&
-          historyRes?.streak_notice?.continued === true
-        ) {
-          setGlobalRewardData(historyRes.streak_notice);
-        }
-        router.push(`/student/reading/${testId}/results/${historyRes.id}`);
+        const dataToSave = {
+          history_id: response.id,
+          answer_histories: response.answer_histories || [],
+          isReadOnly: true,
+          startTime: response.start_time,
+          totalTime: response.total_time,
+          bonus_point: response.bonus_point,
+          earned_bonus_point: response.earned_bonus_point,
+          total_score: response.total_score,
+          feedback_message: response.feedback_message,
+        };
+        window.sessionStorage.setItem('current_receptive_attempt', JSON.stringify(dataToSave));
+        setIsReadOnly(true);
+        setHistoryId(response.id);
       } else {
-        setDraftStatus('saved');
+        setTimeout(() => {
+          if (typeof window !== 'undefined') {
+            window.sessionStorage.removeItem('current_receptive_attempt');
+          }
+          router.push(`/student/reading/${testId}`);
+        }, 1000);
       }
     } catch (err) {
-      if (submitType === 'S') {
-        setSubmitStatus('error');
-      } else {
-        setDraftStatus('error');
+      console.error('Submission error:', err);
+      let errorMessage = err.message || 'Unknown error';
+      if (err.data && typeof err.data === 'object') {
+        errorMessage = JSON.stringify(err.data, null, 2);
       }
-      // eslint-disable-next-line no-console
-      console.error('Failed to submit test:', err);
+      setSnackbar({
+        open: true,
+        message: 'Failed to submit test: ' + errorMessage,
+        severity: 'error',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-  };
-
-  const handleCloseSubmitDialog = () => {
-    setSubmitStatus('idle');
-  };
-
-  const handleCloseDraftToast = () => {
-    setDraftStatus('idle');
-    router.push(`/student/reading/${testId}`);
-  };
-
-  const handleSaveDraftRetry = () => {
-    setDraftStatus('idle');
-    handleConfirmSubmit();
   };
 
   const handlePartChange = (newPartIndex) => {
@@ -348,183 +388,177 @@ export default function ReadingTestPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '60vh',
-          flexDirection: 'column',
-          gap: 2,
-        }}
-      >
-        <CircularProgress size={60} />
-        <Box sx={{ fontSize: '18px', color: 'text.secondary' }}>Loading test data...</Box>
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '60vh',
-          padding: 3,
-        }}
-      >
-        <Alert
-          severity="error"
-          sx={{ maxWidth: 600 }}
-          action={
-            <Button color="inherit" size="small" onClick={() => window.location.reload()}>
-              Retry
-            </Button>
-          }
-        >
-          {error}
-        </Alert>
-      </Box>
-    );
-  }
-
-  if (!testData || !testData.parts || testData.parts.length === 0) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '60vh',
-          padding: 3,
-        }}
-      >
-        <Alert severity="info" sx={{ maxWidth: 600 }}>
-          No test data available.
-        </Alert>
-      </Box>
-    );
-  }
-
-  const currentPart = testData.parts[currentPartIndex];
-
-  const renderPartComponent = () => {
-    if (!currentPart || !currentPart.data) {
+  const mainContent = () => {
+    if (loading) {
       return (
-        <Alert severity="warning" sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
-          This part format is not yet supported.
-        </Alert>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '60vh',
+            flexDirection: 'column',
+            gap: 2,
+          }}
+        >
+          <CircularProgress size={60} />
+          <Box sx={{ fontSize: '18px', color: 'text.secondary' }}>Loading test data...</Box>
+        </Box>
       );
     }
 
-    const commonProps = {
-      testName: testData.title,
-      parts: testData.parts.map((p, idx) => `Part ${idx + 1}`),
-      currentPart: currentPartIndex + 1,
-      answers,
-      onAnswerChange: handleAnswerChange,
-      onPartChange: handlePartChange,
-      isTeacher: false,
-      onSubmit: handleSubmit,
-      onBack: handleBack,
-      onNext: handleNext,
-      currentSection: currentPartIndex + 1,
-      totalSections: testData.parts.length,
-      timerNode: <TestTimer initialSeconds={elapsedSeconds} />,
-    };
+    if (isReadOnly && historyId) {
+      return <ReceptiveTestResult historyId={historyId} testId={testId} />;
+    }
 
-    switch (currentPart.componentType) {
-      case 'multi-choice':
-        return (
-          <MultiChoiceReading
-            {...commonProps}
-            passage={currentPart.data.passage}
-            passageTitle={currentPart.data.passageTitle}
-            questions={currentPart.data.questions}
-          />
-        );
+    if (error) {
+      return (
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '60vh',
+            padding: 3,
+          }}
+        >
+          <Alert
+            severity="error"
+            sx={{ maxWidth: 600 }}
+            action={
+              <Button color="inherit" size="small" onClick={() => window.location.reload()}>
+                Retry
+              </Button>
+            }
+          >
+            {error}
+          </Alert>
+        </Box>
+      );
+    }
 
-      case 'fill-blanks':
-        return (
-          <FillBlanksReading
-            {...commonProps}
-            passage={currentPart.data.passage}
-            passageTitle={currentPart.data.passageTitle}
-            blanks={currentPart.data.blanks}
-            questions={currentPart.data.questions}
-          />
-        );
+    if (!testData || !testData.parts || testData.parts.length === 0) {
+      return (
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '60vh',
+            padding: 3,
+          }}
+        >
+          <Alert severity="info" sx={{ maxWidth: 600 }}>
+            No test data available.
+          </Alert>
+        </Box>
+      );
+    }
+    const currentPart = testData.parts[currentPartIndex];
 
-      case 'matching':
-        return (
-          <MatchingReading
-            {...commonProps}
-            passage={currentPart.data.passage}
-            passageTitle={currentPart.data.passageTitle}
-            sentences={currentPart.data.sentences}
-            gaps={currentPart.data.gaps}
-            questions={currentPart.data.questions}
-          />
-        );
-
-      default:
+    const renderPartComponent = () => {
+      if (!currentPart || !currentPart.data) {
         return (
           <Alert severity="warning" sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
-            Unknown part format: {currentPart.format}
+            This part format is not yet supported.
           </Alert>
         );
-    }
-  };
+      }
 
-  if (!isPracticing) {
-    return (
-      // <ReceptiveTestHistory
-      //   testData={testData}
-      //   onPracticeNow={() => {
-      //     setIsPracticing(true);
-      //     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-      //   }}
-      // />
-      <ReceptiveTestHistory
-        onPracticeNow={() => {
-          setIsPracticing(true);
-          window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-        }}
-      />
-    );
-  }
+      const commonProps = {
+        testName: testData.title,
+        parts: testData.parts.map((p, idx) => `Part ${idx + 1}`),
+        currentPart: currentPartIndex + 1,
+        answers,
+        onAnswerChange: handleAnswerChange,
+        onPartChange: handlePartChange,
+        isTeacher: false,
+        onSubmit: () => handleSubmit('S'),
+        onSaveDraft: () => handleSubmit('D'),
+        onBack: handleBack,
+        onNext: handleNext,
+        currentSection: currentPartIndex + 1,
+        totalSections: testData.parts.length,
+        timerNode: <TestTimer initialSeconds={elapsedSeconds} />,
+      };
+
+      switch (currentPart.componentType) {
+        case 'multi-choice':
+          return (
+            <MultiChoiceReading
+              {...commonProps}
+              passage={currentPart.data.passage}
+              passageTitle={currentPart.data.passageTitle}
+              questions={currentPart.data.questions}
+            />
+          );
+
+        case 'fill-blanks':
+          return (
+            <FillBlanksReading
+              {...commonProps}
+              passage={currentPart.data.passage}
+              passageTitle={currentPart.data.passageTitle}
+              blanks={currentPart.data.blanks}
+              questions={currentPart.data.questions}
+            />
+          );
+
+        case 'matching':
+          return (
+            <MatchingReading
+              {...commonProps}
+              passage={currentPart.data.passage}
+              passageTitle={currentPart.data.passageTitle}
+              sentences={currentPart.data.sentences}
+              gaps={currentPart.data.gaps}
+              questions={currentPart.data.questions}
+            />
+          );
+
+        default:
+          return (
+            <Alert severity="warning" sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
+              Unknown part format: {currentPart.format}
+            </Alert>
+          );
+      }
+    };
+
+    return renderPartComponent();
+  };
 
   return (
     <>
-      <SubmitLoadingDialog
-        status={submitStatus}
-        testType="reading"
-        onClose={handleCloseSubmitDialog}
-        onRetry={() => {
-          setSubmitStatus('idle');
-          handleConfirmSubmit();
-        }}
-      />
+      {/* Global Notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{
+            width: '100%',
+            borderRadius: '12px',
+            fontWeight: 600,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
 
-      <SaveDraftToast
-        status={draftStatus}
-        testType="reading"
-        onClose={handleCloseDraftToast}
-        onRetry={handleSaveDraftRetry}
-      />
-
-      {renderPartComponent()}
+      {/* Main Content Area */}
+      {mainContent()}
 
       {/* Submit Confirmation Dialog */}
       <Dialog
         open={openSubmitDialog}
-        onClose={() =>
-          !(submitStatus === 'submitting' || draftStatus === 'saving') && setOpenSubmitDialog(false)
-        }
+        onClose={() => !isSubmitting && setOpenSubmitDialog(false)}
         PaperProps={{
           sx: {
             borderRadius: '20px',
@@ -545,7 +579,7 @@ export default function ReadingTestPage() {
             color: '#64748b',
             '&:hover': { backgroundColor: '#f1f5f9' },
           }}
-          disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
+          disabled={isSubmitting}
         >
           <CloseIcon fontSize="small" />
         </IconButton>
@@ -557,16 +591,14 @@ export default function ReadingTestPage() {
                 width: '90px',
                 height: '90px',
                 borderRadius: '50%',
-                backgroundColor: submitType === 'S' ? '#f0fdf4' : '#fffbeb',
+                backgroundColor: '#f0fdf4',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                border: `1px solid ${submitType === 'S' ? '#dcfce7' : '#fef3c7'}`,
+                border: '1px solid #dcfce7',
               }}
             >
-              <InfoOutlinedIcon
-                sx={{ fontSize: 48, color: submitType === 'S' ? '#16a34a' : '#f59e0b' }}
-              />
+              <InfoOutlinedIcon sx={{ fontSize: 48, color: '#16a34a' }} />
             </Box>
 
             <Typography
@@ -581,7 +613,7 @@ export default function ReadingTestPage() {
             >
               {submitType === 'S'
                 ? 'Are you sure you want to submit?'
-                : 'Do you want to save your progress as a draft?'}
+                : 'Are you sure you want to save this draft?'}
             </Typography>
           </Stack>
         </DialogContent>
@@ -590,7 +622,7 @@ export default function ReadingTestPage() {
           <Button
             onClick={() => setOpenSubmitDialog(false)}
             variant="outlined"
-            disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
+            disabled={isSubmitting}
             sx={{
               borderRadius: '50px',
               px: 5,
@@ -615,29 +647,29 @@ export default function ReadingTestPage() {
           <Button
             onClick={handleConfirmSubmit}
             variant="contained"
-            disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
+            disabled={isSubmitting}
             sx={{
               borderRadius: '50px',
-              px: submitStatus === 'submitting' || draftStatus === 'saving' ? 6 : 4,
+              px: isSubmitting ? 6 : 4,
               py: 1.5,
               textTransform: 'none',
               fontWeight: 700,
               fontSize: '0.875rem',
-              backgroundColor: submitType === 'S' ? '#166534' : '#f59e0b',
+              backgroundColor: '#166534',
               color: '#ffffff',
               fontFamily: '"Outfit", sans-serif',
-              boxShadow: `0 4px 14px 0 ${submitType === 'S' ? 'rgba(22, 101, 52, 0.39)' : 'rgba(245, 158, 11, 0.39)'}`,
+              boxShadow: '0 4px 14px 0 rgba(22, 101, 52, 0.39)',
               '&:hover': {
-                backgroundColor: submitType === 'S' ? '#14532d' : '#d97706',
-                boxShadow: `0 6px 20px ${submitType === 'S' ? 'rgba(22, 101, 52, 0.23)' : 'rgba(245, 158, 11, 0.23)'}`,
+                backgroundColor: '#14532d',
+                boxShadow: '0 6px 20px rgba(22, 101, 52, 0.23)',
               },
               '&.Mui-disabled': {
-                backgroundColor: submitType === 'S' ? '#166534' : '#f59e0b',
+                backgroundColor: '#166534',
                 opacity: 0.7,
               },
             }}
           >
-            {submitStatus === 'submitting' || draftStatus === 'saving' ? (
+            {isSubmitting ? (
               <CircularProgress size={24} color="inherit" />
             ) : submitType === 'S' ? (
               'SUBMIT'

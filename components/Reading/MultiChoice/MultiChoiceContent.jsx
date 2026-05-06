@@ -65,6 +65,7 @@ const MultiChoiceContent = ({
   embedded = false,
   timerNode,
   onAIReview,
+  onSaveDraft,
   onExit,
 }) => {
   const [selectedPart, setSelectedPart] = useState(currentPart - 1);
@@ -198,46 +199,49 @@ const MultiChoiceContent = ({
           isTeacher={isTeacher || showResults}
           timerNode={timerNode || (!isTeacher && !showResults ? <TestTimer /> : null)}
           onAIReview={onAIReview}
+          onSaveDraft={showResults ? null : onSaveDraft}
           onExit={onExit}
         />
       )}
 
-      <Box sx={{ backgroundColor: 'background.paper' }}>
-        <Container maxWidth={false} disableGutters sx={{ px: { xs: 2, md: 4 } }}>
-          <Box sx={headerWrapperStyles}>
-            <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-              <Tabs
-                value={selectedPart}
-                onChange={handlePartChange}
-                sx={{
-                  ...tabsContainerStyles,
-                  '& .MuiTabs-flexContainer': { gap: 1.5 },
-                  '& .MuiTabs-indicator': { display: 'none' },
-                }}
-              >
-                {parts.map((part, index) => (
-                  <Tab
-                    key={index}
-                    label={part}
-                    sx={{
-                      ...tabStyles,
-                      color:
-                        selectedPart === index
-                          ? 'reading.tabActiveText'
-                          : 'reading.tabInactiveText',
-                      fontWeight: selectedPart === index ? 600 : 500,
-                      backgroundColor:
-                        selectedPart === index ? 'reading.tabActiveBg' : 'reading.tabInactiveBg',
-                      borderColor:
-                        selectedPart === index ? 'reading.tabActiveBg' : 'reading.borderLight',
-                    }}
-                  />
-                ))}
-              </Tabs>
+      {!embedded && (
+        <Box sx={{ backgroundColor: 'background.paper' }}>
+          <Container maxWidth={false} disableGutters sx={{ px: { xs: 2, md: 4 } }}>
+            <Box sx={headerWrapperStyles}>
+              <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                <Tabs
+                  value={selectedPart}
+                  onChange={handlePartChange}
+                  sx={{
+                    ...tabsContainerStyles,
+                    '& .MuiTabs-flexContainer': { gap: 1.5 },
+                    '& .MuiTabs-indicator': { display: 'none' },
+                  }}
+                >
+                  {parts.map((part, index) => (
+                    <Tab
+                      key={index}
+                      label={part}
+                      sx={{
+                        ...tabStyles,
+                        color:
+                          selectedPart === index
+                            ? 'reading.tabActiveText'
+                            : 'reading.tabInactiveText',
+                        fontWeight: selectedPart === index ? 600 : 500,
+                        backgroundColor:
+                          selectedPart === index ? 'reading.tabActiveBg' : 'reading.tabInactiveBg',
+                        borderColor:
+                          selectedPart === index ? 'reading.tabActiveBg' : 'reading.borderLight',
+                      }}
+                    />
+                  ))}
+                </Tabs>
+              </Box>
             </Box>
-          </Box>
-        </Container>
-      </Box>
+          </Container>
+        </Box>
+      )}
 
       <Box sx={{ ...containerStyles, flex: 1, overflow: 'hidden' }}>
         <Container maxWidth={false} disableGutters sx={{ height: '100%', px: 0 }}>

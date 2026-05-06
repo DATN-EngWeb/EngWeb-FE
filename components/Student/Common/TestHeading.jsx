@@ -13,6 +13,7 @@ export default function TestHeading({
   onSubmit = () => {},
   isTeacher = false,
   onAIReview,
+  onSaveDraft,
   onExit,
 }) {
   return (
@@ -33,6 +34,7 @@ export default function TestHeading({
             flexDirection: 'column',
             alignItems: 'flex-start',
             gap: 0.5,
+            order: { xs: 2, md: 1 },
           }}
         >
           {onExit && (
@@ -68,6 +70,7 @@ export default function TestHeading({
             justifyContent: 'flex-end',
             alignItems: 'center',
             gap: 1.5,
+            order: { xs: 3, md: 3 },
           }}
         >
           {onAIReview && (
@@ -85,6 +88,20 @@ export default function TestHeading({
               onClick={onAIReview}
             >
               AI Feedback
+            </Button>
+          )}
+          {onSaveDraft && (
+            <Button
+              sx={{
+                ...listeningtestStyles.draftButton,
+                py: 1,
+                px: 2,
+                fontSize: '0.8125rem',
+                minWidth: 'auto',
+              }}
+              onClick={onSaveDraft}
+            >
+              Save Draft
             </Button>
           )}
           {onSubmit && (

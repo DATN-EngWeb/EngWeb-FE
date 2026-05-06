@@ -65,6 +65,7 @@ const MatchingContent = ({
   embedded = false,
   timerNode,
   onAIReview,
+  onSaveDraft,
   onExit,
 }) => {
   const [selectedPart, setSelectedPart] = useState(currentPart - 1);
@@ -262,61 +263,66 @@ const MatchingContent = ({
           isTeacher={isTeacher || showResults}
           timerNode={timerNode || (!isTeacher && !showResults ? <TestTimer /> : null)}
           onAIReview={onAIReview}
+          onSaveDraft={showResults ? null : onSaveDraft}
           onExit={onExit}
         />
       )}
-      <Box sx={{ backgroundColor: 'background.paper' }}>
-        <Container maxWidth={false} disableGutters sx={{ px: { xs: 2, md: 4 } }}>
-          <Box sx={headerWrapperStyles}>
-            {/* Row 2: Timer - Parts tabs - Submit button */}
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 2,
-              }}
-            >
-              {/* Tabs ở giữa */}
-              <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-                <Tabs
-                  value={selectedPart}
-                  onChange={handlePartChange}
-                  sx={{
-                    ...tabsContainerStyles,
-                    '& .MuiTabs-flexContainer': {
-                      justifyContent: 'center',
-                      gap: 1.5,
-                    },
-                    '& .MuiTabs-indicator': {
-                      display: 'none',
-                    },
-                  }}
-                >
-                  {parts.map((part, index) => (
-                    <Tab
-                      key={index}
-                      label={part}
-                      sx={{
-                        ...tabStyles,
-                        color:
-                          selectedPart === index
-                            ? 'reading.tabActiveText'
-                            : 'reading.tabInactiveText',
-                        fontWeight: selectedPart === index ? 600 : 500,
-                        backgroundColor:
-                          selectedPart === index ? 'reading.tabActiveBg' : 'reading.tabInactiveBg',
-                        borderColor:
-                          selectedPart === index ? 'reading.tabActiveBg' : 'reading.borderLight',
-                      }}
-                    />
-                  ))}
-                </Tabs>
+      {!embedded && (
+        <Box sx={{ backgroundColor: 'background.paper' }}>
+          <Container maxWidth={false} disableGutters sx={{ px: { xs: 2, md: 4 } }}>
+            <Box sx={headerWrapperStyles}>
+              {/* Row 2: Timer - Parts tabs - Submit button */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 2,
+                }}
+              >
+                {/* Tabs ở giữa */}
+                <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                  <Tabs
+                    value={selectedPart}
+                    onChange={handlePartChange}
+                    sx={{
+                      ...tabsContainerStyles,
+                      '& .MuiTabs-flexContainer': {
+                        justifyContent: 'center',
+                        gap: 1.5,
+                      },
+                      '& .MuiTabs-indicator': {
+                        display: 'none',
+                      },
+                    }}
+                  >
+                    {parts.map((part, index) => (
+                      <Tab
+                        key={index}
+                        label={part}
+                        sx={{
+                          ...tabStyles,
+                          color:
+                            selectedPart === index
+                              ? 'reading.tabActiveText'
+                              : 'reading.tabInactiveText',
+                          fontWeight: selectedPart === index ? 600 : 500,
+                          backgroundColor:
+                            selectedPart === index
+                              ? 'reading.tabActiveBg'
+                              : 'reading.tabInactiveBg',
+                          borderColor:
+                            selectedPart === index ? 'reading.tabActiveBg' : 'reading.borderLight',
+                        }}
+                      />
+                    ))}
+                  </Tabs>
+                </Box>
               </Box>
             </Box>
-          </Box>
-        </Container>
-      </Box>
+          </Container>
+        </Box>
+      )}
 
       <Box
         sx={{
