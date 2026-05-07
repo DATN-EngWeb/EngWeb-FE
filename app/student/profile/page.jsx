@@ -87,6 +87,11 @@ export default function StudentProfile() {
       const mapped = mapProfileData(response?.data);
       setProfile(mapped);
       originalProfile.current = mapped;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('avatar', mapped.avatarUrl || '');
+        // eslint-disable-next-line no-undef
+        window.dispatchEvent(new Event('auth-user-updated'));
+      }
       showSnackbar(response?.message || 'Profile updated successfully');
     } catch (err) {
       showSnackbar(err.message || 'Failed to update profile', 'error');

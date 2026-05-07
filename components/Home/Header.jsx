@@ -374,10 +374,24 @@ export default function Header() {
   }, [user]);
 
   useEffect(() => {
-    if (studentProfile?.avatar_url && typeof window !== 'undefined') {
-      setUserAvatar(studentProfile.avatar_url);
-    }
+    if (typeof window === 'undefined') return;
+    setUserAvatar(studentProfile?.avatar_url || null);
   }, [studentProfile]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const syncAvatar = () => {
+      const latestAvatar = localStorage.getItem('avatar');
+      setUserAvatar(latestAvatar || null);
+      setStudentProfile((prev) => (prev ? { ...prev, avatar_url: latestAvatar || '' } : prev));
+    };
+    window.addEventListener('auth-user-updated', syncAvatar);
+    window.addEventListener('storage', syncAvatar);
+    return () => {
+      window.removeEventListener('auth-user-updated', syncAvatar);
+      window.removeEventListener('storage', syncAvatar);
+    };
+  }, []);
 
   const handleOpenModal = (type) => {
     setActionType(type);
@@ -547,7 +561,7 @@ export default function Header() {
                           <UserPopup
                             user={user}
                             studentProfile={studentProfile}
-                            userAvatar={studentProfile?.avatar_url}
+                            userAvatar={userAvatar}
                             onClose={() => setPopupOpen(false)}
                             onLogout={handleLogout}
                             onNavigate={handleNavigate}

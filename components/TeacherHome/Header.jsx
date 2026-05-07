@@ -37,10 +37,24 @@ export default function TeacherHeader() {
   const [userAvatar, setUserAvatar] = useState(null);
 
   useEffect(() => {
-    if (user?.avatar && typeof window !== 'undefined') {
-      setUserAvatar(user.avatar);
-    }
+    if (typeof window === 'undefined') return;
+    const latestAvatar = localStorage.getItem('avatar');
+    setUserAvatar(latestAvatar || user?.avatar || null);
   }, [user]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const syncAvatar = () => {
+      const latestAvatar = localStorage.getItem('avatar');
+      setUserAvatar(latestAvatar || null);
+    };
+    window.addEventListener('auth-user-updated', syncAvatar);
+    window.addEventListener('storage', syncAvatar);
+    return () => {
+      window.removeEventListener('auth-user-updated', syncAvatar);
+      window.removeEventListener('storage', syncAvatar);
+    };
+  }, []);
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);

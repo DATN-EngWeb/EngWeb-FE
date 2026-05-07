@@ -96,7 +96,13 @@ export default function TeacherProfile() {
       setIsSaving(true);
       try {
         const response = await updateTeacherProfile(user.id, sectionData);
-        setProfile(mapProfileData(response?.data));
+        const mapped = mapProfileData(response?.data);
+        setProfile(mapped);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('avatar', mapped.avatarUrl || '');
+          // eslint-disable-next-line no-undef
+          window.dispatchEvent(new Event('auth-user-updated'));
+        }
         setCredentialsChanges({});
         showSnackbar(response?.message || 'Profile updated successfully', 'success');
       } catch (err) {
