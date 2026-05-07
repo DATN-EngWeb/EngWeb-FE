@@ -22,7 +22,6 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
 import ForumIcon from '@mui/icons-material/Forum';
 import { generateAIReadingFeedback, getTestFeedbacks } from '../../../../../../api/feedback';
 import FeedbackCard from '../../../../../../components/Teacher/Feedback/FeedbackCard';
@@ -35,6 +34,7 @@ import {
   getRecepiveTestDetails,
   uploadToObjectStorage,
 } from '../../../../../../api/test';
+import chatBotIcon from '../../../../../../assets/img/chat-bot.png';
 
 const STATUS_LABELS = {
   D: 'Draft',
@@ -474,7 +474,12 @@ export default function ViewTestFeedbackPage({ params }) {
           <Card variant="outlined" sx={{ borderRadius: 3 }}>
             <CardContent>
               <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
-                <SmartToyIcon color="info" />
+                <Box
+                  component="img"
+                  src={chatBotIcon.src ?? chatBotIcon}
+                  alt="AI Feedback"
+                  sx={{ width: 24, height: 24, objectFit: 'contain', color: 'white' }}
+                />
                 <Typography variant="h6" fontWeight={700}>
                   AI Feedback
                 </Typography>

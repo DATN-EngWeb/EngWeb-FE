@@ -6,6 +6,12 @@ import { BrainstormResult } from './Brainstorm';
 import { GeneralResult } from './General';
 import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import {
+  messageBubbleStyles,
+  getModeLabel,
+  getUserMetaDataStackSx,
+  getTimestampTextSx,
+} from '../../styles/AIAssistant/MessageBubbleStyles';
 
 function formatDateShort(value) {
   return new Intl.DateTimeFormat('vi-VN', {
@@ -38,18 +44,9 @@ export default function MessageBubble({ message }) {
 
   if (messageMode === 'mode_notice' || message.role === 'system') {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+      <Box sx={messageBubbleStyles.modeNoticeBox}>
         <Box>
-          <Typography
-            variant="caption"
-            sx={{
-              color: 'text.secondary',
-              fontWeight: 700,
-              textAlign: 'center',
-              px: 2,
-              py: 0.75,
-            }}
-          >
+          <Typography variant="caption" sx={messageBubbleStyles.modeNoticeText}>
             --- {messageContent} ---
           </Typography>
         </Box>
@@ -59,46 +56,20 @@ export default function MessageBubble({ message }) {
 
   if (isUser) {
     return (
-      <Stack direction="row" spacing={1.25} justifyContent="flex-end">
-        <Box sx={{ maxWidth: { xs: '90%', md: '78%' } }}>
-          <Paper
-            elevation={0}
-            sx={{
-              borderRadius: 4,
-              px: 2,
-              py: 1.5,
-              color: 'text.primary',
-              border: 'none',
-            }}
-          >
-            <Typography sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>
-              {messageContent}
-            </Typography>
+      <Stack sx={messageBubbleStyles.userMessageStack}>
+        <Box sx={messageBubbleStyles.userMessageBox}>
+          <Paper elevation={0} sx={messageBubbleStyles.userMessagePaper}>
+            <Typography sx={messageBubbleStyles.userMessageText}>{messageContent}</Typography>
           </Paper>
 
           {!Number.isNaN(createdAtMs) && (
-            <Typography
-              variant="caption"
-              sx={{
-                display: 'block',
-                mt: 0.75,
-                color: 'text.disabled',
-                textAlign: 'right',
-              }}
-            >
-              {formatDateShort(createdAtMs)}
-            </Typography>
+            <Stack sx={getUserMetaDataStackSx()}>
+              <Typography sx={getTimestampTextSx(true)}>{formatDateShort(createdAtMs)}</Typography>
+            </Stack>
           )}
         </Box>
 
-        <Avatar
-          sx={{
-            width: 34,
-            height: 34,
-            bgcolor: 'primary.main',
-            boxShadow: '0 10px 24px rgba(255, 133, 75, 0.18)',
-          }}
-        >
+        <Avatar sx={messageBubbleStyles.userAvatar}>
           <AccountCircleIcon />
         </Avatar>
       </Stack>
@@ -106,35 +77,15 @@ export default function MessageBubble({ message }) {
   }
 
   return (
-    <Stack direction="row" spacing={1.25} justifyContent={isUser ? 'flex-end' : 'flex-start'}>
-      <Avatar
-        sx={{
-          width: 34,
-          height: 34,
-          bgcolor: 'primary.main',
-          boxShadow: '0 10px 24px rgba(83, 40, 34, 0.18)',
-        }}
-      >
-        <AutoAwesomeRoundedIcon sx={{ fontSize: 18 }} />
+    <Stack sx={messageBubbleStyles.aiMessageStack}>
+      <Avatar sx={messageBubbleStyles.aiAvatar}>
+        <AutoAwesomeRoundedIcon sx={messageBubbleStyles.aiAvatarIcon} />
       </Avatar>
 
-      <Box sx={{ maxWidth: { xs: '90%', md: '78%' } }}>
-        <Paper
-          elevation={0}
-          sx={{
-            borderRadius: 4,
-            px: 2,
-            py: 1.5,
-            bgcolor: isUser ? 'primary.main' : 'background.paper',
-            color: isUser ? 'primary.contrastText' : 'text.primary',
-            border: isUser ? 'none' : '1px solid rgba(83, 40, 34, 0.10)',
-            boxShadow: isUser ? '0 10px 24px rgba(83, 40, 34, 0.14)' : 'none',
-          }}
-        >
+      <Box sx={messageBubbleStyles.aiMessageBox}>
+        <Paper elevation={0} sx={messageBubbleStyles.aiMessagePaper}>
           {plainTextContent ? (
-            <Typography sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>
-              {plainTextContent}
-            </Typography>
+            <Typography sx={messageBubbleStyles.aiMessageText}>{plainTextContent}</Typography>
           ) : messageMode === 'grammar' ? (
             <GrammarResult answer={messageContent} />
           ) : messageMode === 'translate' ? (
@@ -144,30 +95,21 @@ export default function MessageBubble({ message }) {
           ) : messageMode === 'brainstorm' ? (
             <BrainstormResult answer={messageContent} />
           ) : messageMode === 'mode_notice' ? (
-            <Typography sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>
-              {messageContent}
-            </Typography>
+            <Typography sx={messageBubbleStyles.aiMessageText}>{messageContent}</Typography>
           ) : messageMode === 'general' ? (
             <GeneralResult answer={messageContent} />
           ) : (
-            <Typography sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>
-              {messageContent}
-            </Typography>
+            <Typography sx={messageBubbleStyles.aiMessageText}>{messageContent}</Typography>
           )}
         </Paper>
 
         {!Number.isNaN(createdAtMs) && (
-          <Typography
-            variant="caption"
-            sx={{
-              display: 'block',
-              mt: 0.75,
-              color: 'text.disabled',
-              textAlign: isUser ? 'right' : 'left',
-            }}
-          >
-            {formatDateShort(createdAtMs)}
-          </Typography>
+          <Stack sx={messageBubbleStyles.metaDataStack} justifyContent="flex-start">
+            <Typography sx={getTimestampTextSx(false)}>{formatDateShort(createdAtMs)}</Typography>
+            {messageMode && messageMode !== 'mode_notice' && (
+              <Box sx={messageBubbleStyles.modeBadge}>{getModeLabel(messageMode)}</Box>
+            )}
+          </Stack>
         )}
       </Box>
     </Stack>

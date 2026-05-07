@@ -9,6 +9,7 @@ import {
   ChevronRight as ChevronRightIcon,
 } from '@mui/icons-material';
 import { CopyButton, SectionCard } from './SharedComponents';
+import { brainstormStyles } from '../../styles/AIAssistant/BrainstormStyles';
 
 function splitVocab(item) {
   const paren = item.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
@@ -22,7 +23,7 @@ function splitVocab(item) {
 
 function ChipList({ items = [], color = 'rgba(59,130,246,0.12)' }) {
   return (
-    <Stack direction="row" flexWrap="wrap" gap={1}>
+    <Stack direction={brainstormStyles.chipList.direction} flexWrap="wrap" gap={1}>
       {items.map((item, i) => {
         const { main, sub } = splitVocab(item);
 
@@ -32,10 +33,8 @@ function ChipList({ items = [], color = 'rgba(59,130,246,0.12)' }) {
             label={sub ? `${main} · ${sub}` : main}
             size="small"
             sx={{
+              ...brainstormStyles.chipItem,
               bgcolor: color,
-              color: 'rgb(15, 23, 42)',
-              fontWeight: 500,
-              borderRadius: 999,
             }}
           />
         );
@@ -46,29 +45,18 @@ function ChipList({ items = [], color = 'rgba(59,130,246,0.12)' }) {
 
 function OutlineBlock({ step, heading, points = [] }) {
   return (
-    <Paper
-      variant="outlined"
-      sx={{ p: 1.5, borderRadius: 3, borderColor: 'rgba(59, 130, 246, 0.2)', bgcolor: '#f8fbff' }}
-    >
+    <Paper variant="outlined" sx={brainstormStyles.outlineBlock}>
       <Stack spacing={1}>
         <Stack direction="row" spacing={1} alignItems="center">
-          <Chip
-            label={step}
-            size="small"
-            sx={{
-              bgcolor: 'rgba(16, 185, 129, 0.15)',
-              color: 'rgb(5, 150, 105)',
-              fontWeight: 700,
-            }}
-          />
-          <Typography fontWeight={600}>{heading}</Typography>
+          <Chip label={step} size="small" sx={brainstormStyles.outlineStepChip} />
+          <Typography sx={brainstormStyles.outlineHeading}>{heading}</Typography>
         </Stack>
 
         <Stack spacing={1}>
           {points.map((p, i) => (
             <Stack key={i} direction="row" spacing={1}>
               <ChevronRightIcon fontSize="small" />
-              <Typography fontSize={14}>{p}</Typography>
+              <Typography sx={brainstormStyles.outlinePoint}>{p}</Typography>
             </Stack>
           ))}
         </Stack>
@@ -138,39 +126,18 @@ export function BrainstormResult({ answer }) {
     .filter(Boolean);
 
   return (
-    <Box maxWidth={600} mx="auto">
+    <Box sx={brainstormStyles.root}>
       <Stack spacing={2}>
         {sampleThesis && (
-          <Paper
-            sx={{
-              borderRadius: 4,
-              p: 3,
-              border: '1px solid rgba(59, 130, 246, 0.2)',
-              boxShadow: '0 8px 22px rgba(15, 23, 42, 0.04)',
-              bgcolor: '#f9fbf7',
-            }}
-          >
-            <Paper
-              variant="outlined"
-              sx={{ p: 1.5, borderRadius: 3, borderColor: 'rgba(15, 23, 42, 0.08)' }}
-            >
+          <Paper sx={brainstormStyles.thesisWrapper}>
+            <Paper variant="outlined" sx={brainstormStyles.thesisCard}>
               <Stack direction="row" spacing={1} alignItems="flex-start">
-                <QuoteIcon fontSize="small" sx={{ color: 'text.secondary', mt: 0.25 }} />
+                <QuoteIcon fontSize="small" sx={brainstormStyles.thesisQuoteIcon} />
 
                 <Box flex={1}>
-                  <Typography
-                    fontSize={11}
-                    fontWeight={800}
-                    textTransform="uppercase"
-                    color="text.secondary"
-                    letterSpacing={0.5}
-                  >
-                    Luận điểm gợi ý
-                  </Typography>
+                  <Typography sx={brainstormStyles.thesisMeta}>Luận điểm gợi ý</Typography>
 
-                  <Typography fontSize={18} fontWeight={700} lineHeight={1.45}>
-                    {sampleThesis}
-                  </Typography>
+                  <Typography sx={brainstormStyles.thesisText}>{sampleThesis}</Typography>
                 </Box>
 
                 <CopyButton text={sampleThesis} compact />
@@ -183,56 +150,19 @@ export function BrainstormResult({ answer }) {
           <SectionCard icon={LightbulbIcon} label="Ý tưởng theo chủ đề nhỏ">
             <Stack spacing={1.5}>
               {normalizedIdeas.map((idea, i) => (
-                <Paper
-                  key={i}
-                  variant="outlined"
-                  sx={{
-                    p: 1.5,
-                    borderRadius: 3,
-                    borderColor: 'rgba(59, 130, 246, 0.16)',
-                    bgcolor: '#f8fbff',
-                  }}
-                >
+                <Paper key={i} variant="outlined" sx={brainstormStyles.ideaCard}>
                   <Stack direction="row" spacing={1.25} alignItems="center" mb={0.75}>
-                    <Box
-                      sx={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: '50%',
-                        bgcolor: 'rgba(16,185,129,0.15)',
-                        color: 'rgb(5,150,105)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 14,
-                        fontWeight: 700,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {i + 1}
-                    </Box>
+                    <Box sx={brainstormStyles.ideaOrderBadge}>{i + 1}</Box>
 
-                    <Typography fontWeight={700} fontSize={14} lineHeight={1.35}>
-                      {idea.subtopic}
-                    </Typography>
+                    <Typography sx={brainstormStyles.ideaHeading}>{idea.subtopic}</Typography>
                   </Stack>
 
                   {idea.points.length > 0 && (
-                    <Stack mt={0.5} spacing={0.45} sx={{ pl: 3.5 }}>
+                    <Stack mt={0.5} spacing={0.45} sx={brainstormStyles.ideaPointList}>
                       {idea.points.map((p, j) => (
                         <Stack key={j} direction="row" spacing={1.25} alignItems="center">
-                          <Box
-                            sx={{
-                              width: 6,
-                              height: 6,
-                              borderRadius: '50%',
-                              bgcolor: 'rgb(16,185,129)',
-                              flexShrink: 0,
-                            }}
-                          />
-                          <Typography fontSize={14} lineHeight={1.5}>
-                            {p}
-                          </Typography>
+                          <Box sx={brainstormStyles.ideaPointDot} />
+                          <Typography sx={brainstormStyles.ideaPointText}>{p}</Typography>
                         </Stack>
                       ))}
                     </Stack>
@@ -244,7 +174,11 @@ export function BrainstormResult({ answer }) {
         )}
 
         {normalizedOutline && (
-          <SectionCard icon={ListTreeIcon} sx={{ fontSize: '14' }} label="Dàn bài đề xuất">
+          <SectionCard
+            icon={ListTreeIcon}
+            sx={brainstormStyles.outlineSection}
+            label="Dàn bài đề xuất"
+          >
             <Stack spacing={1.5}>
               <OutlineBlock step="MB" heading="Mở bài" points={normalizedOutline.introduction} />
 
@@ -259,38 +193,11 @@ export function BrainstormResult({ answer }) {
           <SectionCard icon={PilcrowIcon} label="Câu chủ đề mẫu">
             <Stack spacing={1}>
               {normalizedTopicSentences.map((s, i) => (
-                <Paper
-                  key={i}
-                  variant="outlined"
-                  sx={{
-                    p: 1.25,
-                    borderRadius: 3,
-                    borderColor: 'rgba(59,130,246,0.15)',
-                    bgcolor: '#f8fbff',
-                  }}
-                >
+                <Paper key={i} variant="outlined" sx={brainstormStyles.topicSentenceCard}>
                   <Stack direction="row" spacing={1} alignItems="center">
-                    <Box
-                      sx={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: '50%',
-                        bgcolor: 'rgba(168,85,247,0.14)',
-                        color: 'rgb(147,51,234)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 700,
-                        fontSize: 13,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {i + 1}
-                    </Box>
+                    <Box sx={brainstormStyles.topicSentenceBadge}>{i + 1}</Box>
 
-                    <Typography flex={1} fontSize={14}>
-                      {s}
-                    </Typography>
+                    <Typography sx={brainstormStyles.topicSentenceText}>{s}</Typography>
                     <CopyButton text={s} compact />
                   </Stack>
                 </Paper>

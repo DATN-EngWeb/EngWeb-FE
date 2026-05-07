@@ -6,6 +6,11 @@ import SyncAltRoundedIcon from '@mui/icons-material/SyncAltRounded';
 import BlockRoundedIcon from '@mui/icons-material/BlockRounded';
 import ChecklistRoundedIcon from '@mui/icons-material/ChecklistRounded';
 import { CopyButton, SectionCard } from './SharedComponents';
+import {
+  vocabularyStyles,
+  getSynAntContainerSx,
+  getSynAntBoxSx,
+} from '../../styles/AIAssistant/VocabularyStyles';
 
 function renderInline(text) {
   const tokens = [];
@@ -24,18 +29,7 @@ function renderInline(text) {
       tokens.push(<strong key={`b-${key++}`}>{raw.slice(2, -2)}</strong>);
     } else {
       tokens.push(
-        <Box
-          key={`i-${key++}`}
-          component="span"
-          sx={{
-            px: 0.5,
-            py: 0.25,
-            borderRadius: 1,
-            bgcolor: 'warning.light',
-            fontStyle: 'italic',
-            fontWeight: 500,
-          }}
-        >
+        <Box key={`i-${key++}`} component="span" sx={vocabularyStyles.inlineItalic}>
           {raw.slice(1, -1)}
         </Box>,
       );
@@ -60,9 +54,9 @@ function RichText({ text }) {
   const lines = raw.split(/\n+/).filter((line) => line.trim().length > 0);
 
   return (
-    <Stack spacing={1.1}>
+    <Stack sx={vocabularyStyles.richTextStack}>
       {lines.map((line, index) => (
-        <Typography key={index} fontSize={14} lineHeight={1.65}>
+        <Typography key={index} sx={vocabularyStyles.richTextLine}>
           {renderInline(line)}
         </Typography>
       ))}
@@ -124,53 +118,18 @@ function VocabularyEntryCard({ entry, index, total }) {
   return (
     <Stack spacing={2}>
       {hasMainHeader && (
-        <Paper
-          elevation={2}
-          sx={{
-            borderRadius: 5,
-            p: 3,
-            bgcolor: '#fbfbf4',
-            border: '1px solid rgba(15, 23, 42, 0.07)',
-            boxShadow: '0 10px 28px rgba(15, 23, 42, 0.05)',
-          }}
-        >
+        <Paper elevation={2} sx={vocabularyStyles.vocabHeaderPaper}>
           <Stack direction="row" spacing={2} alignItems="center">
-            <Box
-              sx={{
-                width: 44,
-                height: 44,
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bgcolor: 'rgb(16, 185, 129)',
-                color: '#fff',
-                flexShrink: 0,
-              }}
-            >
+            <Box sx={vocabularyStyles.vocabHeaderIcon}>
               <MenuBookRoundedIcon />
             </Box>
 
             <Box flex={1}>
-              <Typography
-                fontSize={12}
-                fontWeight={800}
-                textTransform="uppercase"
-                color="rgb(16, 185, 129)"
-                letterSpacing={0.7}
-              >
+              <Typography sx={vocabularyStyles.vocabHeaderLabel}>
                 Từ vựng {total > 1 ? `${index + 1}/${total}` : ''}
               </Typography>
 
-              <Typography
-                sx={{
-                  mt: 0.5,
-                  fontSize: { xs: 20, md: 22 },
-                  lineHeight: 1.25,
-                  fontWeight: 800,
-                  color: 'rgb(15, 23, 42)',
-                }}
-              >
+              <Typography sx={vocabularyStyles.vocabHeaderTitle}>
                 {renderInline(meaning)}
               </Typography>
             </Box>
@@ -180,7 +139,7 @@ function VocabularyEntryCard({ entry, index, total }) {
 
       {pronunciation_tip && (
         <SectionCard icon={VolumeUpRoundedIcon} label="Mẹo phát âm" iconTone="violet">
-          <Typography fontSize={14} color="text.secondary" sx={{ lineHeight: 1.75 }}>
+          <Typography sx={vocabularyStyles.pronunciationTip}>
             {renderInline(pronunciation_tip)}
           </Typography>
         </SectionCard>
@@ -190,37 +149,9 @@ function VocabularyEntryCard({ entry, index, total }) {
         <SectionCard icon={LayersRoundedIcon} label="Cụm từ thường đi kèm" iconTone="blue">
           <Stack spacing={1}>
             {collocations.map((item, itemIndex) => (
-              <Paper
-                key={itemIndex}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1.5,
-                  p: 1.25,
-                  pl: 1.5,
-                  borderRadius: 3,
-                  bgcolor: '#ffffff',
-                  border: '1px solid rgba(15,23,42,0.04)',
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: '50%',
-                    bgcolor: 'black',
-                    flexShrink: 0,
-                    mt: 0.4,
-                  }}
-                />
-                <Typography
-                  fontSize={14}
-                  fontWeight={600}
-                  color="text.primary"
-                  sx={{ lineHeight: 1.6 }}
-                >
-                  {item}
-                </Typography>
+              <Paper key={itemIndex} sx={vocabularyStyles.collocationItem}>
+                <Box sx={vocabularyStyles.collocationDot} />
+                <Typography sx={vocabularyStyles.collocationText}>{item}</Typography>
               </Paper>
             ))}
           </Stack>
@@ -228,9 +159,9 @@ function VocabularyEntryCard({ entry, index, total }) {
       )}
 
       {(synonyms.length > 0 || antonyms.length > 0) && (
-        <Box display="flex" gap={2} flexWrap={bothLists ? 'nowrap' : 'wrap'}>
+        <Box sx={getSynAntContainerSx(bothLists)}>
           {synonyms.length > 0 && (
-            <Box flex={bothLists ? 1 : 'unset'} minWidth={bothLists ? 0 : 280}>
+            <Box sx={getSynAntBoxSx(bothLists)}>
               <SectionCard icon={SyncAltRoundedIcon} label="Từ đồng nghĩa" iconTone="green">
                 <RichText text={synonyms} />
               </SectionCard>
@@ -238,7 +169,7 @@ function VocabularyEntryCard({ entry, index, total }) {
           )}
 
           {antonyms.length > 0 && (
-            <Box flex={bothLists ? 1 : 'unset'} minWidth={bothLists ? 0 : 280}>
+            <Box sx={getSynAntBoxSx(bothLists)}>
               <SectionCard icon={BlockRoundedIcon} label="Từ trái nghĩa" iconTone="red">
                 <RichText text={antonyms} />
               </SectionCard>
@@ -251,38 +182,12 @@ function VocabularyEntryCard({ entry, index, total }) {
         <SectionCard icon={ChecklistRoundedIcon} label="Ví dụ" iconTone="violet">
           <Stack spacing={1.25}>
             {examples.map((example, exampleIndex) => (
-              <Paper
-                key={exampleIndex}
-                sx={{
-                  p: 1.25,
-                  borderRadius: 3,
-                  bgcolor: '#ffffff',
-                  border: '1px solid rgba(15,23,42,0.04)',
-                }}
-              >
+              <Paper key={exampleIndex} sx={vocabularyStyles.examplePaper}>
                 <Stack direction="row" spacing={2} alignItems="flex-start">
-                  <Box
-                    sx={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: '50%',
-                      bgcolor: 'rgba(168,85,247,0.14)',
-                      color: 'rgb(147,51,234)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 700,
-                      fontSize: 12,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {exampleIndex + 1}
-                  </Box>
+                  <Box sx={vocabularyStyles.exampleBadge}>{exampleIndex + 1}</Box>
 
                   <Box>
-                    <Typography fontSize={14} color="text.primary" sx={{ lineHeight: 1.65 }}>
-                      {example}
-                    </Typography>
+                    <Typography sx={vocabularyStyles.exampleText}>{example}</Typography>
                   </Box>
                 </Stack>
               </Paper>
@@ -307,7 +212,7 @@ export function VocabularyResult({ answer = {} }) {
   });
 
   return (
-    <Box maxWidth={600} mx="auto">
+    <Box sx={vocabularyStyles.resultRoot}>
       <Stack spacing={2}>
         {entries.map((entry, index) => (
           <VocabularyEntryCard

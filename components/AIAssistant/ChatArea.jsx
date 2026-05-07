@@ -16,8 +16,12 @@ import {
 } from '@mui/material';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
+import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
 import WavyDots from './WavyDots';
 import MessageBubble from './MessageBubble';
+import { chatAreaStyles, selectMenuProps } from '../../styles/AIAssistant/ChatAreaStyles';
 
 const MODE_CONFIGS = [
   {
@@ -71,6 +75,7 @@ export default function ChatArea({
   isThinking,
   quota,
   quotaRemaining,
+  composerError,
   inputRef,
   onDraftChange,
   onKeyDown,
@@ -81,12 +86,16 @@ export default function ChatArea({
   canLoadMoreMessages,
   isLoadingMoreMessages,
   onLoadMoreMessages,
+  onClearError,
 }) {
   const messagesEndRef = useRef(null);
   const activeQuota =
     quota ||
     activeConversation?.quota ||
     (quotaRemaining != null ? { remaining: quotaRemaining } : null);
+  const isBlockedByQuota = activeQuota?.remaining != null && activeQuota.remaining <= 0;
+  const isQuotaError = composerError?.type === 'quota' || (isBlockedByQuota && !composerError);
+  const isSendError = composerError?.type === 'send';
 
   const formatResetAt = (value) => {
     if (!value) return '';
@@ -113,38 +122,22 @@ export default function ChatArea({
   ]);
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: 0,
-        bgcolor: 'background.default',
-      }}
-    >
-      <Box
-        sx={{
-          p: { xs: 2, md: 3 },
-          pb: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 2,
-        }}
-      >
+    <Box sx={chatAreaStyles.root}>
+      <Box sx={chatAreaStyles.header}>
         <Box>
-          <Typography variant="h5" sx={{ fontWeight: 900, lineHeight: 1.1 }}>
+          <Typography variant="h5" sx={chatAreaStyles.title}>
             {activeConversation?.title || 'New conversation'}
           </Typography>
           {activeQuota?.remaining != null && (
-            <Typography variant="caption" sx={{ mt: 0.5, color: 'text.secondary' }}>
-              <Box component="span" sx={{ fontWeight: 700, color: 'primary.main' }}>
+            <Typography variant="caption" sx={chatAreaStyles.quotaCaption}>
+              <Box component="span" sx={chatAreaStyles.quotaValue}>
                 Quota:
                 {activeQuota.limit != null
                   ? ` ${activeQuota.remaining}/${activeQuota.limit}`
                   : ` ${activeQuota.remaining}`}
               </Box>
               {activeQuota.reset_at && (
-                <Box component="span" sx={{ ml: 1 }}>
+                <Box component="span" sx={chatAreaStyles.quotaReset}>
                   Resets at {formatResetAt(activeQuota.reset_at)}
                 </Box>
               )}
@@ -153,22 +146,17 @@ export default function ChatArea({
         </Box>
       </Box>
 
-      <Box sx={{ px: { xs: 2, md: 3 }, pt: 2, pb: 1, flex: 1, minHeight: 0, overflowY: 'auto' }}>
+      <Box sx={chatAreaStyles.messagesContainer}>
         <Stack spacing={1.75}>
           {canLoadMoreMessages && (
-            <Stack direction="row" justifyContent="center" sx={{ pb: 0.5 }}>
+            <Stack direction="row" justifyContent="center" sx={chatAreaStyles.loadMoreRow}>
               <Button
                 variant="outlined"
                 size="small"
                 onClick={onLoadMoreMessages}
                 disabled={isLoadingMoreMessages}
                 startIcon={isLoadingMoreMessages ? <WavyDots /> : null}
-                sx={{
-                  borderRadius: 999,
-                  textTransform: 'none',
-                  fontWeight: 800,
-                  px: 2,
-                }}
+                sx={chatAreaStyles.loadMoreButton}
               >
                 {isLoadingMoreMessages ? 'Loading...' : 'Load more'}
               </Button>
@@ -177,24 +165,17 @@ export default function ChatArea({
 
           {(!activeConversation || (activeConversation.messages || []).length === 0) &&
             !isThinking && (
-              <Paper
-                sx={{
-                  p: 2.25,
-                  borderRadius: 4,
-                  border: '1px solid rgba(25, 118, 210, 0.14)',
-                  bgcolor: 'rgba(25, 118, 210, 0.04)',
-                }}
-              >
+              <Paper sx={chatAreaStyles.emptyStatePaper}>
                 <Stack spacing={1.25}>
                   <Stack direction="row" spacing={1.25} alignItems="center">
-                    <Avatar sx={{ width: 36, height: 36, bgcolor: 'primary.main' }}>
+                    <Avatar sx={chatAreaStyles.emptyStateAvatar}>
                       <AutoAwesomeRoundedIcon sx={{ fontSize: 18 }} />
                     </Avatar>
                     <Box>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 900, lineHeight: 1.1 }}>
+                      <Typography variant="subtitle1" sx={chatAreaStyles.emptyStateTitle}>
                         {activeConversation ? 'Conversation ready' : 'AI Assistant ready'}
                       </Typography>
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.25 }}>
+                      <Typography variant="body2" sx={chatAreaStyles.emptyStateSubtitle}>
                         {activeConversation
                           ? 'Send your first message to start this conversation.'
                           : 'Choose a mode and send a message to begin.'}
@@ -203,16 +184,16 @@ export default function ChatArea({
                   </Stack>
 
                   <Stack spacing={0.75}>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>
+                    <Typography variant="caption" sx={chatAreaStyles.emptyStateHintTitle}>
                       Try one of these:
                     </Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    <Typography variant="body2" sx={chatAreaStyles.emptyStateHintText}>
                       • Ask for a translation with natural tone.
                     </Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    <Typography variant="body2" sx={chatAreaStyles.emptyStateHintText}>
                       • Request grammar correction with explanation.
                     </Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    <Typography variant="body2" sx={chatAreaStyles.emptyStateHintText}>
                       • Brainstorm ideas for speaking or writing.
                     </Typography>
                   </Stack>
@@ -225,18 +206,10 @@ export default function ChatArea({
           ))}
           {isThinking && (
             <Stack direction="row" spacing={1.25} alignItems="center">
-              <Avatar sx={{ width: 34, height: 34, bgcolor: 'primary.main' }}>
+              <Avatar sx={chatAreaStyles.thinkingAvatar}>
                 <AutoAwesomeRoundedIcon sx={{ fontSize: 18 }} />
               </Avatar>
-              <Paper
-                sx={{
-                  px: 2,
-                  py: 1.25,
-                  borderRadius: 4,
-                  border: '1px solid rgba(83, 40, 34, 0.10)',
-                  bgcolor: 'background.paper',
-                }}
-              >
+              <Paper sx={chatAreaStyles.thinkingPaper}>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <WavyDots />
                 </Stack>
@@ -247,22 +220,8 @@ export default function ChatArea({
         </Stack>
       </Box>
 
-      <Box
-        sx={{
-          p: { xs: 2, md: 3 },
-          pt: 0,
-          borderTop: '1px solid rgba(0, 0, 0, 0.08)',
-          bgcolor: 'background.default',
-        }}
-      >
-        <Paper
-          sx={{
-            p: 1.5,
-            borderRadius: 3,
-            bgcolor: 'background.paper',
-            border: '1px solid rgba(0, 0, 0, 0.10)',
-          }}
-        >
+      <Box sx={chatAreaStyles.composerWrap}>
+        <Paper sx={chatAreaStyles.composerPaper}>
           <Stack spacing={1.5}>
             <TextField
               inputRef={inputRef}
@@ -277,14 +236,12 @@ export default function ChatArea({
               slotProps={{
                 input: {
                   endAdornment: (
-                    <InputAdornment position="end" sx={{ mr: 0.5 }}>
+                    <InputAdornment position="end" sx={chatAreaStyles.inputAdornment}>
                       <IconButton
                         onClick={onSend}
-                        disabled={!draft.trim() || (quotaRemaining != null && quotaRemaining <= 0)}
+                        disabled={!draft.trim() || isBlockedByQuota}
                         edge="end"
-                        sx={{
-                          color: 'primary.main',
-                        }}
+                        sx={chatAreaStyles.sendButton}
                       >
                         <SendRoundedIcon sx={{ fontSize: 20 }} />
                       </IconButton>
@@ -292,14 +249,76 @@ export default function ChatArea({
                   ),
                 },
               }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 3,
-                  bgcolor: 'rgba(255,255,255,0.92)',
-                  py: 1,
-                },
-              }}
+              sx={chatAreaStyles.textField}
             />
+
+            {isQuotaError && (
+              <Paper elevation={0} sx={chatAreaStyles.quotaErrorPaper}>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  sx={chatAreaStyles.minWidthRow}
+                >
+                  <AccessTimeRoundedIcon sx={{ fontSize: 18, color: 'warning.dark' }} />
+                  <Typography variant="caption" sx={chatAreaStyles.quotaTitle}>
+                    Quota reached
+                  </Typography>
+                </Stack>
+                <Box sx={chatAreaStyles.minWidthRow}>
+                  <Typography variant="body2" sx={chatAreaStyles.quotaBody}>
+                    {composerError?.message || 'Your AI quota has been used up for now.'}
+                  </Typography>
+                  {activeQuota?.reset_at && (
+                    <Typography variant="caption" sx={chatAreaStyles.mutedCaption}>
+                      You can continue after {formatResetAt(activeQuota.reset_at)}.
+                    </Typography>
+                  )}
+                </Box>
+                <IconButton
+                  onClick={onClearError}
+                  size="small"
+                  sx={chatAreaStyles.closeErrorButton}
+                  aria-label="Close error"
+                >
+                  <CloseRoundedIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              </Paper>
+            )}
+
+            {isSendError && (
+              <Paper elevation={0} sx={chatAreaStyles.sendErrorPaper}>
+                <Stack spacing={0.25} sx={chatAreaStyles.sendErrorStack}>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    alignItems="center"
+                    sx={chatAreaStyles.minWidthRow}
+                  >
+                    <ErrorOutlineRoundedIcon sx={{ fontSize: 18, color: 'error.main' }} />
+                    <Typography variant="caption" sx={chatAreaStyles.sendErrorTitle}>
+                      Message not sent
+                    </Typography>
+                  </Stack>
+                  <Box sx={chatAreaStyles.minWidthRow}>
+                    <Typography variant="body2" sx={chatAreaStyles.textPrimary}>
+                      {composerError?.message}
+                    </Typography>
+                    <Typography variant="caption" sx={chatAreaStyles.mutedCaption}>
+                      Your draft is still in the input box. Edit and send again when ready.
+                    </Typography>
+                  </Box>
+                </Stack>
+                <IconButton
+                  onClick={onClearError}
+                  size="small"
+                  sx={chatAreaStyles.closeErrorButton}
+                  aria-label="Close error"
+                >
+                  <CloseRoundedIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              </Paper>
+            )}
 
             <Stack
               direction="row"
@@ -316,48 +335,11 @@ export default function ChatArea({
                 renderValue={(value) =>
                   MODE_CONFIGS.find((mode) => mode.id === value)?.label || 'General'
                 }
-                MenuProps={{
-                  PaperProps: {
-                    sx: {
-                      mt: 1,
-                      borderRadius: 3,
-                      border: '1px solid rgba(0, 0, 0, 0.08)',
-                      boxShadow: '0 18px 48px rgba(15, 23, 42, 0.12)',
-                    },
-                  },
-                }}
-                sx={{
-                  minWidth: 118,
-                  height: 30,
-                  borderRadius: 999,
-                  bgcolor: 'rgba(255,255,255,0.96)',
-                  color: 'primary.main',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  boxShadow: '0 6px 16px rgba(15, 23, 42, 0.06)',
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(25, 118, 210, 0.35)',
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.main',
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.main',
-                    borderWidth: '1px',
-                  },
-                  '& .MuiSelect-select': {
-                    display: 'flex',
-                    alignItems: 'center',
-                    py: 0.75,
-                    pr: 3,
-                  },
-                  '& .MuiSvgIcon-root': {
-                    color: 'primary.main',
-                  },
-                }}
+                MenuProps={selectMenuProps}
+                sx={chatAreaStyles.modeSelect}
               >
                 {MODE_CONFIGS.map((mode) => (
-                  <MenuItem key={mode.id} value={mode.id}>
+                  <MenuItem key={mode.id} value={mode.id} sx={chatAreaStyles.menuItem}>
                     {mode.label}
                   </MenuItem>
                 ))}
@@ -370,56 +352,16 @@ export default function ChatArea({
                 renderValue={(value) =>
                   LEVEL_CONFIGS.find((level) => level.id === value)?.label || 'All'
                 }
-                MenuProps={{
-                  PaperProps: {
-                    sx: {
-                      mt: 1,
-                      borderRadius: 3,
-                      border: '1px solid rgba(0, 0, 0, 0.08)',
-                      boxShadow: '0 18px 48px rgba(15, 23, 42, 0.12)',
-                    },
-                  },
-                }}
-                sx={{
-                  minWidth: 92,
-                  height: 30,
-                  borderRadius: 999,
-                  bgcolor: 'rgba(255,255,255,0.96)',
-                  color: 'primary.main',
-                  fontWeight: 700,
-                  fontSize: 14,
-                  boxShadow: '0 6px 16px rgba(15, 23, 42, 0.06)',
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(25, 118, 210, 0.35)',
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.main',
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.main',
-                    borderWidth: '1px',
-                  },
-                  '& .MuiSelect-select': {
-                    display: 'flex',
-                    alignItems: 'center',
-                    py: 0.75,
-                    pr: 3,
-                  },
-                  '& .MuiSvgIcon-root': {
-                    color: 'primary.main',
-                  },
-                }}
+                MenuProps={selectMenuProps}
+                sx={chatAreaStyles.levelSelect}
               >
                 {LEVEL_CONFIGS.map((level) => (
-                  <MenuItem key={level.id} value={level.id}>
+                  <MenuItem key={level.id} value={level.id} sx={chatAreaStyles.menuItem}>
                     {level.label}
                   </MenuItem>
                 ))}
               </Select>
-              <Typography
-                variant="caption"
-                sx={{ color: 'text.secondary', lineHeight: 1.5, ml: 'auto' }}
-              >
+              <Typography variant="caption" sx={chatAreaStyles.filtersRow}>
                 Tip: choose General when you are not sure which mode fits best.
               </Typography>
             </Stack>

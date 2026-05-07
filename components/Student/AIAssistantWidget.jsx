@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Drawer, Fab, Snackbar, Alert, Tooltip } from '@mui/material';
-import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
+import { Box, Drawer, Fab, Tooltip } from '@mui/material';
 import ConversationSidebar from '../AIAssistant/ConversationSidebar';
 import ChatArea from '../AIAssistant/ChatArea';
+import chatBotIcon from '../../assets/img/chat-bot.png';
 import {
   getConversations,
   getConversationMessages,
@@ -502,6 +502,7 @@ export default function AIAssistantWidget() {
     const text = draft.trim();
     if (!text) return;
 
+    setError(null);
     setDraft('');
     setIsThinking(true);
 
@@ -587,6 +588,8 @@ export default function AIAssistantWidget() {
       } else {
         setActiveConversationId(conversation.id);
       }
+
+      setError(null);
     } catch {
       if (pendingUserMessageId && pendingConversationId) {
         setConversations((prev) =>
@@ -657,7 +660,12 @@ export default function AIAssistantWidget() {
             fontFamily: `'Source Sans 3', 'Be Vietnam Pro', 'Inter', sans-serif`,
           }}
         >
-          <ChatBubbleOutlineRoundedIcon />
+          <Box
+            component="img"
+            src={chatBotIcon.src ?? chatBotIcon}
+            alt="AI Assistant"
+            sx={{ width: 35, height: 35, objectFit: 'contain' }}
+          />
         </Fab>
       </Tooltip>
 
@@ -688,7 +696,7 @@ export default function AIAssistantWidget() {
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '30% 70%' },
+            gridTemplateColumns: { xs: '1fr', md: '25% 75%' },
             height: '100%',
             minHeight: 0,
           }}
@@ -731,33 +739,21 @@ export default function AIAssistantWidget() {
             isLoadingMoreMessages={isLoadingMoreMessages}
             quota={workspaceQuota}
             quotaRemaining={workspaceQuota?.remaining ?? null}
+            error={error}
             inputRef={inputRef}
-            onDraftChange={setDraft}
+            onDraftChange={(value) => {
+              if (error) setError(null);
+              setDraft(value);
+            }}
             onKeyDown={handleKeyDown}
             onSend={handleSend}
             onModeChange={handleModeChange}
             onLevelChange={setSelectedLevel}
             onLoadMoreMessages={handleLoadMoreMessages}
+            onClearError={() => setError(null)}
           />
         </Box>
       </Drawer>
-
-      <Snackbar
-        open={!!error}
-        autoHideDuration={3500}
-        onClose={() => setError(null)}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        className="ai-assistant-root"
-      >
-        <Alert
-          severity="error"
-          onClose={() => setError(null)}
-          className="ai-assistant-root"
-          sx={{ fontFamily: `'Source Sans 3', 'Be Vietnam Pro', 'Inter', sans-serif` }}
-        >
-          {error}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

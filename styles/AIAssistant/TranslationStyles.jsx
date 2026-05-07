@@ -1,0 +1,102 @@
+export const getLiteralPaperSx = (hasTranslation) => ({
+  mt: hasTranslation ? 2 : 0,
+  p: 1.75,
+  borderRadius: 3,
+  bgcolor: 'rgba(255, 255, 255, 0.7)',
+  border: '1px solid rgba(15, 23, 42, 0.07)',
+});
+
+export const translationStyles = {
+  root: {
+    maxWidth: 760,
+    mx: 'auto',
+  },
+  translationPaper: {
+    borderRadius: 5,
+    p: 3,
+    bgcolor: '#fbfbf4',
+    border: '1px solid rgba(16, 185, 129, 0.18)',
+    boxShadow: '0 10px 28px rgba(15, 23, 42, 0.05)',
+  },
+  translationIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    bgcolor: 'rgb(16, 185, 129)',
+    color: '#fff',
+    flexShrink: 0,
+  },
+  translationLabel: {
+    fontSize: 12,
+    fontWeight: 800,
+    textTransform: 'uppercase',
+    color: 'rgb(16, 185, 129)',
+    letterSpacing: 0.7,
+  },
+  translationText: {
+    mt: 0.5,
+    fontSize: { xs: 22, md: 27 },
+    lineHeight: 1.3,
+    fontWeight: 800,
+    color: 'rgb(15, 23, 42)',
+  },
+  literalIconWrap: {
+    width: 24,
+    height: 24,
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    bgcolor: 'rgba(71, 85, 105, 0.08)',
+    color: 'rgb(71, 85, 105)',
+    mt: 0.25,
+    flexShrink: 0,
+  },
+  literalIcon: {
+    fontSize: 15,
+  },
+  literalLabel: {
+    fontSize: 11,
+    fontWeight: 800,
+    textTransform: 'uppercase',
+    color: 'text.secondary',
+    letterSpacing: 0.6,
+  },
+  literalText: {
+    fontSize: 14,
+    color: 'text.secondary',
+    mt: 0.35,
+    lineHeight: 1.65,
+  },
+  phrasePaper: {
+    p: 1.5,
+    borderRadius: 3,
+    bgcolor: 'rgba(59, 130, 246, 0.06)',
+    border: '1px solid rgba(59, 130, 246, 0.12)',
+  },
+  phraseTitle: {
+    fontWeight: 800,
+    fontSize: 14,
+    color: 'rgb(15, 23, 42)',
+  },
+  phraseMeaning: {
+    fontSize: 14,
+    color: 'text.secondary',
+    mt: 0.5,
+    lineHeight: 1.6,
+  },
+  explanationText: {
+    fontSize: 14,
+    color: 'text.secondary',
+    lineHeight: 1.75,
+    whiteSpace: 'pre-wrap',
+  },
+  englishTipText: {
+    fontSize: 14,
+    color: 'text.secondary',
+    lineHeight: 1.75,
+  },
+};

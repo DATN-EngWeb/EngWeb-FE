@@ -24,6 +24,10 @@ import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import WavyDots from './WavyDots';
+import {
+  conversationSidebarStyles,
+  getConversationItemPaperSx,
+} from '../../styles/AIAssistant/ConversationSidebarStyles';
 
 const MODE_CONFIG_BY_ID = {
   translate: { label: 'Translate', icon: AutoAwesomeRoundedIcon },
@@ -85,49 +89,28 @@ export default function ConversationSidebar({
   };
 
   return (
-    <Box
-      sx={{
-        p: 2.25,
-        borderRight: { md: '1px solid rgba(0, 0, 0, 0.08)' },
-        bgcolor: 'background.paper',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: 0,
-      }}
-    >
+    <Box sx={conversationSidebarStyles.root}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
         <Stack direction="row" spacing={1.25} alignItems="center">
-          <Box
-            sx={{
-              width: 44,
-              height: 44,
-              borderRadius: 3,
-              display: 'grid',
-              placeItems: 'center',
-              bgcolor: 'primary.main',
-              color: 'primary.contrastText',
-              boxShadow: '0 14px 28px rgba(83, 40, 34, 0.22)',
-            }}
-          >
+          <Box sx={conversationSidebarStyles.logoWrap}>
             <AutoAwesomeRoundedIcon />
           </Box>
           <Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: 900, lineHeight: 1.1 }}>
+            <Typography variant="subtitle1" sx={conversationSidebarStyles.title}>
               AI Assistant
             </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            <Typography variant="caption" sx={conversationSidebarStyles.subtitle}>
               Mode-first chat for students
             </Typography>
           </Box>
         </Stack>
 
-        <IconButton onClick={onClose} sx={{ bgcolor: 'background.paper' }}>
+        <IconButton onClick={onClose} sx={conversationSidebarStyles.closeButton}>
           <CloseRoundedIcon />
         </IconButton>
       </Stack>
 
-      <Stack direction="row" spacing={1.5} sx={{ mt: 2 }}>
+      <Stack direction="row" spacing={1.5} sx={conversationSidebarStyles.createButtonRow}>
         <Button
           fullWidth
           variant="contained"
@@ -140,80 +123,32 @@ export default function ConversationSidebar({
           }
           onClick={() => onCreateConversation('general')}
           disabled={isCreatingConversation}
-          sx={{ py: 1.2, fontWeight: 800 }}
+          sx={conversationSidebarStyles.createButton}
         >
           {isCreatingConversation ? 'Creating...' : 'New conversation'}
         </Button>
       </Stack>
 
-      <Box sx={{ mt: 2.25, flex: 1, minHeight: 0, overflowY: 'auto', pr: 0.5 }}>
-        <Typography variant="overline" sx={{ color: 'text.secondary', fontWeight: 900 }}>
+      <Box sx={conversationSidebarStyles.listWrap}>
+        <Typography variant="overline" sx={conversationSidebarStyles.listLabel}>
           Recent conversations
         </Typography>
-        <Stack spacing={1.1} sx={{ mt: 1 }}>
+        <Stack spacing={1.1} sx={conversationSidebarStyles.listStack}>
           {isLoadingConversations ? (
             <>
               {[1, 2, 3].map((i) => (
-                <Paper
-                  key={`skeleton-${i}`}
-                  sx={{
-                    p: 1.25,
-                    borderRadius: 3,
-                    bgcolor: 'rgba(0, 0, 0, 0.06)',
-                    border: 'none',
-                    display: 'flex',
-                    gap: 1.25,
-                    alignItems: 'center',
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 2,
-                      bgcolor: 'rgba(0, 0, 0, 0.08)',
-                      flexShrink: 0,
-                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                      '@keyframes pulse': {
-                        '0%, 100%': { opacity: 1 },
-                        '50%': { opacity: 0.5 },
-                      },
-                    }}
-                  />
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Box
-                      sx={{
-                        height: 12,
-                        bgcolor: 'rgba(0, 0, 0, 0.08)',
-                        borderRadius: 1,
-                        mb: 0.75,
-                        width: '70%',
-                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                      }}
-                    />
-                    <Box
-                      sx={{
-                        height: 10,
-                        bgcolor: 'rgba(0, 0, 0, 0.06)',
-                        borderRadius: 1,
-                        width: '50%',
-                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                      }}
-                    />
+                <Paper key={`skeleton-${i}`} sx={conversationSidebarStyles.skeletonPaper}>
+                  <Box sx={conversationSidebarStyles.skeletonThumb} />
+                  <Box sx={conversationSidebarStyles.skeletonTextWrap}>
+                    <Box sx={conversationSidebarStyles.skeletonLinePrimary} />
+                    <Box sx={conversationSidebarStyles.skeletonLineSecondary} />
                   </Box>
                 </Paper>
               ))}
             </>
           ) : visibleConversations.length === 0 ? (
-            <Paper
-              sx={{
-                p: 2,
-                borderRadius: 3,
-                bgcolor: 'rgba(83, 40, 34, 0.03)',
-                border: '1px dashed rgba(83, 40, 34, 0.14)',
-              }}
-            >
-              <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.secondary' }}>
+            <Paper sx={conversationSidebarStyles.emptyPaper}>
+              <Typography variant="body2" sx={conversationSidebarStyles.emptyText}>
                 No recent conversations
               </Typography>
             </Paper>
@@ -241,21 +176,14 @@ export default function ConversationSidebar({
                       }
                     }
                   }}
-                  sx={{
-                    p: 1.25,
-                    borderRadius: 3,
-                    cursor: 'pointer',
-                    border: '1px solid',
-                    borderColor: isActive ? 'primary.main' : 'rgba(83, 40, 34, 0.08)',
-                    bgcolor: isActive ? 'rgba(83, 40, 34, 0.05)' : 'background.paper',
-                  }}
+                  sx={getConversationItemPaperSx(isActive)}
                 >
                   <Stack direction="row" spacing={1.25} alignItems="center">
-                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Box sx={conversationSidebarStyles.contentGrow}>
                       <Stack direction="row" alignItems="center" justifyContent="space-between">
-                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Box sx={conversationSidebarStyles.contentGrow}>
                           {editingId === conversationKey ? (
-                            <Stack spacing={0.75} sx={{ width: '100%' }}>
+                            <Stack spacing={0.75} sx={conversationSidebarStyles.editStack}>
                               <TextField
                                 value={editingTitle}
                                 onClick={(e) => e.stopPropagation()}
@@ -288,7 +216,7 @@ export default function ConversationSidebar({
                                   }}
                                   disabled={editingLoading}
                                   startIcon={<CheckRoundedIcon />}
-                                  sx={{ borderRadius: 1.5, fontWeight: 700, flex: 1 }}
+                                  sx={conversationSidebarStyles.saveButton}
                                 >
                                   Save
                                 </Button>
@@ -301,14 +229,18 @@ export default function ConversationSidebar({
                                   }}
                                   disabled={editingLoading}
                                   startIcon={<CloseRoundedIcon />}
-                                  sx={{ borderRadius: 1.5, fontWeight: 700, flex: 1 }}
+                                  sx={conversationSidebarStyles.cancelButton}
                                 >
                                   Cancel
                                 </Button>
                               </Stack>
                             </Stack>
                           ) : (
-                            <Typography variant="subtitle2" sx={{ fontWeight: 900 }} noWrap>
+                            <Typography
+                              variant="subtitle2"
+                              sx={conversationSidebarStyles.conversationTitle}
+                              noWrap
+                            >
                               {conversation.title}
                             </Typography>
                           )}
@@ -323,7 +255,7 @@ export default function ConversationSidebar({
                                   event.stopPropagation();
                                   onMenuOpen(event, conversationKey);
                                 }}
-                                sx={{ color: 'text.secondary', flexShrink: 0 }}
+                                sx={conversationSidebarStyles.optionsButton}
                               >
                                 <MoreVertRoundedIcon fontSize="small" />
                               </IconButton>
@@ -333,10 +265,7 @@ export default function ConversationSidebar({
                               open={menuConversationId === conversationKey && !!menuAnchorEl}
                               onClose={onMenuClose}
                               PaperProps={{
-                                sx: {
-                                  borderRadius: 2,
-                                  boxShadow: '0 10px 24px rgba(15, 23, 42, 0.12)',
-                                },
+                                sx: conversationSidebarStyles.menuPaper,
                               }}
                             >
                               <MenuItem
@@ -344,7 +273,7 @@ export default function ConversationSidebar({
                                   event.stopPropagation();
                                   onMenuEdit(event, conversation);
                                 }}
-                                sx={{ fontWeight: 600, fontSize: 14 }}
+                                sx={conversationSidebarStyles.menuItem}
                               >
                                 Edit
                               </MenuItem>
@@ -353,7 +282,7 @@ export default function ConversationSidebar({
                                   event.stopPropagation();
                                   handleRequestDelete(event, conversation);
                                 }}
-                                sx={{ fontWeight: 600, fontSize: 14, color: 'error.dark' }}
+                                sx={conversationSidebarStyles.deleteMenuItem}
                               >
                                 Delete
                               </MenuItem>
