@@ -1,0 +1,125 @@
+export const brainstormStyles = {
+  root: {
+    maxWidth: 600,
+    mx: 'auto',
+  },
+  thesisWrapper: {
+    borderRadius: 4,
+    p: 3,
+    border: '1px solid rgba(59, 130, 246, 0.2)',
+    boxShadow: '0 8px 22px rgba(15, 23, 42, 0.04)',
+    bgcolor: '#f9fbf7',
+  },
+  thesisCard: {
+    p: 1.5,
+    borderRadius: 3,
+    borderColor: 'rgba(15, 23, 42, 0.08)',
+  },
+  thesisQuoteIcon: {
+    color: 'text.secondary',
+    mt: 0.25,
+  },
+  thesisMeta: {
+    fontSize: 11,
+    fontWeight: 800,
+    textTransform: 'uppercase',
+    color: 'text.secondary',
+    letterSpacing: 0.5,
+  },
+  thesisText: {
+    fontSize: 18,
+    fontWeight: 700,
+    lineHeight: 1.45,
+  },
+  chipList: {
+    direction: 'row',
+    flexWrap: 'wrap',
+    gap: 1,
+  },
+  chipItem: {
+    color: 'rgb(15, 23, 42)',
+    fontWeight: 500,
+    borderRadius: 999,
+  },
+  outlineSection: {
+    fontSize: '14',
+  },
+  outlineBlock: {
+    p: 1.5,
+    borderRadius: 3,
+    borderColor: 'rgba(59, 130, 246, 0.2)',
+    bgcolor: '#f8fbff',
+  },
+  outlineStepChip: {
+    bgcolor: 'rgba(16, 185, 129, 0.15)',
+    color: 'rgb(5, 150, 105)',
+    fontWeight: 700,
+  },
+  outlineHeading: {
+    fontWeight: 600,
+  },
+  outlinePoint: {
+    fontSize: 14,
+  },
+  ideaCard: {
+    p: 1.5,
+    borderRadius: 3,
+    borderColor: 'rgba(59, 130, 246, 0.16)',
+    bgcolor: '#f8fbff',
+  },
+  ideaOrderBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: '50%',
+    bgcolor: 'rgba(16,185,129,0.15)',
+    color: 'rgb(5,150,105)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: 14,
+    fontWeight: 700,
+    flexShrink: 0,
+  },
+  ideaHeading: {
+    fontWeight: 700,
+    fontSize: 14,
+    lineHeight: 1.35,
+  },
+  ideaPointList: {
+    pl: 3.5,
+  },
+  ideaPointDot: {
+    width: 6,
+    height: 6,
+    borderRadius: '50%',
+    bgcolor: 'rgb(16,185,129)',
+    flexShrink: 0,
+  },
+  ideaPointText: {
+    fontSize: 14,
+    lineHeight: 1.5,
+  },
+  topicSentenceCard: {
+    p: 1.25,
+    borderRadius: 3,
+    borderColor: 'rgba(59,130,246,0.15)',
+    bgcolor: '#f8fbff',
+  },
+  topicSentenceBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: '50%',
+    bgcolor: 'rgba(168,85,247,0.14)',
+    color: 'rgb(147,51,234)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: 700,
+    fontSize: 13,
+    flexShrink: 0,
+  },
+  topicSentenceText: {
+    flex: 1,
+    fontSize: 14,
+  },
+};

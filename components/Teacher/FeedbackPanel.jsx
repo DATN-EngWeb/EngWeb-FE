@@ -15,7 +15,6 @@ import {
   Tooltip,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckIcon from '@mui/icons-material/Check';
@@ -26,6 +25,7 @@ import {
   updateTestFeedback,
   deleteTestFeedback,
 } from '../../api/feedback';
+import chatBotIcon from '../../assets/img/chat-bot.png';
 
 export default function FeedbackPanel({ testId }) {
   const [feedbacks, setFeedbacks] = useState([]);
@@ -140,7 +140,12 @@ export default function FeedbackPanel({ testId }) {
         sx={{ p: 2.5, borderRadius: 3, mb: 2.5, border: '1px solid #f0f0f0', flexShrink: 0 }}
       >
         <Box display="flex" alignItems="center" gap={1} mb={1.5}>
-          <SmartToyIcon sx={{ color: 'primary.main' }} />
+          <Box
+            component="img"
+            src={chatBotIcon.src ?? chatBotIcon}
+            alt="AI Assistant"
+            sx={{ width: 24, height: 24, objectFit: 'contain' }}
+          />
           <Typography fontWeight={700} fontSize={15}>
             Write your comment
           </Typography>
