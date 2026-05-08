@@ -697,7 +697,13 @@ export default function ListeningTestContent({ test_id, initialData }) {
         }}
       >
         {/* Time Left */}
-        <Box sx={{ ...listeningtestStyles.timeLeft, ...(isReadOnly && { visibility: 'hidden' }) }}>
+        <Box
+          sx={{
+            ...listeningtestStyles.timeLeft,
+            ...(isReadOnly && { visibility: 'hidden' }),
+            ...(isReadOnly && { display: { xs: 'none', md: 'flex' } }),
+          }}
+        >
           <AccessTimeIcon
             sx={{
               fontSize: 28,
@@ -722,6 +728,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
           sx={{
             ...listeningtestStyles.summitButtonWrapper,
             ...(isReadOnly && { visibility: 'hidden' }),
+            ...(isReadOnly && { display: { xs: 'none', md: 'flex' } }),
           }}
         >
           <Button

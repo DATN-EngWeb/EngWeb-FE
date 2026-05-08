@@ -209,7 +209,12 @@ export default function MultipleChoiceSingleAudio({
                             label="Correct"
                             size="small"
                             color="success"
-                            sx={{ height: 20, fontSize: '0.65rem', ml: 1 }}
+                            sx={{
+                              height: 20,
+                              fontSize: '0.65rem',
+                              ml: 1,
+                              display: { xs: 'none', md: 'block' },
+                            }}
                           />
                         )}
                       </Box>
@@ -243,10 +248,11 @@ export default function MultipleChoiceSingleAudio({
     <Box sx={{ display: isActive ? 'block' : 'none', width: '100%' }}>
       {showSummary ? (
         <Container
+          disableGutters
           maxWidth="lg"
           sx={{
             display: 'flex',
-            flexDirection: { xs: 'column', md: 'row' },
+            flexDirection: { xs: 'column-reverse', md: 'row' },
             alignItems: 'flex-start',
           }}
         >

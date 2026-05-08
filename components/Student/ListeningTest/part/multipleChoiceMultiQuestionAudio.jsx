@@ -228,7 +228,7 @@ export default function MultipleChoiceQuestionAudio({
         sx={{
           ...listeningPartStyles.questionSection,
           width: { xs: '100%', md: `calc(${100 - leftWidth}% - 32px)` },
-          minWidth: '400px',
+          minWidth: { md: '400px' },
           height: '100%',
           overflowY: 'auto',
           minHeight: 0,
@@ -366,7 +366,12 @@ export default function MultipleChoiceQuestionAudio({
                             label="Correct"
                             size="small"
                             color="success"
-                            sx={{ height: 20, fontSize: '0.65rem', ml: 1 }}
+                            sx={{
+                              height: 20,
+                              fontSize: '0.65rem',
+                              ml: 1,
+                              display: { xs: 'none', md: 'block' },
+                            }}
                           />
                         )}
                       </Box>
@@ -404,12 +409,12 @@ export default function MultipleChoiceQuestionAudio({
           disableGutters
           sx={{
             display: 'flex',
-            flexDirection: { xs: 'column', md: 'row' },
+            flexDirection: { xs: 'column-reverse', md: 'row' },
             alignItems: 'flex-start',
-            pr: 2,
+            pr: { xs: 0, md: 2 },
           }}
         >
-          <Box maxWidth="lg" sx={{ flex: { xs: 1, md: 4 }, width: '100%', pt: 2 }}>
+          <Box maxWidth="lg" sx={{ flex: { xs: 1, md: 4 }, width: '100%' }}>
             {mainContent}
           </Box>
           <SumaryPartTab questions={partQuestions} onNavigateToQuestion={onNavigateToQuestion} />

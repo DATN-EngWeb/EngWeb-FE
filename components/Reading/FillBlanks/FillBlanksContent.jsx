@@ -199,6 +199,7 @@ const FillBlanksContent = ({
               ...rightPaneStyles,
               flex: '0 0 auto',
               width: { xs: '100%', md: `calc(${100 - leftWidth}% - 32px)` },
+              minWidth: { md: '400px' },
               height: '100%',
               maxHeight: '100%',
               display: 'flex',
@@ -409,7 +410,12 @@ const FillBlanksContent = ({
                                             label="Correct"
                                             size="small"
                                             color="success"
-                                            sx={{ height: 20, fontSize: '0.65rem', ml: 1 }}
+                                            sx={{
+                                              height: 20,
+                                              fontSize: '0.65rem',
+                                              ml: 1,
+                                              display: { xs: 'none', md: 'block' },
+                                            }}
                                           />
                                         )}
                                       </Box>

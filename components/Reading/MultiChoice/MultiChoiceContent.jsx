@@ -188,6 +188,7 @@ const MultiChoiceContent = ({
             sx={{
               ...listeningPartStyles.questionSection,
               width: { xs: '100%', md: `calc(${100 - leftWidth}% - 32px)` },
+              minWidth: { md: '400px' },
               height: '100%',
               overflowY: 'auto',
               minHeight: 0,
@@ -343,7 +344,12 @@ const MultiChoiceContent = ({
                                     label="Correct"
                                     size="small"
                                     color="success"
-                                    sx={{ height: 20, fontSize: '0.65rem', ml: 1 }}
+                                    sx={{
+                                      height: 20,
+                                      fontSize: '0.65rem',
+                                      ml: 1,
+                                      display: { xs: 'none', md: 'block' },
+                                    }}
                                   />
                                 )}
                               </Box>

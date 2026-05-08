@@ -10,7 +10,8 @@ export default function SumaryPartTab({ questions = [], onNavigateToQuestion }) 
     <Box
       sx={{
         flex: 1,
-        width: '100%',
+        width: { xs: 'calc(100% - 32px)', md: '100%' },
+        mx: { xs: 2, md: 0 },
         backgroundColor: 'background.paper',
         p: 2,
         borderRadius: '0.5rem',
@@ -20,7 +21,6 @@ export default function SumaryPartTab({ questions = [], onNavigateToQuestion }) 
         position: { md: 'sticky' },
         top: '16px',
         mt: 2,
-        mb: { xs: '16px', md: 0 },
       }}
     >
       <Typography

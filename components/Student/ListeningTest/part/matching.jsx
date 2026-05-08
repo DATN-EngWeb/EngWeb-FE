@@ -293,12 +293,12 @@ export default function Matching({
     <Box sx={{ display: isActive ? 'block' : 'none', width: '100%' }}>
       {showSummary ? (
         <Container
+          disableGutters
           maxWidth="lg"
           sx={{
             display: 'flex',
-            flexDirection: { xs: 'column', md: 'row' },
+            flexDirection: { xs: 'column-reverse', md: 'row' },
             alignItems: 'flex-start',
-            px: { xs: 2, md: 0 },
           }}
         >
           <Box maxWidth="md" sx={{ flex: { xs: 1, md: 3 }, width: '100%' }}>
