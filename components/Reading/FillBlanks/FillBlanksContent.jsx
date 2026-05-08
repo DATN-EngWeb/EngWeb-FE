@@ -378,6 +378,19 @@ const FillBlanksContent = ({
                                         <Typography
                                           sx={{
                                             ...multipleChoiceStyles.optionLabel,
+                                            flexShrink: 0,
+                                            ...(showResults &&
+                                              isSelected && {
+                                                color: isCorrect ? '#4caf50' : '#f44336',
+                                                fontWeight: 600,
+                                              }),
+                                          }}
+                                        >
+                                          {option.option_label || option.value}.
+                                        </Typography>
+                                        <Typography
+                                          sx={{
+                                            ...multipleChoiceStyles.optionLabel,
                                             fontWeight: 400,
                                             flex: 1,
                                             ...(showResults &&
@@ -387,7 +400,7 @@ const FillBlanksContent = ({
                                               }),
                                           }}
                                         >
-                                          {option.label}
+                                          {option.answer_text || option.text || option.label}
                                         </Typography>
 
                                         {/* Nhãn "Correct" */}
@@ -413,7 +426,8 @@ const FillBlanksContent = ({
                               >
                                 <Box sx={{ ...listeningPartStyles.explanationContainer }}>
                                   <Typography sx={listeningPartStyles.correctText}>
-                                    Correct Answer: {correctAnswerText}
+                                    Correct Answer: {correctOption.option_label}.{' '}
+                                    {correctAnswerText}
                                   </Typography>
                                   {qInfo?.explanation && (
                                     <Typography sx={listeningPartStyles.explanationText}>
@@ -431,6 +445,7 @@ const FillBlanksContent = ({
                         const qInfo = questions.find((qu) => qu.question_number === num);
                         const questionId = qInfo?.id || num;
                         const userAns = answers[questionId] || '';
+                        const isAnswered = userAns.trim().length > 0;
                         const isCorrect =
                           userAns.toLowerCase().trim() ===
                           (qInfo?.correctText || '').toLowerCase().trim();
@@ -455,11 +470,12 @@ const FillBlanksContent = ({
                               <Typography
                                 sx={{
                                   ...listeningPartStyles.questionLabelCircle,
-                                  ...(showResults && {
-                                    backgroundColor: isCorrect ? 'success.main' : 'error.main',
-                                    color: '#fff',
-                                    border: 'none',
-                                  }),
+                                  ...(showResults &&
+                                    isAnswered && {
+                                      backgroundColor: isCorrect ? 'success.main' : 'error.main',
+                                      color: '#fff',
+                                      border: 'none',
+                                    }),
                                 }}
                               >
                                 {num}
@@ -476,23 +492,21 @@ const FillBlanksContent = ({
                                 autoComplete="off"
                                 sx={{
                                   ...listeningPartStyles.inputQuestion,
-                                  ...(showResults && {
-                                    backgroundColor: isCorrect
-                                      ? 'rgba(76, 175, 80, 0.05)'
-                                      : 'rgba(244, 67, 54, 0.05)',
-                                    borderRadius: '4px',
-                                    padding: '2px 8px',
-                                    '& .MuiInputBase-input': {
-                                      color: isCorrect ? '#4caf50' : '#f44336',
-                                      fontWeight: 600,
-                                      WebkitTextFillColor: isCorrect ? '#4caf50' : '#f44336',
-                                    },
-                                    '& .MuiInput-underline:before, & .MuiInput-underline:after, & .MuiInputBase-root.Mui-disabled:before':
-                                      {
-                                        borderBottomColor: isCorrect ? '#4caf50' : '#f44336',
-                                        borderBottomStyle: 'solid',
+                                  ...(showResults &&
+                                    isAnswered && {
+                                      borderRadius: '4px',
+                                      padding: '2px 8px',
+                                      '& .MuiInputBase-input': {
+                                        color: isCorrect ? '#4caf50' : '#f44336',
+                                        fontWeight: 600,
+                                        WebkitTextFillColor: isCorrect ? '#4caf50' : '#f44336',
                                       },
-                                  }),
+                                      '& .MuiInput-underline:before, & .MuiInput-underline:after, & .MuiInputBase-root.Mui-disabled:before':
+                                        {
+                                          borderBottomColor: isCorrect ? '#4caf50' : '#f44336',
+                                          borderBottomStyle: 'solid',
+                                        },
+                                    }),
                                 }}
                               />
                             </Box>

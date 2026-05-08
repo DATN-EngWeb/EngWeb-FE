@@ -314,6 +314,19 @@ const MultiChoiceContent = ({
                                 <Typography
                                   sx={{
                                     ...multipleChoiceStyles.optionLabel,
+                                    flexShrink: 0,
+                                    ...(showResults &&
+                                      isSelected && {
+                                        color: isCorrect ? '#4caf50' : '#f44336',
+                                        fontWeight: 600,
+                                      }),
+                                  }}
+                                >
+                                  {option.option_label || option.value}.
+                                </Typography>
+                                <Typography
+                                  sx={{
+                                    ...multipleChoiceStyles.optionLabel,
                                     fontWeight: 400,
                                     flex: 1,
                                     ...(showResults &&
@@ -323,10 +336,8 @@ const MultiChoiceContent = ({
                                       }),
                                   }}
                                 >
-                                  {option.label}
+                                  {option.answer_text || option.text || option.label}
                                 </Typography>
-
-                                {/* Nhãn "Correct" nếu cần bổ sung giống bản gốc (Tùy chọn) */}
                                 {showResults && isCorrect && (
                                   <Chip
                                     label="Correct"
@@ -347,7 +358,7 @@ const MultiChoiceContent = ({
                       <Box sx={{ pr: { xs: 0, md: 4 }, pl: { xs: 0, md: 4 }, width: '100%' }}>
                         <Box sx={{ ...listeningPartStyles.explanationContainer }}>
                           <Typography sx={listeningPartStyles.correctText}>
-                            Correct Answer: {correctAnswerText}
+                            Correct Answer: {correctOption.option_label}. {correctAnswerText}
                           </Typography>
                           {question.explanation && (
                             <Typography sx={listeningPartStyles.explanationText}>

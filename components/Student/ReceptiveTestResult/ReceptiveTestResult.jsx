@@ -3,8 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Box, Container, Typography, CircularProgress, Button, Stack } from '@mui/material';
-import { alpha } from '@mui/material/styles';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { getReceptiveTestHistory } from '@/api/test';
 import { getFullReceptiveTest } from '@/api/tests';
 import {
@@ -21,6 +20,7 @@ import {
 
 import ReceptiveReviewView from './ReceptiveReviewView';
 import ReceptiveSummaryView from './ReceptiveSummaryView';
+import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles'; // <-- Import style
 
 export default function ReceptiveTestResult({
   mode = 'summary',
@@ -41,13 +41,18 @@ export default function ReceptiveTestResult({
   const [currentPartIndex, setCurrentPartIndex] = useState(0);
   const [viewMode, setViewMode] = useState(mode);
 
+  const [targetQuestionId, setTargetQuestionId] = useState(null);
+
   const showReview = viewMode === 'review';
 
-  const navigateToReview = (index = 0) => {
+  const navigateToReview = (index = 0, questionId = null) => {
     if (typeof index === 'number') {
       setCurrentPartIndex(index);
     }
     setViewMode('review');
+    if (questionId) {
+      setTargetQuestionId(questionId);
+    }
   };
 
   const navigateToSummary = () => {
@@ -171,7 +176,7 @@ export default function ReceptiveTestResult({
           transformedParts,
         });
       } catch (err) {
-        console.error('Error fetching results:', err); // eslint-disable-line no-console
+        console.error('Error fetching results:', err);
         setError('Failed to load results.');
       } finally {
         setLoading(false);
@@ -185,6 +190,62 @@ export default function ReceptiveTestResult({
       blobUrlsToRevoke.forEach((url) => URL.revokeObjectURL(url));
     };
   }, [historyId, testId]);
+
+  useEffect(() => {
+    if (targetQuestionId && showReview) {
+      let retryCount = 0;
+      const maxRetries = 15;
+
+      const attemptScroll = () => {
+        const element = document.getElementById(`question-${targetQuestionId}`);
+
+        if (element && element.getBoundingClientRect().height > 0) {
+          window.requestAnimationFrame(() => {
+            // 1. Cuộn vào giữa màn hình
+            element.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+            });
+
+            // 2. CSS an toàn: CHỈ ĐẨY LÊN, KHÔNG ĐỔI MÀU
+            if (!document.getElementById('safe-bounce-style')) {
+              const style = document.createElement('style');
+              style.id = 'safe-bounce-style';
+              style.innerHTML = `
+                @keyframes slightBounce {
+                  0%, 100% { transform: translateY(0); }
+                  50% { transform: translateY(-2px); } 
+                }
+                .safe-element-bounce {
+                  animation: slightBounce 0.3s ease-in-out 2; 
+                }
+              `;
+              document.head.appendChild(style);
+            }
+
+            // 3. Kịch bản nảy lên
+            setTimeout(() => {
+              element.classList.add('safe-element-bounce');
+
+              // Dọn dẹp class sau khi animation hoàn thành
+              setTimeout(() => {
+                element.classList.remove('safe-element-bounce');
+              }, 600);
+            }, 300); // Đợi cuộn ổn định rồi mới nảy
+          });
+
+          // Reset lại target sau khi đã cuộn thành công
+          setTargetQuestionId(null);
+        } else if (retryCount < maxRetries) {
+          retryCount++;
+          setTimeout(attemptScroll, 100);
+        }
+      };
+
+      const timer = setTimeout(attemptScroll, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [currentPartIndex, targetQuestionId, showReview]);
 
   const { stats, maxScore, userAnswers } = useMemo(() => {
     if (!history || !testData) return { stats: null, maxScore: 0, userAnswers: {} };
@@ -212,10 +273,19 @@ export default function ReceptiveTestResult({
           p.receptive_questions.some((q) => q.id === ah.question_id),
         );
         const question = part?.receptive_questions.find((q) => q.id === ah.question_id);
-        const answer = question?.receptive_answers.find((a) => a.id === ah.selected_answer_id);
 
-        const val = answer?.option_label || ah.user_answer_text || '';
-        answersMap[ah.question_id] = val;
+        let answer = question?.receptive_answers.find((a) => a.id === ah.selected_answer_id);
+        let val = answer?.option_label || ah.user_answer_text;
+
+        if (!val && part) {
+          const allAnswersInPart = part.receptive_questions.flatMap(
+            (q) => q.receptive_answers || [],
+          );
+          const globalAnswer = allAnswersInPart.find((a) => a.id === ah.selected_answer_id);
+          val = globalAnswer?.option_label;
+        }
+
+        answersMap[ah.question_id] = val || ah.selected_answer_id || '';
       });
     }
 
@@ -227,7 +297,6 @@ export default function ReceptiveTestResult({
   }, [history, testData]);
 
   const skillColor = testData?.skill === 'R' ? '#166534' : '#1e40af';
-  const accentColor = '#ea580c';
 
   if (loading) {
     return (
@@ -264,133 +333,114 @@ export default function ReceptiveTestResult({
 
   const receptiveParts = testData.receptive_test?.receptive_parts || [];
 
+  // Gom cấu trúc Tab lại để xử lý Responsive Logic gọn gàng giống ReadingTestContent
+  const tabs = [
+    { label: 'Summary', isSummary: true },
+    ...receptiveParts.map((part, index) => ({
+      label: `Part ${part.order || index + 1}`,
+      index,
+      isSummary: false,
+    })),
+  ];
+  const activeTabIndex = showReview ? currentPartIndex + 1 : 0;
+
+  // Handle Stepper Navigation
+  const handleBack = () => {
+    if (activeTabIndex > 0) {
+      const prevTab = tabs[activeTabIndex - 1];
+      if (prevTab.isSummary) {
+        navigateToSummary();
+      } else {
+        navigateToReview(prevTab.index);
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleNext = () => {
+    if (activeTabIndex < tabs.length - 1) {
+      const nextTab = tabs[activeTabIndex + 1];
+      navigateToReview(nextTab.index);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
-    <Box sx={{ bgcolor: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Shared Header Section */}
+    <Box
+      sx={{
+        position: 'relative',
+        width: '100%',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: 'background.paper',
+      }}
+    >
+      {/* KHỐI 1: TEST HEADING */}
       <Box
-        sx={{ bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', pt: 2.5, pb: 0, zIndex: 1100 }}
+        maxWidth="lg"
+        sx={{
+          ...listeningtestStyles.testHeadingContainer,
+          mx: 'auto',
+          backgroundColor: 'background.paper',
+        }}
       >
-        <Container maxWidth="lg">
-          <Box
-            sx={{
-              minHeight: 72,
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              pb: 2,
-            }}
-          >
-            <Button
-              startIcon={<ChevronLeftIcon />}
-              onClick={() =>
-                router.push(`/student/${testData.skill === 'L' ? 'listening' : 'reading'}`)
-              }
-              sx={{
-                position: 'absolute',
-                left: 0,
-                color: '#64748b',
-                textTransform: 'none',
-                fontWeight: 600,
-                fontFamily: '"Outfit", sans-serif',
-              }}
-            >
-              Back
-            </Button>
-
-            <Stack spacing={0.25} alignItems="center" sx={{ px: { xs: 0, md: 12 } }}>
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: 700,
-                  color: '#1e293b',
-                  letterSpacing: '-0.01em',
-                  textAlign: 'center',
-                  fontFamily: '"Outfit", sans-serif',
-                }}
-              >
-                {testData.title}
-              </Typography>
-              <Typography
-                sx={{
-                  color: accentColor,
-                  fontWeight: 600,
-                  fontSize: '1rem',
-                  fontFamily: '"Outfit", sans-serif',
-                }}
-              >
-                {showReview ? `Review - Part ${currentPartIndex + 1}` : 'Summary'}
-              </Typography>
-            </Stack>
-          </Box>
-        </Container>
-
-        <Box sx={{ borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9' }}>
-          <Container maxWidth="lg" sx={{ py: 1.5 }}>
-            <Stack
-              direction="row"
-              spacing={1.2}
-              alignItems="center"
-              justifyContent="center"
-              flexWrap="wrap"
-            >
-              <Box
-                onClick={navigateToSummary}
-                sx={{
-                  px: 2.25,
-                  py: 0.7,
-                  borderRadius: '10px',
-                  border: `1px solid ${!showReview ? alpha(accentColor, 0.45) : '#e2e8f0'}`,
-                  bgcolor: !showReview ? alpha(accentColor, 0.08) : '#ffffff',
-                  color: !showReview ? accentColor : '#64748b',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  '&:hover': {
-                    borderColor: alpha(accentColor, 0.35),
-                    color: accentColor,
-                    bgcolor: alpha(accentColor, 0.04),
-                  },
-                }}
-              >
-                Summary
-              </Box>
-              {receptiveParts.map((part, index) => (
-                <Box
-                  key={part.id || index}
-                  onClick={() => navigateToReview(index)}
-                  sx={{
-                    px: 2.25,
-                    py: 0.7,
-                    borderRadius: '10px',
-                    border: `1px solid ${showReview && currentPartIndex === index ? alpha(accentColor, 0.45) : '#e2e8f0'}`,
-                    bgcolor:
-                      showReview && currentPartIndex === index
-                        ? alpha(accentColor, 0.08)
-                        : '#ffffff',
-                    color: showReview && currentPartIndex === index ? accentColor : '#64748b',
-                    fontWeight: 600,
-                    fontSize: '0.9rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      borderColor: alpha(accentColor, 0.35),
-                      color: accentColor,
-                      bgcolor: alpha(accentColor, 0.04),
-                    },
-                  }}
-                >
-                  Part {part.order || index + 1}
-                </Box>
-              ))}
-            </Stack>
-          </Container>
+        {/* Name Test and Format Part */}
+        <Box sx={listeningtestStyles.nameTestAndFormatPart}>
+          <Typography sx={listeningtestStyles.nameTest}>{testData.title}</Typography>
+          <Typography sx={listeningtestStyles.formatName}>
+            {showReview ? `Review - Part ${currentPartIndex + 1}` : 'Summary'}
+          </Typography>
         </Box>
       </Box>
 
-      {/* View Content Section */}
-      <Box sx={{ flex: 1, overflow: showReview ? 'hidden' : 'auto' }}>
+      {/* KHỐI 2: LIST PART SELECTION */}
+      <Box maxWidth="lg" sx={{ ...listeningtestStyles.listPartContainer, mx: 'auto' }}>
+        {tabs.map((tab, i) => (
+          <Box
+            key={i}
+            onClick={() => (tab.isSummary ? navigateToSummary() : navigateToReview(tab.index))}
+            sx={{
+              ...listeningtestStyles.boxPart,
+              // Áp dụng UI riêng cho tab Summary theo yêu cầu của bạn
+              ...(tab.isSummary && {
+                width: 'auto',
+                px: 2,
+              }),
+              // Active state
+              ...(i === activeTabIndex && {
+                backgroundColor: 'background.default',
+                borderColor: 'orange.light',
+                color: 'orange.dark',
+              }),
+              // Responsive Logic: Cuộn tab giống bên ReadingTestContent
+              ...((i < activeTabIndex - 1 || i > activeTabIndex + 1) && {
+                display: { xs: 'none', sm: 'flex' },
+              }),
+              ...(((i === activeTabIndex - 2 && activeTabIndex === tabs.length - 1) ||
+                (i === activeTabIndex + 2 && activeTabIndex === 0)) && {
+                display: 'flex',
+              }),
+            }}
+          >
+            {tab.label}
+          </Box>
+        ))}
+      </Box>
+      {/* Separator Line */}
+      <Box sx={{ ...listeningtestStyles.separatorLine, backgroundColor: 'gray.main' }} />
+
+      {/* KHỐI 3: CONTENT VIEW */}
+      <Box
+        sx={{
+          width: '100%',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          bgcolor: 'background.default',
+          overflow: showReview ? 'hidden' : 'auto',
+        }}
+      >
         {showReview ? (
           <ReceptiveReviewView
             testData={testData}
@@ -412,6 +462,47 @@ export default function ReceptiveTestResult({
             skillColor={skillColor}
           />
         )}
+      </Box>
+
+      {/* KHỐI 4: STEPPER NAVIGATION Ở DƯỚI CÙNG */}
+      <Box sx={{ width: '100%', height: 'auto', backgroundColor: 'background.gray', pb: 4 }}>
+        <Container maxWidth="lg" sx={listeningtestStyles.stepperContainer}>
+          <Typography
+            sx={{
+              ...listeningtestStyles.backButton,
+              display: activeTabIndex === 0 ? { xs: 'none', md: 'flex' } : 'flex',
+              visibility: activeTabIndex === 0 ? 'hidden' : 'visible',
+            }}
+            onClick={handleBack}
+          >
+            <ExpandLessIcon
+              sx={{
+                cursor: 'pointer',
+                fontSize: { xs: '1.6rem', md: '1.8rem' },
+                color: 'gray.main',
+                transform: 'rotate(270deg)',
+              }}
+            />
+            Prev
+          </Typography>
+
+          <Typography sx={{ fontSize: '1rem' }}>
+            Section {activeTabIndex + 1} of {tabs.length}
+          </Typography>
+
+          <Box
+            sx={{
+              ...listeningtestStyles.summitButtonWrapper,
+              display: activeTabIndex === tabs.length - 1 ? { xs: 'none', md: 'flex' } : 'flex',
+            }}
+          >
+            {activeTabIndex !== tabs.length - 1 && (
+              <Button sx={listeningtestStyles.nextButton} onClick={handleNext}>
+                Next
+              </Button>
+            )}
+          </Box>
+        </Container>
       </Box>
     </Box>
   );

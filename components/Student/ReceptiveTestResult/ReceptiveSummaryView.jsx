@@ -7,7 +7,6 @@ import {
   Typography,
   Paper,
   Grid,
-  Button,
   Chip,
   Stack,
   useTheme,
@@ -16,7 +15,6 @@ import {
   AccordionDetails,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import TrackChangesIcon from '@mui/icons-material/TrackChanges';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -129,7 +127,13 @@ const ReceptiveSummaryView = ({
     }) || [];
 
   return (
-    <Box sx={{ minHeight: '100vh', pb: 8, fontFamily: '"Outfit", sans-serif' }}>
+    <Box
+      sx={{
+        bgcolor: 'background.gray',
+        minHeight: '100vh',
+        fontFamily: '"Outfit", sans-serif',
+      }}
+    >
       {/* Main Content (Similar to SummaryTab) */}
       <Container maxWidth="lg" sx={{ mt: 4 }}>
         <Box sx={{ maxWidth: '900px', mx: 'auto' }}>
@@ -334,7 +338,8 @@ const ReceptiveSummaryView = ({
 
             {/* Insights */}
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={12}>
+              {/* Đã cập nhật dòng này sang v2 */}
+              <Grid size={{ xs: 12, sm: 12 }}>
                 <Stack
                   direction="row"
                   spacing={2}
@@ -374,7 +379,7 @@ const ReceptiveSummaryView = ({
 
             <Grid container spacing={2} alignItems="flex-start">
               {partsData.map((part, idx) => (
-                <Grid item xs={12} md={6} key={idx}>
+                <Grid size={{ xs: 12, md: 6 }} key={idx}>
                   <Accordion
                     disableGutters
                     elevation={0}
@@ -454,7 +459,7 @@ const ReceptiveSummaryView = ({
                           return (
                             <Box
                               key={qIdx}
-                              onClick={() => navigateToReview(idx)}
+                              onClick={() => navigateToReview(idx, q.id)}
                               sx={{
                                 cursor: 'pointer',
                                 transition: 'transform 0.1s',

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Container, Box, Typography, Checkbox } from '@mui/material';
+import { Container, Box, Typography, Checkbox, Chip } from '@mui/material';
 import CustomAudioPlayer from '../../../Test/customAudioPlayer';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CircleIcon from '@mui/icons-material/Circle';
@@ -193,6 +193,7 @@ export default function MultipleChoiceSingleAudio({
                         <Typography
                           sx={{
                             ...multipleChoiceStyles.optionLabel,
+                            flex: 1,
                             fontWeight: 400,
                             ...(questionResult &&
                               isSelectedInReview && {
@@ -203,6 +204,14 @@ export default function MultipleChoiceSingleAudio({
                         >
                           {option.answer_text || option.text}
                         </Typography>
+                        {correctAnswer.option_label === option.option_label && (
+                          <Chip
+                            label="Correct"
+                            size="small"
+                            color="success"
+                            sx={{ height: 20, fontSize: '0.65rem', ml: 1 }}
+                          />
+                        )}
                       </Box>
                     );
                   })}

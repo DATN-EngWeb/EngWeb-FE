@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Container, Box, Typography, Checkbox } from '@mui/material';
+import { Container, Box, Typography, Checkbox, Chip } from '@mui/material';
 import CustomAudioPlayer from '../../../Test/customAudioPlayer';
 import InstructionIcon from '../../../Test/instructionIcon';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
@@ -228,6 +228,7 @@ export default function MultipleChoiceQuestionAudio({
         sx={{
           ...listeningPartStyles.questionSection,
           width: { xs: '100%', md: `calc(${100 - leftWidth}% - 32px)` },
+          minWidth: '400px',
           height: '100%',
           overflowY: 'auto',
           minHeight: 0,
@@ -350,6 +351,7 @@ export default function MultipleChoiceQuestionAudio({
                           sx={{
                             ...multipleChoiceStyles.optionLabel,
                             fontWeight: 400,
+                            flex: 1,
                             ...(questionResult &&
                               isSelectedInReview && {
                                 color: isCorrect ? '#4caf50' : '#f44336',
@@ -359,6 +361,14 @@ export default function MultipleChoiceQuestionAudio({
                         >
                           {option.answer_text || option.text}
                         </Typography>
+                        {correctAnswer.option_label === option.option_label && (
+                          <Chip
+                            label="Correct"
+                            size="small"
+                            color="success"
+                            sx={{ height: 20, fontSize: '0.65rem', ml: 1 }}
+                          />
+                        )}
                       </Box>
                     );
                   })}

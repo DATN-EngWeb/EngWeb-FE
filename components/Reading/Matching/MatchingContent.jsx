@@ -330,7 +330,29 @@ const MatchingContent = ({
                   <Box sx={listeningPartStyles.questionContainerCol}>
                     {gaps.map((gapNumber) => {
                       const q = questions.find((qu) => qu.question_number === gapNumber);
-                      const isCorrect = showResults ? answers[q?.id] === q?.correctLabel : null;
+
+                      // 1. Lấy answer gốc từ props
+                      let userAnsRaw =
+                        answers[q?.id] !== undefined && answers[q?.id] !== null
+                          ? String(answers[q?.id]).trim()
+                          : '';
+                      let userAns = userAnsRaw;
+
+                      // 2. Nếu answer là một ID (chuỗi số), map nó sang nhãn A, B, C... dựa vào processedSentences
+                      if (/^\d+$/.test(userAnsRaw)) {
+                        const sentenceIndex = processedSentences.findIndex(
+                          (s) => s.id === parseInt(userAnsRaw, 10),
+                        );
+                        if (sentenceIndex !== -1) {
+                          userAns = String.fromCharCode(65 + sentenceIndex);
+                        } else {
+                          userAns = ''; // fallback nếu không tìm thấy ID
+                        }
+                      }
+
+                      // 3. Sử dụng userAns đã được map cho UI
+                      const isAnswered = userAns.trim().length > 0;
+                      const isCorrect = showResults ? userAns === q?.correctLabel : null;
 
                       return (
                         <Box
@@ -355,11 +377,12 @@ const MatchingContent = ({
                             <Typography
                               sx={{
                                 ...listeningPartStyles.questionLabelCircle,
-                                ...(showResults && {
-                                  backgroundColor: isCorrect ? 'success.main' : 'error.main',
-                                  color: '#fff',
-                                  border: 'none',
-                                }),
+                                ...(showResults &&
+                                  isAnswered && {
+                                    backgroundColor: isCorrect ? 'success.main' : 'error.main',
+                                    color: '#fff',
+                                    border: 'none',
+                                  }),
                               }}
                             >
                               {gapNumber}
@@ -373,7 +396,7 @@ const MatchingContent = ({
                               }}
                             >
                               <Select
-                                value={answers[q?.id] || ''}
+                                value={userAns}
                                 onChange={(e) => handleAnswerChangeLocal(gapNumber, e.target.value)}
                                 displayEmpty
                                 disabled={showResults}
@@ -387,20 +410,21 @@ const MatchingContent = ({
                                     py: 1,
                                     px: 2,
                                   },
-                                  ...(showResults && {
-                                    color: isCorrect ? '#4caf50' : '#f44336',
-                                    fontWeight: 600,
-                                    backgroundColor: isCorrect
-                                      ? 'rgba(76, 175, 80, 0.05)'
-                                      : 'rgba(244, 67, 54, 0.05)',
-                                    '& .MuiOutlinedInput-notchedOutline': {
-                                      borderColor: isCorrect ? '#4caf50' : '#f44336',
-                                    },
-                                    '&.Mui-disabled': {
+                                  ...(showResults &&
+                                    isAnswered && {
                                       color: isCorrect ? '#4caf50' : '#f44336',
-                                      WebkitTextFillColor: isCorrect ? '#4caf50' : '#f44336',
-                                    },
-                                  }),
+                                      fontWeight: 600,
+                                      backgroundColor: isCorrect
+                                        ? 'rgba(76, 175, 80, 0.05)'
+                                        : 'rgba(244, 67, 54, 0.05)',
+                                      '& .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: isCorrect ? '#4caf50' : '#f44336',
+                                      },
+                                      '&.Mui-disabled': {
+                                        color: isCorrect ? '#4caf50' : '#f44336',
+                                        WebkitTextFillColor: isCorrect ? '#4caf50' : '#f44336',
+                                      },
+                                    }),
                                 }}
                               >
                                 <MenuItem value="">

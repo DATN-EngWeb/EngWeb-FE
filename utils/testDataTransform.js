@@ -62,7 +62,9 @@ export function transformFillBlanksTest(backendTest) {
           q.receptive_answers?.map((a) => ({
             id: a.id,
             value: a.option_label,
-            label: `${a.option_label}. ${a.answer_text}`,
+            label: a.answer_text || '',
+            option_label: a.option_label || '',
+            answer_text: a.answer_text || '',
             isCorrect: a.is_correct,
           })) || [],
       }));
@@ -162,7 +164,9 @@ export function transformMultiChoiceTest(backendTest) {
             question.receptive_answers?.map((answer) => ({
               id: answer.id,
               value: answer.option_label,
-              label: `${answer.option_label}. ${answer.answer_text}`,
+              label: answer.answer_text || '',
+              option_label: answer.option_label || '',
+              answer_text: answer.answer_text || '',
               isCorrect: answer.is_correct,
             })) || [];
 
