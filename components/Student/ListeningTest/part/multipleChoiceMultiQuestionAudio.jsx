@@ -163,7 +163,18 @@ export default function MultipleChoiceQuestionAudio({
         </Box>
         {/* -------- Passage (Optional) --------- */}
         <Box
-          sx={listeningPartStyles.passageContainer}
+          sx={{
+            ...listeningPartStyles.passageContainer,
+            overflowY: 'auto',
+            scrollbarWidth: 'thin',
+            '&::-webkit-scrollbar': { width: '8px' },
+            '&::-webkit-scrollbar-track': { background: 'transparent' },
+            '&::-webkit-scrollbar-thumb': {
+              background: '#ccc',
+              borderRadius: '4px',
+              '&:hover': { background: '#999' },
+            },
+          }}
           dangerouslySetInnerHTML={{ __html: passageSrc }}
         />
       </Box>
@@ -220,6 +231,14 @@ export default function MultipleChoiceQuestionAudio({
           height: '100%',
           overflowY: 'auto',
           minHeight: 0,
+          scrollbarWidth: 'thin',
+          '&::-webkit-scrollbar': { width: '8px' },
+          '&::-webkit-scrollbar-track': { background: 'transparent' },
+          '&::-webkit-scrollbar-thumb': {
+            background: '#ccc',
+            borderRadius: '4px',
+            '&:hover': { background: '#999' },
+          },
         }}
       >
         {/* -------- Inner Instruction --------- */}

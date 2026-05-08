@@ -14,10 +14,16 @@ import {
   IconButton,
   Stack,
   Snackbar,
+  Container,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
+import SendIcon from '@mui/icons-material/Send';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+
 import MultiChoiceReading from '@/components/Reading/MultiChoice/MultiChoiceReading';
 import FillBlanksReading from '@/components/Reading/FillBlanks/FillBlanksReading';
 import MatchingReading from '@/components/Reading/Matching/MatchingReading';
@@ -28,8 +34,15 @@ import {
   transformFillBlanksTest,
   transformMatchingTest,
 } from '@/utils/testDataTransform';
-import TestTimer from '@/components/Reading/Common/TestTimer';
 import ReceptiveTestResult from '@/components/Student/ReceptiveTestResult/ReceptiveTestResult';
+import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
+
+// Hàm helper format thời gian hiển thị
+const formatTimeFromSeconds = (totalSeconds) => {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+};
 
 export default function ReadingTestContent({ testId }) {
   const router = useRouter();
@@ -49,6 +62,7 @@ export default function ReadingTestContent({ testId }) {
   const [historyId, setHistoryId] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
 
+  // Timer Logic
   useEffect(() => {
     if (isSubmitting || isReadOnly) return;
 
@@ -59,6 +73,7 @@ export default function ReadingTestContent({ testId }) {
     return () => clearInterval(interval);
   }, [isSubmitting, isReadOnly]);
 
+  // Fetch Test Data
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
     async function fetchTestData() {
@@ -138,7 +153,6 @@ export default function ReadingTestContent({ testId }) {
           parts,
         });
 
-        // Load draft/result from sessionStorage if available
         if (typeof window !== 'undefined') {
           const saved = window.sessionStorage.getItem('current_receptive_attempt');
           if (saved) {
@@ -149,7 +163,6 @@ export default function ReadingTestContent({ testId }) {
             if (savedData.answer_histories) {
               const restoredAnswers = {};
 
-              // Helper to find answer label by ID from backendTest data
               const findLabelById = (answerId) => {
                 if (!answerId || !backendTest?.receptive_test?.receptive_parts) return null;
                 for (const part of backendTest.receptive_test.receptive_parts) {
@@ -168,7 +181,6 @@ export default function ReadingTestContent({ testId }) {
                 let value =
                   hist.receptive_answer || hist.selected_answer_id || hist.user_answer_text;
 
-                // If we have an answer ID, try to map it back to a label for UI components
                 if (hist.receptive_answer || hist.selected_answer_id) {
                   const label = findLabelById(hist.receptive_answer || hist.selected_answer_id);
                   if (label) value = label;
@@ -230,7 +242,6 @@ export default function ReadingTestContent({ testId }) {
       const endTime = new Date().toISOString();
       const answer_histories = [];
 
-      // Structure answer_histories based on parts and formats using the 'answers' state
       testData.parts.forEach((part) => {
         part.rawPart.receptive_questions.forEach((q) => {
           const userAnswer = answers[q.id];
@@ -239,7 +250,6 @@ export default function ReadingTestContent({ testId }) {
             const entry = { receptive_question: q.id };
 
             if (['F', 'G', 'A', 'B', 'C', 'H', 'E', 'J'].includes(part.format)) {
-              // Multiple choice or Matching: find the answer ID corresponding to the selected label/option/ID
               let selectedAnswer = q.receptive_answers.find(
                 (a) =>
                   a.option_label === userAnswer ||
@@ -247,7 +257,6 @@ export default function ReadingTestContent({ testId }) {
                   a.id === parseInt(userAnswer),
               );
 
-              // If not found by label or ID, and it's a single letter (A, B, C...), try mapping by index
               if (!selectedAnswer && typeof userAnswer === 'string' && userAnswer.length === 1) {
                 const allAnswers = [...(q.receptive_answers || [])].sort((a, b) => {
                   if (a.option_label && b.option_label)
@@ -260,7 +269,6 @@ export default function ReadingTestContent({ testId }) {
                 }
               }
 
-              // Special handling for global pool matching (formats J, E)
               if (!selectedAnswer && (part.format === 'J' || part.format === 'E')) {
                 const allPossibleAnswers = [];
                 const seenAnswerIds = new Set();
@@ -298,13 +306,9 @@ export default function ReadingTestContent({ testId }) {
               if (selectedAnswer) {
                 entry.receptive_answer = selectedAnswer.id;
               } else {
-                // If we absolutely can't find an ID but the format requires it,
-                // we should probably NOT send user_answer_text as it might cause a backend error
-                // but let's keep it as a last-resort fallback for now
                 entry.user_answer_text = String(userAnswer);
               }
             } else {
-              // Open text formats (I, D)
               entry.user_answer_text = String(userAnswer);
             }
 
@@ -370,10 +374,6 @@ export default function ReadingTestContent({ testId }) {
     }
   };
 
-  const handlePartChange = (newPartIndex) => {
-    setCurrentPartIndex(newPartIndex);
-  };
-
   const handleBack = () => {
     if (currentPartIndex > 0) {
       setCurrentPartIndex(currentPartIndex - 1);
@@ -388,149 +388,138 @@ export default function ReadingTestContent({ testId }) {
     }
   };
 
-  const mainContent = () => {
-    if (loading) {
-      return (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '60vh',
-            flexDirection: 'column',
-            gap: 2,
-          }}
+  // Trạng thái Loading hoặc Lỗi
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '60vh',
+          flexDirection: 'column',
+          gap: 2,
+        }}
+      >
+        <CircularProgress size={60} />
+        <Box sx={{ fontSize: '18px', color: 'text.secondary' }}>Loading test data...</Box>
+      </Box>
+    );
+  }
+
+  // Kết quả sau khi nộp bài
+  if (isReadOnly && historyId) {
+    return <ReceptiveTestResult historyId={historyId} testId={testId} />;
+  }
+
+  if (error) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '60vh',
+          padding: 3,
+        }}
+      >
+        <Alert
+          severity="error"
+          sx={{ maxWidth: 600 }}
+          action={
+            <Button color="inherit" size="small" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          }
         >
-          <CircularProgress size={60} />
-          <Box sx={{ fontSize: '18px', color: 'text.secondary' }}>Loading test data...</Box>
-        </Box>
-      );
-    }
+          {error}
+        </Alert>
+      </Box>
+    );
+  }
 
-    if (isReadOnly && historyId) {
-      return <ReceptiveTestResult historyId={historyId} testId={testId} />;
-    }
+  if (!testData || !testData.parts || testData.parts.length === 0) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '60vh',
+          padding: 3,
+        }}
+      >
+        <Alert severity="info" sx={{ maxWidth: 600 }}>
+          No test data available.
+        </Alert>
+      </Box>
+    );
+  }
 
-    if (error) {
-      return (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '60vh',
-            padding: 3,
-          }}
-        >
-          <Alert
-            severity="error"
-            sx={{ maxWidth: 600 }}
-            action={
-              <Button color="inherit" size="small" onClick={() => window.location.reload()}>
-                Retry
-              </Button>
-            }
-          >
-            {error}
-          </Alert>
-        </Box>
-      );
-    }
+  const currentPart = testData.parts[currentPartIndex];
 
-    if (!testData || !testData.parts || testData.parts.length === 0) {
-      return (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '60vh',
-            padding: 3,
-          }}
-        >
-          <Alert severity="info" sx={{ maxWidth: 600 }}>
-            No test data available.
-          </Alert>
-        </Box>
-      );
-    }
-    const currentPart = testData.parts[currentPartIndex];
-
-    const renderPartComponent = () => {
-      if (!currentPart || !currentPart.data) {
-        return (
-          <Alert severity="warning" sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
-            This part format is not yet supported.
-          </Alert>
-        );
-      }
-
-      const commonProps = {
-        testName: testData.title,
-        parts: testData.parts.map((p, idx) => `Part ${idx + 1}`),
-        currentPart: currentPartIndex + 1,
-        answers,
-        onAnswerChange: handleAnswerChange,
-        onPartChange: handlePartChange,
-        isTeacher: false,
-        onSubmit: () => handleSubmit('S'),
-        onSaveDraft: () => handleSubmit('D'),
-        onBack: handleBack,
-        onNext: handleNext,
-        currentSection: currentPartIndex + 1,
-        totalSections: testData.parts.length,
-        timerNode: <TestTimer initialSeconds={elapsedSeconds} />,
-      };
-
-      switch (currentPart.componentType) {
-        case 'multi-choice':
-          return (
-            <MultiChoiceReading
-              {...commonProps}
-              passage={currentPart.data.passage}
-              passageTitle={currentPart.data.passageTitle}
-              questions={currentPart.data.questions}
-            />
-          );
-
-        case 'fill-blanks':
-          return (
-            <FillBlanksReading
-              {...commonProps}
-              passage={currentPart.data.passage}
-              passageTitle={currentPart.data.passageTitle}
-              blanks={currentPart.data.blanks}
-              questions={currentPart.data.questions}
-            />
-          );
-
-        case 'matching':
-          return (
-            <MatchingReading
-              {...commonProps}
-              passage={currentPart.data.passage}
-              passageTitle={currentPart.data.passageTitle}
-              sentences={currentPart.data.sentences}
-              gaps={currentPart.data.gaps}
-              questions={currentPart.data.questions}
-            />
-          );
-
-        default:
-          return (
-            <Alert severity="warning" sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
-              Unknown part format: {currentPart.format}
-            </Alert>
-          );
-      }
+  // Hàm render Component con (Không chứa Footer hay Header)
+  const renderPartComponent = () => {
+    const commonProps = {
+      answers,
+      onAnswerChange: handleAnswerChange,
+      showResults: isReadOnly,
     };
 
-    return renderPartComponent();
+    switch (currentPart.componentType) {
+      case 'multi-choice':
+        return (
+          <MultiChoiceReading
+            {...commonProps}
+            passage={currentPart.data.passage}
+            passageTitle={currentPart.data.passageTitle}
+            questions={currentPart.data.questions}
+          />
+        );
+
+      case 'fill-blanks':
+        return (
+          <FillBlanksReading
+            {...commonProps}
+            passage={currentPart.data.passage}
+            passageTitle={currentPart.data.passageTitle}
+            blanks={currentPart.data.blanks}
+            questions={currentPart.data.questions}
+          />
+        );
+
+      case 'matching':
+        return (
+          <MatchingReading
+            {...commonProps}
+            passage={currentPart.data.passage}
+            passageTitle={currentPart.data.passageTitle}
+            sentences={currentPart.data.sentences}
+            gaps={currentPart.data.gaps}
+            questions={currentPart.data.questions}
+          />
+        );
+
+      default:
+        return (
+          <Alert severity="warning" sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
+            Unknown part format: {currentPart.format}
+          </Alert>
+        );
+    }
   };
 
   return (
-    <>
-      {/* Global Notifications */}
+    <Box
+      sx={{
+        position: 'relative',
+        width: '100%',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: 'background.paper',
+      }}
+    >
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
@@ -551,11 +540,135 @@ export default function ReadingTestContent({ testId }) {
           {snackbar.message}
         </Alert>
       </Snackbar>
+      {/* KHỐI 1: TEST HEADING & TABS - ĐÃ ĐỒNG BỘ THEO LISTENING */}
+      {/* -------- Test Heading Section --------- */}
+      <Box
+        maxWidth="lg"
+        sx={{
+          ...listeningtestStyles.testHeadingContainer,
+          mx: 'auto',
+          backgroundColor: 'background.paper',
+        }}
+      >
+        {/* Time Left */}
+        <Box sx={{ ...listeningtestStyles.timeLeft, ...(isReadOnly && { visibility: 'hidden' }) }}>
+          <AccessTimeIcon sx={{ fontSize: 28, mr: 0.5 }} />
+          {formatTimeFromSeconds(elapsedSeconds)}
+        </Box>
 
-      {/* Main Content Area */}
-      {mainContent()}
+        {/* Name Test and Format Part */}
+        <Box sx={listeningtestStyles.nameTestAndFormatPart}>
+          <Typography sx={listeningtestStyles.nameTest}>{testData.title}</Typography>
+          <Typography sx={listeningtestStyles.formatName}>
+            Part {currentPartIndex + 1}: {currentPart.componentType.replace('-', ' ')}
+          </Typography>
+        </Box>
 
-      {/* Submit Confirmation Dialog */}
+        {/* Submit và Draft Button */}
+        <Box
+          sx={{
+            ...listeningtestStyles.summitButtonWrapper,
+            ...(isReadOnly && { visibility: 'hidden' }),
+          }}
+        >
+          <Button
+            startIcon={<SaveOutlinedIcon />}
+            sx={listeningtestStyles.draftButton}
+            onClick={() => handleSubmit('D')}
+            disabled={isReadOnly}
+          >
+            Save Draft
+          </Button>
+          <Button
+            startIcon={<SendIcon />}
+            sx={listeningtestStyles.submitButton}
+            onClick={() => handleSubmit('S')}
+            disabled={isReadOnly}
+          >
+            Submit Test
+          </Button>
+        </Box>
+      </Box>
+      {/* -------- List Part Selection --------- */}
+      <Box maxWidth="lg" sx={{ ...listeningtestStyles.listPartContainer, mx: 'auto' }}>
+        {testData.parts.map((part, index) => (
+          <Box
+            key={index}
+            onClick={() => setCurrentPartIndex(index)}
+            sx={{
+              ...listeningtestStyles.boxPart,
+              ...(index === currentPartIndex && {
+                backgroundColor: 'background.default',
+                borderColor: 'orange.light',
+                color: 'orange.dark',
+              }),
+              // Responsive Logic: Ẩn bớt tab trên mobile giống Listening
+              ...((index < currentPartIndex - 1 || index > currentPartIndex + 1) && {
+                display: { xs: 'none', sm: 'flex' },
+              }),
+              ...(((index === currentPartIndex - 2 &&
+                currentPartIndex === testData.parts.length - 1) ||
+                (index === currentPartIndex + 2 && currentPartIndex === 0)) && {
+                display: 'flex',
+              }),
+            }}
+          >
+            Part {index + 1}
+          </Box>
+        ))}
+      </Box>
+      {/* Separator Line */}
+      <Box sx={{ ...listeningtestStyles.separatorLine, backgroundColor: 'gray.main' }} />{' '}
+      {/* KHỐI 2: CONTENT CỦA PART */}
+      <Box sx={{ width: '100%', flex: 1, display: 'flex', bgcolor: 'background.default' }}>
+        {renderPartComponent()}
+      </Box>
+      {/* KHỐI 3: STEPPER NAVIGATION Ở DƯỚI CÙNG */}
+      <Box sx={{ width: '100%', height: 'auto', backgroundColor: 'background.gray', pb: 4 }}>
+        <Container maxWidth="lg" sx={listeningtestStyles.stepperContainer}>
+          <Typography
+            sx={{
+              ...listeningtestStyles.backButton,
+              // Thêm logic display: Ẩn hẳn (none) trên mobile (xs) khi ở trang đầu để chữ Section dạt ra sát mép trái
+              display: currentPartIndex === 0 ? { xs: 'none', md: 'flex' } : 'flex',
+              visibility: currentPartIndex === 0 ? 'hidden' : 'visible',
+            }}
+            onClick={handleBack}
+          >
+            <ExpandLessIcon
+              sx={{
+                cursor: 'pointer',
+                fontSize: { xs: '1.6rem', md: '1.8rem' },
+                color: 'gray.main',
+                transform: 'rotate(270deg)',
+              }}
+            />
+            Prev
+          </Typography>
+
+          <Typography sx={{ fontSize: '1rem' }}>
+            Section {currentPartIndex + 1} of {testData.parts.length}
+          </Typography>
+
+          <Box
+            sx={{
+              ...listeningtestStyles.summitButtonWrapper,
+              // Thêm logic display: Ẩn hẳn Box wrapper này trên mobile (xs) khi ở trang cuối để chữ Section dạt ra sát mép phải
+              display:
+                currentPartIndex === testData.parts.length - 1
+                  ? { xs: 'none', md: 'flex' }
+                  : 'flex',
+            }}
+          >
+            {currentPartIndex !== testData.parts.length - 1 && (
+              <Button sx={listeningtestStyles.nextButton} onClick={handleNext}>
+                Next
+              </Button>
+            )}
+          </Box>
+        </Container>
+      </Box>{' '}
+      {/* --- CÁC DIALOG XÁC NHẬN --- */}
       <Dialog
         open={openSubmitDialog}
         onClose={() => !isSubmitting && setOpenSubmitDialog(false)}
@@ -583,7 +696,6 @@ export default function ReadingTestContent({ testId }) {
         >
           <CloseIcon fontSize="small" />
         </IconButton>
-
         <DialogContent sx={{ textAlign: 'center', pt: 6, pb: 2 }}>
           <Stack spacing={4} alignItems="center">
             <Box
@@ -600,7 +712,6 @@ export default function ReadingTestContent({ testId }) {
             >
               <InfoOutlinedIcon sx={{ fontSize: 48, color: '#16a34a' }} />
             </Box>
-
             <Typography
               sx={{
                 fontSize: '1.25rem',
@@ -617,7 +728,6 @@ export default function ReadingTestContent({ testId }) {
             </Typography>
           </Stack>
         </DialogContent>
-
         <DialogActions sx={{ justifyContent: 'center', gap: 3, pb: 6, pt: 2, px: 4 }}>
           <Button
             onClick={() => setOpenSubmitDialog(false)}
@@ -643,7 +753,6 @@ export default function ReadingTestContent({ testId }) {
           >
             CANCEL
           </Button>
-
           <Button
             onClick={handleConfirmSubmit}
             variant="contained"
@@ -663,10 +772,7 @@ export default function ReadingTestContent({ testId }) {
                 backgroundColor: '#14532d',
                 boxShadow: '0 6px 20px rgba(22, 101, 52, 0.23)',
               },
-              '&.Mui-disabled': {
-                backgroundColor: '#166534',
-                opacity: 0.7,
-              },
+              '&.Mui-disabled': { backgroundColor: '#166534', opacity: 0.7 },
             }}
           >
             {isSubmitting ? (
@@ -679,8 +785,6 @@ export default function ReadingTestContent({ testId }) {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Warning Dialog for empty submission */}
       <Dialog
         open={openWarningDialog}
         onClose={() => setOpenWarningDialog(false)}
@@ -698,18 +802,11 @@ export default function ReadingTestContent({ testId }) {
         <Box sx={{ position: 'absolute', right: 16, top: 16 }}>
           <IconButton
             onClick={() => setOpenWarningDialog(false)}
-            sx={{
-              color: '#94a3b8',
-              '&:hover': {
-                backgroundColor: '#f1f5f9',
-                color: '#475569',
-              },
-            }}
+            sx={{ color: '#94a3b8', '&:hover': { backgroundColor: '#f1f5f9', color: '#475569' } }}
           >
             <CloseIcon />
           </IconButton>
         </Box>
-
         <DialogContent sx={{ pt: 4, pb: 1, textAlign: 'center' }}>
           <Stack alignItems="center" spacing={3}>
             <Box
@@ -726,7 +823,6 @@ export default function ReadingTestContent({ testId }) {
             >
               <WarningAmberIcon sx={{ fontSize: 48, color: '#f59e0b' }} />
             </Box>
-
             <Typography
               sx={{
                 fontSize: '1.5rem',
@@ -740,18 +836,12 @@ export default function ReadingTestContent({ testId }) {
               Warning
             </Typography>
             <Typography
-              sx={{
-                fontSize: '1rem',
-                color: '#475569',
-                px: 2,
-                fontFamily: '"Outfit", sans-serif',
-              }}
+              sx={{ fontSize: '1rem', color: '#475569', px: 2, fontFamily: '"Outfit", sans-serif' }}
             >
               Please select or fill in at least one answer before submitting!
             </Typography>
           </Stack>
         </DialogContent>
-
         <DialogActions sx={{ justifyContent: 'center', pb: 4, pt: 2, px: 4 }}>
           <Button
             onClick={() => setOpenWarningDialog(false)}
@@ -777,6 +867,6 @@ export default function ReadingTestContent({ testId }) {
           </Button>
         </DialogActions>
       </Dialog>
-    </>
+    </Box>
   );
 }

@@ -696,35 +696,8 @@ export default function ListeningTestContent({ test_id, initialData }) {
           mx: 'auto',
         }}
       >
-        {/* Back Button */}
-        <Box
-          sx={{
-            ...listeningtestStyles.summitButtonWrapper,
-            justifyContent: 'flex-start',
-            order: { xs: 2, md: 1 },
-            ...(!isReadOnly && {
-              display: 'none',
-            }),
-          }}
-        >
-          <Button
-            startIcon={<ChevronLeftRounded />}
-            sx={{
-              ...listeningtestStyles.backButton,
-              width: 'auto',
-              '& .MuiButton-startIcon': {
-                '& svg': {
-                  fontSize: { xs: '1.5rem', md: '1.75rem' },
-                },
-              },
-            }}
-            onClick={() => handleBack()}
-          >
-            Back
-          </Button>
-        </Box>
         {/* Time Left */}
-        <Box sx={{ ...listeningtestStyles.timeLeft, ...(isReadOnly && { display: 'none' }) }}>
+        <Box sx={{ ...listeningtestStyles.timeLeft, ...(isReadOnly && { visibility: 'hidden' }) }}>
           <AccessTimeIcon
             sx={{
               fontSize: 28,
@@ -769,7 +742,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
           </Button>
         </Box>
       </Box>
-      <Box sx={listeningtestStyles.separatorLine}></Box>
       {/* -------- List Part Selection --------- */}
       <Box maxWidth="lg" sx={{ ...listeningtestStyles.listPartContainer, mx: 'auto' }}>
         {/* -------- Summary Tab -------- */}
@@ -855,7 +827,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
                 transform: 'rotate(270deg)',
               }}
             />
-            Back
+            Prev
           </Typography>
 
           <Typography sx={{ fontSize: '1rem' }}>
@@ -870,39 +842,10 @@ export default function ListeningTestContent({ test_id, initialData }) {
                 indexPart === receptiveParts.length - 1 ? { xs: 'none', md: 'flex' } : 'flex',
             }}
           >
-            {indexPart !== receptiveParts.length - 1 ? (
+            {indexPart !== receptiveParts.length - 1 && (
               <Button sx={listeningtestStyles.nextButton} onClick={goNextPart}>
                 Next
               </Button>
-            ) : (
-              <Stack direction="row" spacing={1.5} sx={{ display: { xs: 'none', md: 'flex' } }}>
-                <Button
-                  startIcon={<SaveOutlinedIcon />}
-                  sx={{
-                    ...listeningtestStyles.draftButton,
-                    px: 3,
-                    py: 0.5,
-                    ...(isReadOnly && { display: 'none' }),
-                  }}
-                  onClick={handlePreSaveDraft}
-                  disabled={isReadOnly}
-                >
-                  Save Draft
-                </Button>
-                <Button
-                  startIcon={<SendIcon />}
-                  sx={{
-                    ...listeningtestStyles.submitButton,
-                    px: 3,
-                    py: 0.5,
-                    ...(isReadOnly && { visibility: 'hidden' }),
-                  }}
-                  onClick={handlePreSubmit}
-                  disabled={isReadOnly}
-                >
-                  Submit
-                </Button>
-              </Stack>
             )}
           </Box>
         </Container>

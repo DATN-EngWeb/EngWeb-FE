@@ -1,8 +1,8 @@
 'use client';
 
 import { Box, Button, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 
 import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
 
@@ -14,116 +14,74 @@ export default function TestHeading({
   isTeacher = false,
   onAIReview,
   onSaveDraft,
-  onExit,
 }) {
   return (
     <>
-      <Box
-        sx={{
-          ...listeningtestStyles.testHeadingContainer,
-          minHeight: '80px',
-          display: 'flex',
-          alignItems: 'center',
-        }}
-      >
-        {/* Left: Timer or Back/Exit */}
+      <Box sx={{ ...listeningtestStyles.mainContainer, position: 'relative' }}>
         <Box
+          maxWidth="lg"
           sx={{
-            width: { xs: 'auto', md: '320px' },
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-start',
-            gap: 0.5,
-            order: { xs: 2, md: 1 },
+            ...listeningtestStyles.testHeadingContainer,
+            mx: 'auto',
           }}
         >
-          {onExit && (
-            <Button
-              onClick={onExit}
-              size="small"
-              startIcon={<ArrowBackIcon />}
-              sx={{
-                color: 'text.secondary',
-                textTransform: 'none',
-                fontWeight: 600,
-                fontSize: '1rem',
-              }}
-            >
-              Back
-            </Button>
-          )}
-          {timerNode}
-        </Box>
-
-        {/* Center: test name + part label */}
-        <Box sx={listeningtestStyles.nameTestAndFormatPart}>
-          <Typography sx={listeningtestStyles.nameTest}>{testName}</Typography>
-          {partLabel && <Typography sx={listeningtestStyles.formatName}>{partLabel}</Typography>}
-        </Box>
-
-        {/* Right: Submit Test and/or AI Review */}
-        <Box
-          sx={{
-            width: { xs: 'auto', md: '320px' },
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'flex-end',
-            alignItems: 'center',
-            gap: 1.5,
-            order: { xs: 3, md: 3 },
-          }}
-        >
-          {onAIReview && (
-            <Button
-              sx={{
-                ...listeningtestStyles.submitButton,
-                backgroundColor: 'info.pastel',
-                color: 'info.main',
-                py: 1,
-                fontSize: '0.8125rem',
-                minWidth: 'auto',
-                px: 2,
-                '&:hover': { bgcolor: '#e3f2fd' },
-              }}
-              onClick={onAIReview}
-            >
-              AI Feedback
-            </Button>
-          )}
-          {onSaveDraft && (
-            <Button
-              sx={{
-                ...listeningtestStyles.draftButton,
-                py: 1,
-                px: 2,
-                fontSize: '0.8125rem',
-                minWidth: 'auto',
-              }}
-              onClick={onSaveDraft}
-            >
-              Save Draft
-            </Button>
-          )}
-          {onSubmit && (
-            <Button
-              startIcon={<SendIcon />}
-              sx={{
-                ...listeningtestStyles.submitButton,
-                py: 1,
-                px: 2,
-                fontSize: '0.8125rem',
-                minWidth: 'auto',
-              }}
-              onClick={onSubmit}
-            >
-              Submit Test
-            </Button>
-          )}
+          {/* Left: Timer */}
+          <Box sx={listeningtestStyles.timeLeft}>{timerNode}</Box>
+          {/* Center: test name + part label */}
+          <Box sx={listeningtestStyles.nameTestAndFormatPart}>
+            <Typography sx={listeningtestStyles.nameTest}>{testName}</Typography>
+            {partLabel && <Typography sx={listeningtestStyles.formatName}>{partLabel}</Typography>}
+          </Box>
+          {/* Right: Submit Test and/or AI Review */}
+          <Box
+            sx={{
+              width: { xs: 'auto', md: '320px' },
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              gap: 1.5,
+              order: { xs: 3, md: 3 },
+            }}
+          >
+            {onAIReview && (
+              <Button
+                sx={{
+                  ...listeningtestStyles.submitButton,
+                  backgroundColor: 'info.pastel',
+                  color: 'info.main',
+                  py: 1,
+                  fontSize: '0.8125rem',
+                  minWidth: 'auto',
+                  px: 2,
+                  '&:hover': { bgcolor: '#e3f2fd' },
+                }}
+                onClick={onAIReview}
+              >
+                AI Feedback
+              </Button>
+            )}
+            {onSaveDraft && (
+              <Button
+                startIcon={<SaveOutlinedIcon />}
+                sx={listeningtestStyles.draftButton}
+                onClick={onSaveDraft}
+              >
+                Save Draft
+              </Button>
+            )}
+            {onSubmit && (
+              <Button
+                startIcon={<SendIcon />}
+                sx={listeningtestStyles.submitButton}
+                onClick={onSubmit}
+              >
+                Submit Test
+              </Button>
+            )}
+          </Box>
         </Box>
       </Box>
-
-      {/* Orange separator */}
-      <Box sx={listeningtestStyles.separatorLine} />
     </>
   );
 }

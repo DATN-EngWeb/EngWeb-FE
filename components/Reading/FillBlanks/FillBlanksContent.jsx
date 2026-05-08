@@ -1,89 +1,34 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Container,
-  Typography,
-  Button,
-  TextField,
-  Paper,
-  Tabs,
-  Tab,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  FormControl,
-  IconButton,
-  Tooltip,
-} from '@mui/material';
+import { Box, Container, Typography, TextField, Radio, RadioGroup, Chip } from '@mui/material';
 import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded';
-import Header from '../../Home/Header';
-import TestHeading from '../../Student/Common/TestHeading';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import CircleIcon from '@mui/icons-material/Circle';
+
 import {
   containerStyles,
-  headerWrapperStyles,
-  tabsContainerStyles,
-  tabStyles,
-  contentWrapperStyles,
-  leftPaneStyles,
   passageTitleStyles,
-  passageContainerStyles,
   rightPaneStyles,
-  instructionBoxStyles,
-  instructionIconStyles,
-  answerInputContainerStyles,
-  answerInputBoxStyles,
-  answerNumberStyles,
-  answerInputStyles,
-  navigationFooterStyles,
-  backLinkStyles,
-  sectionInfoStyles,
-  nextButtonStyles,
 } from '@/styles/Reading/FillBlanksStyles';
-
-import {
-  questionContainerStyles,
-  questionNumberStyles,
-  questionTextStyles,
-  optionContainerStyles,
-  optionLabelStyles,
-} from '@/styles/Reading/MultiChoiceReadingStyles';
-import TestTimer from '../Common/TestTimer';
+import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
+import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
 
 const FillBlanksContent = ({
-  testName = 'Practice Test Name',
-  partLabel,
-  parts = ['Part 1', 'Part 2', 'Part 3', 'Part 4', 'Part 5'],
-  currentPart = 2,
   passage = '',
   passageTitle = '',
   blanks = [],
   questions = [],
-  answers,
+  answers = {},
   showResults = false,
   onAnswerChange = () => {},
-  onPartChange = () => {},
-  isTeacher = false,
-  onSubmit = () => {},
-  onBack = () => {},
-  onNext = () => {},
-  currentSection = 1,
-  totalSections = 5,
-  embedded = false,
-  timerNode,
-  onAIReview,
-  onSaveDraft,
-  onExit,
 }) => {
-  const [selectedPart, setSelectedPart] = useState(currentPart - 1);
-  const [selectedAnswers, setSelectedAnswers] = useState(answers || {});
   const [leftWidth, setLeftWidth] = useState(55);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = React.useRef(null);
   const [passageContent, setPassageContent] = useState(passage);
 
+  // Load đoạn văn (Fetch nếu là URL)
   useEffect(() => {
     setPassageContent(passage);
     const fetchContent = async () => {
@@ -98,30 +43,14 @@ const FillBlanksContent = ({
           const text = await response.text();
           setPassageContent(text);
         } catch (error) {
-          console.error('Failed to fetch passage content:', error); // eslint-disable-line no-console
+          console.error('Failed to fetch passage content:', error);
         }
       }
     };
     fetchContent();
   }, [passage]);
 
-  useEffect(() => {
-    setSelectedPart(currentPart - 1);
-  }, [currentPart]);
-
-  useEffect(() => {
-    setSelectedAnswers(answers || {});
-  }, [answers]);
-
-  useEffect(() => {
-    if (embedded) return;
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, [embedded]);
-
+  // Logic kéo thả để chia đôi màn hình
   useEffect(() => {
     if (!isDragging) return;
     const handleMouseMove = (event) => {
@@ -167,16 +96,9 @@ const FillBlanksContent = ({
     };
   }, [isDragging]);
 
-  const handlePartChange = (event, newValue) => {
-    setSelectedPart(newValue);
-    onPartChange(newValue);
-  };
-
-  const handleAnswerChange = (blankNumber, value) => {
-    if (isTeacher || showResults) return;
-    const newAnswers = { ...selectedAnswers, [blankNumber]: value };
-    setSelectedAnswers(newAnswers);
-    onAnswerChange(newAnswers);
+  const handleAnswerChangeLocal = (questionOrBlankId, value) => {
+    if (showResults) return;
+    onAnswerChange({ ...answers, [questionOrBlankId]: value });
   };
 
   const renderPassageWithBlanks = () => {
@@ -191,462 +113,412 @@ const FillBlanksContent = ({
     return <div dangerouslySetInnerHTML={{ __html: processPassage }} />;
   };
 
+  // Xác định định dạng là Trắc nghiệm điền từ (có options) hay Tự luận điền từ
   const isMultiChoiceFormat =
     questions && questions.length > 0 && questions.some((q) => q.options && q.options.length > 1);
 
   return (
-    <Box
-      sx={{
-        ...(embedded
-          ? { position: 'relative', width: '100%', minHeight: '100%' }
-          : {
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: '100vh',
-              width: '100vw',
-              overflow: 'hidden',
-            }),
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: 'background.default',
-      }}
-    >
-      {!embedded && <Header />}
-      {!embedded && (
-        <TestHeading
-          testName={testName}
-          partLabel={partLabel}
-          onSubmit={showResults ? null : () => onSubmit(selectedAnswers)}
-          isTeacher={isTeacher || showResults}
-          timerNode={timerNode || (!isTeacher && !showResults ? <TestTimer /> : null)}
-          onAIReview={onAIReview}
-          onSaveDraft={showResults ? null : onSaveDraft}
-          onExit={onExit}
-        />
-      )}
-
-      {!embedded && (
-        <Box sx={{ backgroundColor: 'background.paper' }}>
-          <Container maxWidth={false} disableGutters sx={{ px: { xs: 2, md: 4 } }}>
-            <Box sx={headerWrapperStyles}>
-              <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-                <Tabs
-                  value={selectedPart}
-                  onChange={handlePartChange}
-                  sx={{
-                    ...tabsContainerStyles,
-                    '& .MuiTabs-flexContainer': { gap: 1.5 },
-                    '& .MuiTabs-indicator': { display: 'none' },
-                  }}
-                >
-                  {parts.map((p, i) => (
-                    <Tab
-                      key={i}
-                      label={p}
-                      sx={{
-                        ...tabStyles,
-                        color:
-                          selectedPart === i ? 'reading.tabActiveText' : 'reading.tabInactiveText',
-                        fontWeight: selectedPart === i ? 600 : 500,
-                        backgroundColor:
-                          selectedPart === i ? 'reading.tabActiveBg' : 'reading.tabInactiveBg',
-                        borderColor:
-                          selectedPart === i ? 'reading.tabActiveBg' : 'reading.borderLight',
-                      }}
-                    />
-                  ))}
-                </Tabs>
-              </Box>
-            </Box>
-          </Container>
-        </Box>
-      )}
-
-      <Box sx={{ ...containerStyles, flex: 1, overflow: 'hidden' }}>
-        <Container maxWidth={false} disableGutters sx={{ height: '100%', px: 0 }}>
+    <Box sx={{ ...containerStyles, flex: 1, width: '100%', overflow: 'hidden' }}>
+      <Container maxWidth={false} disableGutters sx={{ height: '100%', px: 0 }}>
+        <Box
+          ref={containerRef}
+          sx={{
+            ...listeningPartStyles.containerColRow,
+            height: { xs: 'auto', md: '100vh' },
+            maxHeight: { xs: 'none', md: '100vh' },
+            overflow: { xs: 'visible', md: 'hidden' },
+            width: '100%',
+            py: 2,
+          }}
+        >
+          {/* TRÁI: PASSAGE (BÀI ĐỌC) */}
           <Box
-            ref={containerRef}
-            data-content-wrapper
             sx={{
-              ...contentWrapperStyles,
+              ...listeningPartStyles.basicFlexColCenStart,
+              width: { xs: '100%', md: `${leftWidth}%` },
+              mb: { xs: 2, md: 0 }, // Thêm margin bottom trên mobile cho thoáng
               height: '100%',
-              flexDirection: { xs: 'column', md: 'row' },
+              overflowY: 'auto',
+              minHeight: 0,
+              // Giữ lại custom scrollbar cho Reading
+              scrollbarWidth: 'thin',
+              '&::-webkit-scrollbar': { width: '8px' },
+              '&::-webkit-scrollbar-track': { background: 'transparent' },
+              '&::-webkit-scrollbar-thumb': {
+                background: '#ccc',
+                borderRadius: '4px',
+                '&:hover': { background: '#999' },
+              },
+            }}
+          >
+            {passageTitle && <Typography sx={passageTitleStyles}>{passageTitle}</Typography>}
+            <Box sx={listeningPartStyles.passageContainer}>{renderPassageWithBlanks()}</Box>
+          </Box>
+          {/* GIỮA: DRAG DIVIDER */}
+          <Box
+            onMouseDown={() => setIsDragging(true)}
+            onTouchStart={() => setIsDragging(true)}
+            onDragStart={(e) => e.preventDefault()}
+            sx={{
+              display: { xs: 'none', md: 'flex' },
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 32,
+              cursor: 'col-resize',
+              flexShrink: 0,
+              zIndex: 10,
+              position: 'relative',
+              userSelect: 'none',
+              touchAction: 'none',
+            }}
+          >
+            <Box
+              sx={{ width: 2, height: '100%', bgcolor: isDragging ? 'warning.main' : 'divider' }}
+            />
+            <Box
+              sx={{
+                position: 'absolute',
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                border: '1px solid',
+                borderColor: isDragging ? 'warning.main' : 'divider',
+                backgroundColor: 'background.paper',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 14,
+              }}
+            >
+              ⇔
+            </Box>
+          </Box>
+          {/* PHẢI: QUESTIONS & BLANKS */}
+          <Box
+            sx={{
+              ...rightPaneStyles,
+              flex: '0 0 auto',
+              width: { xs: '100%', md: `calc(${100 - leftWidth}% - 32px)` },
+              height: '100%',
+              maxHeight: '100%',
               display: 'flex',
-              alignItems: 'stretch',
-              gap: 0,
+              flexDirection: 'column',
+              overflow: 'hidden',
+              containerType: 'inline-size',
+              containerName: 'rightPanel',
+              p: 0,
             }}
           >
             <Box
               sx={{
-                ...leftPaneStyles,
-                flex: '0 0 auto',
-                width: { xs: '100%', md: `${leftWidth}%` },
-                height: '100%',
-                maxHeight: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'hidden',
-                p: 0,
+                flex: 1,
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                scrollbarWidth: 'thin',
+                '&::-webkit-scrollbar': { width: '8px' },
+                '&::-webkit-scrollbar-track': { background: 'transparent' },
+                '&::-webkit-scrollbar-thumb': {
+                  background: '#ccc',
+                  borderRadius: '4px',
+                  '&:hover': { background: '#999' },
+                },
               }}
             >
-              <Box
-                sx={{
-                  flex: 1,
-                  overflowY: 'scroll',
-                  overflowX: 'hidden',
-                  p: 3,
-                  scrollbarWidth: 'thin',
-                  '&::-webkit-scrollbar': {
-                    width: '8px',
-                  },
-                  '&::-webkit-scrollbar-track': {
-                    background: 'transparent',
-                  },
-                  '&::-webkit-scrollbar-thumb': {
-                    background: '#ccc',
-                    borderRadius: '4px',
-                    '&:hover': {
-                      background: '#999',
-                    },
-                  },
-                }}
-              >
-                {passageTitle && <Typography sx={passageTitleStyles}>{passageTitle}</Typography>}
-                <Box sx={passageContainerStyles}>{renderPassageWithBlanks()}</Box>
-              </Box>
-            </Box>
-
-            <Box
-              onMouseDown={() => setIsDragging(true)}
-              onTouchStart={() => setIsDragging(true)}
-              onDragStart={(e) => e.preventDefault()}
-              sx={{
-                display: { xs: 'none', md: 'flex' },
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 32,
-                cursor: 'col-resize',
-                flexShrink: 0,
-                zIndex: 10,
-                position: 'relative',
-                userSelect: 'none',
-                touchAction: 'none',
-              }}
-            >
-              <Box
-                sx={{ width: 2, height: '100%', bgcolor: isDragging ? 'warning.main' : 'divider' }}
-              />
-              <Box
-                sx={{
-                  position: 'absolute',
-                  width: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  border: '1px solid',
-                  borderColor: isDragging ? 'warning.main' : 'divider',
-                  backgroundColor: 'background.paper',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 14,
-                }}
-              >
-                ⇔
-              </Box>
-            </Box>
-
-            <Box
-              sx={{
-                ...rightPaneStyles,
-                flex: '0 0 auto',
-                width: { xs: '100%', md: `calc(${100 - leftWidth}% - 32px)` },
-                height: '100%',
-                maxHeight: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'hidden',
-              }}
-            >
-              <Box
-                sx={{
-                  flex: 1,
-                  overflowY: 'scroll',
-                  overflowX: 'hidden',
-                  px: 1.5,
-                  py: 3,
-                  scrollbarWidth: 'thin',
-                  '&::-webkit-scrollbar': {
-                    width: '8px',
-                  },
-                  '&::-webkit-scrollbar-track': {
-                    background: 'transparent',
-                  },
-                  '&::-webkit-scrollbar-thumb': {
-                    background: '#ccc',
-                    borderRadius: '4px',
-                    '&:hover': {
-                      background: '#999',
-                    },
-                  },
-                }}
-              >
-                <Paper sx={instructionBoxStyles}>
-                  <ErrorRoundedIcon sx={{ color: 'reading.instructionIcon', fontSize: '1.5rem' }} />
-                  <Box>
-                    <Typography sx={{ fontWeight: 600, color: 'reading.instructionIcon' }}>
-                      Instruction
-                    </Typography>
-                    <Typography sx={{ fontSize: '0.9rem', color: 'text.primary' }}>
-                      Read the passage on the left and fill in the blanks with the correct words.
-                    </Typography>
-                  </Box>
-                </Paper>
-
-                <Box sx={{ mt: 3 }}>
-                  <Box
+              {/* -------- Instruction (Đã đổi sang style mới giống Listening) --------- */}
+              <Box sx={listeningPartStyles.instructionContainer}>
+                <ErrorRoundedIcon sx={{ color: 'red.text', fontSize: '1.5rem', mt: 0.2 }} />
+                <Box sx={listeningPartStyles.instructionWrapper}>
+                  <Typography
+                    sx={{ color: 'red.text', fontSize: '1rem', fontWeight: 600, mb: 0.5 }}
+                  >
+                    Instruction
+                  </Typography>
+                  <Typography
                     sx={{
-                      ...answerInputContainerStyles,
-                      gridTemplateColumns: isMultiChoiceFormat ? '1fr' : 'repeat(2, 1fr)',
-                      gap: 3,
+                      color: 'text.primary',
+                      fontSize: '0.9rem',
+                      lineHeight: 1.5,
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      wordBreak: 'break-word',
                     }}
                   >
-                    {isMultiChoiceFormat
-                      ? questions.map((q, idx) => {
-                          const selectedVal = selectedAnswers[q.id] || '';
-                          const qInfo = questions.find((qu) => qu.id === q.id);
-                          return (
+                    Read the passage on the left and fill in the blanks with the correct words.
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* -------- Question Section Container --------- */}
+              <Box sx={{ ...listeningPartStyles.questionSection, mt: 2 }}>
+                <Box
+                  sx={{
+                    ...listeningPartStyles.listQuestionContainerGrid,
+                    gridTemplateColumns: isMultiChoiceFormat ? '1fr' : 'repeat(2, 1fr)',
+                    gap: isMultiChoiceFormat ? 3 : 1,
+                    '@container rightPanel (max-width: 400px)': {
+                      display: 'grid',
+                      gridTemplateColumns: '1fr !important',
+                    },
+                  }}
+                >
+                  {isMultiChoiceFormat
+                    ? questions.map((q, idx) => {
+                        // --- Dạng 1: MultiChoice (Đã cập nhật UI giống MultiChoiceContent) ---
+                        const selectedVal = answers[q.id] || '';
+                        const qInfo = questions.find((qu) => qu.id === q.id);
+
+                        // Tìm đáp án đúng để hiển thị khi showResults
+                        const correctOption = qInfo?.options?.find((o) => o.isCorrect);
+                        const correctAnswerText = correctOption ? correctOption.label : '';
+
+                        return (
+                          <Box
+                            key={q.id || idx}
+                            id={`question-${q.id}`}
+                            sx={listeningPartStyles.questionContainerCol}
+                          >
+                            {/* TIÊU ĐỀ CÂU HỎI */}
+                            <Box sx={listeningPartStyles.questionTextContainer}>
+                              <Typography sx={listeningPartStyles.questionLabelRectangle}>
+                                {q.question_number || idx + 1}
+                              </Typography>
+                              <Typography
+                                sx={listeningPartStyles.questionText}
+                                dangerouslySetInnerHTML={{
+                                  __html: q.question || `Question ${q.question_number}`,
+                                }}
+                              />
+                            </Box>
+
+                            {/* DANH SÁCH ĐÁP ÁN */}
                             <Box
-                              key={q.id}
                               sx={{
-                                ...questionContainerStyles,
-                                border: showResults ? '1px solid' : 'none',
-                                borderColor: showResults
-                                  ? qInfo?.options?.find((o) => o.value === selectedVal)?.isCorrect
-                                    ? 'success.light'
-                                    : 'error.light'
-                                  : 'transparent',
-                                p: 2,
-                                borderRadius: 2,
+                                ...listeningPartStyles.audioAndOptionsContainer,
+                                pl: { xs: 0, md: 4 },
                               }}
                             >
-                              <Box sx={questionNumberStyles}>{q.question_number || idx + 1}</Box>
-                              <Box sx={{ flex: 1 }}>
-                                <Typography
-                                  sx={questionTextStyles}
-                                  dangerouslySetInnerHTML={{
-                                    __html: q.question || `Question ${q.question_number}`,
-                                  }}
-                                />
+                              <Box sx={listeningPartStyles.optionsGridRow}>
                                 <RadioGroup
                                   value={selectedVal}
-                                  onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                                  sx={{ mt: 1 }}
+                                  onChange={(e) => handleAnswerChangeLocal(q.id, e.target.value)}
+                                  sx={{ gap: 1 }}
                                 >
-                                  {q.options?.map((opt, oIdx) => {
-                                    const isSelected = selectedVal === opt.value;
-                                    const isCorrect = opt.isCorrect;
-                                    let bgColor = 'transparent',
-                                      borderColor = 'divider';
-                                    if (showResults) {
-                                      if (isSelected && isCorrect)
-                                        ((bgColor = '#f0fdf4'), (borderColor = '#16a34a'));
-                                      else if (isSelected && !isCorrect)
-                                        ((bgColor = '#fef2f2'), (borderColor = '#dc2626'));
-                                      else if (isCorrect)
-                                        ((bgColor = '#f0fdf4'), (borderColor = '#16a34a'));
-                                    }
+                                  {q.options?.map((option, optIndex) => {
+                                    const isSelected = selectedVal === option.value;
+                                    const isCorrect = option.isCorrect;
+
                                     return (
                                       <Box
-                                        key={oIdx}
+                                        key={optIndex}
+                                        onClick={() => {
+                                          if (!showResults)
+                                            handleAnswerChangeLocal(q.id, option.value);
+                                        }}
                                         sx={{
-                                          ...optionContainerStyles,
-                                          bgcolor: bgColor,
-                                          border: '1px solid',
-                                          borderColor,
-                                          mb: 1,
-                                          px: 1,
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'space-between',
+                                          ...multipleChoiceStyles.optionContainer,
+                                          cursor: showResults ? 'default' : 'pointer',
+                                          ...(showResults &&
+                                            isSelected && {
+                                              border: `1px solid ${isCorrect ? '#4caf50' : '#f44336'}`,
+                                              backgroundColor: isCorrect
+                                                ? 'rgba(76, 175, 80, 0.05)'
+                                                : 'rgba(244, 67, 54, 0.05)',
+                                            }),
                                         }}
                                       >
-                                        <FormControlLabel
-                                          value={opt.value}
-                                          control={<Radio disabled={isTeacher || showResults} />}
-                                          label={
-                                            <Typography sx={optionLabelStyles}>
-                                              {opt.label}
-                                            </Typography>
+                                        <Radio
+                                          disabled={showResults}
+                                          checked={isSelected}
+                                          value={option.value}
+                                          icon={
+                                            <RadioButtonUncheckedIcon
+                                              sx={multipleChoiceStyles.uncheckIcon}
+                                            />
                                           }
-                                          sx={{ flex: 1, m: 0 }}
+                                          checkedIcon={
+                                            <Box sx={multipleChoiceStyles.checkedIconWrapper}>
+                                              <RadioButtonUncheckedIcon
+                                                sx={{
+                                                  ...multipleChoiceStyles.outerCircle,
+                                                  ...(showResults &&
+                                                    isSelected && {
+                                                      color: isCorrect
+                                                        ? 'success.main'
+                                                        : 'error.main',
+                                                    }),
+                                                }}
+                                              />
+                                              <CircleIcon
+                                                sx={{
+                                                  ...multipleChoiceStyles.innerCircle,
+                                                  ...(showResults &&
+                                                    isSelected && {
+                                                      color: isCorrect
+                                                        ? 'success.main'
+                                                        : 'error.main',
+                                                    }),
+                                                }}
+                                              />
+                                            </Box>
+                                          }
+                                          sx={{
+                                            ...multipleChoiceStyles.checkboxRoot,
+                                            ...(showResults &&
+                                              isSelected && {
+                                                color: isCorrect ? 'success.main' : 'error.main',
+                                                '&.Mui-checked': {
+                                                  color: isCorrect ? 'success.main' : 'error.main',
+                                                },
+                                              }),
+                                          }}
                                         />
+                                        <Typography
+                                          sx={{
+                                            ...multipleChoiceStyles.optionLabel,
+                                            fontWeight: 400,
+                                            flex: 1,
+                                            ...(showResults &&
+                                              isSelected && {
+                                                color: isCorrect ? '#4caf50' : '#f44336',
+                                                fontWeight: 500,
+                                              }),
+                                          }}
+                                        >
+                                          {option.label}
+                                        </Typography>
+
+                                        {/* Nhãn "Correct" */}
                                         {showResults && isCorrect && (
-                                          <Typography
-                                            variant="caption"
-                                            sx={{ color: 'success.main', fontWeight: 700 }}
-                                          >
-                                            Correct
-                                          </Typography>
+                                          <Chip
+                                            label="Correct"
+                                            size="small"
+                                            color="success"
+                                            sx={{ height: 20, fontSize: '0.65rem', ml: 1 }}
+                                          />
                                         )}
                                       </Box>
                                     );
                                   })}
                                 </RadioGroup>
-                                {showResults && q.explanation && (
-                                  <Box
-                                    sx={{
-                                      mt: 1.5,
-                                      p: 2,
-                                      bgcolor: '#fff7ed',
-                                      borderRadius: '12px',
-                                      border: '1px solid #ffedd5',
-                                    }}
-                                  >
-                                    <Typography
-                                      variant="caption"
-                                      sx={{
-                                        fontWeight: 800,
-                                        color: '#ea580c',
-                                        display: 'block',
-                                        mb: 0.5,
-                                      }}
-                                    >
-                                      EXPLANATION
-                                    </Typography>
-                                    <Typography
-                                      variant="body2"
-                                      sx={{ color: '#9a3412', lineHeight: 1.6, fontWeight: 500 }}
-                                    >
-                                      {q.explanation}
-                                    </Typography>
-                                  </Box>
-                                )}
                               </Box>
                             </Box>
-                          );
-                        })
-                      : blanks.map((num) => {
-                          const qInfo = questions.find((qu) => qu.question_number === num);
-                          const questionId = qInfo?.id || num;
-                          const userAns = selectedAnswers[questionId] || '';
-                          const isCorrect =
-                            userAns.toLowerCase().trim() ===
-                            (qInfo?.correctText || '').toLowerCase().trim();
 
-                          return (
-                            <Box
-                              key={questionId}
-                              sx={{
-                                ...answerInputBoxStyles,
-                                flexDirection: 'column',
-                                alignItems: 'flex-start',
-                                height: 'auto',
-                                gap: 1,
-                              }}
-                            >
+                            {/* GIẢI THÍCH (EXPLANATION) */}
+                            {showResults && (
                               <Box
-                                sx={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 1,
-                                  width: '100%',
-                                }}
+                                sx={{ pr: { xs: 0, md: 4 }, pl: { xs: 0, md: 4 }, width: '100%' }}
                               >
-                                <Box sx={answerNumberStyles}>{num}</Box>
-                                <TextField
-                                  fullWidth
-                                  value={userAns}
-                                  onChange={(e) => handleAnswerChange(questionId, e.target.value)}
-                                  disabled={isTeacher || showResults}
-                                  sx={{
-                                    ...answerInputStyles,
-                                    '& .MuiOutlinedInput-notchedOutline': {
-                                      borderColor: showResults
-                                        ? isCorrect
-                                          ? 'success.main'
-                                          : 'error.main'
-                                        : 'divider',
-                                      borderWidth: showResults ? 2 : 1,
-                                    },
-                                  }}
-                                  variant="outlined"
-                                  autoComplete="off"
-                                />
-                              </Box>
-                              {showResults && (
-                                <Box sx={{ width: '100%', pl: 5 }}>
-                                  <Typography
-                                    variant="caption"
-                                    sx={{
-                                      color: 'success.main',
-                                      fontWeight: 700,
-                                      textTransform: 'uppercase',
-                                      whiteSpace: 'nowrap',
-                                    }}
-                                  >
-                                    Correct Answer: {qInfo?.correctText}
+                                <Box sx={{ ...listeningPartStyles.explanationContainer }}>
+                                  <Typography sx={listeningPartStyles.correctText}>
+                                    Correct Answer: {correctAnswerText}
                                   </Typography>
                                   {qInfo?.explanation && (
-                                    <Box
-                                      sx={{
-                                        mt: 1,
-                                        p: 1.5,
-                                        bgcolor: '#fff7ed',
-                                        borderRadius: '8px',
-                                        border: '1px solid #ffedd5',
-                                      }}
-                                    >
-                                      <Typography
-                                        variant="caption"
-                                        sx={{
-                                          fontWeight: 800,
-                                          color: '#ea580c',
-                                          display: 'block',
-                                          mb: 0.5,
-                                        }}
-                                      >
-                                        EXPLANATION
-                                      </Typography>
-                                      <Typography
-                                        variant="caption"
-                                        sx={{ color: '#9a3412', lineHeight: 1.4 }}
-                                      >
-                                        {qInfo.explanation}
-                                      </Typography>
-                                    </Box>
+                                    <Typography sx={listeningPartStyles.explanationText}>
+                                      <strong>Explanation:</strong> {qInfo.explanation}
+                                    </Typography>
                                   )}
                                 </Box>
-                              )}
-                            </Box>
-                          );
-                        })}
-                  </Box>
-                </Box>
+                              </Box>
+                            )}
+                          </Box>
+                        );
+                      })
+                    : blanks.map((num) => {
+                        // --- Dạng 2: Tự luận điền từ (Đã cập nhật giống Listening UI) ---
+                        const qInfo = questions.find((qu) => qu.question_number === num);
+                        const questionId = qInfo?.id || num;
+                        const userAns = answers[questionId] || '';
+                        const isCorrect =
+                          userAns.toLowerCase().trim() ===
+                          (qInfo?.correctText || '').toLowerCase().trim();
 
-                <Box sx={{ ...navigationFooterStyles, mt: 4 }}>
-                  <Button onClick={onBack} sx={backLinkStyles} disabled={currentSection === 1}>
-                    &lt; Back
-                  </Button>
-                  <Typography sx={sectionInfoStyles}>
-                    Section {currentSection} of {totalSections}
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    sx={nextButtonStyles}
-                    onClick={onNext}
-                    disabled={currentSection === totalSections}
-                  >
-                    Next Part
-                  </Button>
+                        return (
+                          <Box
+                            key={questionId}
+                            id={`question-${questionId}`}
+                            sx={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              width: '100%',
+                              mb: showResults ? 3 : 1,
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                ...listeningPartStyles.questionContainerRow,
+                                mb: showResults ? 1 : 0,
+                              }}
+                            >
+                              <Typography
+                                sx={{
+                                  ...listeningPartStyles.questionLabelCircle,
+                                  ...(showResults && {
+                                    backgroundColor: isCorrect ? 'success.main' : 'error.main',
+                                    color: '#fff',
+                                    border: 'none',
+                                  }),
+                                }}
+                              >
+                                {num}
+                              </Typography>
+                              <TextField
+                                fullWidth
+                                disabled={showResults}
+                                variant="standard"
+                                placeholder="Type answer ..."
+                                value={userAns}
+                                onChange={(e) =>
+                                  handleAnswerChangeLocal(questionId, e.target.value)
+                                }
+                                autoComplete="off"
+                                sx={{
+                                  ...listeningPartStyles.inputQuestion,
+                                  ...(showResults && {
+                                    backgroundColor: isCorrect
+                                      ? 'rgba(76, 175, 80, 0.05)'
+                                      : 'rgba(244, 67, 54, 0.05)',
+                                    borderRadius: '4px',
+                                    padding: '2px 8px',
+                                    '& .MuiInputBase-input': {
+                                      color: isCorrect ? '#4caf50' : '#f44336',
+                                      fontWeight: 600,
+                                      WebkitTextFillColor: isCorrect ? '#4caf50' : '#f44336',
+                                    },
+                                    '& .MuiInput-underline:before, & .MuiInput-underline:after, & .MuiInputBase-root.Mui-disabled:before':
+                                      {
+                                        borderBottomColor: isCorrect ? '#4caf50' : '#f44336',
+                                        borderBottomStyle: 'solid',
+                                      },
+                                  }),
+                                }}
+                              />
+                            </Box>
+
+                            {/* EXPLANATION CHO ĐIỀN TỪ (Style Listening) */}
+                            {showResults && (
+                              <Box sx={listeningPartStyles.explanationContainer}>
+                                <Typography sx={listeningPartStyles.correctText}>
+                                  Correct Answer: {qInfo?.correctText}
+                                </Typography>
+                                {qInfo?.explanation && (
+                                  <Typography sx={listeningPartStyles.explanationText}>
+                                    <strong>Explanation:</strong> {qInfo.explanation}
+                                  </Typography>
+                                )}
+                              </Box>
+                            )}
+                          </Box>
+                        );
+                      })}
                 </Box>
               </Box>
             </Box>
           </Box>
-        </Container>
-      </Box>
+        </Box>
+      </Container>
     </Box>
   );
 };

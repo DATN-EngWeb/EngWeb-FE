@@ -20,7 +20,6 @@ export default function Skeleton() {
           <Typography sx={listeningtestStyles.formatNameSkeleton}></Typography>
         </Box>
       </Box>
-      <Box sx={listeningtestStyles.separatorLine}></Box>
       {/* -------- List Part Selection --------- */}
       <Box sx={listeningtestStyles.listPartContainer}>
         {[1, 2, 3, 4].map((part, index) => (

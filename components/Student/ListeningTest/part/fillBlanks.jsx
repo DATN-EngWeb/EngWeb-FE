@@ -138,7 +138,18 @@ export default function FillBlankPart({
           )}
         </Box>
         <Box
-          sx={listeningPartStyles.passageContainer}
+          sx={{
+            ...listeningPartStyles.passageContainer,
+            overflowY: 'auto',
+            scrollbarWidth: 'thin',
+            '&::-webkit-scrollbar': { width: '8px' },
+            '&::-webkit-scrollbar-track': { background: 'transparent' },
+            '&::-webkit-scrollbar-thumb': {
+              background: '#ccc',
+              borderRadius: '4px',
+              '&:hover': { background: '#999' },
+            },
+          }}
           dangerouslySetInnerHTML={{ __html: passageSrc || '' }}
         />
       </Box>
@@ -199,6 +210,14 @@ export default function FillBlankPart({
           minHeight: 0,
           containerType: 'inline-size',
           containerName: 'rightPanel',
+          scrollbarWidth: 'thin',
+          '&::-webkit-scrollbar': { width: '8px' },
+          '&::-webkit-scrollbar-track': { background: 'transparent' },
+          '&::-webkit-scrollbar-thumb': {
+            background: '#ccc',
+            borderRadius: '4px',
+            '&:hover': { background: '#999' },
+          },
         }}
       >
         {/* -------- Instruction --------- */}
@@ -228,7 +247,6 @@ export default function FillBlankPart({
         </Box>
         {/* -------- Question Section --------- */}
         <Box sx={listeningPartStyles.questionSection}>
-          <Box sx={listeningPartStyles.innerDecorQuestionSection} />
           <Box sx={listeningPartStyles.innerInstruction}>
             <LightbulbOutlinedIcon />
             <Typography sx={{ color: 'inherit', fontSize: 'inherit', fontWeight: 'inherit' }}>

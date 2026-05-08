@@ -99,7 +99,6 @@ export default function Matching({
       </Box>
       {/* -------- Question Section --------- */}
       <Box sx={listeningPartStyles.questionSection}>
-        <Box sx={listeningPartStyles.innerDecorQuestionSection} />
         <Box sx={listeningPartStyles.innerInstruction}>
           <LightbulbOutlinedIcon />
           <Typography sx={{ color: 'inherit', fontSize: 'inherit', fontWeight: 'inherit' }}>

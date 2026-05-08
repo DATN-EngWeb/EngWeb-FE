@@ -1,81 +1,37 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Container,
-  Typography,
-  Button,
-  Paper,
-  Tabs,
-  Tab,
-  Select,
-  MenuItem,
-  FormControl,
-  IconButton,
-  Tooltip,
-} from '@mui/material';
+import { Box, Container, Typography, Paper, Select, MenuItem, FormControl } from '@mui/material';
 import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded';
-import Header from '../../Home/Header';
-import TestHeading from '../../Student/Common/TestHeading';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
+import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
+import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
+
 import {
   containerStyles,
-  headerWrapperStyles,
-  headerSectionStyles,
-  testNameStyles,
-  partTitleStyles,
-  submitButtonStyles,
-  tabsContainerStyles,
-  tabStyles,
-  contentWrapperStyles,
   leftPaneStyles,
   passageTitleStyles,
   passageTextStyles,
   rightPaneStyles,
   instructionBoxStyles,
-  instructionIconStyles,
-  navigationFooterStyles,
-  backLinkStyles,
-  sectionInfoStyles,
-  nextButtonStyles,
 } from '@/styles/Reading/MatchingStyles';
-import TestTimer from '../Common/TestTimer';
 
 const MatchingContent = ({
-  testName = 'Practice Test Name',
-  partLabel,
-  parts = ['Part 1', 'Part 2', 'Part 3', 'Part 4', 'Part 5'],
-  currentPart = 3,
   passage = '',
   passageTitle = '',
   sentences = [],
   gaps = [],
   questions = [],
-  answers,
+  answers = {},
   showResults = false,
   onAnswerChange = () => {},
-  onPartChange = () => {},
-  isTeacher = false,
-  onSubmit = () => {},
-  onBack = () => {},
-  onNext = () => {},
-  currentSection = 1,
-  totalSections = 5,
-  embedded = false,
-  timerNode,
-  onAIReview,
-  onSaveDraft,
-  onExit,
 }) => {
-  const [selectedPart, setSelectedPart] = useState(currentPart - 1);
-  const [selectedAnswers, setSelectedAnswers] = useState(answers || {});
   const [leftWidth, setLeftWidth] = useState(55); // percentage width for passage
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = React.useRef(null);
   const [passageContent, setPassageContent] = useState(passage);
   const [processedSentences, setProcessedSentences] = useState(sentences);
 
+  // Fetch passage content if it's a URL
   useEffect(() => {
     setPassageContent(passage);
     const fetchContent = async () => {
@@ -90,13 +46,14 @@ const MatchingContent = ({
           const text = await response.text();
           setPassageContent(text);
         } catch (error) {
-          console.error('Failed to fetch passage content:', error); // eslint-disable-line no-console
+          console.error('Failed to fetch passage content:', error);
         }
       }
     };
     fetchContent();
   }, [passage]);
 
+  // Fetch sentence content if it's a URL
   useEffect(() => {
     setProcessedSentences(sentences);
     const fetchSentences = async () => {
@@ -113,7 +70,7 @@ const MatchingContent = ({
               const text = await response.text();
               return { ...s, text };
             } catch (error) {
-              console.error('Failed to fetch sentence content:', error); // eslint-disable-line no-console
+              console.error('Failed to fetch sentence content:', error);
               return s;
             }
           }
@@ -125,24 +82,6 @@ const MatchingContent = ({
     fetchSentences();
   }, [sentences]);
 
-  useEffect(() => {
-    setSelectedPart(currentPart - 1);
-  }, [currentPart]);
-
-  useEffect(() => {
-    setSelectedAnswers(answers || {});
-  }, [answers]);
-
-  // Disable body scroll when component mounts
-  useEffect(() => {
-    if (embedded) return;
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, [embedded]);
-
   // Handle drag to resize panes on desktop
   useEffect(() => {
     if (!isDragging) return;
@@ -150,7 +89,7 @@ const MatchingContent = ({
     const handleMouseMove = (event) => {
       event.preventDefault();
       const clientX = event.type.startsWith('touch') ? event.touches[0].clientX : event.clientX;
-      // Get the actual container width (contentWrapper)
+
       const container = containerRef.current;
       if (!container) {
         const totalWidth = window.innerWidth || document.body.clientWidth;
@@ -167,7 +106,6 @@ const MatchingContent = ({
 
       if (!containerWidth) return;
 
-      // Calculate relative position within container
       const relativeX = clientX - containerLeft;
       const newLeftWidth = (relativeX / containerWidth) * 100;
       const clamped = Math.min(75, Math.max(25, newLeftWidth));
@@ -180,7 +118,6 @@ const MatchingContent = ({
       document.body.style.cursor = '';
     };
 
-    // Prevent text selection while dragging
     if (isDragging) {
       document.body.style.userSelect = 'none';
       document.body.style.cursor = 'col-resize';
@@ -201,27 +138,16 @@ const MatchingContent = ({
     };
   }, [isDragging]);
 
-  const handlePartChange = (event, newValue) => {
-    setSelectedPart(newValue);
-    onPartChange(newValue);
-  };
-
-  const handleAnswerChange = (gapNumber, value) => {
-    if (isTeacher) return;
+  const handleAnswerChangeLocal = (gapNumber, value) => {
+    if (showResults) return;
 
     const question = questions.find((q) => q.question_number === gapNumber);
     if (!question) return;
 
-    const newAnswers = {
-      ...selectedAnswers,
+    onAnswerChange({
+      ...answers,
       [question.id]: value,
-    };
-    setSelectedAnswers(newAnswers);
-    onAnswerChange(newAnswers);
-  };
-
-  const handleSubmit = () => {
-    onSubmit(selectedAnswers);
+    });
   };
 
   const renderPassageWithGaps = () => {
@@ -235,431 +161,250 @@ const MatchingContent = ({
   };
 
   return (
-    <Box
-      sx={{
-        ...(embedded
-          ? { position: 'relative', width: '100%', minHeight: '100%' }
-          : {
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: '100vh',
-              width: '100vw',
-              overflow: 'hidden',
-            }),
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: 'background.default',
-      }}
-    >
-      {!embedded && <Header />}
-      {!embedded && (
-        <TestHeading
-          testName={testName}
-          partLabel={partLabel}
-          onSubmit={showResults ? null : handleSubmit}
-          isTeacher={isTeacher || showResults}
-          timerNode={timerNode || (!isTeacher && !showResults ? <TestTimer /> : null)}
-          onAIReview={onAIReview}
-          onSaveDraft={showResults ? null : onSaveDraft}
-          onExit={onExit}
-        />
-      )}
-      {!embedded && (
-        <Box sx={{ backgroundColor: 'background.paper' }}>
-          <Container maxWidth={false} disableGutters sx={{ px: { xs: 2, md: 4 } }}>
-            <Box sx={headerWrapperStyles}>
-              {/* Row 2: Timer - Parts tabs - Submit button */}
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 2,
-                }}
-              >
-                {/* Tabs ở giữa */}
-                <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-                  <Tabs
-                    value={selectedPart}
-                    onChange={handlePartChange}
-                    sx={{
-                      ...tabsContainerStyles,
-                      '& .MuiTabs-flexContainer': {
-                        justifyContent: 'center',
-                        gap: 1.5,
-                      },
-                      '& .MuiTabs-indicator': {
-                        display: 'none',
-                      },
-                    }}
-                  >
-                    {parts.map((part, index) => (
-                      <Tab
-                        key={index}
-                        label={part}
-                        sx={{
-                          ...tabStyles,
-                          color:
-                            selectedPart === index
-                              ? 'reading.tabActiveText'
-                              : 'reading.tabInactiveText',
-                          fontWeight: selectedPart === index ? 600 : 500,
-                          backgroundColor:
-                            selectedPart === index
-                              ? 'reading.tabActiveBg'
-                              : 'reading.tabInactiveBg',
-                          borderColor:
-                            selectedPart === index ? 'reading.tabActiveBg' : 'reading.borderLight',
-                        }}
-                      />
-                    ))}
-                  </Tabs>
-                </Box>
-              </Box>
-            </Box>
-          </Container>
-        </Box>
-      )}
-
-      <Box
-        sx={{
-          ...containerStyles,
-          flex: 1,
-          height: '100%',
-          maxHeight: '100%',
-          overflow: 'hidden',
-          pb: 0,
-        }}
-      >
-        <Container maxWidth={false} disableGutters sx={{ height: '100%', px: 0 }}>
+    <Box sx={{ ...containerStyles, flex: 1, width: '100%', overflow: 'hidden' }}>
+      <Container maxWidth={false} disableGutters sx={{ height: '100%', px: 0 }}>
+        <Box
+          ref={containerRef}
+          sx={{
+            ...listeningPartStyles.containerColRow,
+            height: { xs: 'auto', md: '100vh' },
+            maxHeight: { xs: 'none', md: '100vh' },
+            overflow: { xs: 'visible', md: 'hidden' },
+            width: '100%',
+            py: 2,
+          }}
+        >
+          {/* TRÁI: PASSAGE (BÀI ĐỌC) */}
           <Box
-            ref={containerRef}
-            data-content-wrapper
             sx={{
-              ...contentWrapperStyles,
+              ...listeningPartStyles.basicFlexColCenStart,
+              width: { xs: '100%', md: `${leftWidth}%` },
+              mb: { xs: 2, md: 0 }, // Thêm margin bottom trên mobile cho thoáng
               height: '100%',
-              maxHeight: '100%',
-              mb: 0,
-              flexDirection: { xs: 'column', md: 'row' },
-              overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'stretch',
-              gap: 0,
+              overflowY: 'auto',
+              minHeight: 0,
+              // Giữ lại custom scrollbar cho Reading
+              scrollbarWidth: 'thin',
+              '&::-webkit-scrollbar': { width: '8px' },
+              '&::-webkit-scrollbar-track': { background: 'transparent' },
+              '&::-webkit-scrollbar-thumb': {
+                background: '#ccc',
+                borderRadius: '4px',
+                '&:hover': { background: '#999' },
+              },
             }}
           >
-            {/* Left pane: passage */}
+            {passageTitle && <Typography sx={passageTitleStyles}>{passageTitle}</Typography>}
+            <Box sx={listeningPartStyles.passageContainer}>{renderPassageWithGaps()}</Box>
+          </Box>
+          {/* GIỮA: DRAG DIVIDER (THANH KÉO) */}
+          <Box
+            onMouseDown={() => setIsDragging(true)}
+            onTouchStart={() => setIsDragging(true)}
+            onDragStart={(e) => e.preventDefault()}
+            sx={{
+              position: 'relative',
+              display: { xs: 'none', md: 'flex' },
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 32,
+              cursor: 'col-resize',
+              flexShrink: 0,
+              zIndex: 10,
+              userSelect: 'none',
+              touchAction: 'none',
+            }}
+            role="separator"
+          >
             <Box
               sx={{
-                ...leftPaneStyles,
-                flex: '0 0 auto',
-                width: { xs: '100%', md: `${leftWidth}%` },
-                height: '100%',
-                maxHeight: '100%',
-                minHeight: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'hidden',
-                backgroundColor: 'background.paper',
-                borderRadius: 0,
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                position: 'absolute',
+                top: 0,
+                bottom: 0,
+                left: '50%',
+                width: 2,
+                transform: 'translateX(-50%)',
+                backgroundColor: isDragging ? 'warning.main' : 'divider',
               }}
-            >
-              <Box
-                sx={{
-                  flex: 1,
-                  overflowY: 'scroll',
-                  overflowX: 'hidden',
-                  minHeight: 0,
-                  p: 3,
-                  // Force scrollbar to always be visible
-                  scrollbarWidth: 'thin',
-                  '&::-webkit-scrollbar': {
-                    width: '8px',
-                  },
-                  '&::-webkit-scrollbar-track': {
-                    background: 'transparent',
-                  },
-                  '&::-webkit-scrollbar-thumb': {
-                    background: '#ccc',
-                    borderRadius: '4px',
-                    '&:hover': {
-                      background: '#999',
-                    },
-                  },
-                }}
-              >
-                {/* Đã chuyển phần mô tả/tiêu đề sang Instruction bên phải */}
-                <Box sx={{ ...passageTextStyles, component: 'div' }}>{renderPassageWithGaps()}</Box>
-              </Box>
-            </Box>
-
-            {/* Draggable divider */}
+            />
             <Box
-              onMouseDown={() => setIsDragging(true)}
-              onTouchStart={() => setIsDragging(true)}
-              onDragStart={(e) => e.preventDefault()}
               sx={{
-                position: 'relative',
-                display: { xs: 'none', md: 'flex' },
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                border: '1px solid',
+                borderColor: isDragging ? 'warning.main' : 'divider',
+                backgroundColor: 'background.paper',
+                boxShadow: '0 0 4px rgba(0,0,0,0.15)',
+                display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: 32,
-                cursor: 'col-resize',
-                flexShrink: 0,
-                zIndex: 10,
+                fontSize: 14,
+                color: 'text.secondary',
                 userSelect: 'none',
-                touchAction: 'none',
               }}
-              role="separator"
             >
-              {/* Vertical line */}
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: 0,
-                  bottom: 0,
-                  left: '50%',
-                  width: 2,
-                  transform: 'translateX(-50%)',
-                  backgroundColor: isDragging ? 'warning.main' : 'divider',
-                }}
-              />
-              {/* Handle circle */}
-              <Box
-                sx={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  border: '1px solid',
-                  borderColor: isDragging ? 'warning.main' : 'divider',
-                  backgroundColor: 'background.paper',
-                  boxShadow: '0 0 4px rgba(0,0,0,0.15)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 14,
-                  color: 'text.secondary',
-                  userSelect: 'none',
-                }}
-              >
-                ⇔
-              </Box>
+              ⇔
             </Box>
-
-            {/* Right pane: questions */}
+          </Box>
+          {/* PHẢI: QUESTIONS (CÂU HỎI MATCHING) */}
+          <Box
+            sx={{
+              ...rightPaneStyles,
+              flex: '0 0 auto',
+              width: { xs: '100%', md: `calc(${100 - leftWidth}% - 32px)` },
+              height: '100%',
+              maxHeight: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              p: 0,
+              containerType: 'inline-size',
+              containerName: 'rightPanel',
+            }}
+          >
             <Box
               sx={{
-                ...rightPaneStyles,
-                flex: '0 0 auto',
-                width: { xs: '100%', md: `calc(${100 - leftWidth}% - 32px)` },
-                height: '100%',
-                maxHeight: '100%',
-                minHeight: 0,
+                flex: 1,
                 display: 'flex',
                 flexDirection: 'column',
-                overflow: 'hidden',
+                gap: 2,
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                scrollbarWidth: 'thin',
+                '&::-webkit-scrollbar': { width: '8px' },
+                '&::-webkit-scrollbar-track': { background: 'transparent' },
+                '&::-webkit-scrollbar-thumb': {
+                  background: '#ccc',
+                  borderRadius: '4px',
+                  '&:hover': { background: '#999' },
+                },
               }}
             >
-              <Box
-                sx={{
-                  flex: 1,
-                  overflowY: 'scroll',
-                  overflowX: 'hidden',
-                  minHeight: 0,
-                  // Force scrollbar to always be visible
-                  scrollbarWidth: 'thin',
-                  '&::-webkit-scrollbar': {
-                    width: '8px',
-                  },
-                  '&::-webkit-scrollbar-track': {
-                    background: 'transparent',
-                  },
-                  '&::-webkit-scrollbar-thumb': {
-                    background: '#ccc',
-                    borderRadius: '4px',
-                    '&:hover': {
-                      background: '#999',
-                    },
-                  },
-                }}
-              >
-                {/* Instruction Section */}
-                <Box sx={{ px: 1.5, py: 3 }}>
-                  <Paper sx={instructionBoxStyles}>
-                    <ErrorRoundedIcon
-                      sx={{ color: 'reading.instructionIcon', fontSize: '1.5rem' }}
-                    />
-                    <Box>
-                      <Typography
-                        sx={{
-                          fontWeight: 600,
-                          fontSize: '1rem',
-                          color: 'reading.instructionIcon',
-                          mb: 0.5,
-                        }}
-                      >
-                        Instruction
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: '0.9rem',
-                          color: 'text.primary',
-                        }}
-                      >
-                        Read the passage on the left and match the correct sentences or headings to
-                        each person or category.
-                      </Typography>
-                    </Box>
-                  </Paper>
+              {/* Instruction Section */}
+              <Box sx={listeningPartStyles.instructionContainer}>
+                <ErrorRoundedIcon sx={{ color: 'red.text', fontSize: '1.5rem', mt: 0.2 }} />
+                <Box sx={listeningPartStyles.instructionWrapper}>
+                  <Typography
+                    sx={{ color: 'red.text', fontSize: '1rem', fontWeight: 600, mb: 0.5 }}
+                  >
+                    Instruction
+                  </Typography>
+                  <Typography
+                    sx={{
+                      color: 'text.primary',
+                      fontSize: '0.9rem',
+                      lineHeight: 1.5,
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      wordBreak: 'break-word',
+                    }}
+                  >
+                    Read the passage on the left and match the correct sentences or headings to each
+                    person or category.
+                  </Typography>
+                </Box>
+              </Box>
+              {/* Content Section */}
+              <Box sx={listeningPartStyles.questionSection}>
+                <Box sx={listeningPartStyles.innerInstruction}>
+                  <Typography sx={{ color: 'inherit', fontSize: 'inherit', fontWeight: 'inherit' }}>
+                    Match the questions with the correct options.
+                  </Typography>
                 </Box>
 
-                {/* Content Section */}
-                <Box sx={{ px: 1.5, py: 3, pt: 0 }}>
-                  <Paper
-                    sx={{
-                      p: 2.5,
-                      backgroundColor: 'background.paper',
-                      borderRadius: '8px',
-                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
-                      mb: 2,
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontWeight: 600,
-                        fontSize: '1rem',
-                        color: 'text.primary',
-                        mb: 2,
-                      }}
-                    >
-                      Match Question
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                      {processedSentences.map((sentence, index) => (
-                        <Box
-                          key={`${sentence.id}-${index}`}
-                          sx={{
-                            display: 'flex',
-                            gap: 1,
-                            p: 1.5,
-                            backgroundColor: 'background.paper',
-                            borderRadius: '8px',
-                            border: '1px solid',
-                            borderColor: 'divider',
-                          }}
-                        >
-                          <Typography
-                            sx={{
-                              fontWeight: 700,
-                              color: 'darkGrey.main',
-                              minWidth: '24px',
-                            }}
-                          >
-                            {index + 1}.
-                          </Typography>
-                          <Typography
-                            sx={{
-                              fontSize: '0.95rem',
-                              color: 'text.primary',
-                              lineHeight: 1.6,
-                            }}
-                            dangerouslySetInnerHTML={{ __html: sentence.text }}
-                          />
-                        </Box>
-                      ))}
-                    </Box>
-                  </Paper>
+                <Box
+                  sx={{
+                    ...listeningPartStyles.matchingQuestionAnswerContainerGrid,
+                    gridTemplateColumns: '5fr 5fr',
+                    '@container rightPanel (max-width: 500px)': {
+                      display: 'grid',
+                      gridTemplateColumns: '1fr !important',
+                    },
+                  }}
+                >
+                  {/* CỘT TRÁI: DANH SÁCH CÂU HỎI (CÁC GAPS VÀ Ô CHỌN ĐÁP ÁN) */}
+                  <Box sx={listeningPartStyles.questionContainerCol}>
+                    {gaps.map((gapNumber) => {
+                      const q = questions.find((qu) => qu.question_number === gapNumber);
+                      const isCorrect = showResults ? answers[q?.id] === q?.correctLabel : null;
 
-                  <Paper
-                    sx={{
-                      p: 2.5,
-                      backgroundColor: 'background.paper',
-                      borderRadius: '8px',
-                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(2, 1fr)',
-                        gap: 3,
-                        width: '100%',
-                      }}
-                    >
-                      {gaps.map((gapNumber) => (
+                      return (
                         <Box
                           key={gapNumber}
+                          id={`question-${q?.id}`}
                           sx={{
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: 0.5,
-                            minWidth: 0, // Prevent grid items from overflowing
+                            width: '100%',
+                            mb: showResults ? 2 : 0,
                           }}
                         >
                           <Box
                             sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 1.5,
+                              ...listeningPartStyles.questionContainerRow,
+                              mb: showResults ? 1 : 0,
+                              justifyContent: 'space-between', // Đẩy vòng tròn và Select ra 2 mép
+                              gap: 2,
                             }}
                           >
-                            <Box
+                            {/* Vòng tròn số */}
+                            <Typography
                               sx={{
-                                width: 32,
-                                height: 32,
-                                backgroundColor: 'primary.main',
-                                color: 'background.paper',
-                                borderRadius: '4px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 600,
-                                fontSize: '1rem',
-                                flexShrink: 0,
+                                ...listeningPartStyles.questionLabelCircle,
+                                ...(showResults && {
+                                  backgroundColor: isCorrect ? 'success.main' : 'error.main',
+                                  color: '#fff',
+                                  border: 'none',
+                                }),
                               }}
                             >
                               {gapNumber}
-                            </Box>
-                            <FormControl fullWidth size="small">
+                            </Typography>
+
+                            {/* Ô Select chọn đáp án A, B, C... */}
+                            <FormControl
+                              sx={{
+                                width: '100%',
+                                maxWidth: '150px', // Đặt max width để không bị giãn quá to
+                              }}
+                            >
                               <Select
-                                value={(() => {
-                                  const q = questions.find(
-                                    (qu) => qu.question_number === gapNumber,
-                                  );
-                                  return selectedAnswers[q?.id] || '';
-                                })()}
-                                onChange={(e) => handleAnswerChange(gapNumber, e.target.value)}
+                                value={answers[q?.id] || ''}
+                                onChange={(e) => handleAnswerChangeLocal(gapNumber, e.target.value)}
                                 displayEmpty
-                                disabled={isTeacher || showResults}
+                                disabled={showResults}
                                 sx={{
-                                  backgroundColor: 'background.paper',
-                                  '& .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: showResults
-                                      ? (() => {
-                                          const q = questions.find(
-                                            (qu) => qu.question_number === gapNumber,
-                                          );
-                                          const val = selectedAnswers[q?.id];
-                                          return val === q?.correctLabel
-                                            ? 'success.main'
-                                            : 'error.main';
-                                        })()
-                                      : 'divider',
-                                    borderWidth: showResults ? 2 : 1,
+                                  height: 44,
+                                  width: '100%',
+                                  borderRadius: '1rem',
+                                  fontSize: { xs: '0.7rem', md: '0.9rem' },
+                                  backgroundColor: '#fff',
+                                  '& .MuiSelect-select': {
+                                    py: 1,
+                                    px: 2,
                                   },
-                                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: showResults ? 'inherit' : 'secondary.main',
-                                  },
-                                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: showResults ? 'inherit' : 'secondary.main',
-                                  },
+                                  ...(showResults && {
+                                    color: isCorrect ? '#4caf50' : '#f44336',
+                                    fontWeight: 600,
+                                    backgroundColor: isCorrect
+                                      ? 'rgba(76, 175, 80, 0.05)'
+                                      : 'rgba(244, 67, 54, 0.05)',
+                                    '& .MuiOutlinedInput-notchedOutline': {
+                                      borderColor: isCorrect ? '#4caf50' : '#f44336',
+                                    },
+                                    '&.Mui-disabled': {
+                                      color: isCorrect ? '#4caf50' : '#f44336',
+                                      WebkitTextFillColor: isCorrect ? '#4caf50' : '#f44336',
+                                    },
+                                  }),
                                 }}
                               >
-                                <MenuItem value="" disabled>
-                                  Select
+                                <MenuItem value="">
+                                  <em>Select</em>
                                 </MenuItem>
                                 {processedSentences
                                   .map((_, idx) => String.fromCharCode(65 + idx))
@@ -672,129 +417,60 @@ const MatchingContent = ({
                             </FormControl>
                           </Box>
 
+                          {/* HIỂN THỊ ĐÁP ÁN ĐÚNG VÀ GIẢI THÍCH KHI CÓ KẾT QUẢ */}
                           {showResults && (
-                            <Box sx={{ pl: { xs: 0, sm: 6 }, mt: 0.5, minWidth: 0 }}>
-                              <Box
-                                sx={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 1,
-                                  flexWrap: 'wrap',
-                                  mb: 1,
-                                }}
-                              >
-                                <Typography
-                                  variant="caption"
-                                  sx={{
-                                    fontWeight: 700,
-                                    color: 'text.secondary',
-                                    fontSize: '0.7rem',
-                                    textTransform: 'uppercase',
-                                  }}
-                                >
-                                  Correct Answer:
+                            <Box sx={listeningPartStyles.explanationContainer}>
+                              <Typography sx={listeningPartStyles.correctText}>
+                                Correct Answer: {q?.correctLabel || 'N/A'}
+                              </Typography>
+                              {q?.explanation && (
+                                <Typography sx={listeningPartStyles.explanationText}>
+                                  <strong>Explanation:</strong> {q.explanation}
                                 </Typography>
-                                <Box
-                                  sx={{
-                                    px: 0.8,
-                                    py: 0.2,
-                                    borderRadius: '4px',
-                                    bgcolor: 'success.main',
-                                    color: 'white',
-                                    fontWeight: 800,
-                                    fontSize: '0.75rem',
-                                    display: 'inline-flex',
-                                  }}
-                                >
-                                  {(() => {
-                                    const q = questions.find(
-                                      (qu) => qu.question_number === gapNumber,
-                                    );
-                                    return q?.correctLabel || 'N/A';
-                                  })()}
-                                </Box>
-                              </Box>
-
-                              {(() => {
-                                const q = questions.find((qu) => qu.question_number === gapNumber);
-                                if (q?.explanation) {
-                                  return (
-                                    <Box
-                                      sx={{
-                                        p: 1.5,
-                                        bgcolor: '#fff7ed',
-                                        borderRadius: '8px',
-                                        border: '1px solid #ffedd5',
-                                        boxSizing: 'border-box',
-                                      }}
-                                    >
-                                      <Typography
-                                        variant="caption"
-                                        sx={{
-                                          color: '#ea580c',
-                                          fontWeight: 800,
-                                          display: 'block',
-                                          mb: 0.5,
-                                          fontSize: '0.7rem',
-                                        }}
-                                      >
-                                        EXPLANATION
-                                      </Typography>
-                                      <Typography
-                                        variant="caption"
-                                        sx={{
-                                          color: '#9a3412',
-                                          fontSize: '0.75rem',
-                                          lineHeight: 1.4,
-                                          display: 'block',
-                                          wordBreak: 'break-word',
-                                        }}
-                                      >
-                                        {q.explanation}
-                                      </Typography>
-                                    </Box>
-                                  );
-                                }
-                                return null;
-                              })()}
+                              )}
                             </Box>
                           )}
                         </Box>
-                      ))}
-                    </Box>
-                  </Paper>
-
-                  <Box
-                    sx={{
-                      ...navigationFooterStyles,
-                      display: isTeacher ? 'none' : 'flex',
-                    }}
-                  >
-                    <Button onClick={onBack} sx={backLinkStyles} disabled={isTeacher}>
-                      &lt; Back
-                    </Button>
-                    <Typography sx={sectionInfoStyles}>
-                      Section {currentSection} of {totalSections}
-                    </Typography>
-                    <Button
-                      variant="contained"
-                      sx={{
-                        ...nextButtonStyles,
-                        visibility: currentSection < totalSections ? 'visible' : 'hidden',
-                        pointerEvents: currentSection < totalSections ? 'auto' : 'none',
-                      }}
-                      onClick={onNext}
-                      disabled={isTeacher}
-                    >
-                      Next Part
-                    </Button>
+                      );
+                    })}
+                  </Box>
+                  {/* CỘT PHẢI: DANH SÁCH CÁC LỰA CHỌN ĐỂ MATCH (A. Text, B. Text...) */}
+                  <Box sx={{ ...listeningPartStyles.questionContainerCol, gap: 0 }}>
+                    {processedSentences.map((sentence, index) => (
+                      <Box
+                        key={`${sentence.id}-${index}`}
+                        sx={{
+                          ...listeningPartStyles.questionContainerRow,
+                          border: 'none',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            ...multipleChoiceStyles.optionLabel,
+                            fontWeight: 700,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {String.fromCharCode(65 + index)}.
+                        </Typography>
+                        <Typography
+                          sx={{
+                            ...multipleChoiceStyles.optionLabel,
+                            fontWeight: 400,
+                            wordBreak: 'break-word',
+                          }}
+                          dangerouslySetInnerHTML={{ __html: sentence.text }}
+                        />
+                      </Box>
+                    ))}
                   </Box>
                 </Box>
-              </Box>
+              </Box>{' '}
             </Box>
           </Box>
-        </Container>
-      </Box>
+        </Box>
+      </Container>
     </Box>
   );
 };

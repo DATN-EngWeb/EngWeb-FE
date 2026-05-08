@@ -1,10 +1,8 @@
 import theme from '../../theme/theme';
 
 export const containerStyles = {
-  backgroundColor: theme.palette.reading.contentBg,
+  backgroundColor: theme.palette.background.gray,
   minHeight: 'calc(100vh - 200px)',
-  pt: 2,
-  pb: 4,
 };
 
 export const headerWrapperStyles = {

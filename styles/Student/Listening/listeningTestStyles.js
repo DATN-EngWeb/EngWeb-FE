@@ -136,7 +136,7 @@ export const listeningtestStyles = {
     display: 'inline-block',
   },
   formatName: {
-    fontSize: { xs: '1rem', md: '1.2rem' },
+    fontSize: { xs: '0.8rem', md: '1rem' },
     fontWeight: 500,
     color: 'red.text',
     textAlign: 'center',
@@ -161,7 +161,7 @@ export const listeningtestStyles = {
     justifyContent: 'center',
     userSelect: 'none',
     gap: { xs: 1, md: 2 },
-    py: 1,
+    pb: 1,
   },
   boxPart: {
     width: '80px',
@@ -551,17 +551,19 @@ export const listeningPartStyles = {
   // -------- Explanation Section ---------
   explanationContainer: {
     width: '100%',
-    mt: { xs: 1, md: 2 },
-    p: 1.5,
+    display: 'flex',
+    flexDirection: 'column',
     backgroundColor: '#f9f9f9',
     borderRadius: '8px',
     border: '1px solid #e0e0e0',
+    gap: 0.5,
+    mt: { xs: 1, md: 2 },
+    p: 1.5,
   },
   correctText: {
     fontSize: '1rem',
     color: 'success.main',
     fontWeight: 600,
-    mb: 0.5,
   },
   explanationText: { fontSize: '1rem', color: 'text.secondary' },
 };
