@@ -22,6 +22,7 @@ import {
 } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
+import ShareIcon from '@mui/icons-material/Share';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ReplayIcon from '@mui/icons-material/Replay';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -79,6 +80,7 @@ export default function SpeakingTest() {
   };
   const [isMounted, setIsMounted] = useState(false);
   const [openShareModal, setOpenShareModal] = useState(false);
+  const [pendingShareHistoryID, setPendingShareHistoryID] = useState(null);
   const [startTime, setStartTime] = useState(new Date().toISOString());
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
@@ -215,6 +217,18 @@ export default function SpeakingTest() {
     return () => clearInterval(interval);
   }, [isRecording]);
 
+  // Share-to-forum: hiển thị SubmitDialog 5s rồi redirect sang trang share
+  useEffect(() => {
+    if (submitStatus !== 'submitted' || submitMode !== 'share' || !pendingShareHistoryID) return;
+
+    const timer = setTimeout(() => {
+      setSubmitStatus('idle');
+      router.push(`/student/speaking/${testId}/share/${pendingShareHistoryID}`);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [submitStatus, submitMode, pendingShareHistoryID, testId, router]);
+
   if (!isMounted) {
     return <Box sx={styles.mainContainer} />;
   }
@@ -281,6 +295,69 @@ export default function SpeakingTest() {
       } else {
         setSubmitStatus('error');
       }
+    }
+  };
+
+  const handleShareToForum = async () => {
+    setOpenShareModal(false);
+    setSubmitStatus('submitting');
+    setSubmitMode('share');
+    try {
+      if (!audioBlob) {
+        setSubmitStatus('idle');
+        return;
+      }
+
+      const audioFile = new File([audioBlob], `recording_${testId}.webm`, {
+        type: 'audio/mpeg',
+        lastModified: Date.now(),
+      });
+      const uploadedAudioUrl = await uploadMediaFile(audioFile, testId);
+
+      const response = await createProductiveTest({
+        productive_test: testId,
+        total_time: secondsElapsed,
+        type: 'S',
+        start_time: startTime,
+        end_time: new Date().toISOString(),
+        audio_path: uploadedAudioUrl,
+        is_shared: true,
+      });
+
+      const historyId = response.id;
+
+      setBonusPoint(response?.earned_bonus_point || 0);
+      setLevelData(response?.level_notice || null);
+      setFinalTimeStr(formatTime(secondsElapsed));
+      setHistoryID(historyId);
+      setPendingShareHistoryID(historyId);
+
+      // Reset
+      setIsDraftSaved(true);
+      setAudioBlob(null);
+      setRecordingTime(0);
+      setSecondsElapsed(0);
+      setStartTime(new Date().toISOString());
+      sessionStorage.removeItem('current_productive_attempt');
+
+      // Set status AFTER all state ready
+      setSubmitStatus('submitted');
+
+      // Streak
+      await refreshStreak();
+      if (response?.streak_reward_notice) {
+        setGlobalRewardData(response.streak_reward_notice);
+      } else if (
+        response?.streak_notice?.current_streak === 1 &&
+        response?.streak_notice?.continued === true
+      ) {
+        setGlobalRewardData(response.streak_notice);
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Share submit error:', error);
+      setSubmitStatus('error');
+      setSubmitMode('');
     }
   };
 
@@ -632,7 +709,7 @@ export default function SpeakingTest() {
                 });
                 return;
               }
-              handleFinalSubmit();
+              setOpenShareModal(true);
             }}
           >
             Submit Test
@@ -861,19 +938,36 @@ export default function SpeakingTest() {
               Great job! You have completed your speaking.
             </Typography>
           </DialogContent>
-          <DialogActions sx={{ p: 3 }}>
+          <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'center', gap: 2 }}>
             <Button
               variant="contained"
               onClick={handleFinalSubmit}
               sx={{
-                bgcolor: '#4e342e',
+                bgcolor: 'primary.dark',
+                color: 'warning.light',
                 borderRadius: '12px',
                 px: 3,
                 textTransform: 'none',
-                '&:hover': { bgcolor: '#3e2723' },
+                '&:hover': { bgcolor: 'warning.light', color: 'primary.dark' },
               }}
             >
+              <SendIcon sx={{ mr: 1 }} />
               Submit
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleShareToForum}
+              sx={{
+                bgcolor: 'warning.light',
+                color: 'primary.dark',
+                borderRadius: '12px',
+                px: 3,
+                textTransform: 'none',
+                '&:hover': { bgcolor: 'primary.dark', color: 'warning.light' },
+              }}
+            >
+              <ShareIcon sx={{ mr: 1 }} />
+              Submit & Share
             </Button>
           </DialogActions>
         </Dialog>
@@ -895,9 +989,9 @@ export default function SpeakingTest() {
           levelTitle={levelData ? levelData.current_level?.level_title : undefined}
           leveledUp={levelData ? levelData.leveled_up : false}
           testType="speaking"
-          onClose={handleCloseSubmitDialog}
+          onClose={submitMode === 'share' ? undefined : handleCloseSubmitDialog}
           onViewResults={submitMode === 'ai' ? handleCloseSubmitDialog : undefined}
-          onContinue={handleCloseSubmitDialog}
+          onContinue={submitMode === 'share' ? undefined : handleCloseSubmitDialog}
         />
 
         <Dialog

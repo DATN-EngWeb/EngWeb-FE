@@ -21,6 +21,7 @@ import {
 } from '@mui/material';
 import { useParams, useRouter } from 'next/navigation';
 import SendIcon from '@mui/icons-material/Send';
+import ShareIcon from '@mui/icons-material/Share';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
@@ -69,6 +70,7 @@ export default function WritingTest() {
   const [isDraftSaved, setIsDraftSaved] = useState(false);
   const [note, setNote] = useState('');
   const [historyID, setHistoryID] = useState(0);
+  const [pendingShareHistoryID, setPendingShareHistoryID] = useState(null);
   const [serverErrorOpen, setServerErrorOpen] = useState(false);
   const [isFetchingFeedback, setIsFetchingFeedback] = useState(false);
   const [remainingAITurns, setRemainingAITurns] = useState({ weekly_ai_turn: 0, bonus_ai_turn: 0 });
@@ -77,8 +79,10 @@ export default function WritingTest() {
     setServerErrorOpen(false);
     router.push('/student/writing');
   };
+
   const [startTime, setStartTime] = useState(new Date().toISOString());
   const [isReadOnly, setIsReadOnly] = useState(false);
+
   // Word Count Logic
   const wordCount = useMemo(() => {
     return text.trim() ? text.trim().split(/\s+/).length : 0;
@@ -89,19 +93,17 @@ export default function WritingTest() {
     const secs = totalSeconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+
   const normalizeAITurns = (turns) => ({
     weekly_ai_turn: Number(turns?.weekly_ai_turn) || 0,
     bonus_ai_turn: Number(turns?.bonus_ai_turn) || 0,
   });
+
   const totalAITurns = remainingAITurns.weekly_ai_turn + remainingAITurns.bonus_ai_turn;
 
   useEffect(() => {
     const savedTurns = localStorage.getItem('remainAIturns');
-
-    if (!savedTurns) {
-      return;
-    }
-
+    if (!savedTurns) return;
     try {
       setRemainingAITurns(normalizeAITurns(JSON.parse(savedTurns)));
     } catch (error) {
@@ -111,10 +113,7 @@ export default function WritingTest() {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!user?.id || user?.role !== 'S') {
-        return;
-      }
-
+      if (!user?.id || user?.role !== 'S') return;
       try {
         const profile = await getStudentProfile(user.id);
         const nextTurns = normalizeAITurns(profile);
@@ -125,7 +124,6 @@ export default function WritingTest() {
         console.error('Failed to fetch student profile:', error);
       }
     };
-
     fetchProfile();
   }, [user]);
 
@@ -141,21 +139,19 @@ export default function WritingTest() {
           type: response.productive_test.format,
           time: response.time,
         });
-
         setSettings({
           minWords: response.productive_test.min_word || 50,
           maxWords: 1000,
         });
 
-        // Fetch HTML content từ link Google Storage
         const desResponse = await fetch(response.productive_test.description);
         const htmlText = await desResponse.text();
-
         setQuestion({
           description: htmlText,
           suggestion: response.productive_test.glue_text,
           audio: response.productive_test.glue_resources?.audio,
         });
+
         const saved = sessionStorage.getItem('current_productive_attempt');
         if (saved) {
           const parsed = JSON.parse(saved);
@@ -166,9 +162,7 @@ export default function WritingTest() {
           const savedTime = Number(parsed.totalTime) || 0;
           setSecondsElapsed(savedTime);
           setIsReadOnly(parsed.isReadOnly || false);
-          if (parsed.isReadOnly) {
-            setIsFinished(true);
-          }
+          if (parsed.isReadOnly) setIsFinished(true);
         }
       } catch (error) {
         // eslint-disable-next-line no-console
@@ -178,21 +172,31 @@ export default function WritingTest() {
     };
     if (testId) fetchData();
   }, [testId]);
+
   useEffect(() => {
     if (!isMounted) return;
-
     const timerId = setInterval(() => {
-      if (!isReadOnly) {
-        setSecondsElapsed((prev) => prev + 1);
-      }
+      if (!isReadOnly) setSecondsElapsed((prev) => prev + 1);
     }, 1000);
-
     return () => clearInterval(timerId);
   }, [isMounted, isReadOnly]);
+
+  // Share-to-forum
+  useEffect(() => {
+    if (submitStatus !== 'submitted' || submitMode !== 'share' || !pendingShareHistoryID) return;
+
+    const timer = setTimeout(() => {
+      setSubmitStatus('idle');
+      router.push(`/student/writing/${testId}/share/${pendingShareHistoryID}`);
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, [submitStatus, submitMode, pendingShareHistoryID, testId, router]);
 
   if (!isMounted) {
     return <Box sx={styles.mainContainer} />;
   }
+
   const handleSubmit = () => {
     if (wordCount >= settings.minWords) {
       setOpenShareModal(true);
@@ -204,7 +208,9 @@ export default function WritingTest() {
       });
     }
   };
-  const handleFinalSubmit = async () => {
+
+  const handleFinalSubmit = async (mode = 'final') => {
+    const actualMode = typeof mode === 'string' ? mode : 'final';
     setOpenShareModal(false);
     setSubmitStatus('submitting');
     try {
@@ -218,13 +224,12 @@ export default function WritingTest() {
         user_answer_text: text,
       });
 
-      // Delay to ensure the "Submitting..." spinner state is visible
       await new Promise((resolve) => setTimeout(resolve, 600));
 
       setBonusPoint(response?.earned_bonus_point || 0);
       setLevelData(response?.level_notice || null);
       setHistoryID(response.id);
-      setSubmitMode('final');
+      setSubmitMode(actualMode);
       setFinalTimeStr(formatDuration(secondsElapsed));
 
       localStorage.setItem(
@@ -242,6 +247,7 @@ export default function WritingTest() {
 
       // eslint-disable-next-line no-console
       console.log('Submission response:', response);
+
       setIsDraftSaved(true);
       setSubmitStatus('submitted');
       setText('');
@@ -250,6 +256,7 @@ export default function WritingTest() {
       setIsFinished(false);
       setStartTime(new Date().toISOString());
       setSnackbar({ open: true, message: 'Test submitted successfully!', severity: 'success' });
+
       await refreshStreak();
       if (response?.streak_reward_notice) {
         setGlobalRewardData(response.streak_reward_notice);
@@ -259,15 +266,19 @@ export default function WritingTest() {
       ) {
         setGlobalRewardData(response.streak_notice);
       }
+
+      return response.id;
     } catch (error) {
       await new Promise((resolve) => setTimeout(resolve, 400));
       setSubmitStatus('error');
+      throw error;
     }
   };
+
   const handleAIFeedback = async () => {
     setOpenShareModal(false);
+    setPendingShareHistoryID(null);
     setIsFetchingFeedback(true);
-
     let newHistoryID = null;
 
     try {
@@ -300,7 +311,6 @@ export default function WritingTest() {
       newHistoryID = response.id;
       setHistoryID(newHistoryID);
 
-      // Save context for AI Feedback page
       localStorage.setItem(
         'aiFeedbackContext',
         JSON.stringify({
@@ -314,7 +324,6 @@ export default function WritingTest() {
         }),
       );
 
-      // reset form
       setIsDraftSaved(true);
       setText('');
       setNote('');
@@ -371,7 +380,7 @@ export default function WritingTest() {
   const handleSaveDraft = async () => {
     setDraftStatus('saving');
     try {
-      const response = await createProductiveTest({
+      await createProductiveTest({
         productive_test: testId,
         total_time: secondsElapsed,
         type: 'D',
@@ -381,7 +390,6 @@ export default function WritingTest() {
         user_answer_text: text,
       });
 
-      // Delay to ensure the "Saving draft..." spinner state is visible
       await new Promise((resolve) => setTimeout(resolve, 600));
 
       setIsDraftSaved(true);
@@ -392,7 +400,6 @@ export default function WritingTest() {
       setStartTime(new Date().toISOString());
       setIsFinished(false);
     } catch (error) {
-      // Delay before switching to error state
       await new Promise((resolve) => setTimeout(resolve, 400));
       // eslint-disable-next-line no-console
       console.error('Draft save error:', error);
@@ -408,19 +415,87 @@ export default function WritingTest() {
     setDraftStatus('idle');
   };
 
-  const handleGlobalClose = () => {
+  // FIX: capture current values before resetting to avoid stale closure bug
+  const handleGlobalClose = (overrideShareID = null) => {
+    const currentStatus = submitStatus;
+    const shareID = overrideShareID ?? pendingShareHistoryID;
+
     setSubmitStatus('idle');
-    if (submitStatus === 'submitted') {
+
+    if (currentStatus === 'submitted') {
       sessionStorage.removeItem('current_productive_attempt');
-      router.push(`/student/writing/${testId}`);
+      if (shareID) {
+        setPendingShareHistoryID(null);
+        router.push(`/student/writing/${testId}/share/${shareID}`);
+      } else {
+        router.push(`/student/writing/${testId}`);
+      }
     }
   };
 
-  const handleViewResultAction = () => {
-    setSubmitStatus('idle');
-    router.push(`/student/writing/${testId}/${attempt}/AI-feedback`);
+  const handleViewResultAction = async () => {
+    try {
+      localStorage.removeItem('category');
+      setSubmitStatus('idle');
+      router.push(`/student/writing/${testId}/${attempt}/AI-feedback`);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to open submitted result:', error);
+      setSnackbar({ open: true, message: 'Failed to open submitted result', severity: 'error' });
+    }
   };
 
+  const handleShareToForum = async () => {
+    setOpenShareModal(false);
+    setSubmitStatus('submitting');
+    setSubmitMode('share');
+
+    try {
+      const response = await createProductiveTest({
+        productive_test: testId,
+        total_time: secondsElapsed,
+        type: 'S',
+        start_time: startTime,
+        end_time: new Date().toISOString(),
+        user_note_text: note,
+        user_answer_text: text,
+      });
+
+      const historyId = response.id;
+
+      setBonusPoint(response?.earned_bonus_point || 0);
+      setLevelData(response?.level_notice || null);
+      setHistoryID(historyId);
+      setPendingShareHistoryID(historyId);
+      setFinalTimeStr(formatDuration(secondsElapsed));
+
+      // Reset form
+      setText('');
+      setNote('');
+      setSecondsElapsed(0);
+      setIsFinished(false);
+      setStartTime(new Date().toISOString());
+      sessionStorage.removeItem('current_productive_attempt');
+      setSubmitStatus('submitted');
+      setSubmitMode('share');
+      setPendingShareHistoryID(historyId);
+
+      // Streak
+      await refreshStreak();
+      if (response?.streak_reward_notice) {
+        setGlobalRewardData(response.streak_reward_notice);
+      } else if (
+        response?.streak_notice?.current_streak === 1 &&
+        response?.streak_notice?.continued
+      ) {
+        setGlobalRewardData(response.streak_notice);
+      }
+    } catch (error) {
+      console.error('Share submit error:', error);
+      setSubmitStatus('error');
+      setSubmitMode('');
+    }
+  };
   const FormatMapper = {
     A: 'Writing an email',
     B: 'Writing an article',
@@ -433,7 +508,7 @@ export default function WritingTest() {
   return (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <Box sx={styles.testHeaderContainer}>
-        {/* time counter*/}
+        {/* time counter */}
         <Box sx={{ width: 320, display: 'flex', justifyContent: 'flex-start' }}>
           <Box sx={styles.timerBox}>
             <AccessTimeIcon sx={{ fontSize: 28 }} />
@@ -493,14 +568,7 @@ export default function WritingTest() {
         </Box>
 
         {/* Action Buttons on the Right */}
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 1,
-            alignItems: 'flex-end',
-          }}
-        >
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-end' }}>
           {/* Row 1: Save Draft and Submit Test */}
           <Stack direction="row" spacing={1.5} alignItems="center">
             <Button
@@ -594,7 +662,7 @@ export default function WritingTest() {
       <Box sx={{ ...styles.mainContainer, flex: 1 }}>
         <Box sx={styles.contentWrapper}>
           <PanelGroup direction="horizontal" id="writing-test-layout">
-            {/* test  data */}
+            {/* test data */}
             <Panel defaultSize={50} minSize={40}>
               <Box sx={{ height: '100%', overflowY: 'auto', mr: 2 }}>
                 <ProductivePreview
@@ -618,9 +686,7 @@ export default function WritingTest() {
                 justifyContent: 'center',
               }}
             >
-              {/* Vertical Line */}
               <Box sx={{ width: '2px', height: '100%', bgcolor: '#e0e0e0' }} />
-              {/* Circular Handle */}
               <Box
                 sx={{
                   position: 'absolute',
@@ -640,9 +706,7 @@ export default function WritingTest() {
                   fontSize: 14,
                   color: 'text.secondary',
                   userSelect: 'none',
-                  '&:hover': {
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                  },
+                  '&:hover': { boxShadow: '0 2px 8px rgba(0,0,0,0.2)' },
                 }}
               >
                 ⇔
@@ -725,13 +789,8 @@ export default function WritingTest() {
                       flex: 1,
                       display: 'flex',
                       flexDirection: 'column',
-                      '& .MuiInputBase-root': {
-                        flex: 1,
-                        alignItems: 'flex-start',
-                      },
-                      '& .MuiInputBase-input': {
-                        height: '100% !important',
-                      },
+                      '& .MuiInputBase-root': { flex: 1, alignItems: 'flex-start' },
+                      '& .MuiInputBase-input': { height: '100% !important' },
                     }}
                     disabled={isFinished}
                   />
@@ -745,16 +804,6 @@ export default function WritingTest() {
             </Panel>
           </PanelGroup>
         </Box>
-
-        {/* snackbar */}
-        {/* <Snackbar
-          open={snackbar.open}
-          autoHideDuration={4000}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        >
-          <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
-        </Snackbar> */}
 
         {/* Share to forum modal */}
         <Dialog
@@ -777,13 +826,31 @@ export default function WritingTest() {
               Great job! You have completed your writing.
             </Typography>
           </DialogContent>
-          <DialogActions sx={{ p: 3 }}>
+          <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'center', gap: 2 }}>
             <Button
               variant="contained"
               onClick={handleFinalSubmit}
-              sx={styles.submitButton(wordCount < 100)}
+              sx={{
+                ...styles.submitButton(wordCount < 100),
+                bgcolor: 'primary.dark',
+                color: 'warning.light',
+                '&:hover': { bgcolor: 'warning.light', color: '#fff' },
+              }}
             >
-              Submit Test
+              <SendIcon sx={{ mr: 1 }} />
+              Submit
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleShareToForum}
+              sx={{
+                ...styles.submitButton(wordCount < 100),
+                bgcolor: 'warning.light',
+                color: 'primary.dark',
+              }}
+            >
+              <ShareIcon sx={{ mr: 1 }} />
+              Submit & Share
             </Button>
           </DialogActions>
         </Dialog>
@@ -795,6 +862,7 @@ export default function WritingTest() {
         </Backdrop>
 
         {/* Regular Submit/Save Components */}
+        {/* FIX: pass pendingShareHistoryID into onClose/onContinue to avoid stale closure */}
         <SubmitLoadingDialog
           status={submitStatus}
           bonusPoint={bonusPoint}
@@ -806,9 +874,19 @@ export default function WritingTest() {
           levelTitle={levelData ? levelData.current_level?.level_title : undefined}
           leveledUp={levelData ? levelData.leveled_up : false}
           testType="writing"
-          onClose={handleGlobalClose}
-          onViewResults={handleViewResultAction}
-          onContinue={handleGlobalClose}
+          onClose={
+            submitMode === 'share' || pendingShareHistoryID
+              ? undefined
+              : () => handleGlobalClose(pendingShareHistoryID)
+          }
+          onViewResults={
+            submitMode === 'share' || pendingShareHistoryID ? undefined : handleViewResultAction
+          }
+          onContinue={
+            submitMode === 'share' || pendingShareHistoryID
+              ? undefined
+              : () => handleGlobalClose(pendingShareHistoryID)
+          }
         />
 
         <SaveDraftToast
