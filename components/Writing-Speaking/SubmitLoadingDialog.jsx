@@ -625,7 +625,7 @@ export default function SubmitLoadingDialog({
       open={open}
       maxWidth="xs"
       fullWidth
-      disableEscapeKeyDown={status === 'submitting'}
+      disableEscapeKeyDown={status === 'submitting' || !onClose}
       onClose={status !== 'submitting' ? onClose : undefined}
       TransitionProps={{ timeout: 220 }}
       PaperProps={{
