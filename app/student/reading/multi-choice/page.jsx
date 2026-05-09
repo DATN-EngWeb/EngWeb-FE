@@ -200,6 +200,7 @@ function ReadingMultiChoicePageContent() {
         passage={currentPartData.passage}
         passageTitle={currentPartData.passageTitle}
         questions={currentPartData.questions}
+        stimulusPageUrls={currentPartData.stimulusPageUrls}
         answers={answers}
         onAnswerChange={handleAnswerChange}
         isTeacher={isTeacherMode}
@@ -208,6 +209,9 @@ function ReadingMultiChoicePageContent() {
         onNext={handleNext}
         currentSection={currentSection}
         totalSections={testData.parts.length}
+        hidePassage={
+          currentPartData.rawPart?.format === 'F' && !String(currentPartData.passage || '').trim()
+        }
       />
     </>
   );

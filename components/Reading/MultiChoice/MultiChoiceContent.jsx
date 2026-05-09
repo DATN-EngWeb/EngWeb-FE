@@ -14,6 +14,101 @@ import {
 import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
 import SumaryPartTab from '../../Student/ListeningTest/part/sumaryPartTab';
+import { fetchHtmlContent } from '@/api/test';
+
+/**
+ * Tách khối hình ảnh / media khỏi phần chữ trong HTML stem (short text).
+ * Dùng regex để kết quả giống nhau giữa SSR và client, tránh lệch hydrate.
+ */
+function splitHtmlImagesAndRest(html) {
+  if (!html || typeof html !== 'string') return { imagesHtml: '', restHtml: '' };
+
+  const blockRe = /(?:<picture\b[\s\S]*?<\/picture>|<img\b[^>]*(?:\/)?>|<svg\b[\s\S]*?<\/svg>)/gi;
+  const fragments = [];
+  let m;
+  blockRe.lastIndex = 0;
+  while ((m = blockRe.exec(html)) !== null) {
+    fragments.push(m[0]);
+  }
+  if (fragments.length === 0) return { imagesHtml: '', restHtml: html };
+
+  let rest = html;
+  fragments.forEach((frag) => {
+    rest = rest.replace(frag, '');
+  });
+  rest = rest
+    .replace(/<p>\s*<\/p>/gi, '')
+    .replace(/<div>\s*<\/div>/gi, '')
+    .trim();
+
+  return {
+    imagesHtml: fragments.join(''),
+    restHtml: rest,
+  };
+}
+
+const passageResponsiveMediaSx = {
+  '& img, & svg': { maxWidth: '100%', height: 'auto', display: 'block' },
+  '& picture': { display: 'block', maxWidth: '100%' },
+};
+
+const stimulusFigureMediaSx = {
+  flex: 1,
+  minWidth: 0,
+  ...passageResponsiveMediaSx,
+};
+
+/** Tách từng khối ảnh/SVG trong passage để render badge số giống cột choice. */
+function extractNumberedMediaParts(html) {
+  if (!html || typeof html !== 'string') {
+    return { items: [], restHtml: '', hasMedia: false };
+  }
+  const blockRe = /(?:<picture\b[\s\S]*?<\/picture>|<img\b[^>]*(?:\/)?>|<svg\b[\s\S]*?<\/svg>)/gi;
+  const frags = [];
+  let m;
+  blockRe.lastIndex = 0;
+  while ((m = blockRe.exec(html)) !== null) {
+    frags.push(m[0]);
+  }
+  if (frags.length === 0) return { items: [], restHtml: html, hasMedia: false };
+
+  let rest = html;
+  frags.forEach((frag) => {
+    rest = rest.replace(frag, '');
+  });
+  rest = rest
+    .replace(/<p>\s*<\/p>/gi, '')
+    .replace(/<div>\s*<\/div>/gi, '')
+    .trim();
+
+  const items = frags.map((frag, i) => ({ n: i + 1, html: frag }));
+  return { items, restHtml: rest, hasMedia: true };
+}
+
+function computeShortTextSplits(questions, questionBodyByKey) {
+  const splits = {};
+  let hasMedia = false;
+
+  questions.forEach((q, i) => {
+    const qKey = q?.id ?? `__idx_${i}`;
+    const raw = q?.question;
+    let html =
+      typeof raw === 'string' && raw.startsWith('http')
+        ? (questionBodyByKey[qKey] ?? '')
+        : (raw ?? '');
+
+    if (typeof html !== 'string' || html.startsWith('http')) {
+      splits[qKey] = { imagesHtml: '', restHtml: '', pendingFetch: true };
+      return;
+    }
+
+    const s = splitHtmlImagesAndRest(html);
+    splits[qKey] = { ...s, pendingFetch: false };
+    if (s.imagesHtml) hasMedia = true;
+  });
+
+  return { splits, hasMedia };
+}
 
 const MultiChoiceContent = ({
   passage = '',
@@ -22,6 +117,10 @@ const MultiChoiceContent = ({
   answers = {},
   showResults = false,
   onAnswerChange = () => {},
+  /** Reading format F (short text): không hiển thị passage chung, chỉ câu hỏi */
+  hidePassage = false,
+  /** Format F legacy: nhiều URL ở question — fetch từng file, hiển thị đánh số cột trái */
+  stimulusPageUrls = null,
 }) => {
   const pathname = usePathname();
   const isTeacherView = pathname?.includes('/teacher/view-test/');
@@ -33,9 +132,87 @@ const MultiChoiceContent = ({
   const [passageContent, setPassageContent] = useState(passage);
 
   const [targetQuestionId, setTargetQuestionId] = useState(null);
+  /** Nội dung HTML sau khi fetch, key = question.id (hoặc __idx_i nếu thiếu id) */
+  const [questionBodyByKey, setQuestionBodyByKey] = useState({});
+  /** stimulusPageUrls[i] → HTML đã fetch */
+  const [stimulusHtmlByIndex, setStimulusHtmlByIndex] = useState({});
+
+  const stimulusFetchKey = React.useMemo(
+    () => (Array.isArray(stimulusPageUrls) ? stimulusPageUrls.join('\0') : ''),
+    [stimulusPageUrls],
+  );
+
+  const questionUrlFetchKey = React.useMemo(
+    () =>
+      questions
+        .map((q, i) => {
+          const id = q?.id ?? `__idx_${i}`;
+          const text = q?.question;
+          return `${id}|${typeof text === 'string' ? text : ''}`;
+        })
+        .join(';;'),
+    [questions],
+  );
+
+  const shortTextLayout = React.useMemo(
+    () => (hidePassage ? computeShortTextSplits(questions, questionBodyByKey) : null),
+    [hidePassage, questions, questionBodyByKey],
+  );
+
+  /** Cột trái: passage dài (G) hoặc ảnh stem short text (F) hoặc stimulusPageUrls */
+  const usePassageColumn =
+    !hidePassage || Boolean(shortTextLayout?.hasMedia) || Boolean(stimulusPageUrls?.length);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadStimulusPages = async () => {
+      if (!stimulusPageUrls?.length) return;
+      const next = {};
+      await Promise.all(
+        stimulusPageUrls.map(async (url, i) => {
+          if (typeof url !== 'string' || !url.startsWith('http')) return;
+          const html = await fetchHtmlContent(url);
+          if (!cancelled) next[i] = html || url;
+        }),
+      );
+      if (!cancelled) setStimulusHtmlByIndex(next);
+    };
+
+    loadStimulusPages();
+    return () => {
+      cancelled = true;
+    };
+  }, [stimulusFetchKey, stimulusPageUrls]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadQuestionBodies = async () => {
+      const next = {};
+      await Promise.all(
+        questions.map(async (q, i) => {
+          const key = q?.id ?? `__idx_${i}`;
+          const raw = q?.question;
+          if (typeof raw !== 'string' || !raw.startsWith('http')) return;
+          const html = await fetchHtmlContent(raw);
+          if (!cancelled) next[key] = html || raw;
+        }),
+      );
+      if (!cancelled && Object.keys(next).length > 0) {
+        setQuestionBodyByKey((prev) => ({ ...prev, ...next }));
+      }
+    };
+
+    loadQuestionBodies();
+    return () => {
+      cancelled = true;
+    };
+  }, [questionUrlFetchKey, questions]);
 
   // Lấy nội dung bài đọc từ URL nếu passage là một link lưu trữ (như Google Cloud Storage)
   useEffect(() => {
+    if (hidePassage) return;
     setPassageContent(passage);
     const fetchContent = async () => {
       if (
@@ -48,17 +225,17 @@ const MultiChoiceContent = ({
           const response = await fetch(passage);
           const text = await response.text();
           setPassageContent(text);
-        } catch (error) {
-          console.error('Failed to fetch passage content:', error);
+        } catch {
+          // Passage fetch failed; keep raw passage string
         }
       }
     };
     fetchContent();
-  }, [passage]);
+  }, [passage, hidePassage]);
 
   // Xử lý sự kiện kéo thả chuột hoặc cảm ứng để thay đổi tỷ lệ chiều rộng 2 cột trái/phải
   useEffect(() => {
-    if (!isDragging) return;
+    if (!usePassageColumn || !isDragging) return;
     const handleMouseMove = (event) => {
       event.preventDefault();
       const clientX = event.type.startsWith('touch') ? event.touches[0].clientX : event.clientX;
@@ -100,7 +277,7 @@ const MultiChoiceContent = ({
         document.body.style.cursor = '';
       }
     };
-  }, [isDragging]);
+  }, [isDragging, usePassageColumn]);
 
   // Lưu trữ đáp án người dùng chọn và truyền lên component cha thông qua onAnswerChange
   const handleAnswerSelection = (questionId, value) => {
@@ -188,9 +365,14 @@ const MultiChoiceContent = ({
       <Container maxWidth={false} disableGutters sx={{ height: '100%', px: 0 }}>
         {/* Layout chính chứa cột bài đọc (trái), thanh chia (giữa) và danh sách câu hỏi (phải) */}
         <Box
-          ref={containerRef}
+          ref={usePassageColumn ? containerRef : undefined}
           sx={{
             ...listeningPartStyles.containerColRow,
+            ...(hidePassage &&
+              !shortTextLayout?.hasMedia &&
+              !stimulusPageUrls?.length && {
+                flexDirection: { xs: 'column', md: 'column' },
+              }),
             height: { xs: 'auto', md: '100vh' },
             maxHeight: { xs: 'none', md: '100vh' },
             overflow: { xs: 'visible', md: 'hidden' },
@@ -198,81 +380,198 @@ const MultiChoiceContent = ({
             py: 2,
           }}
         >
-          <Box
-            sx={{
-              ...listeningPartStyles.basicFlexColCenStart,
-              width: { xs: '100%', md: `${leftWidth}%` },
-              mb: { xs: 2, md: 0 },
-              height: '100%',
-              overflowY: 'auto',
-              minHeight: 0,
-              scrollbarWidth: 'thin',
-              '&::-webkit-scrollbar': { width: '8px' },
-              '&::-webkit-scrollbar-track': { background: 'transparent' },
-              '&::-webkit-scrollbar-thumb': {
-                background: '#ccc',
-                borderRadius: '4px',
-                '&:hover': { background: '#999' },
-              },
-            }}
-          >
-            <Box sx={listeningPartStyles.passageContainer}>
-              {passageTitle && (
-                <Typography sx={{ ...passageTitleStyles, mb: 2 }}>{passageTitle}</Typography>
-              )}
-              <Typography
-                component="div"
-                sx={passageTextStyles}
-                dangerouslySetInnerHTML={{ __html: passageContent }}
-              />
-            </Box>
-          </Box>
+          {usePassageColumn && (
+            <>
+              <Box
+                sx={{
+                  ...listeningPartStyles.basicFlexColCenStart,
+                  width: { xs: '100%', md: `${leftWidth}%` },
+                  mb: { xs: 2, md: 0 },
+                  height: '100%',
+                  overflowY: 'auto',
+                  minHeight: 0,
+                  scrollbarWidth: 'thin',
+                  '&::-webkit-scrollbar': { width: '8px' },
+                  '&::-webkit-scrollbar-track': { background: 'transparent' },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: '#ccc',
+                    borderRadius: '4px',
+                    '&:hover': { background: '#999' },
+                  },
+                }}
+              >
+                {!hidePassage ? (
+                  <Box sx={listeningPartStyles.passageContainer}>
+                    {passageTitle && (
+                      <Typography sx={{ ...passageTitleStyles, mb: 2 }}>{passageTitle}</Typography>
+                    )}
+                    {(() => {
+                      const { items, restHtml, hasMedia } =
+                        extractNumberedMediaParts(passageContent);
+                      if (!hasMedia) {
+                        return (
+                          <Typography
+                            component="div"
+                            sx={{
+                              ...passageTextStyles,
+                              ...passageResponsiveMediaSx,
+                            }}
+                            dangerouslySetInnerHTML={{ __html: passageContent }}
+                          />
+                        );
+                      }
+                      return (
+                        <>
+                          <Box
+                            sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}
+                          >
+                            {items.map(({ n, html }) => (
+                              <Box
+                                key={n}
+                                sx={{
+                                  ...listeningPartStyles.questionTextContainer,
+                                  alignItems: 'flex-start',
+                                }}
+                              >
+                                <Typography sx={listeningPartStyles.questionLabelRectangle}>
+                                  {n}
+                                </Typography>
+                                <Box
+                                  component="div"
+                                  sx={{ ...passageTextStyles, ...stimulusFigureMediaSx }}
+                                  dangerouslySetInnerHTML={{ __html: html }}
+                                />
+                              </Box>
+                            ))}
+                          </Box>
+                          {restHtml ? (
+                            <Box
+                              component="div"
+                              sx={{ ...passageTextStyles, mt: 2, ...passageResponsiveMediaSx }}
+                              dangerouslySetInnerHTML={{ __html: restHtml }}
+                            />
+                          ) : null}
+                        </>
+                      );
+                    })()}
+                  </Box>
+                ) : stimulusPageUrls?.length ? (
+                  <Box sx={listeningPartStyles.passageContainer}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}>
+                      {stimulusPageUrls.map((url, i) => (
+                        <Box
+                          key={`${i}-${url}`}
+                          sx={{
+                            ...listeningPartStyles.questionTextContainer,
+                            alignItems: 'flex-start',
+                          }}
+                        >
+                          <Typography sx={listeningPartStyles.questionLabelRectangle}>
+                            {i + 1}
+                          </Typography>
+                          <Box
+                            component="div"
+                            sx={{ ...passageTextStyles, ...stimulusFigureMediaSx }}
+                            dangerouslySetInnerHTML={{
+                              __html:
+                                stimulusHtmlByIndex[i] ??
+                                (typeof url === 'string' && url.startsWith('http') ? '' : url),
+                            }}
+                          />
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                ) : (
+                  <Box sx={listeningPartStyles.passageContainer}>
+                    {questions.map((q, i) => {
+                      const qKey = q.id ?? `__idx_${i}`;
+                      const mediaHtml = shortTextLayout?.splits?.[qKey]?.imagesHtml;
+                      if (!mediaHtml) return null;
+                      const labelN = q.question_number ?? q.questionNumber ?? i + 1;
+                      return (
+                        <Box
+                          key={qKey}
+                          sx={{
+                            ...listeningPartStyles.questionTextContainer,
+                            alignItems: 'flex-start',
+                            mb: questions.length > 1 ? 2 : 0,
+                          }}
+                        >
+                          <Typography sx={listeningPartStyles.questionLabelRectangle}>
+                            {labelN}
+                          </Typography>
+                          <Box
+                            component="div"
+                            sx={{ ...passageTextStyles, ...stimulusFigureMediaSx }}
+                            dangerouslySetInnerHTML={{ __html: mediaHtml }}
+                          />
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                )}
+              </Box>
 
-          <Box
-            onMouseDown={() => setIsDragging(true)}
-            onTouchStart={() => setIsDragging(true)}
-            onDragStart={(e) => e.preventDefault()}
-            sx={{
-              display: { xs: 'none', md: 'flex' },
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 32,
-              cursor: 'col-resize',
-              flexShrink: 0,
-              zIndex: 10,
-              position: 'relative',
-              userSelect: 'none',
-              touchAction: 'none',
-            }}
-          >
-            <Box
-              sx={{ width: 2, height: '100%', bgcolor: isDragging ? 'warning.main' : 'divider' }}
-            />
-            <Box
-              sx={{
-                position: 'absolute',
-                width: 28,
-                height: 28,
-                borderRadius: '50%',
-                border: '1px solid',
-                borderColor: isDragging ? 'warning.main' : 'divider',
-                backgroundColor: 'background.paper',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 14,
-              }}
-            >
-              ⇔
-            </Box>
-          </Box>
+              <Box
+                onMouseDown={() => setIsDragging(true)}
+                onTouchStart={() => setIsDragging(true)}
+                onDragStart={(e) => e.preventDefault()}
+                sx={{
+                  display: { xs: 'none', md: 'flex' },
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 32,
+                  cursor: 'col-resize',
+                  flexShrink: 0,
+                  zIndex: 10,
+                  position: 'relative',
+                  userSelect: 'none',
+                  touchAction: 'none',
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 2,
+                    height: '100%',
+                    bgcolor: isDragging ? 'warning.main' : 'divider',
+                  }}
+                />
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                    border: '1px solid',
+                    borderColor: isDragging ? 'warning.main' : 'divider',
+                    backgroundColor: 'background.paper',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 14,
+                  }}
+                >
+                  ⇔
+                </Box>
+              </Box>
+            </>
+          )}
 
           {/* Khu vực cột phải: Hiển thị hướng dẫn, danh sách các câu hỏi và tùy chọn */}
           <Box
             sx={{
               ...listeningPartStyles.questionSection,
-              width: { xs: '100%', md: `calc(${100 - leftWidth}% - 32px)` },
-              minWidth: { md: '400px' },
+              flex:
+                hidePassage && !shortTextLayout?.hasMedia && !stimulusPageUrls?.length
+                  ? 1
+                  : undefined,
+              width: {
+                xs: '100%',
+                md: usePassageColumn ? `calc(${100 - leftWidth}% - 32px)` : '100%',
+              },
+              minWidth: usePassageColumn ? { md: '400px' } : 0,
+              maxWidth: !usePassageColumn ? '100%' : undefined,
               height: '100%',
               overflowY: 'auto',
               minHeight: 0,
@@ -289,13 +588,37 @@ const MultiChoiceContent = ({
             <Box sx={listeningPartStyles.innerInstruction}>
               <LightbulbOutlinedIcon />
               <Typography sx={{ color: 'inherit', fontSize: 'inherit', fontWeight: 'inherit' }}>
-                Read the passage on the left and choose the correct answer for each question.
+                {hidePassage && shortTextLayout?.hasMedia
+                  ? 'Look at the image on the left and choose the correct answer for each question.'
+                  : hidePassage && stimulusPageUrls?.length
+                    ? 'Look at the numbered images on the left and choose the correct answer for each question.'
+                    : hidePassage
+                      ? 'Choose the correct answer for each question.'
+                      : 'Read the passage on the left and choose the correct answer for each question.'}
               </Typography>
             </Box>
 
             {/* Vòng lặp render từng câu hỏi trắc nghiệm và danh sách các phương án A, B, C, D */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               {questions.map((question, index) => {
+                const qKey = question.id ?? `__idx_${index}`;
+                const rawQuestion = question.question;
+                const questionHtml =
+                  typeof rawQuestion === 'string' && rawQuestion.startsWith('http')
+                    ? (questionBodyByKey[qKey] ?? rawQuestion)
+                    : (rawQuestion ?? '');
+                const split = shortTextLayout?.splits?.[qKey];
+                const isUrlOnly =
+                  typeof questionHtml === 'string' && questionHtml.startsWith('http');
+                const displayHtml =
+                  hidePassage &&
+                  shortTextLayout?.hasMedia &&
+                  split &&
+                  !split.pendingFetch &&
+                  !isUrlOnly
+                    ? split.restHtml
+                    : questionHtml;
+
                 const selectedValue = answers[question.id] || '';
                 const correctOption = question.options?.find((o) => o.isCorrect);
                 const correctAnswerText = correctOption ? correctOption.label : '';
@@ -308,11 +631,11 @@ const MultiChoiceContent = ({
                   >
                     <Box sx={listeningPartStyles.questionTextContainer}>
                       <Typography sx={listeningPartStyles.questionLabelRectangle}>
-                        {question.question_number || index + 1}
+                        {question.question_number ?? question.questionNumber ?? index + 1}
                       </Typography>
                       <Typography
                         sx={listeningPartStyles.questionText}
-                        dangerouslySetInnerHTML={{ __html: question.question }}
+                        dangerouslySetInnerHTML={{ __html: displayHtml }}
                       />
                     </Box>
                     <Box

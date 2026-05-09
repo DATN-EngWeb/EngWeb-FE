@@ -8,6 +8,7 @@ import FillBlanksContent from '../../Reading/FillBlanks/FillBlanksContent';
 import MatchingContent from '../../Reading/Matching/MatchingContent';
 import MultiChoiceContent from '../../Reading/MultiChoice/MultiChoiceContent';
 import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
+import { transformMultiChoiceTest } from '@/utils/testDataTransform';
 
 const getReadingPartTypeLabel = (format) => {
   switch (format) {
@@ -50,7 +51,60 @@ const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButto
     };
 
     switch (currentPart.format) {
-      case 'F':
+      case 'F': {
+        const transformed = transformMultiChoiceTest({
+          receptive_test: {
+            receptive_parts: [
+              {
+                id: currentPart.id,
+                format: 'F',
+                content: currentPart.content || '',
+                description: currentPart.description || '',
+                order: currentPart.order || 1,
+                receptive_questions: currentPart.questions.map((q) => ({
+                  id: q.id,
+                  question_number: q.question_number,
+                  content: q.content,
+                  explanation: q.explanation,
+                  receptive_answers: (q.answers || []).map((a) => ({
+                    id: a.id,
+                    option_label: a.option_label,
+                    answer_text: a.answer_text,
+                    is_correct: a.is_correct,
+                  })),
+                })),
+              },
+            ],
+          },
+        });
+        const d = transformed.parts[0];
+        if (!d) return null;
+        return {
+          component: MultiChoiceContent,
+          props: {
+            ...commonProps,
+            passage: d.passage,
+            passageTitle: d.passageTitle,
+            stimulusPageUrls: d.stimulusPageUrls,
+            hidePassage: !String(d.passage || '').trim(),
+            questions: d.questions.map((q) => ({
+              id: q.id,
+              question_number: q.questionNumber,
+              question: q.question || `Question ${q.questionNumber}`,
+              explanation: q.explanation,
+              options: (q.options || []).map((a, idx) => ({
+                value: String(a.id || a.option_label || a.value),
+                option_label: a.option_label || String.fromCharCode(65 + idx),
+                label: a.label || a.answer_text || '',
+                answer_text: a.answer_text || a.label,
+                text: a.answer_text || a.label,
+                isCorrect: a.isCorrect,
+              })),
+            })),
+          },
+        };
+      }
+
       case 'G':
         return {
           component: MultiChoiceContent,

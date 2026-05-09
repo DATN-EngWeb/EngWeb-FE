@@ -461,6 +461,10 @@ export default function ReadingTestContent({ testId }) {
             passage={currentPart.data.passage}
             passageTitle={currentPart.data.passageTitle}
             questions={currentPart.data.questions}
+            stimulusPageUrls={currentPart.data.stimulusPageUrls}
+            hidePassage={
+              currentPart.format === 'F' && !String(currentPart.data.passage || '').trim()
+            }
           />
         );
 
