@@ -21,6 +21,7 @@ import {
 import ReceptiveReviewView from './ReceptiveReviewView';
 import ReceptiveSummaryView from './ReceptiveSummaryView';
 import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
+import Skeleton from '../ListeningTest/skeleton';
 
 export default function ReceptiveTestResult({
   mode = 'summary',
@@ -299,23 +300,7 @@ export default function ReceptiveTestResult({
   const skillColor = testData?.skill === 'R' ? '#166534' : '#1e40af';
 
   if (loading) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '80vh',
-          flexDirection: 'column',
-          gap: 2,
-        }}
-      >
-        <CircularProgress size={60} thickness={4} sx={{ color: '#166534' }} />
-        <Typography variant="h6" color="text.secondary">
-          Analyzing your results...
-        </Typography>
-      </Box>
-    );
+    return <Skeleton />;
   }
 
   if (error || !history || !testData) {

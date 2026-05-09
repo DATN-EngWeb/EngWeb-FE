@@ -36,6 +36,7 @@ import {
 } from '@/utils/testDataTransform';
 import ReceptiveTestResult from '@/components/Student/ReceptiveTestResult/ReceptiveTestResult';
 import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
+import Skeleton from '../ListeningTest/skeleton';
 
 // Hàm helper format thời gian hiển thị
 const formatTimeFromSeconds = (totalSeconds) => {
@@ -390,21 +391,7 @@ export default function ReadingTestContent({ testId }) {
 
   // Trạng thái Loading hoặc Lỗi
   if (loading) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '60vh',
-          flexDirection: 'column',
-          gap: 2,
-        }}
-      >
-        <CircularProgress size={60} />
-        <Box sx={{ fontSize: '18px', color: 'text.secondary' }}>Loading test data...</Box>
-      </Box>
-    );
+    return <Skeleton />;
   }
 
   // Kết quả sau khi nộp bài
