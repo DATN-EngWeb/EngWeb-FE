@@ -13,6 +13,7 @@ import {
 } from '@/styles/Reading/FillBlanksStyles';
 import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
+import SumaryPartTab from '../../Student/ListeningTest/part/sumaryPartTab'; // Đã import component
 
 const FillBlanksContent = ({
   passage = '',
@@ -27,6 +28,9 @@ const FillBlanksContent = ({
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = React.useRef(null);
   const [passageContent, setPassageContent] = useState(passage);
+
+  // Thêm state để lưu câu hỏi mục tiêu khi click từ SumaryPartTab
+  const [targetQuestionId, setTargetQuestionId] = useState(null);
 
   // Load đoạn văn (Fetch nếu là URL)
   useEffect(() => {
@@ -117,7 +121,88 @@ const FillBlanksContent = ({
   const isMultiChoiceFormat =
     questions && questions.length > 0 && questions.some((q) => q.options && q.options.length > 1);
 
-  return (
+  // Logic cuộn trang và nảy Container Question khi click từ SumaryPartTab
+  useEffect(() => {
+    if (targetQuestionId && showResults) {
+      let retryCount = 0;
+      const maxRetries = 15;
+
+      const attemptScroll = () => {
+        const element = document.getElementById(`question-${targetQuestionId}`);
+
+        if (element && element.getBoundingClientRect().height > 0) {
+          window.requestAnimationFrame(() => {
+            element.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+            });
+
+            if (!document.getElementById('safe-bounce-style')) {
+              const style = document.createElement('style');
+              style.id = 'safe-bounce-style';
+              style.innerHTML = `
+                @keyframes slightBounce {
+                  0%, 100% { transform: translateY(0); }
+                  50% { transform: translateY(-2px); }
+                }
+                .safe-element-bounce {
+                  animation: slightBounce 0.3s ease-in-out 2;
+                }
+              `;
+              document.head.appendChild(style);
+            }
+
+            setTimeout(() => {
+              element.classList.add('safe-element-bounce');
+
+              setTimeout(() => {
+                element.classList.remove('safe-element-bounce');
+              }, 600);
+            }, 300);
+          });
+
+          setTargetQuestionId(null);
+        } else if (retryCount < maxRetries) {
+          retryCount++;
+          setTimeout(attemptScroll, 100);
+        }
+      };
+
+      const timer = setTimeout(attemptScroll, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [targetQuestionId, showResults]);
+
+  // Chuẩn bị dữ liệu trạng thái cho SumaryPartTab
+  const partQuestions = showResults
+    ? isMultiChoiceFormat
+      ? questions.map((q) => {
+          const selectedValue = answers[q.id];
+          const isAnswered =
+            selectedValue !== undefined && selectedValue !== null && selectedValue !== '';
+          const selectedOption = q.options?.find((o) => o.value === selectedValue);
+          const isCorrect = selectedOption?.isCorrect || false;
+
+          return { id: q.id, isAnswered, isCorrect };
+        })
+      : blanks.map((num) => {
+          const qInfo = questions.find((qu) => qu.question_number === num);
+          const questionId = qInfo?.id || num;
+          const userAns = answers[questionId] || '';
+          const isAnswered = userAns.trim().length > 0;
+          const isCorrect =
+            userAns.toLowerCase().trim() === (qInfo?.correctText || '').toLowerCase().trim();
+
+          return { id: questionId, isAnswered, isCorrect };
+        })
+    : [];
+
+  const handleNavigateToQuestion = (questionId) => {
+    setTargetQuestionId(questionId);
+  };
+
+  // Tách nội dung chính
+  const mainContent = (
     <Box sx={{ ...containerStyles, flex: 1, width: '100%', overflow: 'hidden' }}>
       <Container maxWidth={false} disableGutters sx={{ height: '100%', px: 0 }}>
         <Box
@@ -136,11 +221,10 @@ const FillBlanksContent = ({
             sx={{
               ...listeningPartStyles.basicFlexColCenStart,
               width: { xs: '100%', md: `${leftWidth}%` },
-              mb: { xs: 2, md: 0 }, // Thêm margin bottom trên mobile cho thoáng
+              mb: { xs: 2, md: 0 },
               height: '100%',
               overflowY: 'auto',
               minHeight: 0,
-              // Giữ lại custom scrollbar cho Reading
               scrollbarWidth: 'thin',
               '&::-webkit-scrollbar': { width: '8px' },
               '&::-webkit-scrollbar-track': { background: 'transparent' },
@@ -225,7 +309,6 @@ const FillBlanksContent = ({
                 },
               }}
             >
-              {/* -------- Instruction (Đã đổi sang style mới giống Listening) --------- */}
               <Box sx={listeningPartStyles.instructionContainer}>
                 <ErrorRoundedIcon sx={{ color: 'red.text', fontSize: '1.5rem', mt: 0.2 }} />
                 <Box sx={listeningPartStyles.instructionWrapper}>
@@ -252,7 +335,6 @@ const FillBlanksContent = ({
                 </Box>
               </Box>
 
-              {/* -------- Question Section Container --------- */}
               <Box sx={{ ...listeningPartStyles.questionSection, mt: 2 }}>
                 <Box
                   sx={{
@@ -267,11 +349,9 @@ const FillBlanksContent = ({
                 >
                   {isMultiChoiceFormat
                     ? questions.map((q, idx) => {
-                        // --- Dạng 1: MultiChoice (Đã cập nhật UI giống MultiChoiceContent) ---
                         const selectedVal = answers[q.id] || '';
                         const qInfo = questions.find((qu) => qu.id === q.id);
 
-                        // Tìm đáp án đúng để hiển thị khi showResults
                         const correctOption = qInfo?.options?.find((o) => o.isCorrect);
                         const correctAnswerText = correctOption ? correctOption.label : '';
 
@@ -281,7 +361,6 @@ const FillBlanksContent = ({
                             id={`question-${q.id}`}
                             sx={listeningPartStyles.questionContainerCol}
                           >
-                            {/* TIÊU ĐỀ CÂU HỎI */}
                             <Box sx={listeningPartStyles.questionTextContainer}>
                               <Typography sx={listeningPartStyles.questionLabelRectangle}>
                                 {q.question_number || idx + 1}
@@ -294,7 +373,6 @@ const FillBlanksContent = ({
                               />
                             </Box>
 
-                            {/* DANH SÁCH ĐÁP ÁN */}
                             <Box
                               sx={{
                                 ...listeningPartStyles.audioAndOptionsContainer,
@@ -404,7 +482,6 @@ const FillBlanksContent = ({
                                           {option.answer_text || option.text || option.label}
                                         </Typography>
 
-                                        {/* Nhãn "Correct" */}
                                         {showResults && isCorrect && (
                                           <Chip
                                             label="Correct"
@@ -425,14 +502,13 @@ const FillBlanksContent = ({
                               </Box>
                             </Box>
 
-                            {/* GIẢI THÍCH (EXPLANATION) */}
                             {showResults && (
                               <Box
                                 sx={{ pr: { xs: 0, md: 4 }, pl: { xs: 0, md: 4 }, width: '100%' }}
                               >
                                 <Box sx={{ ...listeningPartStyles.explanationContainer }}>
                                   <Typography sx={listeningPartStyles.correctText}>
-                                    Correct Answer: {correctOption.option_label}.{' '}
+                                    Correct Answer: {correctOption?.option_label}.{' '}
                                     {correctAnswerText}
                                   </Typography>
                                   {qInfo?.explanation && (
@@ -447,7 +523,6 @@ const FillBlanksContent = ({
                         );
                       })
                     : blanks.map((num) => {
-                        // --- Dạng 2: Tự luận điền từ (Đã cập nhật giống Listening UI) ---
                         const qInfo = questions.find((qu) => qu.question_number === num);
                         const questionId = qInfo?.id || num;
                         const userAns = answers[questionId] || '';
@@ -517,7 +592,6 @@ const FillBlanksContent = ({
                               />
                             </Box>
 
-                            {/* EXPLANATION CHO ĐIỀN TỪ (Style Listening) */}
                             {showResults && (
                               <Box sx={listeningPartStyles.explanationContainer}>
                                 <Typography sx={listeningPartStyles.correctText}>
@@ -539,6 +613,32 @@ const FillBlanksContent = ({
           </Box>
         </Box>
       </Container>
+    </Box>
+  );
+
+  return (
+    <Box sx={{ display: 'block', width: '100%', height: '100%' }}>
+      {showResults ? (
+        <Container
+          maxWidth="xl"
+          disableGutters
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column-reverse', md: 'row' },
+            alignItems: 'flex-start',
+            pr: { xs: 0, md: 2 },
+            bgcolor: 'background.gray', // Điều chỉnh BG theo yêu cầu
+          }}
+        >
+          <Box sx={{ flex: { xs: 1, md: 4 }, width: '100%', height: '100%' }}>{mainContent}</Box>
+          <SumaryPartTab
+            questions={partQuestions}
+            onNavigateToQuestion={handleNavigateToQuestion}
+          />
+        </Container>
+      ) : (
+        mainContent
+      )}
     </Box>
   );
 };

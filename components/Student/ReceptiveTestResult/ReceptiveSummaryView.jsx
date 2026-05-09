@@ -135,7 +135,7 @@ const ReceptiveSummaryView = ({
       }}
     >
       {/* Main Content (Similar to SummaryTab) */}
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Container maxWidth="lg" sx={{ mt: 3 }}>
         <Box sx={{ maxWidth: '900px', mx: 'auto' }}>
           {/* --- HERO CARD --- */}
           <Paper

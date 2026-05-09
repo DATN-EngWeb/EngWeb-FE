@@ -20,7 +20,7 @@ import {
 
 import ReceptiveReviewView from './ReceptiveReviewView';
 import ReceptiveSummaryView from './ReceptiveSummaryView';
-import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles'; // <-- Import style
+import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
 
 export default function ReceptiveTestResult({
   mode = 'summary',
@@ -438,7 +438,6 @@ export default function ReceptiveTestResult({
           display: 'flex',
           flexDirection: 'column',
           bgcolor: 'background.default',
-          overflow: showReview ? 'hidden' : 'auto',
         }}
       >
         {showReview ? (

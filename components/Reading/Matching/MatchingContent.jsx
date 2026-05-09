@@ -1,18 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Typography, Paper, Select, MenuItem, FormControl } from '@mui/material';
+import { Box, Container, Typography, Select, MenuItem, FormControl } from '@mui/material';
 import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded';
 import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
+import SumaryPartTab from '../../Student/ListeningTest/part/sumaryPartTab';
 
 import {
   containerStyles,
-  leftPaneStyles,
   passageTitleStyles,
-  passageTextStyles,
   rightPaneStyles,
-  instructionBoxStyles,
 } from '@/styles/Reading/MatchingStyles';
 
 const MatchingContent = ({
@@ -30,6 +28,8 @@ const MatchingContent = ({
   const containerRef = React.useRef(null);
   const [passageContent, setPassageContent] = useState(passage);
   const [processedSentences, setProcessedSentences] = useState(sentences);
+
+  const [targetQuestionId, setTargetQuestionId] = useState(null);
 
   // Fetch passage content if it's a URL
   useEffect(() => {
@@ -150,6 +150,94 @@ const MatchingContent = ({
     });
   };
 
+  // Logic cuộn trang và nảy Container Question khi click từ SumaryPartTab
+  useEffect(() => {
+    if (targetQuestionId && showResults) {
+      let retryCount = 0;
+      const maxRetries = 15;
+
+      const attemptScroll = () => {
+        const element = document.getElementById(`question-${targetQuestionId}`);
+
+        if (element && element.getBoundingClientRect().height > 0) {
+          window.requestAnimationFrame(() => {
+            element.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+            });
+
+            if (!document.getElementById('safe-bounce-style')) {
+              const style = document.createElement('style');
+              style.id = 'safe-bounce-style';
+              style.innerHTML = `
+                @keyframes slightBounce {
+                  0%, 100% { transform: translateY(0); }
+                  50% { transform: translateY(-2px); }
+                }
+                .safe-element-bounce {
+                  animation: slightBounce 0.3s ease-in-out 2;
+                }
+              `;
+              document.head.appendChild(style);
+            }
+
+            setTimeout(() => {
+              element.classList.add('safe-element-bounce');
+
+              setTimeout(() => {
+                element.classList.remove('safe-element-bounce');
+              }, 600);
+            }, 300);
+          });
+
+          setTargetQuestionId(null);
+        } else if (retryCount < maxRetries) {
+          retryCount++;
+          setTimeout(attemptScroll, 100);
+        }
+      };
+
+      const timer = setTimeout(attemptScroll, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [targetQuestionId, showResults]);
+
+  // Chuẩn bị dữ liệu trạng thái cho SumaryPartTab
+  const partQuestions = showResults
+    ? questions.map((q) => {
+        let userAnsRaw =
+          answers[q?.id] !== undefined && answers[q?.id] !== null
+            ? String(answers[q?.id]).trim()
+            : '';
+        let userAns = userAnsRaw;
+
+        // Map ID sang chữ cái nếu cần thiết như logic render
+        if (/^\d+$/.test(userAnsRaw)) {
+          const sentenceIndex = processedSentences.findIndex(
+            (s) => s.id === parseInt(userAnsRaw, 10),
+          );
+          if (sentenceIndex !== -1) {
+            userAns = String.fromCharCode(65 + sentenceIndex);
+          } else {
+            userAns = '';
+          }
+        }
+
+        const isAnswered = userAns.trim().length > 0;
+        const isCorrect = userAns === q?.correctLabel;
+
+        return {
+          id: q.id,
+          isAnswered,
+          isCorrect,
+        };
+      })
+    : [];
+
+  const handleNavigateToQuestion = (questionId) => {
+    setTargetQuestionId(questionId);
+  };
+
   const renderPassageWithGaps = () => {
     if (!passageContent) return null;
 
@@ -160,7 +248,8 @@ const MatchingContent = ({
     return <div dangerouslySetInnerHTML={{ __html: processedPassage }} />;
   };
 
-  return (
+  // Tách riêng nội dung chính thành một biến để dễ bọc Layout với SumaryPartTab
+  const mainContent = (
     <Box sx={{ ...containerStyles, flex: 1, width: '100%', overflow: 'hidden' }}>
       <Container maxWidth={false} disableGutters sx={{ height: '100%', px: 0 }}>
         <Box
@@ -495,6 +584,32 @@ const MatchingContent = ({
           </Box>
         </Box>
       </Container>
+    </Box>
+  );
+
+  return (
+    <Box sx={{ display: 'block', width: '100%', height: '100%' }}>
+      {showResults ? (
+        <Container
+          maxWidth="xl"
+          disableGutters
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column-reverse', md: 'row' },
+            alignItems: 'flex-start',
+            pr: { xs: 0, md: 2 },
+            bgcolor: 'background.gray',
+          }}
+        >
+          <Box sx={{ flex: { xs: 1, md: 4 }, width: '100%', height: '100%' }}>{mainContent}</Box>
+          <SumaryPartTab
+            questions={partQuestions}
+            onNavigateToQuestion={handleNavigateToQuestion}
+          />
+        </Container>
+      ) : (
+        mainContent
+      )}
     </Box>
   );
 };

@@ -44,7 +44,6 @@ import SummaryTab from './part/sumaryTab';
 import { useStreakContext } from '@/context/streakContext';
 import SubmitLoadingDialog from '../../Writing-Speaking/SubmitLoadingDialog';
 import SaveDraftToast from '../../Writing-Speaking/SaveDraftToast';
-import { ChevronLeftRounded } from '@mui/icons-material';
 
 export default function ListeningTestContent({ test_id, initialData }) {
   const router = useRouter();
@@ -816,7 +815,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
           <Typography
             sx={{
               ...listeningtestStyles.backButton,
-              // Thêm logic display: Ẩn hẳn (none) trên mobile (xs) khi ở trang đầu để chữ Section dạt ra sát mép trái
               display:
                 indexPart === -1 || (!isReadOnly && indexPart === 0)
                   ? { xs: 'none', md: 'flex' }

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Typography, Radio, RadioGroup, Paper, Chip } from '@mui/material';
+import { Box, Container, Typography, Radio, RadioGroup, Chip } from '@mui/material';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CircleIcon from '@mui/icons-material/Circle';
@@ -12,6 +12,7 @@ import {
 } from '@/styles/Reading/MultiChoiceReadingStyles';
 import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
+import SumaryPartTab from '../../Student/ListeningTest/part/sumaryPartTab';
 
 const MultiChoiceContent = ({
   passage = '',
@@ -25,6 +26,9 @@ const MultiChoiceContent = ({
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = React.useRef(null);
   const [passageContent, setPassageContent] = useState(passage);
+
+  // Thêm state để lưu câu hỏi mục tiêu khi click từ SumaryPartTab
+  const [targetQuestionId, setTargetQuestionId] = useState(null);
 
   // Lấy nội dung passage nếu nó là link từ storage
   useEffect(() => {
@@ -99,7 +103,83 @@ const MultiChoiceContent = ({
     onAnswerChange({ ...answers, [questionId]: value });
   };
 
-  return (
+  // Logic cuộn trang và nảy Container Question khi click từ SumaryPartTab
+  useEffect(() => {
+    if (targetQuestionId && showResults) {
+      let retryCount = 0;
+      const maxRetries = 15;
+
+      const attemptScroll = () => {
+        const element = document.getElementById(`question-${targetQuestionId}`);
+
+        if (element && element.getBoundingClientRect().height > 0) {
+          window.requestAnimationFrame(() => {
+            element.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+            });
+
+            if (!document.getElementById('safe-bounce-style')) {
+              const style = document.createElement('style');
+              style.id = 'safe-bounce-style';
+              style.innerHTML = `
+                @keyframes slightBounce {
+                  0%, 100% { transform: translateY(0); }
+                  50% { transform: translateY(-2px); }
+                }
+                .safe-element-bounce {
+                  animation: slightBounce 0.3s ease-in-out 2;
+                }
+              `;
+              document.head.appendChild(style);
+            }
+
+            setTimeout(() => {
+              element.classList.add('safe-element-bounce');
+
+              setTimeout(() => {
+                element.classList.remove('safe-element-bounce');
+              }, 600);
+            }, 300);
+          });
+
+          setTargetQuestionId(null);
+        } else if (retryCount < maxRetries) {
+          retryCount++;
+          setTimeout(attemptScroll, 100);
+        }
+      };
+
+      const timer = setTimeout(attemptScroll, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [targetQuestionId, showResults]);
+
+  // Chuẩn bị dữ liệu trạng thái cho SumaryPartTab
+  const partQuestions = showResults
+    ? questions.map((q) => {
+        const selectedValue = answers[q.id];
+        const isAnswered =
+          selectedValue !== undefined && selectedValue !== null && selectedValue !== '';
+
+        // Tìm option người dùng đã chọn để xác định tính đúng sai
+        const selectedOption = q.options?.find((o) => o.value === selectedValue);
+        const isCorrect = selectedOption?.isCorrect || false;
+
+        return {
+          id: q.id,
+          isAnswered,
+          isCorrect,
+        };
+      })
+    : [];
+
+  const handleNavigateToQuestion = (questionId) => {
+    setTargetQuestionId(questionId);
+  };
+
+  // Tách riêng nội dung chính thành một biến để dễ bọc Layout
+  const mainContent = (
     <Box sx={{ ...containerStyles, flex: 1, width: '100%', overflow: 'hidden' }}>
       <Container maxWidth={false} disableGutters sx={{ height: '100%', px: 0 }}>
         <Box
@@ -118,11 +198,10 @@ const MultiChoiceContent = ({
             sx={{
               ...listeningPartStyles.basicFlexColCenStart,
               width: { xs: '100%', md: `${leftWidth}%` },
-              mb: { xs: 2, md: 0 }, // Thêm margin bottom trên mobile cho thoáng
+              mb: { xs: 2, md: 0 },
               height: '100%',
               overflowY: 'auto',
               minHeight: 0,
-              // Giữ lại custom scrollbar cho Reading
               scrollbarWidth: 'thin',
               '&::-webkit-scrollbar': { width: '8px' },
               '&::-webkit-scrollbar-track': { background: 'transparent' },
@@ -144,6 +223,7 @@ const MultiChoiceContent = ({
               />
             </Box>
           </Box>
+
           {/* GIỮA: THANH KÉO (DRAG DIVIDER) */}
           <Box
             onMouseDown={() => setIsDragging(true)}
@@ -183,6 +263,7 @@ const MultiChoiceContent = ({
               ⇔
             </Box>
           </Box>
+
           {/* PHẢI: CÂU HỎI TRẮC NGHIỆM */}
           <Box
             sx={{
@@ -202,7 +283,6 @@ const MultiChoiceContent = ({
               },
             }}
           >
-            {/* INNER INSTRUCTION (Áp dụng từ Listening UI) */}
             <Box sx={listeningPartStyles.innerInstruction}>
               <LightbulbOutlinedIcon />
               <Typography sx={{ color: 'inherit', fontSize: 'inherit', fontWeight: 'inherit' }}>
@@ -213,8 +293,6 @@ const MultiChoiceContent = ({
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               {questions.map((question, index) => {
                 const selectedValue = answers[question.id] || '';
-
-                // Tìm đáp án đúng để hiển thị khi showResults
                 const correctOption = question.options?.find((o) => o.isCorrect);
                 const correctAnswerText = correctOption ? correctOption.label : '';
 
@@ -224,7 +302,6 @@ const MultiChoiceContent = ({
                     id={`question-${question.id}`}
                     sx={listeningPartStyles.questionContainerCol}
                   >
-                    {/* TIÊU ĐỀ CÂU HỎI */}
                     <Box sx={listeningPartStyles.questionTextContainer}>
                       <Typography sx={listeningPartStyles.questionLabelRectangle}>
                         {question.question_number || index + 1}
@@ -234,12 +311,8 @@ const MultiChoiceContent = ({
                         dangerouslySetInnerHTML={{ __html: question.question }}
                       />
                     </Box>
-                    {/* DANH SÁCH ĐÁP ÁN */}
                     <Box
-                      sx={{
-                        ...listeningPartStyles.audioAndOptionsContainer,
-                        pl: { xs: 0, md: 4 },
-                      }}
+                      sx={{ ...listeningPartStyles.audioAndOptionsContainer, pl: { xs: 0, md: 4 } }}
                     >
                       <Box sx={listeningPartStyles.optionsGridRow}>
                         <RadioGroup
@@ -359,8 +432,7 @@ const MultiChoiceContent = ({
                       </Box>
                     </Box>
 
-                    {/* GIẢI THÍCH (EXPLANATION) */}
-                    {showResults && (
+                    {showResults && correctOption && (
                       <Box sx={{ pr: { xs: 0, md: 4 }, pl: { xs: 0, md: 4 }, width: '100%' }}>
                         <Box sx={{ ...listeningPartStyles.explanationContainer }}>
                           <Typography sx={listeningPartStyles.correctText}>
@@ -381,6 +453,32 @@ const MultiChoiceContent = ({
           </Box>
         </Box>
       </Container>
+    </Box>
+  );
+
+  return (
+    <Box sx={{ display: 'block', width: '100%', height: '100%' }}>
+      {showResults ? (
+        <Container
+          maxWidth="xl"
+          disableGutters
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column-reverse', md: 'row' },
+            alignItems: 'flex-start',
+            pr: { xs: 0, md: 2 },
+            bgcolor: 'background.gray',
+          }}
+        >
+          <Box sx={{ flex: { xs: 1, md: 4 }, width: '100%', height: '100%' }}>{mainContent}</Box>
+          <SumaryPartTab
+            questions={partQuestions}
+            onNavigateToQuestion={handleNavigateToQuestion}
+          />
+        </Container>
+      ) : (
+        mainContent
+      )}
     </Box>
   );
 };

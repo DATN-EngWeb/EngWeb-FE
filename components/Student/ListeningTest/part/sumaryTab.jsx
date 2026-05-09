@@ -89,7 +89,7 @@ export default function SummaryTab({
     }) || [];
 
   return (
-    <Box sx={{ maxWidth: '900px', mx: 'auto', p: { xs: 2, md: 3 } }}>
+    <Box sx={{ maxWidth: '900px', mx: 'auto', pt: 3 }}>
       {/* --- HERO CARD --- */}
       <Paper
         elevation={4}
