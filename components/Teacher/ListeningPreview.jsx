@@ -202,6 +202,10 @@ export default function ListeningPreview({
         ...listeningtestStyles.mainContainer,
         position: 'relative',
         overflow: 'hidden',
+        borderRadius: 4,
+        border: '1px solid',
+        borderColor: 'dark.main',
+        boxShadow: '0 6px 16px rgba(61, 30, 25, 0.06)',
         '@media print': {
           overflow: 'visible !important',
           height: 'auto !important',

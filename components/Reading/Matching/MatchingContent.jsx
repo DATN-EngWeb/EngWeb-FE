@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { Box, Container, Typography, Select, MenuItem, FormControl } from '@mui/material';
 import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded';
 import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
@@ -23,7 +24,11 @@ const MatchingContent = ({
   showResults = false,
   onAnswerChange = () => {},
 }) => {
-  const [leftWidth, setLeftWidth] = useState(55); // percentage width for passage
+  const pathname = usePathname();
+  const isTeacherView = pathname?.includes('/teacher/view-test/');
+  const showSummary = showResults && !isTeacherView;
+
+  const [leftWidth, setLeftWidth] = useState(55);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = React.useRef(null);
   const [passageContent, setPassageContent] = useState(passage);
@@ -31,7 +36,7 @@ const MatchingContent = ({
 
   const [targetQuestionId, setTargetQuestionId] = useState(null);
 
-  // Fetch passage content if it's a URL
+  // Lấy nội dung bài đọc từ URL nếu passage là một link lưu trữ (Google Cloud Storage)
   useEffect(() => {
     setPassageContent(passage);
     const fetchContent = async () => {
@@ -53,7 +58,7 @@ const MatchingContent = ({
     fetchContent();
   }, [passage]);
 
-  // Fetch sentence content if it's a URL
+  // Tải nội dung cho từng câu/đoạn văn cần nối nếu dữ liệu trả về là dạng link (URL)
   useEffect(() => {
     setProcessedSentences(sentences);
     const fetchSentences = async () => {
@@ -82,7 +87,7 @@ const MatchingContent = ({
     fetchSentences();
   }, [sentences]);
 
-  // Handle drag to resize panes on desktop
+  // Xử lý logic kéo thả chuột hoặc cảm ứng để thay đổi tỷ lệ chiều rộng 2 cột trái/phải
   useEffect(() => {
     if (!isDragging) return;
 
@@ -138,6 +143,7 @@ const MatchingContent = ({
     };
   }, [isDragging]);
 
+  // Lưu đáp án nối cục bộ của người dùng và truyền lên component cha qua hàm onAnswerChange
   const handleAnswerChangeLocal = (gapNumber, value) => {
     if (showResults) return;
 
@@ -150,9 +156,9 @@ const MatchingContent = ({
     });
   };
 
-  // Logic cuộn trang và nảy Container Question khi click từ SumaryPartTab
+  // Tự động cuộn mượt và tạo hiệu ứng nhún (bounce) tới câu hỏi được click từ bảng tóm tắt
   useEffect(() => {
-    if (targetQuestionId && showResults) {
+    if (targetQuestionId && showSummary) {
       let retryCount = 0;
       const maxRetries = 15;
 
@@ -200,10 +206,10 @@ const MatchingContent = ({
       const timer = setTimeout(attemptScroll, 200);
       return () => clearTimeout(timer);
     }
-  }, [targetQuestionId, showResults]);
+  }, [targetQuestionId, showSummary]);
 
-  // Chuẩn bị dữ liệu trạng thái cho SumaryPartTab
-  const partQuestions = showResults
+  // Chuyển đổi đáp án nối của người dùng thành định dạng chuẩn để chấm điểm trong SumaryPartTab
+  const partQuestions = showSummary
     ? questions.map((q) => {
         let userAnsRaw =
           answers[q?.id] !== undefined && answers[q?.id] !== null
@@ -211,7 +217,6 @@ const MatchingContent = ({
             : '';
         let userAns = userAnsRaw;
 
-        // Map ID sang chữ cái nếu cần thiết như logic render
         if (/^\d+$/.test(userAnsRaw)) {
           const sentenceIndex = processedSentences.findIndex(
             (s) => s.id === parseInt(userAnsRaw, 10),
@@ -238,6 +243,7 @@ const MatchingContent = ({
     setTargetQuestionId(questionId);
   };
 
+  // Xử lý văn bản bài đọc: thay thế các tag đánh dấu (ví dụ [1]) thành khối UI số thứ tự
   const renderPassageWithGaps = () => {
     if (!passageContent) return null;
 
@@ -248,10 +254,10 @@ const MatchingContent = ({
     return <div dangerouslySetInnerHTML={{ __html: processedPassage }} />;
   };
 
-  // Tách riêng nội dung chính thành một biến để dễ bọc Layout với SumaryPartTab
   const mainContent = (
     <Box sx={{ ...containerStyles, flex: 1, width: '100%', overflow: 'hidden' }}>
       <Container maxWidth={false} disableGutters sx={{ height: '100%', px: 0 }}>
+        {/* Box chính chứa cả bài đọc (cột trái) và phần câu hỏi/câu trả lời nối (cột phải) */}
         <Box
           ref={containerRef}
           sx={{
@@ -263,16 +269,14 @@ const MatchingContent = ({
             py: 2,
           }}
         >
-          {/* TRÁI: PASSAGE (BÀI ĐỌC) */}
           <Box
             sx={{
               ...listeningPartStyles.basicFlexColCenStart,
               width: { xs: '100%', md: `${leftWidth}%` },
-              mb: { xs: 2, md: 0 }, // Thêm margin bottom trên mobile cho thoáng
+              mb: { xs: 2, md: 0 },
               height: '100%',
               overflowY: 'auto',
               minHeight: 0,
-              // Giữ lại custom scrollbar cho Reading
               scrollbarWidth: 'thin',
               '&::-webkit-scrollbar': { width: '8px' },
               '&::-webkit-scrollbar-track': { background: 'transparent' },
@@ -286,7 +290,7 @@ const MatchingContent = ({
             {passageTitle && <Typography sx={passageTitleStyles}>{passageTitle}</Typography>}
             <Box sx={listeningPartStyles.passageContainer}>{renderPassageWithGaps()}</Box>
           </Box>
-          {/* GIỮA: DRAG DIVIDER (THANH KÉO) */}
+          {/* Thanh điều khiển (divider) cho phép người dùng kéo qua lại để đổi chiều rộng 2 cột */}
           <Box
             onMouseDown={() => setIsDragging(true)}
             onTouchStart={() => setIsDragging(true)}
@@ -336,7 +340,7 @@ const MatchingContent = ({
               ⇔
             </Box>
           </Box>
-          {/* PHẢI: QUESTIONS (CÂU HỎI MATCHING) */}
+          {/* Khu vực bên phải: Hiển thị hướng dẫn và phần tương tác chọn đáp án nối (Matching) */}
           <Box
             sx={{
               ...rightPaneStyles,
@@ -370,7 +374,6 @@ const MatchingContent = ({
                 },
               }}
             >
-              {/* Instruction Section */}
               <Box sx={listeningPartStyles.instructionContainer}>
                 <ErrorRoundedIcon sx={{ color: 'red.text', fontSize: '1.5rem', mt: 0.2 }} />
                 <Box sx={listeningPartStyles.instructionWrapper}>
@@ -397,7 +400,6 @@ const MatchingContent = ({
                   </Typography>
                 </Box>
               </Box>
-              {/* Content Section */}
               <Box sx={listeningPartStyles.questionSection}>
                 <Box sx={listeningPartStyles.innerInstruction}>
                   <Typography sx={{ color: 'inherit', fontSize: 'inherit', fontWeight: 'inherit' }}>
@@ -415,19 +417,17 @@ const MatchingContent = ({
                     },
                   }}
                 >
-                  {/* CỘT TRÁI: DANH SÁCH CÂU HỎI (CÁC GAPS VÀ Ô CHỌN ĐÁP ÁN) */}
+                  {/* Danh sách các ô trống để người dùng chọn câu trả lời tương ứng (Select box) */}
                   <Box sx={listeningPartStyles.questionContainerCol}>
                     {gaps.map((gapNumber) => {
                       const q = questions.find((qu) => qu.question_number === gapNumber);
 
-                      // 1. Lấy answer gốc từ props
                       let userAnsRaw =
                         answers[q?.id] !== undefined && answers[q?.id] !== null
                           ? String(answers[q?.id]).trim()
                           : '';
                       let userAns = userAnsRaw;
 
-                      // 2. Nếu answer là một ID (chuỗi số), map nó sang nhãn A, B, C... dựa vào processedSentences
                       if (/^\d+$/.test(userAnsRaw)) {
                         const sentenceIndex = processedSentences.findIndex(
                           (s) => s.id === parseInt(userAnsRaw, 10),
@@ -435,13 +435,12 @@ const MatchingContent = ({
                         if (sentenceIndex !== -1) {
                           userAns = String.fromCharCode(65 + sentenceIndex);
                         } else {
-                          userAns = ''; // fallback nếu không tìm thấy ID
+                          userAns = '';
                         }
                       }
 
-                      // 3. Sử dụng userAns đã được map cho UI
                       const isAnswered = userAns.trim().length > 0;
-                      const isCorrect = showResults ? userAns === q?.correctLabel : null;
+                      const isCorrect = showSummary ? userAns === q?.correctLabel : null;
 
                       return (
                         <Box
@@ -451,22 +450,21 @@ const MatchingContent = ({
                             display: 'flex',
                             flexDirection: 'column',
                             width: '100%',
-                            mb: showResults ? 2 : 0,
+                            mb: showSummary ? 2 : 0,
                           }}
                         >
                           <Box
                             sx={{
                               ...listeningPartStyles.questionContainerRow,
-                              mb: showResults ? 1 : 0,
-                              justifyContent: 'space-between', // Đẩy vòng tròn và Select ra 2 mép
+                              mb: showSummary ? 1 : 0,
+                              justifyContent: 'space-between',
                               gap: 2,
                             }}
                           >
-                            {/* Vòng tròn số */}
                             <Typography
                               sx={{
                                 ...listeningPartStyles.questionLabelCircle,
-                                ...(showResults &&
+                                ...(showSummary &&
                                   isAnswered && {
                                     backgroundColor: isCorrect ? 'success.main' : 'error.main',
                                     color: '#fff',
@@ -477,11 +475,10 @@ const MatchingContent = ({
                               {gapNumber}
                             </Typography>
 
-                            {/* Ô Select chọn đáp án A, B, C... */}
                             <FormControl
                               sx={{
                                 width: '100%',
-                                maxWidth: '150px', // Đặt max width để không bị giãn quá to
+                                maxWidth: '150px',
                               }}
                             >
                               <Select
@@ -499,7 +496,7 @@ const MatchingContent = ({
                                     py: 1,
                                     px: 2,
                                   },
-                                  ...(showResults &&
+                                  ...(showSummary &&
                                     isAnswered && {
                                       color: isCorrect ? '#4caf50' : '#f44336',
                                       fontWeight: 600,
@@ -530,8 +527,7 @@ const MatchingContent = ({
                             </FormControl>
                           </Box>
 
-                          {/* HIỂN THỊ ĐÁP ÁN ĐÚNG VÀ GIẢI THÍCH KHI CÓ KẾT QUẢ */}
-                          {showResults && (
+                          {showSummary && (
                             <Box sx={listeningPartStyles.explanationContainer}>
                               <Typography sx={listeningPartStyles.correctText}>
                                 Correct Answer: {q?.correctLabel || 'N/A'}
@@ -547,7 +543,7 @@ const MatchingContent = ({
                       );
                     })}
                   </Box>
-                  {/* CỘT PHẢI: DANH SÁCH CÁC LỰA CHỌN ĐỂ MATCH (A. Text, B. Text...) */}
+                  {/* Danh sách các câu/đoạn văn bản có thể được chọn (hiển thị kèm chữ cái A, B, C...) */}
                   <Box sx={{ ...listeningPartStyles.questionContainerCol, gap: 0 }}>
                     {processedSentences.map((sentence, index) => (
                       <Box
@@ -589,7 +585,8 @@ const MatchingContent = ({
 
   return (
     <Box sx={{ display: 'block', width: '100%', height: '100%' }}>
-      {showResults ? (
+      {/* Hiển thị layout chia đôi (kèm bảng tóm tắt) ở chế độ xem kết quả hoặc layout mặc định */}
+      {showSummary ? (
         <Container
           maxWidth="xl"
           disableGutters

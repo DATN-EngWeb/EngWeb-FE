@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { Box, Container, Typography, Radio, RadioGroup, Chip } from '@mui/material';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
@@ -22,15 +23,18 @@ const MultiChoiceContent = ({
   showResults = false,
   onAnswerChange = () => {},
 }) => {
+  const pathname = usePathname();
+  const isTeacherView = pathname?.includes('/teacher/view-test/');
+  const showSummary = showResults && !isTeacherView;
+
   const [leftWidth, setLeftWidth] = useState(55);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = React.useRef(null);
   const [passageContent, setPassageContent] = useState(passage);
 
-  // Thêm state để lưu câu hỏi mục tiêu khi click từ SumaryPartTab
   const [targetQuestionId, setTargetQuestionId] = useState(null);
 
-  // Lấy nội dung passage nếu nó là link từ storage
+  // Lấy nội dung bài đọc từ URL nếu passage là một link lưu trữ (như Google Cloud Storage)
   useEffect(() => {
     setPassageContent(passage);
     const fetchContent = async () => {
@@ -52,7 +56,7 @@ const MultiChoiceContent = ({
     fetchContent();
   }, [passage]);
 
-  // Logic kéo thả chia độ rộng màn hình
+  // Xử lý sự kiện kéo thả chuột hoặc cảm ứng để thay đổi tỷ lệ chiều rộng 2 cột trái/phải
   useEffect(() => {
     if (!isDragging) return;
     const handleMouseMove = (event) => {
@@ -98,14 +102,15 @@ const MultiChoiceContent = ({
     };
   }, [isDragging]);
 
+  // Lưu trữ đáp án người dùng chọn và truyền lên component cha thông qua onAnswerChange
   const handleAnswerSelection = (questionId, value) => {
     if (showResults) return;
     onAnswerChange({ ...answers, [questionId]: value });
   };
 
-  // Logic cuộn trang và nảy Container Question khi click từ SumaryPartTab
+  // Tự động cuộn mượt và thêm hiệu ứng nhún (bounce) tới câu hỏi được chọn từ bảng tóm tắt
   useEffect(() => {
-    if (targetQuestionId && showResults) {
+    if (targetQuestionId && showSummary) {
       let retryCount = 0;
       const maxRetries = 15;
 
@@ -153,16 +158,15 @@ const MultiChoiceContent = ({
       const timer = setTimeout(attemptScroll, 200);
       return () => clearTimeout(timer);
     }
-  }, [targetQuestionId, showResults]);
+  }, [targetQuestionId, showSummary]);
 
-  // Chuẩn bị dữ liệu trạng thái cho SumaryPartTab
-  const partQuestions = showResults
+  // Đánh giá trạng thái đúng/sai của từng câu hỏi để hiển thị bên trong SumaryPartTab
+  const partQuestions = showSummary
     ? questions.map((q) => {
         const selectedValue = answers[q.id];
         const isAnswered =
           selectedValue !== undefined && selectedValue !== null && selectedValue !== '';
 
-        // Tìm option người dùng đã chọn để xác định tính đúng sai
         const selectedOption = q.options?.find((o) => o.value === selectedValue);
         const isCorrect = selectedOption?.isCorrect || false;
 
@@ -174,14 +178,15 @@ const MultiChoiceContent = ({
       })
     : [];
 
+  // Đặt ID mục tiêu để kích hoạt trigger cuộn đến câu hỏi khi nhấn vào bảng tóm tắt
   const handleNavigateToQuestion = (questionId) => {
     setTargetQuestionId(questionId);
   };
 
-  // Tách riêng nội dung chính thành một biến để dễ bọc Layout
   const mainContent = (
     <Box sx={{ ...containerStyles, flex: 1, width: '100%', overflow: 'hidden' }}>
       <Container maxWidth={false} disableGutters sx={{ height: '100%', px: 0 }}>
+        {/* Layout chính chứa cột bài đọc (trái), thanh chia (giữa) và danh sách câu hỏi (phải) */}
         <Box
           ref={containerRef}
           sx={{
@@ -193,7 +198,6 @@ const MultiChoiceContent = ({
             py: 2,
           }}
         >
-          {/* TRÁI: ĐOẠN VĂN (PASSAGE) */}
           <Box
             sx={{
               ...listeningPartStyles.basicFlexColCenStart,
@@ -224,7 +228,6 @@ const MultiChoiceContent = ({
             </Box>
           </Box>
 
-          {/* GIỮA: THANH KÉO (DRAG DIVIDER) */}
           <Box
             onMouseDown={() => setIsDragging(true)}
             onTouchStart={() => setIsDragging(true)}
@@ -264,7 +267,7 @@ const MultiChoiceContent = ({
             </Box>
           </Box>
 
-          {/* PHẢI: CÂU HỎI TRẮC NGHIỆM */}
+          {/* Khu vực cột phải: Hiển thị hướng dẫn, danh sách các câu hỏi và tùy chọn */}
           <Box
             sx={{
               ...listeningPartStyles.questionSection,
@@ -290,6 +293,7 @@ const MultiChoiceContent = ({
               </Typography>
             </Box>
 
+            {/* Vòng lặp render từng câu hỏi trắc nghiệm và danh sách các phương án A, B, C, D */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               {questions.map((question, index) => {
                 const selectedValue = answers[question.id] || '';
@@ -334,7 +338,7 @@ const MultiChoiceContent = ({
                                 sx={{
                                   ...multipleChoiceStyles.optionContainer,
                                   cursor: showResults ? 'default' : 'pointer',
-                                  ...(showResults &&
+                                  ...(showSummary &&
                                     isSelected && {
                                       border: `1px solid ${isCorrect ? '#4caf50' : '#f44336'}`,
                                       backgroundColor: isCorrect
@@ -357,7 +361,7 @@ const MultiChoiceContent = ({
                                       <RadioButtonUncheckedIcon
                                         sx={{
                                           ...multipleChoiceStyles.outerCircle,
-                                          ...(showResults &&
+                                          ...(showSummary &&
                                             isSelected && {
                                               color: isCorrect ? 'success.main' : 'error.main',
                                             }),
@@ -366,7 +370,7 @@ const MultiChoiceContent = ({
                                       <CircleIcon
                                         sx={{
                                           ...multipleChoiceStyles.innerCircle,
-                                          ...(showResults &&
+                                          ...(showSummary &&
                                             isSelected && {
                                               color: isCorrect ? 'success.main' : 'error.main',
                                             }),
@@ -376,7 +380,7 @@ const MultiChoiceContent = ({
                                   }
                                   sx={{
                                     ...multipleChoiceStyles.checkboxRoot,
-                                    ...(showResults &&
+                                    ...(showSummary &&
                                       isSelected && {
                                         color: isCorrect ? 'success.main' : 'error.main',
                                         '&.Mui-checked': {
@@ -389,7 +393,7 @@ const MultiChoiceContent = ({
                                   sx={{
                                     ...multipleChoiceStyles.optionLabel,
                                     flexShrink: 0,
-                                    ...(showResults &&
+                                    ...(showSummary &&
                                       isSelected && {
                                         color: isCorrect ? '#4caf50' : '#f44336',
                                         fontWeight: 600,
@@ -403,7 +407,7 @@ const MultiChoiceContent = ({
                                     ...multipleChoiceStyles.optionLabel,
                                     fontWeight: 400,
                                     flex: 1,
-                                    ...(showResults &&
+                                    ...(showSummary &&
                                       isSelected && {
                                         color: isCorrect ? '#4caf50' : '#f44336',
                                         fontWeight: 500,
@@ -412,7 +416,7 @@ const MultiChoiceContent = ({
                                 >
                                   {option.answer_text || option.text || option.label}
                                 </Typography>
-                                {showResults && isCorrect && (
+                                {showSummary && isCorrect && (
                                   <Chip
                                     label="Correct"
                                     size="small"
@@ -432,7 +436,8 @@ const MultiChoiceContent = ({
                       </Box>
                     </Box>
 
-                    {showResults && correctOption && (
+                    {/* Hiển thị đáp án đúng và lời giải chi tiết (explanation) khi xem lại kết quả bài làm */}
+                    {showSummary && correctOption && (
                       <Box sx={{ pr: { xs: 0, md: 4 }, pl: { xs: 0, md: 4 }, width: '100%' }}>
                         <Box sx={{ ...listeningPartStyles.explanationContainer }}>
                           <Typography sx={listeningPartStyles.correctText}>
@@ -458,7 +463,7 @@ const MultiChoiceContent = ({
 
   return (
     <Box sx={{ display: 'block', width: '100%', height: '100%' }}>
-      {showResults ? (
+      {showSummary ? (
         <Container
           maxWidth="xl"
           disableGutters

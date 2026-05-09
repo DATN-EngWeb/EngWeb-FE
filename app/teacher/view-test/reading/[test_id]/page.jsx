@@ -115,7 +115,7 @@ export default function ViewReadingTestPage({ params }) {
     };
 
     fetchData();
-  }, [test_id]);
+  }, [test_id, router]);
 
   if (loading) {
     return (

@@ -1,19 +1,13 @@
 'use client';
 
-import React, { useRef, useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  Box,
-  Typography,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import React, { useState, useMemo } from 'react';
+import { Box, Typography, Dialog, Button, Container } from '@mui/material';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import FillBlanksContent from '../../Reading/FillBlanks/FillBlanksContent';
 import MatchingContent from '../../Reading/Matching/MatchingContent';
 import MultiChoiceContent from '../../Reading/MultiChoice/MultiChoiceContent';
+import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
 
 const getReadingPartTypeLabel = (format) => {
   switch (format) {
@@ -33,12 +27,9 @@ const getReadingPartTypeLabel = (format) => {
 };
 
 const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButton = true }) => {
-  const router = useRouter();
   const [currentPartIndex, setCurrentPartIndex] = useState(0);
 
   const parts = testData?.parts || [];
-  const partTitles = parts.map((_part, index) => `Part ${index + 1}`);
-
   const currentPart = parts[currentPartIndex];
 
   const handlePartChange = (newIndex) => {
@@ -51,43 +42,37 @@ const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButto
     if (!currentPart) return null;
 
     const commonProps = {
-      testName: testData?.test?.title || testData?.title || '',
-      partLabel: `Part ${currentPartIndex + 1}: ${getReadingPartTypeLabel(currentPart.format)}`,
-      parts: partTitles,
-      currentPart: currentPartIndex + 1,
       passage: currentPart.content || '',
       passageTitle: currentPart.description || '',
-      onPartChange: handlePartChange,
-      isTeacher: true,
-      onSubmit: null,
-      onBack: () => handlePartChange(currentPartIndex - 1),
-      onNext: () => handlePartChange(currentPartIndex + 1),
-      currentSection: currentPartIndex + 1,
-      totalSections: parts.length,
-      onExit: showBackButton ? onClose : undefined,
-      embedded: inline,
+      answers: {}, // Preview của giáo viên không cần lưu câu trả lời
+      onAnswerChange: () => {},
+      showResults: true, // QUAN TRỌNG: Để disabled các input và hiện đáp án
     };
 
     switch (currentPart.format) {
-      case 'F': // Multiple Choice Short
-      case 'G': // Multiple Choice Long
+      case 'F':
+      case 'G':
         return {
           component: MultiChoiceContent,
           props: {
             ...commonProps,
             questions: currentPart.questions.map((q) => ({
               id: q.id,
+              question_number: q.question_number,
               question: q.content || `Question ${q.question_number}`,
-              options: q.answers.map((a, index) => ({
+              explanation: q.explanation,
+              options: q.answers.map((a, idx) => ({
                 value: String(a.id || a.option_label),
-                label: `${a.option_label && a.option_label !== 'undefined' && a.option_label !== 'null' ? a.option_label : String.fromCharCode(65 + index)}. ${a.answer_text || ''}`,
+                option_label: a.option_label || String.fromCharCode(65 + idx),
+                label: a.answer_text || '',
+                isCorrect: a.is_correct || false,
               })),
             })),
           },
         };
 
-      case 'I': // Fill Blanks Text
-      case 'H': // Fill Blanks Choice
+      case 'I':
+      case 'H':
         return {
           component: FillBlanksContent,
           props: {
@@ -97,96 +82,178 @@ const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButto
               id: q.id,
               question_number: q.question_number,
               question: q.content || `Question ${q.question_number}`,
+              explanation: q.explanation,
+              correctText: q.answers?.[0]?.answer_text || '',
               options:
                 currentPart.format === 'H'
-                  ? q.answers.map((a, index) => ({
+                  ? q.answers.map((a, idx) => ({
                       value: String(a.id || a.option_label),
-                      label: `${a.option_label && a.option_label !== 'undefined' && a.option_label !== 'null' ? a.option_label : String.fromCharCode(65 + index)}. ${a.answer_text || ''}`,
+                      option_label: a.option_label || String.fromCharCode(65 + idx),
+                      label: a.answer_text || '',
+                      isCorrect: a.is_correct || false,
                     }))
                   : [],
             })),
           },
         };
 
-      case 'J': {
-        const activeQuestions = currentPart.questions.filter((q) => q.action !== 'delete');
-        const sentences = activeQuestions.map((q) => ({
-          id: q.id,
-          text: q.content || q.text || q.explanation || '', // Support both content and text, fallback to explanation
-        }));
-
-        const gaps = activeQuestions.map((q) => q.question_number).sort((a, b) => a - b);
-
+      case 'J':
         return {
           component: MatchingContent,
           props: {
             ...commonProps,
-            sentences: sentences,
-            gaps: gaps,
-            passage: currentPart.content || '',
+            sentences: currentPart.questions.map((q) => ({
+              id: q.id,
+              text: q.content || q.text || '',
+            })),
+            gaps: currentPart.questions.map((q) => q.question_number).sort((a, b) => a - b),
+            questions: currentPart.questions.map((q) => ({
+              id: q.id,
+              question_number: q.question_number,
+              explanation: q.explanation,
+              correctLabel: q.answers?.[0]?.option_label || '',
+            })),
           },
         };
-      }
 
       default:
         return null;
     }
-  }, [currentPart, currentPartIndex, onClose, parts, partTitles, showBackButton, testData]);
+  }, [currentPart]);
 
-  if (!open && !inline) return null;
-
-  const ContentComponent = transformedData?.component;
-
-  if (inline) {
-    return (
-      <Box>
-        {ContentComponent ? (
-          <ContentComponent {...transformedData.props} />
-        ) : (
-          <Box sx={{ p: 4, textAlign: 'center' }}>
-            <Typography color="text.secondary">
-              {parts.length === 0
-                ? 'No parts added yet.'
-                : 'This part type is not supported for preview yet or is invalid.'}
-            </Typography>
-          </Box>
-        )}
-      </Box>
-    );
-  }
-
-  return (
+  const mainLayout = (
     <Box
       sx={{
-        position: 'relative',
-        height: '100%',
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
+        bgcolor: 'background.paper',
+        borderRadius: 4,
+        border: '1px solid',
+        borderColor: 'dark.main',
+        boxShadow: '0 6px 16px rgba(61, 30, 25, 0.06)',
+        overflow: 'hidden',
       }}
     >
+      {/* KHỐI 1: TEST HEADING */}
+      <Box
+        maxWidth="lg"
+        sx={{ ...listeningtestStyles.testHeadingContainer, mx: 'auto', width: '100%' }}
+      >
+        <Box sx={{ ...listeningtestStyles.timeLeft, visibility: 'hidden' }}>
+          <AccessTimeIcon sx={{ fontSize: 28, mr: 0.5 }} />
+          00:00
+        </Box>
+        <Box sx={listeningtestStyles.nameTestAndFormatPart}>
+          <Typography sx={listeningtestStyles.nameTest}>{testData?.title || 'Preview'}</Typography>
+          <Typography sx={listeningtestStyles.formatName}>
+            Part {currentPartIndex + 1}: {getReadingPartTypeLabel(currentPart?.format)}
+          </Typography>
+        </Box>
+        <Box sx={{ ...listeningtestStyles.summitButtonWrapper, visibility: 'hidden' }}>
+          <Button disabled>Submit</Button>
+        </Box>
+      </Box>
+
+      {/* KHỐI 2: LIST PART SELECTION */}
+      <Box
+        maxWidth="lg"
+        sx={{ ...listeningtestStyles.listPartContainer, mx: 'auto', width: '100%' }}
+      >
+        {parts.map((_, index) => (
+          <Box
+            key={index}
+            onClick={() => handlePartChange(index)}
+            sx={{
+              ...listeningtestStyles.boxPart,
+              ...(index === currentPartIndex && {
+                backgroundColor: 'background.default',
+                borderColor: 'orange.light',
+                color: 'orange.dark',
+              }),
+            }}
+          >
+            Part {index + 1}
+          </Box>
+        ))}
+      </Box>
+      <Box sx={{ ...listeningtestStyles.separatorLine, backgroundColor: 'gray.main' }} />
+
+      {/* KHỐI 3: CONTENT VIEW */}
       <Box
         sx={{
+          width: '100%',
           flex: 1,
-          overflow: 'hidden',
-          '@media print': {
-            display: 'none', // Hide on-screen preview when printing
-          },
+          display: 'flex',
+          bgcolor: 'background.default',
+          minHeight: '60vh',
         }}
       >
-        {ContentComponent ? (
-          <ContentComponent {...transformedData.props} />
+        {transformedData?.component ? (
+          <transformedData.component {...transformedData.props} />
         ) : (
-          <Box sx={{ p: 4, textAlign: 'center' }}>
-            <Typography color="text.secondary">
-              {parts.length === 0
-                ? 'No parts added yet.'
-                : 'This part type is not supported for preview yet or is invalid.'}
-            </Typography>
+          <Box sx={{ p: 4, textAlign: 'center', width: '100%' }}>
+            <Typography color="text.secondary">No content available for preview.</Typography>
           </Box>
         )}
       </Box>
+
+      {/* KHỐI 4: STEPPER NAVIGATION */}
+      <Box sx={{ width: '100%', backgroundColor: 'background.gray' }}>
+        <Container maxWidth="lg" sx={listeningtestStyles.stepperContainer}>
+          <Typography
+            sx={{
+              ...listeningtestStyles.backButton,
+              visibility: currentPartIndex === 0 ? 'hidden' : 'visible',
+            }}
+            onClick={() => {
+              handlePartChange(currentPartIndex - 1);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          >
+            <ExpandLessIcon
+              sx={{ fontSize: '1.8rem', color: 'gray.main', transform: 'rotate(270deg)' }}
+            />
+            Prev
+          </Typography>
+          <Typography sx={{ fontSize: '1rem' }}>
+            Section {currentPartIndex + 1} of {parts.length}
+          </Typography>
+          <Box sx={listeningtestStyles.summitButtonWrapper}>
+            {currentPartIndex !== parts.length - 1 && (
+              <Button
+                sx={listeningtestStyles.nextButton}
+                onClick={() => {
+                  handlePartChange(currentPartIndex + 1);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              >
+                Next
+              </Button>
+            )}
+          </Box>
+        </Container>
+      </Box>
     </Box>
+  );
+
+  if (inline) return mainLayout;
+
+  return (
+    <Dialog fullScreen open={open} onClose={onClose}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', position: 'relative' }}>
+        {showBackButton && (
+          <Button
+            onClick={onClose}
+            sx={{ position: 'absolute', right: 20, top: 20, zIndex: 1000 }}
+            variant="outlined"
+          >
+            Close Preview
+          </Button>
+        )}
+        {mainLayout}
+      </Box>
+    </Dialog>
   );
 };
 

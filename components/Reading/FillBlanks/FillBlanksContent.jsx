@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { Box, Container, Typography, TextField, Radio, RadioGroup, Chip } from '@mui/material';
 import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
@@ -13,7 +14,7 @@ import {
 } from '@/styles/Reading/FillBlanksStyles';
 import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
-import SumaryPartTab from '../../Student/ListeningTest/part/sumaryPartTab'; // Đã import component
+import SumaryPartTab from '../../Student/ListeningTest/part/sumaryPartTab';
 
 const FillBlanksContent = ({
   passage = '',
@@ -24,15 +25,18 @@ const FillBlanksContent = ({
   showResults = false,
   onAnswerChange = () => {},
 }) => {
+  const pathname = usePathname();
+  const isTeacherView = pathname?.includes('/teacher/view-test/');
+  const showSummary = showResults && !isTeacherView;
+
   const [leftWidth, setLeftWidth] = useState(55);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = React.useRef(null);
   const [passageContent, setPassageContent] = useState(passage);
 
-  // Thêm state để lưu câu hỏi mục tiêu khi click từ SumaryPartTab
   const [targetQuestionId, setTargetQuestionId] = useState(null);
 
-  // Load đoạn văn (Fetch nếu là URL)
+  // Lấy nội dung bài đọc từ URL nếu passage là một link lưu trữ (Google Cloud Storage)
   useEffect(() => {
     setPassageContent(passage);
     const fetchContent = async () => {
@@ -54,7 +58,7 @@ const FillBlanksContent = ({
     fetchContent();
   }, [passage]);
 
-  // Logic kéo thả để chia đôi màn hình
+  // Xử lý logic kéo thả chuột hoặc cảm ứng để thay đổi tỷ lệ chiều rộng 2 cột trái/phải
   useEffect(() => {
     if (!isDragging) return;
     const handleMouseMove = (event) => {
@@ -100,11 +104,13 @@ const FillBlanksContent = ({
     };
   }, [isDragging]);
 
+  // Cập nhật state đáp án cục bộ và truyền dữ liệu lên component cha qua onAnswerChange
   const handleAnswerChangeLocal = (questionOrBlankId, value) => {
     if (showResults) return;
     onAnswerChange({ ...answers, [questionOrBlankId]: value });
   };
 
+  // Biến đổi văn bản bài đọc: thay thế các ký tự đánh dấu thành khối UI số thứ tự hoặc đường gạch dưới
   const renderPassageWithBlanks = () => {
     if (!passageContent) return null;
     const processPassage = passageContent
@@ -117,13 +123,12 @@ const FillBlanksContent = ({
     return <div dangerouslySetInnerHTML={{ __html: processPassage }} />;
   };
 
-  // Xác định định dạng là Trắc nghiệm điền từ (có options) hay Tự luận điền từ
   const isMultiChoiceFormat =
     questions && questions.length > 0 && questions.some((q) => q.options && q.options.length > 1);
 
-  // Logic cuộn trang và nảy Container Question khi click từ SumaryPartTab
+  // Tự động cuộn mượt và tạo hiệu ứng nhún (bounce) tới câu hỏi được click từ bảng tóm tắt
   useEffect(() => {
-    if (targetQuestionId && showResults) {
+    if (targetQuestionId && showSummary) {
       let retryCount = 0;
       const maxRetries = 15;
 
@@ -171,10 +176,10 @@ const FillBlanksContent = ({
       const timer = setTimeout(attemptScroll, 200);
       return () => clearTimeout(timer);
     }
-  }, [targetQuestionId, showResults]);
+  }, [targetQuestionId, showSummary]);
 
-  // Chuẩn bị dữ liệu trạng thái cho SumaryPartTab
-  const partQuestions = showResults
+  // Đánh giá trạng thái đã trả lời và đúng/sai cho từng ô trống để render trên SumaryPartTab
+  const partQuestions = showSummary
     ? isMultiChoiceFormat
       ? questions.map((q) => {
           const selectedValue = answers[q.id];
@@ -197,14 +202,15 @@ const FillBlanksContent = ({
         })
     : [];
 
+  // Kích hoạt cuộn màn hình đến vị trí câu hỏi mục tiêu khi click trên bảng tóm tắt
   const handleNavigateToQuestion = (questionId) => {
     setTargetQuestionId(questionId);
   };
 
-  // Tách nội dung chính
   const mainContent = (
     <Box sx={{ ...containerStyles, flex: 1, width: '100%', overflow: 'hidden' }}>
       <Container maxWidth={false} disableGutters sx={{ height: '100%', px: 0 }}>
+        {/* Box chính chứa cả bài đọc (cột trái) và danh sách câu hỏi/ô điền (cột phải) */}
         <Box
           ref={containerRef}
           sx={{
@@ -216,7 +222,6 @@ const FillBlanksContent = ({
             py: 2,
           }}
         >
-          {/* TRÁI: PASSAGE (BÀI ĐỌC) */}
           <Box
             sx={{
               ...listeningPartStyles.basicFlexColCenStart,
@@ -238,7 +243,7 @@ const FillBlanksContent = ({
             {passageTitle && <Typography sx={passageTitleStyles}>{passageTitle}</Typography>}
             <Box sx={listeningPartStyles.passageContainer}>{renderPassageWithBlanks()}</Box>
           </Box>
-          {/* GIỮA: DRAG DIVIDER */}
+          {/* Thanh điều khiển (divider) cho phép người dùng kéo qua lại để đổi chiều rộng cột */}
           <Box
             onMouseDown={() => setIsDragging(true)}
             onTouchStart={() => setIsDragging(true)}
@@ -277,7 +282,7 @@ const FillBlanksContent = ({
               ⇔
             </Box>
           </Box>
-          {/* PHẢI: QUESTIONS & BLANKS */}
+          {/* Khu vực bên phải: Hiển thị hướng dẫn và danh sách các câu hỏi/ô điền từ */}
           <Box
             sx={{
               ...rightPaneStyles,
@@ -347,6 +352,7 @@ const FillBlanksContent = ({
                     },
                   }}
                 >
+                  {/* Tùy thuộc vào định dạng dữ liệu, render dạng trắc nghiệm hoặc ô nhập liệu (TextField) */}
                   {isMultiChoiceFormat
                     ? questions.map((q, idx) => {
                         const selectedVal = answers[q.id] || '';
@@ -399,7 +405,7 @@ const FillBlanksContent = ({
                                         sx={{
                                           ...multipleChoiceStyles.optionContainer,
                                           cursor: showResults ? 'default' : 'pointer',
-                                          ...(showResults &&
+                                          ...(showSummary &&
                                             isSelected && {
                                               border: `1px solid ${isCorrect ? '#4caf50' : '#f44336'}`,
                                               backgroundColor: isCorrect
@@ -422,7 +428,7 @@ const FillBlanksContent = ({
                                               <RadioButtonUncheckedIcon
                                                 sx={{
                                                   ...multipleChoiceStyles.outerCircle,
-                                                  ...(showResults &&
+                                                  ...(showSummary &&
                                                     isSelected && {
                                                       color: isCorrect
                                                         ? 'success.main'
@@ -433,7 +439,7 @@ const FillBlanksContent = ({
                                               <CircleIcon
                                                 sx={{
                                                   ...multipleChoiceStyles.innerCircle,
-                                                  ...(showResults &&
+                                                  ...(showSummary &&
                                                     isSelected && {
                                                       color: isCorrect
                                                         ? 'success.main'
@@ -445,7 +451,7 @@ const FillBlanksContent = ({
                                           }
                                           sx={{
                                             ...multipleChoiceStyles.checkboxRoot,
-                                            ...(showResults &&
+                                            ...(showSummary &&
                                               isSelected && {
                                                 color: isCorrect ? 'success.main' : 'error.main',
                                                 '&.Mui-checked': {
@@ -458,7 +464,7 @@ const FillBlanksContent = ({
                                           sx={{
                                             ...multipleChoiceStyles.optionLabel,
                                             flexShrink: 0,
-                                            ...(showResults &&
+                                            ...(showSummary &&
                                               isSelected && {
                                                 color: isCorrect ? '#4caf50' : '#f44336',
                                                 fontWeight: 600,
@@ -472,7 +478,7 @@ const FillBlanksContent = ({
                                             ...multipleChoiceStyles.optionLabel,
                                             fontWeight: 400,
                                             flex: 1,
-                                            ...(showResults &&
+                                            ...(showSummary &&
                                               isSelected && {
                                                 color: isCorrect ? '#4caf50' : '#f44336',
                                                 fontWeight: 500,
@@ -482,7 +488,7 @@ const FillBlanksContent = ({
                                           {option.answer_text || option.text || option.label}
                                         </Typography>
 
-                                        {showResults && isCorrect && (
+                                        {showSummary && isCorrect && (
                                           <Chip
                                             label="Correct"
                                             size="small"
@@ -502,7 +508,7 @@ const FillBlanksContent = ({
                               </Box>
                             </Box>
 
-                            {showResults && (
+                            {showSummary && (
                               <Box
                                 sx={{ pr: { xs: 0, md: 4 }, pl: { xs: 0, md: 4 }, width: '100%' }}
                               >
@@ -539,19 +545,19 @@ const FillBlanksContent = ({
                               display: 'flex',
                               flexDirection: 'column',
                               width: '100%',
-                              mb: showResults ? 3 : 1,
+                              mb: showSummary ? 3 : 1,
                             }}
                           >
                             <Box
                               sx={{
                                 ...listeningPartStyles.questionContainerRow,
-                                mb: showResults ? 1 : 0,
+                                mb: showSummary ? 1 : 0,
                               }}
                             >
                               <Typography
                                 sx={{
                                   ...listeningPartStyles.questionLabelCircle,
-                                  ...(showResults &&
+                                  ...(showSummary &&
                                     isAnswered && {
                                       backgroundColor: isCorrect ? 'success.main' : 'error.main',
                                       color: '#fff',
@@ -573,7 +579,7 @@ const FillBlanksContent = ({
                                 autoComplete="off"
                                 sx={{
                                   ...listeningPartStyles.inputQuestion,
-                                  ...(showResults &&
+                                  ...(showSummary &&
                                     isAnswered && {
                                       borderRadius: '4px',
                                       padding: '2px 8px',
@@ -592,7 +598,8 @@ const FillBlanksContent = ({
                               />
                             </Box>
 
-                            {showResults && (
+                            {/* Hiển thị đáp án đúng và lời giải chi tiết khi xem lại kết quả bài làm */}
+                            {showSummary && (
                               <Box sx={listeningPartStyles.explanationContainer}>
                                 <Typography sx={listeningPartStyles.correctText}>
                                   Correct Answer: {qInfo?.correctText}
@@ -618,7 +625,7 @@ const FillBlanksContent = ({
 
   return (
     <Box sx={{ display: 'block', width: '100%', height: '100%' }}>
-      {showResults ? (
+      {showSummary ? (
         <Container
           maxWidth="xl"
           disableGutters
@@ -627,7 +634,7 @@ const FillBlanksContent = ({
             flexDirection: { xs: 'column-reverse', md: 'row' },
             alignItems: 'flex-start',
             pr: { xs: 0, md: 2 },
-            bgcolor: 'background.gray', // Điều chỉnh BG theo yêu cầu
+            bgcolor: 'background.gray',
           }}
         >
           <Box sx={{ flex: { xs: 1, md: 4 }, width: '100%', height: '100%' }}>{mainContent}</Box>
