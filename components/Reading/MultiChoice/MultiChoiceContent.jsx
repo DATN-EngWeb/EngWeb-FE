@@ -103,7 +103,7 @@ function computeShortTextSplits(questions, questionBodyByKey) {
     }
 
     const s = splitHtmlImagesAndRest(html);
-    splits[qKey] = { ...s, pendingFetch: false };
+    splits[qKey] = { ...s, fullHtml: html, pendingFetch: false };
     if (s.imagesHtml) hasMedia = true;
   });
 
@@ -159,9 +159,9 @@ const MultiChoiceContent = ({
     [hidePassage, questions, questionBodyByKey],
   );
 
-  /** Cột trái: passage dài (G) hoặc ảnh stem short text (F) hoặc stimulusPageUrls */
+  /** Cột trái: passage dài (G) hoặc nội dung câu hỏi short text (F) hoặc stimulusPageUrls */
   const usePassageColumn =
-    !hidePassage || Boolean(shortTextLayout?.hasMedia) || Boolean(stimulusPageUrls?.length);
+    !hidePassage || questions.length > 0 || Boolean(stimulusPageUrls?.length);
 
   useEffect(() => {
     let cancelled = false;
@@ -369,7 +369,7 @@ const MultiChoiceContent = ({
           sx={{
             ...listeningPartStyles.containerColRow,
             ...(hidePassage &&
-              !shortTextLayout?.hasMedia &&
+              !questions.length &&
               !stimulusPageUrls?.length && {
                 flexDirection: { xs: 'column', md: 'column' },
               }),
@@ -484,10 +484,33 @@ const MultiChoiceContent = ({
                   </Box>
                 ) : (
                   <Box sx={listeningPartStyles.passageContainer}>
+                    {passage && (
+                      <Box sx={{ mb: questions.length > 0 ? 3 : 0 }}>
+                        {passageTitle && (
+                          <Typography sx={{ ...passageTitleStyles, mb: 2 }}>
+                            {passageTitle}
+                          </Typography>
+                        )}
+                        <Typography
+                          component="div"
+                          sx={{
+                            ...passageTextStyles,
+                            ...passageResponsiveMediaSx,
+                          }}
+                          dangerouslySetInnerHTML={{ __html: passage }}
+                        />
+                      </Box>
+                    )}
                     {questions.map((q, i) => {
                       const qKey = q.id ?? `__idx_${i}`;
-                      const mediaHtml = shortTextLayout?.splits?.[qKey]?.imagesHtml;
-                      if (!mediaHtml) return null;
+                      const split = shortTextLayout?.splits?.[qKey];
+                      const contentHtml = split
+                        ? split.fullHtml
+                        : typeof q.question === 'string' && q.question.startsWith('http')
+                          ? (questionBodyByKey[qKey] ?? '')
+                          : (q.question ?? '');
+
+                      if (!contentHtml) return null;
                       const labelN = q.question_number ?? q.questionNumber ?? i + 1;
                       return (
                         <Box
@@ -504,7 +527,7 @@ const MultiChoiceContent = ({
                           <Box
                             component="div"
                             sx={{ ...passageTextStyles, ...stimulusFigureMediaSx }}
-                            dangerouslySetInnerHTML={{ __html: mediaHtml }}
+                            dangerouslySetInnerHTML={{ __html: contentHtml }}
                           />
                         </Box>
                       );
@@ -588,13 +611,9 @@ const MultiChoiceContent = ({
             <Box sx={listeningPartStyles.innerInstruction}>
               <LightbulbOutlinedIcon />
               <Typography sx={{ color: 'inherit', fontSize: 'inherit', fontWeight: 'inherit' }}>
-                {hidePassage && shortTextLayout?.hasMedia
-                  ? 'Look at the image on the left and choose the correct answer for each question.'
-                  : hidePassage && stimulusPageUrls?.length
-                    ? 'Look at the numbered images on the left and choose the correct answer for each question.'
-                    : hidePassage
-                      ? 'Choose the correct answer for each question.'
-                      : 'Read the passage on the left and choose the correct answer for each question.'}
+                {hidePassage
+                  ? 'Look at the content on the left and choose the correct answer for each question.'
+                  : 'Read the passage on the left and choose the correct answer for each question.'}
               </Typography>
             </Box>
 
@@ -610,14 +629,7 @@ const MultiChoiceContent = ({
                 const split = shortTextLayout?.splits?.[qKey];
                 const isUrlOnly =
                   typeof questionHtml === 'string' && questionHtml.startsWith('http');
-                const displayHtml =
-                  hidePassage &&
-                  shortTextLayout?.hasMedia &&
-                  split &&
-                  !split.pendingFetch &&
-                  !isUrlOnly
-                    ? split.restHtml
-                    : questionHtml;
+                const displayHtml = hidePassage ? '' : questionHtml;
 
                 const selectedValue = answers[question.id] || '';
                 const correctOption = question.options?.find((o) => o.isCorrect);

@@ -171,10 +171,7 @@ export function transformMultiChoiceTest(backendTest) {
         const urlQuestions = rawQuestions
           .filter((q) => isHttpUrlString(q.content))
           .sort((a, b) => (a.question_number || 0) - (b.question_number || 0));
-        if (urlQuestions.length === 1) {
-          passage = urlQuestions[0].content.trim();
-          stripQuestionIds.add(urlQuestions[0].id);
-        } else if (urlQuestions.length > 1) {
+        if (urlQuestions.length >= 1) {
           stimulusPageUrls = urlQuestions.map((q) => String(q.content).trim());
           urlQuestions.forEach((q) => stripQuestionIds.add(q.id));
         }

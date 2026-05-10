@@ -209,9 +209,7 @@ function ReadingMultiChoicePageContent() {
         onNext={handleNext}
         currentSection={currentSection}
         totalSections={testData.parts.length}
-        hidePassage={
-          currentPartData.rawPart?.format === 'F' && !String(currentPartData.passage || '').trim()
-        }
+        hidePassage={currentPartData.rawPart?.format === 'F'}
       />
     </>
   );
