@@ -16,6 +16,11 @@ import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyle
 import SumaryPartTab from '../../Student/ListeningTest/part/sumaryPartTab';
 import { fetchHtmlContent } from '@/api/test';
 
+const textWrapStyles = {
+  wordBreak: 'break-word',
+  overflowWrap: 'anywhere',
+};
+
 /**
  * Tách khối hình ảnh / media khỏi phần chữ trong HTML stem (short text).
  * Dùng regex để kết quả giống nhau giữa SSR và client, tránh lệch hydrate.
@@ -117,13 +122,12 @@ const MultiChoiceContent = ({
   answers = {},
   showResults = false,
   onAnswerChange = () => {},
-  /** Reading format F (short text): không hiển thị passage chung, chỉ câu hỏi */
   hidePassage = false,
-  /** Format F legacy: nhiều URL ở question — fetch từng file, hiển thị đánh số cột trái */
   stimulusPageUrls = null,
 }) => {
   const pathname = usePathname();
-  const isTeacherView = pathname?.includes('/teacher/view-test/');
+  const isTeacherView =
+    pathname?.includes('/teacher/view-test/') || pathname?.includes('/teacher/upload-test/');
   const showSummary = showResults && !isTeacherView;
 
   const [leftWidth, setLeftWidth] = useState(55);
@@ -132,9 +136,7 @@ const MultiChoiceContent = ({
   const [passageContent, setPassageContent] = useState(passage);
 
   const [targetQuestionId, setTargetQuestionId] = useState(null);
-  /** Nội dung HTML sau khi fetch, key = question.id (hoặc __idx_i nếu thiếu id) */
   const [questionBodyByKey, setQuestionBodyByKey] = useState({});
-  /** stimulusPageUrls[i] → HTML đã fetch */
   const [stimulusHtmlByIndex, setStimulusHtmlByIndex] = useState({});
 
   const stimulusFetchKey = React.useMemo(
@@ -159,7 +161,6 @@ const MultiChoiceContent = ({
     [hidePassage, questions, questionBodyByKey],
   );
 
-  /** Cột trái: passage dài (G) hoặc nội dung câu hỏi short text (F) hoặc stimulusPageUrls */
   const usePassageColumn =
     !hidePassage || questions.length > 0 || Boolean(stimulusPageUrls?.length);
 
@@ -210,7 +211,6 @@ const MultiChoiceContent = ({
     };
   }, [questionUrlFetchKey, questions]);
 
-  // Lấy nội dung bài đọc từ URL nếu passage là một link lưu trữ (như Google Cloud Storage)
   useEffect(() => {
     if (hidePassage) return;
     setPassageContent(passage);
@@ -226,14 +226,13 @@ const MultiChoiceContent = ({
           const text = await response.text();
           setPassageContent(text);
         } catch {
-          // Passage fetch failed; keep raw passage string
+          // Catch error
         }
       }
     };
     fetchContent();
   }, [passage, hidePassage]);
 
-  // Xử lý sự kiện kéo thả chuột hoặc cảm ứng để thay đổi tỷ lệ chiều rộng 2 cột trái/phải
   useEffect(() => {
     if (!usePassageColumn || !isDragging) return;
     const handleMouseMove = (event) => {
@@ -279,13 +278,11 @@ const MultiChoiceContent = ({
     };
   }, [isDragging, usePassageColumn]);
 
-  // Lưu trữ đáp án người dùng chọn và truyền lên component cha thông qua onAnswerChange
   const handleAnswerSelection = (questionId, value) => {
     if (showResults) return;
     onAnswerChange({ ...answers, [questionId]: value });
   };
 
-  // Tự động cuộn mượt và thêm hiệu ứng nhún (bounce) tới câu hỏi được chọn từ bảng tóm tắt
   useEffect(() => {
     if (targetQuestionId && showSummary) {
       let retryCount = 0;
@@ -337,7 +334,6 @@ const MultiChoiceContent = ({
     }
   }, [targetQuestionId, showSummary]);
 
-  // Đánh giá trạng thái đúng/sai của từng câu hỏi để hiển thị bên trong SumaryPartTab
   const partQuestions = showSummary
     ? questions.map((q) => {
         const selectedValue = answers[q.id];
@@ -355,7 +351,6 @@ const MultiChoiceContent = ({
       })
     : [];
 
-  // Đặt ID mục tiêu để kích hoạt trigger cuộn đến câu hỏi khi nhấn vào bảng tóm tắt
   const handleNavigateToQuestion = (questionId) => {
     setTargetQuestionId(questionId);
   };
@@ -363,7 +358,6 @@ const MultiChoiceContent = ({
   const mainContent = (
     <Box sx={{ ...containerStyles, flex: 1, width: '100%', overflow: 'hidden' }}>
       <Container maxWidth={false} disableGutters sx={{ height: '100%', px: 0 }}>
-        {/* Layout chính chứa cột bài đọc (trái), thanh chia (giữa) và danh sách câu hỏi (phải) */}
         <Box
           ref={usePassageColumn ? containerRef : undefined}
           sx={{
@@ -403,7 +397,9 @@ const MultiChoiceContent = ({
                 {!hidePassage ? (
                   <Box sx={listeningPartStyles.passageContainer}>
                     {passageTitle && (
-                      <Typography sx={{ ...passageTitleStyles, mb: 2 }}>{passageTitle}</Typography>
+                      <Typography sx={{ ...passageTitleStyles, mb: 2, ...textWrapStyles }}>
+                        {passageTitle}
+                      </Typography>
                     )}
                     {(() => {
                       const { items, restHtml, hasMedia } =
@@ -415,6 +411,7 @@ const MultiChoiceContent = ({
                             sx={{
                               ...passageTextStyles,
                               ...passageResponsiveMediaSx,
+                              ...textWrapStyles, // Cập nhật ngắt dòng
                             }}
                             dangerouslySetInnerHTML={{ __html: passageContent }}
                           />
@@ -438,7 +435,11 @@ const MultiChoiceContent = ({
                                 </Typography>
                                 <Box
                                   component="div"
-                                  sx={{ ...passageTextStyles, ...stimulusFigureMediaSx }}
+                                  sx={{
+                                    ...passageTextStyles,
+                                    ...stimulusFigureMediaSx,
+                                    ...textWrapStyles,
+                                  }} // Cập nhật ngắt dòng
                                   dangerouslySetInnerHTML={{ __html: html }}
                                 />
                               </Box>
@@ -447,7 +448,12 @@ const MultiChoiceContent = ({
                           {restHtml ? (
                             <Box
                               component="div"
-                              sx={{ ...passageTextStyles, mt: 2, ...passageResponsiveMediaSx }}
+                              sx={{
+                                ...passageTextStyles,
+                                mt: 2,
+                                ...passageResponsiveMediaSx,
+                                ...textWrapStyles,
+                              }} // Cập nhật ngắt dòng
                               dangerouslySetInnerHTML={{ __html: restHtml }}
                             />
                           ) : null}
@@ -471,7 +477,11 @@ const MultiChoiceContent = ({
                           </Typography>
                           <Box
                             component="div"
-                            sx={{ ...passageTextStyles, ...stimulusFigureMediaSx }}
+                            sx={{
+                              ...passageTextStyles,
+                              ...stimulusFigureMediaSx,
+                              ...textWrapStyles,
+                            }} // Cập nhật ngắt dòng
                             dangerouslySetInnerHTML={{
                               __html:
                                 stimulusHtmlByIndex[i] ??
@@ -487,7 +497,7 @@ const MultiChoiceContent = ({
                     {passage && (
                       <Box sx={{ mb: questions.length > 0 ? 3 : 0 }}>
                         {passageTitle && (
-                          <Typography sx={{ ...passageTitleStyles, mb: 2 }}>
+                          <Typography sx={{ ...passageTitleStyles, mb: 2, ...textWrapStyles }}>
                             {passageTitle}
                           </Typography>
                         )}
@@ -496,6 +506,7 @@ const MultiChoiceContent = ({
                           sx={{
                             ...passageTextStyles,
                             ...passageResponsiveMediaSx,
+                            ...textWrapStyles,
                           }}
                           dangerouslySetInnerHTML={{ __html: passage }}
                         />
@@ -526,7 +537,11 @@ const MultiChoiceContent = ({
                           </Typography>
                           <Box
                             component="div"
-                            sx={{ ...passageTextStyles, ...stimulusFigureMediaSx }}
+                            sx={{
+                              ...passageTextStyles,
+                              ...stimulusFigureMediaSx,
+                              ...textWrapStyles,
+                            }}
                             dangerouslySetInnerHTML={{ __html: contentHtml }}
                           />
                         </Box>
@@ -581,7 +596,6 @@ const MultiChoiceContent = ({
             </>
           )}
 
-          {/* Khu vực cột phải: Hiển thị hướng dẫn, danh sách các câu hỏi và tùy chọn */}
           <Box
             sx={{
               ...listeningPartStyles.questionSection,
@@ -617,8 +631,7 @@ const MultiChoiceContent = ({
               </Typography>
             </Box>
 
-            {/* Vòng lặp render từng câu hỏi trắc nghiệm và danh sách các phương án A, B, C, D */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, width: '100%' }}>
               {questions.map((question, index) => {
                 const qKey = question.id ?? `__idx_${index}`;
                 const rawQuestion = question.question;
@@ -626,9 +639,6 @@ const MultiChoiceContent = ({
                   typeof rawQuestion === 'string' && rawQuestion.startsWith('http')
                     ? (questionBodyByKey[qKey] ?? rawQuestion)
                     : (rawQuestion ?? '');
-                const split = shortTextLayout?.splits?.[qKey];
-                const isUrlOnly =
-                  typeof questionHtml === 'string' && questionHtml.startsWith('http');
                 const displayHtml = hidePassage ? '' : questionHtml;
 
                 const selectedValue = answers[question.id] || '';
@@ -646,7 +656,7 @@ const MultiChoiceContent = ({
                         {question.question_number ?? question.questionNumber ?? index + 1}
                       </Typography>
                       <Typography
-                        sx={listeningPartStyles.questionText}
+                        sx={{ ...listeningPartStyles.questionText, ...textWrapStyles }} // Cập nhật ngắt dòng
                         dangerouslySetInnerHTML={{ __html: displayHtml }}
                       />
                     </Box>
@@ -742,6 +752,7 @@ const MultiChoiceContent = ({
                                     ...multipleChoiceStyles.optionLabel,
                                     fontWeight: 400,
                                     flex: 1,
+                                    ...textWrapStyles, // Cập nhật ngắt dòng
                                     ...(showSummary &&
                                       isSelected && {
                                         color: isCorrect ? '#4caf50' : '#f44336',
@@ -760,7 +771,7 @@ const MultiChoiceContent = ({
                                       height: 20,
                                       fontSize: '0.65rem',
                                       ml: 1,
-                                      display: { xs: 'none', md: 'block' },
+                                      display: { xs: 'none', md: 'inline-flex' },
                                     }}
                                   />
                                 )}
@@ -771,15 +782,18 @@ const MultiChoiceContent = ({
                       </Box>
                     </Box>
 
-                    {/* Hiển thị đáp án đúng và lời giải chi tiết (explanation) khi xem lại kết quả bài làm */}
                     {showSummary && correctOption && (
                       <Box sx={{ pr: { xs: 0, md: 4 }, pl: { xs: 0, md: 4 }, width: '100%' }}>
                         <Box sx={{ ...listeningPartStyles.explanationContainer }}>
-                          <Typography sx={listeningPartStyles.correctText}>
+                          <Typography
+                            sx={{ ...listeningPartStyles.correctText, ...textWrapStyles }}
+                          >
                             Correct Answer: {correctOption.option_label}. {correctAnswerText}
                           </Typography>
                           {question.explanation && (
-                            <Typography sx={listeningPartStyles.explanationText}>
+                            <Typography
+                              sx={{ ...listeningPartStyles.explanationText, ...textWrapStyles }}
+                            >
                               <strong>Explanation:</strong> {question.explanation}
                             </Typography>
                           )}

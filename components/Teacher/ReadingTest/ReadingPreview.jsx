@@ -135,7 +135,7 @@ const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButto
             questions: currentPart.questions.map((q) => ({
               id: q.id,
               question_number: q.question_number,
-              question: q.content || `Question ${q.question_number}`,
+              question: q.content || '',
               explanation: q.explanation,
               correctText: q.answers?.[0]?.answer_text || '',
               options:

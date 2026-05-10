@@ -20,7 +20,8 @@ export default function FillBlankPart({
   onNavigateToQuestion,
 }) {
   const pathname = usePathname();
-  const isTeacherView = pathname?.includes('/teacher/view-test/');
+  const isTeacherView =
+    pathname?.includes('/teacher/view-test/') || pathname?.includes('/teacher/upload-test/');
 
   const showSummary = disabled && !isTeacherView;
 
@@ -141,6 +142,8 @@ export default function FillBlankPart({
           sx={{
             ...listeningPartStyles.passageContainer,
             overflowY: 'auto',
+            overflowWrap: 'break-word',
+            wordBreak: 'break-word',
             scrollbarWidth: 'thin',
             '&::-webkit-scrollbar': { width: '8px' },
             '&::-webkit-scrollbar-track': { background: 'transparent' },
