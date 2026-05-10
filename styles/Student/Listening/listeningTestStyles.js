@@ -127,6 +127,7 @@ export const listeningtestStyles = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     maxWidth: '100%',
+    overflowWrap: 'break-word',
   },
   nameTestSkeleton: {
     ...skeletonBase,
@@ -448,8 +449,8 @@ export const listeningPartStyles = {
     fontSize: { xs: '1rem', md: '1rem' },
     fontWeight: 400,
     color: 'dark.main',
+    overflowWrap: 'break-word',
     wordBreak: 'break-word',
-    overflowWrap: 'anywhere',
   },
   // -------- Option Section ---------
   optionsGrid: {
@@ -565,5 +566,5 @@ export const listeningPartStyles = {
     color: 'success.main',
     fontWeight: 600,
   },
-  explanationText: { fontSize: '1rem', color: 'text.secondary' },
+  explanationText: { fontSize: '1rem', color: 'text.secondary', overflowWrap: 'break-word' },
 };

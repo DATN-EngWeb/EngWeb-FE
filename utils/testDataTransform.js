@@ -55,6 +55,7 @@ export function transformFillBlanksTest(backendTest) {
       const questions = (part.receptive_questions || []).map((q) => ({
         id: q.id,
         question_number: q.question_number,
+        question: q.content || '',
         explanation: q.explanation,
         correctLabel: q.receptive_answers?.find((a) => a.is_correct)?.option_label || '',
         correctText: q.receptive_answers?.find((a) => a.is_correct)?.answer_text || '',

@@ -354,7 +354,8 @@ export const validateReadingPartPayload = (parts) => {
         }
       }
 
-      if (['F', 'G', 'H', 'J'].includes(format)) {
+      // Đã xóa 'H' khỏi mảng kiểm tra này để bỏ qua validate q.content cho Format H
+      if (['F', 'G', 'J'].includes(format)) {
         if (isEmptyText(q.content)) {
           return formatQuestionMessage(partName, qNum, 'add the question content.');
         }
@@ -466,7 +467,7 @@ export const validateReadingPartUpdatePayload = (transformedParts, originalParts
 
       if (tQuestion.action === 'create' || tQuestion.action === 'update') {
         if (
-          !['I'].includes(partFormat) &&
+          !['I', 'H'].includes(partFormat) &&
           (!tQuestion.content || String(tQuestion.content).trim() === '')
         ) {
           return `Part ${displayPartNum}, Question ${displayQuestionNum}: add the question content.`;

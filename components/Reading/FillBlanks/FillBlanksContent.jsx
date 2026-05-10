@@ -16,6 +16,11 @@ import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestSty
 import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
 import SumaryPartTab from '../../Student/ListeningTest/part/sumaryPartTab';
 
+const textWrapStyles = {
+  wordBreak: 'break-word',
+  overflowWrap: 'anywhere',
+};
+
 const FillBlanksContent = ({
   passage = '',
   passageTitle = '',
@@ -26,7 +31,8 @@ const FillBlanksContent = ({
   onAnswerChange = () => {},
 }) => {
   const pathname = usePathname();
-  const isTeacherView = pathname?.includes('/teacher/view-test/');
+  const isTeacherView =
+    pathname?.includes('/teacher/view-test/') || pathname?.includes('/teacher/upload-test/');
   const showSummary = showResults && !isTeacherView;
 
   const [leftWidth, setLeftWidth] = useState(55);
@@ -51,6 +57,7 @@ const FillBlanksContent = ({
           const text = await response.text();
           setPassageContent(text);
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.error('Failed to fetch passage content:', error);
         }
       }
@@ -240,8 +247,14 @@ const FillBlanksContent = ({
               },
             }}
           >
-            {passageTitle && <Typography sx={passageTitleStyles}>{passageTitle}</Typography>}
-            <Box sx={listeningPartStyles.passageContainer}>{renderPassageWithBlanks()}</Box>
+            {passageTitle && (
+              <Typography sx={{ ...passageTitleStyles, ...textWrapStyles }}>
+                {passageTitle}
+              </Typography>
+            )}
+            <Box sx={{ ...listeningPartStyles.passageContainer, ...textWrapStyles }}>
+              {renderPassageWithBlanks()}
+            </Box>
           </Box>
           {/* Thanh điều khiển (divider) cho phép người dùng kéo qua lại để đổi chiều rộng cột */}
           <Box
@@ -372,13 +385,13 @@ const FillBlanksContent = ({
                                 {q.question_number || idx + 1}
                               </Typography>
                               <Typography
-                                sx={listeningPartStyles.questionText}
-                                dangerouslySetInnerHTML={{
-                                  __html: q.question || `Question ${q.question_number}`,
-                                }}
-                              />
+                                sx={{ ...listeningPartStyles.questionText, ...textWrapStyles }}
+                              >
+                                {q.question?.trim()
+                                  ? q.question
+                                  : `Please choose the correct answer for blank ${q.question_number || idx + 1}`}
+                              </Typography>
                             </Box>
-
                             <Box
                               sx={{
                                 ...listeningPartStyles.audioAndOptionsContainer,
@@ -478,6 +491,7 @@ const FillBlanksContent = ({
                                             ...multipleChoiceStyles.optionLabel,
                                             fontWeight: 400,
                                             flex: 1,
+                                            ...textWrapStyles,
                                             ...(showSummary &&
                                               isSelected && {
                                                 color: isCorrect ? '#4caf50' : '#f44336',
@@ -497,7 +511,7 @@ const FillBlanksContent = ({
                                               height: 20,
                                               fontSize: '0.65rem',
                                               ml: 1,
-                                              display: { xs: 'none', md: 'block' },
+                                              display: { xs: 'none', md: 'inline-flex' },
                                             }}
                                           />
                                         )}
@@ -513,12 +527,19 @@ const FillBlanksContent = ({
                                 sx={{ pr: { xs: 0, md: 4 }, pl: { xs: 0, md: 4 }, width: '100%' }}
                               >
                                 <Box sx={{ ...listeningPartStyles.explanationContainer }}>
-                                  <Typography sx={listeningPartStyles.correctText}>
+                                  <Typography
+                                    sx={{ ...listeningPartStyles.correctText, ...textWrapStyles }}
+                                  >
                                     Correct Answer: {correctOption?.option_label}.{' '}
                                     {correctAnswerText}
                                   </Typography>
                                   {qInfo?.explanation && (
-                                    <Typography sx={listeningPartStyles.explanationText}>
+                                    <Typography
+                                      sx={{
+                                        ...listeningPartStyles.explanationText,
+                                        ...textWrapStyles,
+                                      }}
+                                    >
                                       <strong>Explanation:</strong> {qInfo.explanation}
                                     </Typography>
                                   )}
@@ -601,11 +622,18 @@ const FillBlanksContent = ({
                             {/* Hiển thị đáp án đúng và lời giải chi tiết khi xem lại kết quả bài làm */}
                             {showSummary && (
                               <Box sx={listeningPartStyles.explanationContainer}>
-                                <Typography sx={listeningPartStyles.correctText}>
+                                <Typography
+                                  sx={{ ...listeningPartStyles.correctText, ...textWrapStyles }}
+                                >
                                   Correct Answer: {qInfo?.correctText}
                                 </Typography>
                                 {qInfo?.explanation && (
-                                  <Typography sx={listeningPartStyles.explanationText}>
+                                  <Typography
+                                    sx={{
+                                      ...listeningPartStyles.explanationText,
+                                      ...textWrapStyles,
+                                    }}
+                                  >
                                     <strong>Explanation:</strong> {qInfo.explanation}
                                   </Typography>
                                 )}

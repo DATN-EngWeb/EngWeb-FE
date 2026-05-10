@@ -19,7 +19,8 @@ export default function MultipleChoiceImagePart({
   onNavigateToQuestion,
 }) {
   const pathname = usePathname();
-  const isTeacherView = pathname?.includes('/teacher/view-test/');
+  const isTeacherView =
+    pathname?.includes('/teacher/view-test/') || pathname?.includes('/teacher/upload-test/');
 
   const showSummary = disabled && !isTeacherView;
 

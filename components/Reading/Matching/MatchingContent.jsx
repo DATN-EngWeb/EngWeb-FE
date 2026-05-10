@@ -14,6 +14,11 @@ import {
   rightPaneStyles,
 } from '@/styles/Reading/MatchingStyles';
 
+const textWrapStyles = {
+  wordBreak: 'break-word',
+  overflowWrap: 'anywhere',
+};
+
 const MatchingContent = ({
   passage = '',
   passageTitle = '',
@@ -25,7 +30,8 @@ const MatchingContent = ({
   onAnswerChange = () => {},
 }) => {
   const pathname = usePathname();
-  const isTeacherView = pathname?.includes('/teacher/view-test/');
+  const isTeacherView =
+    pathname?.includes('/teacher/view-test/') || pathname?.includes('/teacher/upload-test/');
   const showSummary = showResults && !isTeacherView;
 
   const [leftWidth, setLeftWidth] = useState(55);
@@ -51,6 +57,7 @@ const MatchingContent = ({
           const text = await response.text();
           setPassageContent(text);
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.error('Failed to fetch passage content:', error);
         }
       }
@@ -75,6 +82,7 @@ const MatchingContent = ({
               const text = await response.text();
               return { ...s, text };
             } catch (error) {
+              // eslint-disable-next-line no-console
               console.error('Failed to fetch sentence content:', error);
               return s;
             }
@@ -287,8 +295,14 @@ const MatchingContent = ({
               },
             }}
           >
-            {passageTitle && <Typography sx={passageTitleStyles}>{passageTitle}</Typography>}
-            <Box sx={listeningPartStyles.passageContainer}>{renderPassageWithGaps()}</Box>
+            {passageTitle && (
+              <Typography sx={{ ...passageTitleStyles, ...textWrapStyles }}>
+                {passageTitle}
+              </Typography>
+            )}
+            <Box sx={{ ...listeningPartStyles.passageContainer, ...textWrapStyles }}>
+              {renderPassageWithGaps()}
+            </Box>
           </Box>
           {/* Thanh điều khiển (divider) cho phép người dùng kéo qua lại để đổi chiều rộng 2 cột */}
           <Box
@@ -529,11 +543,15 @@ const MatchingContent = ({
 
                           {showSummary && (
                             <Box sx={listeningPartStyles.explanationContainer}>
-                              <Typography sx={listeningPartStyles.correctText}>
+                              <Typography
+                                sx={{ ...listeningPartStyles.correctText, ...textWrapStyles }}
+                              >
                                 Correct Answer: {q?.correctLabel || 'N/A'}
                               </Typography>
                               {q?.explanation && (
-                                <Typography sx={listeningPartStyles.explanationText}>
+                                <Typography
+                                  sx={{ ...listeningPartStyles.explanationText, ...textWrapStyles }}
+                                >
                                   <strong>Explanation:</strong> {q.explanation}
                                 </Typography>
                               )}
@@ -559,6 +577,7 @@ const MatchingContent = ({
                             ...multipleChoiceStyles.optionLabel,
                             fontWeight: 700,
                             flexShrink: 0,
+                            ...textWrapStyles,
                           }}
                         >
                           {String.fromCharCode(65 + index)}.
@@ -567,7 +586,7 @@ const MatchingContent = ({
                           sx={{
                             ...multipleChoiceStyles.optionLabel,
                             fontWeight: 400,
-                            wordBreak: 'break-word',
+                            ...textWrapStyles, // Cập nhật ngắt dòng
                           }}
                           dangerouslySetInnerHTML={{ __html: sentence.text }}
                         />

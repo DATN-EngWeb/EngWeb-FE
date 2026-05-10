@@ -31,12 +31,15 @@ export const uploadReadingStyles = {
     maxWidth: { xs: '100%', sm: '100%' },
     wordBreak: 'break-word',
     hyphens: 'auto',
+    overflowWrap: 'break-word',
   },
   description: {
     color: 'text.primary',
     fontSize: { xs: '0.8rem', md: '1rem' },
     lineHeight: 1.7,
     textAlign: { xs: 'center', md: 'left' },
+    wordBreak: 'break-word',
+    overflowWrap: 'break-word',
   },
   // -------- Function Buttons Wrapper ---------
   functionButtonsWrapper: {
@@ -185,6 +188,7 @@ export const uploadReadingStyles = {
     maxWidth: { xs: '100%', md: '100%' },
     wordBreak: 'break-word',
     hyphens: 'auto',
+    overflowWrap: 'break-word',
   },
   formControl: {
     display: 'flex',
@@ -286,6 +290,7 @@ export const uploadReadingStyles = {
   partTitle: {
     fontWeight: 600,
     fontSize: { xs: '0.7rem', sm: '1rem' },
+    overflowWrap: 'break-word',
   },
   partDescription: {
     color: 'text.gray',

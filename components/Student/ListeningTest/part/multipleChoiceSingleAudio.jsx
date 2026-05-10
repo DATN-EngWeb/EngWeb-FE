@@ -22,7 +22,8 @@ export default function MultipleChoiceSingleAudio({
   onNavigateToQuestion,
 }) {
   const pathname = usePathname();
-  const isTeacherView = pathname?.includes('/teacher/view-test/');
+  const isTeacherView =
+    pathname?.includes('/teacher/view-test/') || pathname?.includes('/teacher/upload-test/');
 
   const showSummary = disabled && !isTeacherView;
 
@@ -213,7 +214,7 @@ export default function MultipleChoiceSingleAudio({
                               height: 20,
                               fontSize: '0.65rem',
                               ml: 1,
-                              display: { xs: 'none', md: 'block' },
+                              display: { xs: 'none', md: 'inline-flex' },
                             }}
                           />
                         )}

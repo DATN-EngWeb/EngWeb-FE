@@ -25,6 +25,7 @@ export const multipleChoiceStyles = {
     maxWidth: { xs: '100%', md: '100%' },
     wordBreak: 'break-word',
     hyphens: 'auto',
+    overflowWrap: 'break-word',
   },
   descriptionCard: {
     color: 'text.primary',
@@ -179,7 +180,7 @@ export const multipleChoiceStyles = {
     color: 'text.primary',
     fontWeight: 600,
     wordBreak: 'break-word',
-    overflowWrap: 'anywhere',
+    overflowWrap: 'break-word',
   },
   optionInput: {
     flexGrow: 1,
