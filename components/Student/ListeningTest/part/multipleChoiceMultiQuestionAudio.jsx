@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Container, Box, Typography, Checkbox } from '@mui/material';
+import { Container, Box, Typography, Checkbox, Chip } from '@mui/material';
 import CustomAudioPlayer from '../../../Test/customAudioPlayer';
 import InstructionIcon from '../../../Test/instructionIcon';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
@@ -163,7 +163,18 @@ export default function MultipleChoiceQuestionAudio({
         </Box>
         {/* -------- Passage (Optional) --------- */}
         <Box
-          sx={listeningPartStyles.passageContainer}
+          sx={{
+            ...listeningPartStyles.passageContainer,
+            overflowY: 'auto',
+            scrollbarWidth: 'thin',
+            '&::-webkit-scrollbar': { width: '8px' },
+            '&::-webkit-scrollbar-track': { background: 'transparent' },
+            '&::-webkit-scrollbar-thumb': {
+              background: '#ccc',
+              borderRadius: '4px',
+              '&:hover': { background: '#999' },
+            },
+          }}
           dangerouslySetInnerHTML={{ __html: passageSrc }}
         />
       </Box>
@@ -217,9 +228,18 @@ export default function MultipleChoiceQuestionAudio({
         sx={{
           ...listeningPartStyles.questionSection,
           width: { xs: '100%', md: `calc(${100 - leftWidth}% - 32px)` },
+          minWidth: { md: '400px' },
           height: '100%',
           overflowY: 'auto',
           minHeight: 0,
+          scrollbarWidth: 'thin',
+          '&::-webkit-scrollbar': { width: '8px' },
+          '&::-webkit-scrollbar-track': { background: 'transparent' },
+          '&::-webkit-scrollbar-thumb': {
+            background: '#ccc',
+            borderRadius: '4px',
+            '&:hover': { background: '#999' },
+          },
         }}
       >
         {/* -------- Inner Instruction --------- */}
@@ -331,6 +351,7 @@ export default function MultipleChoiceQuestionAudio({
                           sx={{
                             ...multipleChoiceStyles.optionLabel,
                             fontWeight: 400,
+                            flex: 1,
                             ...(questionResult &&
                               isSelectedInReview && {
                                 color: isCorrect ? '#4caf50' : '#f44336',
@@ -340,6 +361,19 @@ export default function MultipleChoiceQuestionAudio({
                         >
                           {option.answer_text || option.text}
                         </Typography>
+                        {correctAnswer.option_label === option.option_label && showSummary && (
+                          <Chip
+                            label="Correct"
+                            size="small"
+                            color="success"
+                            sx={{
+                              height: 20,
+                              fontSize: '0.65rem',
+                              ml: 1,
+                              display: { xs: 'none', md: 'block' },
+                            }}
+                          />
+                        )}
                       </Box>
                     );
                   })}
@@ -375,12 +409,12 @@ export default function MultipleChoiceQuestionAudio({
           disableGutters
           sx={{
             display: 'flex',
-            flexDirection: { xs: 'column', md: 'row' },
+            flexDirection: { xs: 'column-reverse', md: 'row' },
             alignItems: 'flex-start',
-            pr: 2,
+            pr: { xs: 0, md: 2 },
           }}
         >
-          <Box maxWidth="lg" sx={{ flex: { xs: 1, md: 4 }, width: '100%', pt: 2 }}>
+          <Box maxWidth="lg" sx={{ flex: { xs: 1, md: 4 }, width: '100%' }}>
             {mainContent}
           </Box>
           <SumaryPartTab questions={partQuestions} onNavigateToQuestion={onNavigateToQuestion} />

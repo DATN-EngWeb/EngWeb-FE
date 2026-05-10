@@ -138,7 +138,18 @@ export default function FillBlankPart({
           )}
         </Box>
         <Box
-          sx={listeningPartStyles.passageContainer}
+          sx={{
+            ...listeningPartStyles.passageContainer,
+            overflowY: 'auto',
+            scrollbarWidth: 'thin',
+            '&::-webkit-scrollbar': { width: '8px' },
+            '&::-webkit-scrollbar-track': { background: 'transparent' },
+            '&::-webkit-scrollbar-thumb': {
+              background: '#ccc',
+              borderRadius: '4px',
+              '&:hover': { background: '#999' },
+            },
+          }}
           dangerouslySetInnerHTML={{ __html: passageSrc || '' }}
         />
       </Box>
@@ -194,11 +205,20 @@ export default function FillBlankPart({
         sx={{
           ...listeningPartStyles.basicFlexColCenStart,
           width: { xs: '100%', md: `calc(${100 - leftWidth}% - 32px)` },
+          minWidth: { md: '400px' },
           height: '100%',
           overflowY: 'auto',
           minHeight: 0,
           containerType: 'inline-size',
           containerName: 'rightPanel',
+          scrollbarWidth: 'thin',
+          '&::-webkit-scrollbar': { width: '8px' },
+          '&::-webkit-scrollbar-track': { background: 'transparent' },
+          '&::-webkit-scrollbar-thumb': {
+            background: '#ccc',
+            borderRadius: '4px',
+            '&:hover': { background: '#999' },
+          },
         }}
       >
         {/* -------- Instruction --------- */}
@@ -228,7 +248,6 @@ export default function FillBlankPart({
         </Box>
         {/* -------- Question Section --------- */}
         <Box sx={listeningPartStyles.questionSection}>
-          <Box sx={listeningPartStyles.innerDecorQuestionSection} />
           <Box sx={listeningPartStyles.innerInstruction}>
             <LightbulbOutlinedIcon />
             <Typography sx={{ color: 'inherit', fontSize: 'inherit', fontWeight: 'inherit' }}>
@@ -406,12 +425,12 @@ export default function FillBlankPart({
           disableGutters
           sx={{
             display: 'flex',
-            flexDirection: { xs: 'column', md: 'row' },
+            flexDirection: { xs: 'column-reverse', md: 'row' },
             alignItems: 'flex-start',
-            pr: 2,
+            pr: { xs: 0, md: 2 },
           }}
         >
-          <Box maxWidth="lg" sx={{ flex: { xs: 1, md: 4 }, width: '100%', pt: 2 }}>
+          <Box maxWidth="lg" sx={{ flex: { xs: 1, md: 4 }, width: '100%' }}>
             {mainContent}
           </Box>
           <SumaryPartTab questions={partQuestions} onNavigateToQuestion={onNavigateToQuestion} />

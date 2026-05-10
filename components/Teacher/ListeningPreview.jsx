@@ -202,6 +202,10 @@ export default function ListeningPreview({
         ...listeningtestStyles.mainContainer,
         position: 'relative',
         overflow: 'hidden',
+        borderRadius: 4,
+        border: '1px solid',
+        borderColor: 'dark.main',
+        boxShadow: '0 6px 16px rgba(61, 30, 25, 0.06)',
         '@media print': {
           overflow: 'visible !important',
           height: 'auto !important',
@@ -247,7 +251,6 @@ export default function ListeningPreview({
           <Box sx={{ minWidth: 120 }} />
         )}
       </Box>
-      <Box sx={listeningtestStyles.separatorLine}></Box>
       <Box sx={listeningtestStyles.listPartContainer}>
         {parts.map((part, index) => (
           <Box
@@ -289,7 +292,8 @@ export default function ListeningPreview({
           <Typography
             sx={{
               ...listeningtestStyles.backButton,
-              visibility: indexPart === 0 ? 'hidden' : 'visible',
+              display: indexPart === -1 || indexPart === 0 ? { xs: 'none', md: 'flex' } : 'flex',
+              visibility: indexPart === -1 || indexPart === 0 ? 'hidden' : 'visible',
             }}
             onClick={goPrevPart}
           >
@@ -301,15 +305,23 @@ export default function ListeningPreview({
                 transform: 'rotate(270deg)',
               }}
             />
-            Back
-          </Typography>
+            Prev
+          </Typography>{' '}
           <Typography sx={{ fontSize: '1rem' }}>
             Section {indexPart + 1} of {parts.length}
           </Typography>
-          <Box sx={listeningtestStyles.summitButtonWrapper}>
-            <Button sx={listeningtestStyles.nextButton} onClick={goNextPart}>
-              Next
-            </Button>
+          <Box
+            sx={{
+              ...listeningtestStyles.summitButtonWrapper,
+              display:
+                indexPart === receptiveParts.length - 1 ? { xs: 'none', md: 'flex' } : 'flex',
+            }}
+          >
+            {indexPart !== receptiveParts.length - 1 && (
+              <Button sx={listeningtestStyles.nextButton} onClick={goNextPart}>
+                Next
+              </Button>
+            )}
           </Box>
         </Container>
       </Box>

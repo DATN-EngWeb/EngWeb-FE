@@ -189,10 +189,11 @@ export default function MultipleChoiceImagePart({
     <Box sx={{ display: isActive ? 'block' : 'none', width: '100%' }}>
       {showSummary ? (
         <Container
+          disableGutters
           maxWidth="lg"
           sx={{
             display: 'flex',
-            flexDirection: { xs: 'column', md: 'row' },
+            flexDirection: { xs: 'column-reverse', md: 'row' },
             alignItems: 'flex-start',
           }}
         >

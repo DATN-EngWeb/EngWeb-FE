@@ -62,7 +62,9 @@ export function transformFillBlanksTest(backendTest) {
           q.receptive_answers?.map((a) => ({
             id: a.id,
             value: a.option_label,
-            label: `${a.option_label}. ${a.answer_text}`,
+            label: a.answer_text || '',
+            option_label: a.option_label || '',
+            answer_text: a.answer_text || '',
             isCorrect: a.is_correct,
           })) || [],
       }));
@@ -138,6 +140,10 @@ export function transformMatchingTest(backendTest) {
   return { parts };
 }
 
+function isHttpUrlString(s) {
+  return typeof s === 'string' && /^https?:\/\//i.test(s.trim());
+}
+
 export function transformMultiChoiceTest(backendTest) {
   const receptiveParts =
     backendTest?.receptive_test?.receptive_parts || backendTest?.receptive_parts;
@@ -156,32 +162,55 @@ export function transformMultiChoiceTest(backendTest) {
         part.format === 'C',
     )
     .map((part, index) => {
-      const questions =
-        part.receptive_questions?.map((question) => {
-          const options =
-            question.receptive_answers?.map((answer) => ({
-              id: answer.id,
-              value: answer.option_label,
-              label: `${answer.option_label}. ${answer.answer_text}`,
-              isCorrect: answer.is_correct,
-            })) || [];
+      const rawQuestions = part.receptive_questions || [];
+      let passage = part.content || '';
+      let stimulusPageUrls = null;
+      const stripQuestionIds = new Set();
 
-          return {
-            id: question.id,
-            questionNumber: question.question_number,
-            question: question.content,
-            explanation: question.explanation,
-            options,
-          };
-        }) || [];
+      if (part.format === 'F' && !String(passage).trim()) {
+        const urlQuestions = rawQuestions
+          .filter((q) => isHttpUrlString(q.content))
+          .sort((a, b) => (a.question_number || 0) - (b.question_number || 0));
+        if (urlQuestions.length === 1) {
+          passage = urlQuestions[0].content.trim();
+          stripQuestionIds.add(urlQuestions[0].id);
+        } else if (urlQuestions.length > 1) {
+          stimulusPageUrls = urlQuestions.map((q) => String(q.content).trim());
+          urlQuestions.forEach((q) => stripQuestionIds.add(q.id));
+        }
+      }
+
+      const questions = rawQuestions.map((question) => {
+        const options =
+          question.receptive_answers?.map((answer) => ({
+            id: answer.id,
+            value: answer.option_label,
+            label: answer.answer_text || '',
+            option_label: answer.option_label || '',
+            answer_text: answer.answer_text || '',
+            isCorrect: answer.is_correct,
+          })) || [];
+
+        const stem = stripQuestionIds.has(question.id) ? '' : question.content;
+
+        return {
+          id: question.id,
+          questionNumber: question.question_number,
+          question: stem,
+          explanation: question.explanation,
+          options,
+        };
+      });
 
       return {
         id: part.order || index + 1,
         databaseId: part.id,
         title: `Part ${part.order || index + 1}`,
-        passage: part.content || '',
+        passage,
         passageTitle: part.description || '',
         questions,
+        /** Format F: nhiều URL stem cũ — fetch từng trang, đánh số 1..n bên trái */
+        stimulusPageUrls,
         componentType: 'multi-choice',
         rawPart: part,
       };
