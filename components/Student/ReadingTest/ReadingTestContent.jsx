@@ -37,6 +37,7 @@ import {
 import ReceptiveTestResult from '@/components/Student/ReceptiveTestResult/ReceptiveTestResult';
 import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import Skeleton from '../ListeningTest/skeleton';
+import { useStreakContext } from '@/context/streakContext';
 
 // Hàm helper format thời gian hiển thị
 const formatTimeFromSeconds = (totalSeconds) => {
@@ -64,6 +65,7 @@ const getReadingPartTypeLabel = (format) => {
 
 export default function ReadingTestContent({ testId }) {
   const router = useRouter();
+  const { refreshStreak, setGlobalRewardData } = useStreakContext();
 
   const [testData, setTestData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -368,6 +370,13 @@ export default function ReadingTestContent({ testId }) {
         window.sessionStorage.setItem('current_receptive_attempt', JSON.stringify(dataToSave));
         setIsReadOnly(true);
         setHistoryId(response.id);
+
+        await refreshStreak();
+        if (response?.streak_reward_notice) {
+          setGlobalRewardData(response.streak_reward_notice);
+        } else if (response?.streak_notice?.current_streak === 1) {
+          setGlobalRewardData(response.streak_notice);
+        }
       } else {
         setTimeout(() => {
           if (typeof window !== 'undefined') {
