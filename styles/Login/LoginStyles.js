@@ -1,7 +1,7 @@
 export const loginStyles = {
   page: {
-    height: '100vh',
-    overflow: 'hidden',
+    height: { xs: 'auto', lg: '100vh' },
+    overflow: { xs: 'auto', lg: 'hidden' },
     display: 'flex',
     gap: { xs: 4, lg: 6 },
     flexDirection: { xs: 'column', lg: 'row' },
@@ -10,7 +10,7 @@ export const loginStyles = {
   storyPanel: {
     width: { xs: '100%', lg: '50%' },
     flex: { xs: 'none', lg: '0 0 50%' },
-    height: '100%',
+    height: { xs: 'auto', lg: '100%' },
     borderRadius: { xs: 0, md: 0 },
     position: 'relative',
     overflow: 'hidden',
@@ -141,12 +141,13 @@ export const loginStyles = {
   },
   formPanel: {
     width: { xs: '100%', lg: '50%' },
-    flex: { xs: '1', lg: '0 0 50%' },
+    flex: { xs: 'none', lg: '0 0 50%' },
     display: 'flex',
     alignItems: 'center',
     justifyContent: { xs: 'center', lg: 'center' },
-    overflow: 'auto',
+    overflow: { xs: 'visible', lg: 'auto' },
     minWidth: 0,
+    py: { xs: 3, lg: 0 },
   },
   formCard: {
     width: '100%',
