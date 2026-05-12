@@ -38,6 +38,8 @@ import ReceptiveTestResult from '@/components/Student/ReceptiveTestResult/Recept
 import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import Skeleton from '../ListeningTest/skeleton';
 import { useStreakContext } from '@/context/streakContext';
+import SubmitLoadingDialog from '../../Writing-Speaking/SubmitLoadingDialog';
+import SaveDraftToast from '../../Writing-Speaking/SaveDraftToast';
 
 // Hàm helper format thời gian hiển thị
 const formatTimeFromSeconds = (totalSeconds) => {
@@ -81,6 +83,8 @@ export default function ReadingTestContent({ testId }) {
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [historyId, setHistoryId] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
+  const [submitStatus, setSubmitStatus] = useState('idle');
+  const [draftStatus, setDraftStatus] = useState('idle');
 
   // Timer Logic
   useEffect(() => {
@@ -228,7 +232,37 @@ export default function ReadingTestContent({ testId }) {
     setAnswers(newAnswers);
   };
 
+  const checkCompletionStatus = (readingTestData, currentAnswers) => {
+    let totalQuestions = 0;
+
+    readingTestData.parts.forEach((part) => {
+      totalQuestions += part.data?.questions?.length || 0;
+    });
+
+    let totalAnswered = 0;
+    Object.values(currentAnswers).forEach((partAnswers) => {
+      Object.values(partAnswers || {}).forEach((answer) => {
+        if (
+          answer !== null &&
+          answer !== undefined &&
+          (typeof answer === 'string' ? answer.trim() !== '' : true) &&
+          (Array.isArray(answer) ? answer.length > 0 : true)
+        ) {
+          totalAnswered += 1;
+        }
+      });
+    });
+
+    return totalQuestions === totalAnswered ? 'S' : 'D';
+  };
+
   const handleSubmit = (type = 'S') => {
+    if (type === 'S' && checkCompletionStatus(testData, answers) !== 'S') {
+      setSubmitType('S');
+      setOpenSubmitDialog(true);
+      return;
+    }
+
     const hasAnswer = Object.values(answers).some(
       (val) => val !== '' && val !== null && val !== undefined,
     );
@@ -242,8 +276,31 @@ export default function ReadingTestContent({ testId }) {
     setOpenSubmitDialog(true);
   };
 
+  const handleCloseSubmitDialog = () => {
+    setSubmitStatus('idle');
+  };
+
+  const handleCloseDraftToast = () => {
+    setDraftStatus('idle');
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem('current_receptive_attempt');
+    }
+    router.push(`/student/reading/${testId}`);
+  };
+
+  const handleSaveDraftRetry = () => {
+    setDraftStatus('idle');
+    handleConfirmSubmit();
+  };
+
   const handleConfirmSubmit = async () => {
     try {
+      if (submitType === 'S') {
+        setSubmitStatus('submitting');
+      } else {
+        setDraftStatus('saving');
+      }
+      setOpenSubmitDialog(false);
       setIsSubmitting(true);
       const token = localStorage.getItem('accessToken');
       if (!token) {
@@ -346,14 +403,18 @@ export default function ReadingTestContent({ testId }) {
         answer_histories,
       };
 
-      const response = await createReceptiveTest(payload, token);
-      setOpenSubmitDialog(false);
+      const [response] = await Promise.all([
+        createReceptiveTest(payload, token),
+        submitType === 'S'
+          ? new Promise((resolve) => setTimeout(resolve, 1500))
+          : Promise.resolve(),
+      ]);
 
-      setSnackbar({
-        open: true,
-        message: submitType === 'S' ? 'Test submitted successfully!' : 'Draft saved successfully!',
-        severity: 'success',
-      });
+      if (submitType === 'S') {
+        setSubmitStatus('idle');
+      } else {
+        setDraftStatus('saved');
+      }
 
       if (submitType === 'S') {
         const dataToSave = {
@@ -377,25 +438,14 @@ export default function ReadingTestContent({ testId }) {
         } else if (response?.streak_notice?.current_streak === 1) {
           setGlobalRewardData(response.streak_notice);
         }
-      } else {
-        setTimeout(() => {
-          if (typeof window !== 'undefined') {
-            window.sessionStorage.removeItem('current_receptive_attempt');
-          }
-          router.push(`/student/reading/${testId}`);
-        }, 1000);
       }
     } catch (err) {
       console.error('Submission error:', err);
-      let errorMessage = err.message || 'Unknown error';
-      if (err.data && typeof err.data === 'object') {
-        errorMessage = JSON.stringify(err.data, null, 2);
+      if (submitType === 'S') {
+        setSubmitStatus('error');
+      } else {
+        setDraftStatus('error');
       }
-      setSnackbar({
-        open: true,
-        message: 'Failed to submit test: ' + errorMessage,
-        severity: 'error',
-      });
     } finally {
       setIsSubmitting(false);
     }
@@ -537,6 +587,21 @@ export default function ReadingTestContent({ testId }) {
         backgroundColor: 'background.paper',
       }}
     >
+      <SubmitLoadingDialog
+        status={submitStatus}
+        testType="reading"
+        onClose={handleCloseSubmitDialog}
+        onRetry={() => {
+          setSubmitStatus('idle');
+          handleConfirmSubmit();
+        }}
+      />
+      <SaveDraftToast
+        status={draftStatus}
+        testType="reading"
+        onClose={handleCloseDraftToast}
+        onRetry={handleSaveDraftRetry}
+      />
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
@@ -586,6 +651,7 @@ export default function ReadingTestContent({ testId }) {
           sx={{
             ...listeningtestStyles.summitButtonWrapper,
             ...(isReadOnly && { visibility: 'hidden' }),
+            ...(isReadOnly && { display: { xs: 'none', md: 'flex' } }),
           }}
         >
           <Button
@@ -688,7 +754,9 @@ export default function ReadingTestContent({ testId }) {
       {/* --- CÁC DIALOG XÁC NHẬN --- */}
       <Dialog
         open={openSubmitDialog}
-        onClose={() => !isSubmitting && setOpenSubmitDialog(false)}
+        onClose={() =>
+          !(submitStatus === 'submitting' || draftStatus === 'saving') && setOpenSubmitDialog(false)
+        }
         PaperProps={{
           sx: {
             borderRadius: '20px',
@@ -697,6 +765,7 @@ export default function ReadingTestContent({ testId }) {
             width: '100%',
             position: 'relative',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            border: '1px solid #d7ccc8',
           },
         }}
       >
@@ -706,10 +775,10 @@ export default function ReadingTestContent({ testId }) {
             position: 'absolute',
             right: 16,
             top: 16,
-            color: '#64748b',
-            '&:hover': { backgroundColor: '#f1f5f9' },
+            color: 'primary.dark',
+            '&:hover': { backgroundColor: '#efebe9' },
           }}
-          disabled={isSubmitting}
+          disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
         >
           <CloseIcon fontSize="small" />
         </IconButton>
@@ -720,50 +789,52 @@ export default function ReadingTestContent({ testId }) {
                 width: '90px',
                 height: '90px',
                 borderRadius: '50%',
-                backgroundColor: '#f0fdf4',
+                backgroundColor: '#efebe9',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                border: '1px solid #dcfce7',
+                border: '2px solid #a1887f',
               }}
             >
-              <InfoOutlinedIcon sx={{ fontSize: 48, color: '#16a34a' }} />
+              <InfoOutlinedIcon sx={{ fontSize: 48, color: 'primary.dark' }} />
             </Box>
             <Typography
               sx={{
                 fontSize: '1.25rem',
                 fontWeight: 700,
-                color: '#1e293b',
-                lineHeight: 1.2,
+                color: 'primary.main',
+                lineHeight: 1.4,
                 px: 3,
                 fontFamily: '"Outfit", sans-serif',
               }}
             >
               {submitType === 'S'
-                ? 'Are you sure you want to submit?'
-                : 'Are you sure you want to save this draft?'}
+                ? checkCompletionStatus(testData, answers) === 'S'
+                  ? 'Are you sure you want to submit your test?'
+                  : 'You have not finished all questions. Are you sure you want to submit your test?'
+                : 'Do you want to save your progress as a draft?'}
             </Typography>
           </Stack>
         </DialogContent>
-        <DialogActions sx={{ justifyContent: 'center', gap: 3, pb: 6, pt: 2, px: 4 }}>
+        <DialogActions sx={{ gap: 2, pb: 6, pt: 2, px: 4, justifyContent: 'center' }}>
           <Button
             onClick={() => setOpenSubmitDialog(false)}
             variant="outlined"
-            disabled={isSubmitting}
+            disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
             sx={{
               borderRadius: '50px',
-              px: 5,
-              py: 1.5,
+              px: 4,
+              py: 1.2,
               textTransform: 'none',
               fontWeight: 700,
               fontSize: '0.875rem',
-              color: '#475569',
-              borderColor: '#e2e8f0',
+              color: '#6d4c41',
+              borderColor: '#d7ccc8',
               borderWidth: '1.5px',
               fontFamily: '"Outfit", sans-serif',
               '&:hover': {
-                backgroundColor: '#f8fafc',
-                borderColor: '#cbd5e1',
+                backgroundColor: '#fbe9e7',
+                borderColor: '#bcaaa4',
                 borderWidth: '1.5px',
               },
             }}
@@ -773,114 +844,31 @@ export default function ReadingTestContent({ testId }) {
           <Button
             onClick={handleConfirmSubmit}
             variant="contained"
-            disabled={isSubmitting}
+            disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
             sx={{
               borderRadius: '50px',
-              px: isSubmitting ? 6 : 4,
-              py: 1.5,
+              px: 4,
+              py: 1.2,
               textTransform: 'none',
               fontWeight: 700,
               fontSize: '0.875rem',
-              backgroundColor: '#166534',
+              backgroundColor: 'primary.main',
               color: '#ffffff',
               fontFamily: '"Outfit", sans-serif',
-              boxShadow: '0 4px 14px 0 rgba(22, 101, 52, 0.39)',
+              boxShadow: '0 4px 14px 0 rgba(93, 64, 55, 0.39)',
               '&:hover': {
-                backgroundColor: '#14532d',
-                boxShadow: '0 6px 20px rgba(22, 101, 52, 0.23)',
+                backgroundColor: 'primary.dark',
+                boxShadow: '0 6px 20px rgba(93, 64, 55, 0.23)',
               },
-              '&.Mui-disabled': { backgroundColor: '#166534', opacity: 0.7 },
             }}
           >
-            {isSubmitting ? (
+            {submitStatus === 'submitting' || draftStatus === 'saving' ? (
               <CircularProgress size={24} color="inherit" />
             ) : submitType === 'S' ? (
-              'SUBMIT'
+              'SUBMIT NOW'
             ) : (
               'SAVE DRAFT'
             )}
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog
-        open={openWarningDialog}
-        onClose={() => setOpenWarningDialog(false)}
-        maxWidth="xs"
-        fullWidth
-        PaperProps={{
-          elevation: 0,
-          sx: {
-            borderRadius: '24px',
-            padding: 2,
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-          },
-        }}
-      >
-        <Box sx={{ position: 'absolute', right: 16, top: 16 }}>
-          <IconButton
-            onClick={() => setOpenWarningDialog(false)}
-            sx={{ color: '#94a3b8', '&:hover': { backgroundColor: '#f1f5f9', color: '#475569' } }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </Box>
-        <DialogContent sx={{ pt: 4, pb: 1, textAlign: 'center' }}>
-          <Stack alignItems="center" spacing={3}>
-            <Box
-              sx={{
-                width: '90px',
-                height: '90px',
-                borderRadius: '50%',
-                backgroundColor: '#fffbeb',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '1px solid #fef3c7',
-              }}
-            >
-              <WarningAmberIcon sx={{ fontSize: 48, color: '#f59e0b' }} />
-            </Box>
-            <Typography
-              sx={{
-                fontSize: '1.5rem',
-                fontWeight: 700,
-                color: '#1e293b',
-                lineHeight: 1.2,
-                px: 2,
-                fontFamily: '"Outfit", sans-serif',
-              }}
-            >
-              Warning
-            </Typography>
-            <Typography
-              sx={{ fontSize: '1rem', color: '#475569', px: 2, fontFamily: '"Outfit", sans-serif' }}
-            >
-              Please select or fill in at least one answer before submitting!
-            </Typography>
-          </Stack>
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: 'center', pb: 4, pt: 2, px: 4 }}>
-          <Button
-            onClick={() => setOpenWarningDialog(false)}
-            variant="contained"
-            sx={{
-              borderRadius: '50px',
-              px: 6,
-              py: 1.5,
-              textTransform: 'none',
-              fontWeight: 700,
-              fontSize: '1rem',
-              backgroundColor: '#f59e0b',
-              color: '#ffffff',
-              fontFamily: '"Outfit", sans-serif',
-              boxShadow: '0 4px 14px 0 rgba(245, 158, 11, 0.39)',
-              '&:hover': {
-                backgroundColor: '#d97706',
-                boxShadow: '0 6px 20px rgba(245, 158, 11, 0.23)',
-              },
-            }}
-          >
-            GOT IT
           </Button>
         </DialogActions>
       </Dialog>
