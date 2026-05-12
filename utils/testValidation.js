@@ -518,7 +518,7 @@ export const validateReadingPartUpdatePayload = (transformedParts, originalParts
       }
 
       if (['F', 'G', 'H'].includes(partFormat)) {
-        const hasCorrectAnswer = tQuestion.answers?.some((a) => a.is_correct === true);
+        const hasCorrectAnswer = activeAnswers.some((a) => a.is_correct === true);
         if (!hasCorrectAnswer) {
           return `Part ${displayPartNum}, Question ${displayQuestionNum}: choose the correct answer.`;
         }
