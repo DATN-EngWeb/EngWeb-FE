@@ -11,7 +11,6 @@ import {
   Select,
   Checkbox,
   FormControlLabel,
-  Button,
   Pagination,
   InputAdornment,
   Stack,
@@ -19,7 +18,6 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import PersonIcon from '@mui/icons-material/Person';
-import { useRouter } from 'next/navigation';
 import { getTestOverview } from '../../../api/tests';
 import TestCard from '../../../components/TestCard';
 import { useAuth } from '../../../hooks/useAuth';
@@ -28,13 +26,6 @@ const pageContainerStyles = {
   backgroundColor: 'background.default',
   minHeight: '100vh',
   pb: 8,
-};
-
-const headerSectionStyles = {
-  bgcolor: 'background.paper',
-  px: 4,
-  py: 3,
-  borderRadius: 4,
 };
 
 const filterSidebarStyles = {
@@ -46,7 +37,14 @@ const filterSidebarStyles = {
   top: 24,
 };
 
-const YEARS = ['2024', '2023', '2022', 'All years'];
+const currentYear = new Date().getFullYear();
+
+const YEARS = [
+  'All years',
+  currentYear.toString(),
+  (currentYear - 1).toString(),
+  (currentYear - 2).toString(),
+];
 const LEVELS = [
   { value: 'A1', label: 'Basic (A1)' },
   { value: 'A2', label: 'Basic (A2)' },
@@ -55,7 +53,6 @@ const LEVELS = [
 ];
 
 export default function ListeningHub() {
-  const router = useRouter();
   const { user } = useAuth();
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,6 +71,23 @@ export default function ListeningHub() {
     mine: false,
   });
 
+  const [localTitle, setLocalTitle] = useState(filters.title);
+  const [localTeacher, setLocalTeacher] = useState(filters.teacher);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((prev) => {
+        if (prev.title !== localTitle || prev.teacher !== localTeacher) {
+          setPage(1);
+          return { ...prev, title: localTitle, teacher: localTeacher };
+        }
+        return prev;
+      });
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [localTitle, localTeacher]);
+
   useEffect(() => {
     async function fetchTests() {
       setLoading(true);
@@ -89,6 +103,8 @@ export default function ListeningHub() {
         if (filters.title) params.title = filters.title;
         if (filters.level) params.level = filters.level;
         if (filters.mine) params.mine = 'true';
+        if (filters.year !== 'All years') params.year = filters.year;
+        if (filters.teacher) params.teacher_name = filters.teacher;
         params.progress_status = true;
 
         if (user?.role === 'A') {
@@ -161,8 +177,8 @@ export default function ListeningHub() {
                     fullWidth
                     placeholder="Find test name"
                     size="small"
-                    value={filters.title}
-                    onChange={(e) => handleFilterChange('title', e.target.value)}
+                    value={localTitle}
+                    onChange={(e) => setLocalTitle(e.target.value)}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -188,8 +204,8 @@ export default function ListeningHub() {
                     fullWidth
                     placeholder="Find teacher"
                     size="small"
-                    value={filters.teacher}
-                    onChange={(e) => handleFilterChange('teacher', e.target.value)}
+                    value={localTeacher}
+                    onChange={(e) => setLocalTeacher(e.target.value)}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -261,36 +277,28 @@ export default function ListeningHub() {
                   <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
                     Level
                   </Typography>
-                  <Stack>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={filters.level === ''}
-                          onChange={() => handleFilterChange('level', '')}
-                          size="small"
-                          sx={{ color: 'warning.main', '&.Mui-checked': { color: 'warning.dark' } }}
-                        />
-                      }
-                      label={<Typography variant="body2">All Levels</Typography>}
-                    />
+                  <Select
+                    fullWidth
+                    size="small"
+                    displayEmpty
+                    value={filters.level}
+                    onChange={(e) => handleFilterChange('level', e.target.value)}
+                    sx={{
+                      bgcolor: 'background.paper',
+                      borderRadius: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      '& fieldset': { border: 'none' },
+                    }}
+                  >
+                    <MenuItem value="">All Levels</MenuItem>
+
                     {LEVELS.map((level) => (
-                      <FormControlLabel
-                        key={level.value}
-                        control={
-                          <Checkbox
-                            checked={filters.level === level.value}
-                            onChange={() => handleFilterChange('level', level.value)}
-                            size="small"
-                            sx={{
-                              color: 'warning.main',
-                              '&.Mui-checked': { color: 'warning.dark' },
-                            }}
-                          />
-                        }
-                        label={<Typography variant="body2">{level.label}</Typography>}
-                      />
+                      <MenuItem key={level.value} value={level.value}>
+                        {level.label}
+                      </MenuItem>
                     ))}
-                  </Stack>
+                  </Select>
                 </Box>
 
                 {user?.role === 'T' && (
