@@ -22,7 +22,7 @@ import {
 import { useParams, useRouter } from 'next/navigation';
 import SendIcon from '@mui/icons-material/Send';
 import ShareIcon from '@mui/icons-material/Share';
-import EditNoteIcon from '@mui/icons-material/EditNote';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import HistoryEduIcon from '@mui/icons-material/HistoryEdu';
@@ -567,20 +567,31 @@ export default function WritingTest() {
           <Stack direction="row" spacing={1.5} alignItems="center">
             <Button
               variant="contained"
-              startIcon={<EditNoteIcon />}
+              startIcon={<SaveOutlinedIcon />}
               onClick={handleSaveDraft}
               sx={{
-                ...styles.aiButton,
-                bgcolor: 'info.pastel',
-                color: 'info.main',
-                py: 1,
-                px: 2,
+                flex: 1,
+                minWidth: 0,
+                backgroundColor: 'transparent',
+                color: 'primary.main',
                 borderRadius: '12px',
-                fontSize: '0.8125rem',
-                minWidth: 'auto',
-                textTransform: 'none',
+                border: '1px solid',
+                borderColor: 'gray.main',
+                fontSize: { xs: '0.8rem', md: '0.9rem' }, // Tăng lại cỡ chữ
                 fontWeight: 700,
-                '&:hover': { bgcolor: '#e3f2fd' },
+                textTransform: 'none',
+                whiteSpace: 'nowrap',
+                px: 1.5,
+                py: 0.75,
+                '& .MuiButton-startIcon': {
+                  marginRight: '6px',
+                  marginLeft: '-4px',
+                  '& svg': { fontSize: '1.2rem' },
+                },
+                '&:hover': {
+                  backgroundColor: 'background.gray',
+                  color: 'primary.main',
+                },
               }}
             >
               Save Draft
