@@ -21,15 +21,12 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import PersonIcon from '@mui/icons-material/Person';
-import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getTestOverview } from '../../../api/tests';
 import TestCard from '../../../components/TestCard';
 import { useAuth } from '../../../hooks/useAuth';
+import FilterSidebar from '../../../components/Student/FilterSidebar';
 
 const pageContainerStyles = {
   backgroundColor: 'background.default',
@@ -43,23 +40,6 @@ const headerSectionStyles = {
   py: 3,
   borderRadius: 4,
 };
-
-const filterSidebarStyles = {
-  backgroundColor: 'background.paper',
-  p: 2,
-  borderRadius: 4,
-  height: 'fit-content',
-  position: 'sticky',
-  top: 24,
-};
-
-const YEARS = ['2024', '2023', '2022', 'All years'];
-const LEVELS = [
-  { value: 'A1', label: 'Basic (A1)' },
-  { value: 'A2', label: 'Basic (A2)' },
-  { value: 'B1', label: 'Intermediate (B1)' },
-  { value: 'B2', label: 'Intermediate (B2)' },
-];
 
 export default function ReadingHub() {
   const router = useRouter();
@@ -75,7 +55,7 @@ export default function ReadingHub() {
     title: '',
     teacher: '',
     year: 'All years',
-    level: '',
+    level: [],
     status: '',
     ordering: '-created_at',
     mine: false,
@@ -95,9 +75,10 @@ export default function ReadingHub() {
         };
 
         if (filters.title) params.title = filters.title;
-        if (filters.level) params.level = filters.level;
+        if (filters.level && filters.level.length > 0) params.level = filters.level;
         if (filters.mine) params.mine = 'true';
         params.progress_status = true;
+        params.submitted = 'true';
         params.submitted = 'true';
 
         if (user?.role === 'A') {
@@ -153,203 +134,7 @@ export default function ReadingHub() {
               display: 'block',
             }}
           >
-            <Box sx={filterSidebarStyles}>
-              <Stack direction="row" alignItems="center" spacing={1} mb={3}>
-                <Box sx={{ width: 4, height: 24, bgcolor: 'warning.main', borderRadius: 1 }} />
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  Search and Filter
-                </Typography>
-              </Stack>
-
-              <Stack spacing={3}>
-                <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                    Test name
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    placeholder="Find test name"
-                    size="small"
-                    value={filters.title}
-                    onChange={(e) => handleFilterChange('title', e.target.value)}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <SearchIcon color="action" />
-                        </InputAdornment>
-                      ),
-                      sx: {
-                        bgcolor: 'background.paper',
-                        borderRadius: 2,
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        '& fieldset': { border: 'none' },
-                      },
-                    }}
-                  />
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                    Teacher
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    placeholder="Find teacher"
-                    size="small"
-                    value={filters.teacher}
-                    onChange={(e) => handleFilterChange('teacher', e.target.value)}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <PersonIcon color="action" />
-                        </InputAdornment>
-                      ),
-                      sx: {
-                        bgcolor: 'background.paper',
-                        borderRadius: 2,
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        '& fieldset': { border: 'none' },
-                      },
-                    }}
-                  />
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                    Year
-                  </Typography>
-                  <Select
-                    fullWidth
-                    size="small"
-                    value={filters.year}
-                    onChange={(e) => handleFilterChange('year', e.target.value)}
-                    sx={{
-                      bgcolor: 'background.paper',
-                      borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      '& fieldset': { border: 'none' },
-                    }}
-                  >
-                    {YEARS.map((year) => (
-                      <MenuItem key={year} value={year}>
-                        {year}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                    Sort by
-                  </Typography>
-                  <Select
-                    fullWidth
-                    size="small"
-                    value={filters.ordering}
-                    onChange={(e) => handleFilterChange('ordering', e.target.value)}
-                    sx={{
-                      bgcolor: 'background.paper',
-                      borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      '& fieldset': { border: 'none' },
-                    }}
-                  >
-                    <MenuItem value="-created_at">Newest First</MenuItem>
-                    <MenuItem value="created_at">Oldest First</MenuItem>
-                    <MenuItem value="-updated_at">Recently Updated</MenuItem>
-                    <MenuItem value="title">Title (A-Z)</MenuItem>
-                    <MenuItem value="-title">Title (Z-A)</MenuItem>
-                  </Select>
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                    Level
-                  </Typography>
-                  <Stack>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={filters.level === ''}
-                          onChange={() => handleFilterChange('level', '')}
-                          size="small"
-                          sx={{ color: 'warning.main', '&.Mui-checked': { color: 'warning.dark' } }}
-                        />
-                      }
-                      label={<Typography variant="body2">All Levels</Typography>}
-                    />
-                    {LEVELS.map((level) => (
-                      <FormControlLabel
-                        key={level.value}
-                        control={
-                          <Checkbox
-                            checked={filters.level === level.value}
-                            onChange={() => handleFilterChange('level', level.value)}
-                            size="small"
-                            sx={{
-                              color: 'warning.main',
-                              '&.Mui-checked': { color: 'warning.dark' },
-                            }}
-                          />
-                        }
-                        label={<Typography variant="body2">{level.label}</Typography>}
-                      />
-                    ))}
-                  </Stack>
-                </Box>
-
-                {user?.role === 'T' && (
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={filters.mine}
-                          onChange={(e) => handleFilterChange('mine', e.target.checked)}
-                          size="small"
-                          sx={{ color: 'warning.main', '&.Mui-checked': { color: 'warning.dark' } }}
-                        />
-                      }
-                      label={
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                          My Tests Only
-                        </Typography>
-                      }
-                    />
-                  </Box>
-                )}
-
-                {user?.role === 'A' && (
-                  <Box>
-                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                      Status
-                    </Typography>
-                    <Select
-                      fullWidth
-                      size="small"
-                      value={filters.status}
-                      onChange={(e) => handleFilterChange('status', e.target.value)}
-                      sx={{
-                        bgcolor: 'background.paper',
-                        borderRadius: 2,
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        '& fieldset': { border: 'none' },
-                      }}
-                    >
-                      <MenuItem value="">All Statuses</MenuItem>
-                      <MenuItem value="P">Published</MenuItem>
-                      <MenuItem value="D">Draft</MenuItem>
-                      <MenuItem value="I">In Review</MenuItem>
-                      <MenuItem value="R">Removed</MenuItem>
-                    </Select>
-                  </Box>
-                )}
-              </Stack>
-            </Box>
+            <FilterSidebar filters={filters} handleFilterChange={handleFilterChange} user={user} />
           </Grid>
 
           <Grid
