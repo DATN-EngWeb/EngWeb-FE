@@ -260,10 +260,7 @@ export default function WritingTest() {
       await refreshStreak();
       if (response?.streak_reward_notice) {
         setGlobalRewardData(response.streak_reward_notice);
-      } else if (
-        response?.streak_notice?.current_streak === 1 &&
-        response?.streak_notice?.continued === true
-      ) {
+      } else if (response?.streak_notice?.current_streak === 1) {
         setGlobalRewardData(response.streak_notice);
       }
 
@@ -299,10 +296,7 @@ export default function WritingTest() {
 
       if (response?.streak_reward_notice) {
         setGlobalRewardData(response.streak_reward_notice);
-      } else if (
-        response?.streak_notice?.current_streak === 1 &&
-        response?.streak_notice?.continued === true
-      ) {
+      } else if (response?.streak_notice?.current_streak === 1) {
         setGlobalRewardData(response.streak_notice);
       }
 
