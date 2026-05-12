@@ -98,6 +98,7 @@ export default function ReadingHub() {
         if (filters.level) params.level = filters.level;
         if (filters.mine) params.mine = 'true';
         params.progress_status = true;
+        params.submitted = 'true';
 
         if (user?.role === 'A') {
           if (filters.status) params.status = filters.status;

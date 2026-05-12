@@ -92,6 +92,7 @@ export default function ProductiveHub({ Skill }) {
           type: 'P',
           page: page,
           ordering: filters.ordering,
+          submitted: 'true',
         };
 
         if (filters.title) params.title = filters.title;
