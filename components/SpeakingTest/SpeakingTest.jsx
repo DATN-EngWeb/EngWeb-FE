@@ -250,15 +250,18 @@ export default function SpeakingTest() {
       // eslint-disable-next-line no-console
       console.log('Uploading audio to URL:', audioUrl);
 
-      const response = await createProductiveTest({
-        productive_test: testId,
-        total_time: secondsElapsed,
-        type: 'S',
-        start_time: startTime,
-        end_time: new Date().toISOString(),
-        audio_path: audioUrl,
-        is_shared: true,
-      });
+      const [response] = await Promise.all([
+        createProductiveTest({
+          productive_test: testId,
+          total_time: secondsElapsed,
+          type: 'S',
+          start_time: startTime,
+          end_time: new Date().toISOString(),
+          audio_path: audioUrl,
+          is_shared: true,
+        }),
+        new Promise((resolve) => setTimeout(resolve, 1500)),
+      ]);
 
       // eslint-disable-next-line no-console
       console.log('Submission response:', response);
@@ -311,15 +314,18 @@ export default function SpeakingTest() {
       });
       const uploadedAudioUrl = await uploadMediaFile(audioFile, testId);
 
-      const response = await createProductiveTest({
-        productive_test: testId,
-        total_time: secondsElapsed,
-        type: 'S',
-        start_time: startTime,
-        end_time: new Date().toISOString(),
-        audio_path: uploadedAudioUrl,
-        is_shared: true,
-      });
+      const [response] = await Promise.all([
+        createProductiveTest({
+          productive_test: testId,
+          total_time: secondsElapsed,
+          type: 'S',
+          start_time: startTime,
+          end_time: new Date().toISOString(),
+          audio_path: uploadedAudioUrl,
+          is_shared: true,
+        }),
+        new Promise((resolve) => setTimeout(resolve, 1500)),
+      ]);
 
       const historyId = response.id;
 
@@ -357,12 +363,11 @@ export default function SpeakingTest() {
 
   const handleAIFeedback = async () => {
     setOpenShareModal(false);
-    setSubmitStatus('submitting');
-    let newHistoryID = null;
+    setIsFetchingFeedback(true);
 
     try {
       if (!audioBlob) {
-        setSubmitStatus('idle');
+        setIsFetchingFeedback(false);
         return null;
       }
 
@@ -404,9 +409,25 @@ export default function SpeakingTest() {
         setGlobalRewardData(response.streak_notice);
       }
 
-      setSubmitMode('ai');
-      setSubmitStatus('submitted');
+      // Fetch AI Feedback
+      const category = await getSpeakingAIFeedback({ id: response.id });
+      localStorage.setItem('category', JSON.stringify(category.ai_feedback));
+      const nextTurns = normalizeAITurns(category.remaining_turns);
+      setRemainingAITurns(nextTurns);
+      localStorage.setItem('remainAIturns', JSON.stringify(nextTurns));
+
+      // Save audio context for AIFeedback page
+      localStorage.setItem(
+        'aiFeedbackContext',
+        JSON.stringify({
+          audio: uploadedAudioUrl,
+        }),
+      );
+
+      setIsFetchingFeedback(false);
+      router.push(`/student/speaking/${testId}/${attempt}/AI-feedback`);
     } catch (error) {
+      setIsFetchingFeedback(false);
       if (
         error?.status >= 500 ||
         error?.response?.status >= 500 ||
@@ -414,7 +435,7 @@ export default function SpeakingTest() {
       ) {
         setServerErrorOpen(true);
       } else {
-        setSubmitStatus('error');
+        setSnackbar({ open: true, message: 'Failed to get AI feedback', severity: 'error' });
       }
       return;
     }
