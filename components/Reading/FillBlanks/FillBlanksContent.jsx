@@ -384,13 +384,6 @@ const FillBlanksContent = ({
                               <Typography sx={listeningPartStyles.questionLabelRectangle}>
                                 {q.question_number || idx + 1}
                               </Typography>
-                              <Typography
-                                sx={{ ...listeningPartStyles.questionText, ...textWrapStyles }}
-                              >
-                                {q.question?.trim()
-                                  ? q.question
-                                  : `Please choose the correct answer for blank ${q.question_number || idx + 1}`}
-                              </Typography>
                             </Box>
                             <Box
                               sx={{

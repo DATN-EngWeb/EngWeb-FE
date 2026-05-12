@@ -142,6 +142,20 @@ function LoginContent() {
         const userIdFromToken = decoded?.user_id;
         const roleFromToken = decoded?.role;
 
+        if (roleFromToken === 'S' && currentRole === 'teacher') {
+          setServerError(
+            'Your account does not have teacher access. Please log in as a student or contact support.',
+          );
+          return;
+        }
+
+        if (roleFromToken === 'T' && currentRole === 'student') {
+          setServerError(
+            'Your account does not have student access. Please log in as a teacher or contact support.',
+          );
+          return;
+        }
+
         // Save tokens to localStorage
         if (typeof window !== 'undefined') {
           localStorage.setItem('accessToken', response.access);
