@@ -9,11 +9,12 @@ import {
   labelText,
   textInput,
 } from '../../styles/Teacher/Listening/ListeningStyles';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 export default function BasicInformation({ testName, level, time, description, onChange }) {
   return (
-    <Paper sx={panelPaper}>
-      <Box sx={sectionHeader}>
+    <Paper sx={{ ...panelPaper, mb: 0, p: { xs: 2, md: 3 } }}>
+      <Box sx={{ ...sectionHeader, gap: 2 }}>
         <Box sx={accentBar} />
         <Typography
           fontWeight={600}
@@ -86,7 +87,23 @@ export default function BasicInformation({ testName, level, time, description, o
             },
           }}
         >
-          <Select value={level} onChange={(e) => onChange('level', e.target.value)} displayEmpty>
+          <Select
+            value={level}
+            onChange={(e) => onChange('level', e.target.value)}
+            displayEmpty
+            sx={{
+              '& .MuiSelect-icon': {
+                color: 'primary.main',
+                fontSize: '1.8rem',
+                right: '12px',
+                transition: 'transform 0.2s',
+              },
+              '& .MuiSelect-iconOpen': {
+                transform: 'rotate(180deg)',
+              },
+            }}
+            IconComponent={KeyboardArrowDownIcon}
+          >
             <MenuItem value="" disabled>
               Choose level
             </MenuItem>

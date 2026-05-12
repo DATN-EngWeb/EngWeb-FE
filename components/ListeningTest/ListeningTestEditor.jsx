@@ -427,6 +427,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
         />
         <Box
           sx={{
+            position: 'sticky',
             top: 0,
             zIndex: 1100,
             backgroundColor: '#FFF4E9',
@@ -544,7 +545,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
                     ))}
 
                   <Box sx={addPartBox} onClick={handleAddPart}>
-                    <AddRoundedIcon sx={{ fontSize: '1.4rem' }} /> Add new part
+                    <AddRoundedIcon sx={{ fontSize: '1.4rem' }} /> Add New Part
                   </Box>
                 </Box>
               </Box>

@@ -51,6 +51,8 @@ import { getPresignedUrl, uploadToObjectStorage, confirmUpload } from '../../../
 import { validateReadingPartUpdatePayload } from '../../../../../utils/testValidation';
 import ScrollToTopButton from '../../../../../components/CreateTest/ScrollToTopButton';
 import TestEditorHeader from '../../../../../components/UploadTest/TestEditorHeader';
+import { accentBar, addPartBox } from '@/styles/Teacher/Listening/ListeningStyles';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
 
 export default function Page() {
   const { test_id } = useParams();
@@ -821,7 +823,7 @@ export default function Page() {
   };
 
   return (
-    <Box sx={uploadReadingStyles.mainContainer}>
+    <Box sx={{ ...uploadReadingStyles.mainContainer, minHeight: 'calc(100vh-64px)' }}>
       <ScrollToTopButton />
       <Snackbar
         open={snackbar.open}
@@ -846,6 +848,7 @@ export default function Page() {
         {/* -------- Function Buttons Section --------- */}
         <Box
           sx={{
+            position: 'sticky',
             top: 0,
             zIndex: 1100,
             backgroundColor: '#FFF4E9',
@@ -914,7 +917,7 @@ export default function Page() {
           >
             <Box sx={{ ...uploadReadingStyles.uploadReadingFormSection, flex: 1, minWidth: 0 }}>
               {/* -------------------- Basic Information -------------------- */}
-              <Box sx={{ ...uploadReadingStyles.basicInfoContainer, mt: 1 }}>
+              <Box sx={uploadReadingStyles.basicInfoContainer}>
                 <Box
                   sx={{
                     display: 'flex',
@@ -924,14 +927,8 @@ export default function Page() {
                     alignItems: 'center',
                   }}
                 >
-                  <Box
-                    sx={{
-                      width: '4px',
-                      height: '36px',
-                      backgroundColor: 'yellow.main',
-                      borderRadius: '1rem',
-                    }}
-                  ></Box>
+                  <Box sx={accentBar} />
+
                   <Typography
                     sx={{
                       ...uploadReadingStyles.basicInfoHeading,
@@ -1151,13 +1148,9 @@ export default function Page() {
                   </Box>
                 ))}
               {/* -------- Add New Part Button --------- */}
-              <Button
-                startIcon={<AddIcon />}
-                sx={uploadReadingStyles.addPartButton}
-                onClick={() => handleAddPart()}
-              >
-                Add New Part
-              </Button>
+              <Box sx={addPartBox} onClick={() => handleAddPart()}>
+                <AddRoundedIcon sx={{ fontSize: '1.4rem' }} /> Add New Part
+              </Box>
             </Box>
 
             {canShowFeedback && showFeedbackPanel && (

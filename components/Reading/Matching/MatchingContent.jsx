@@ -31,7 +31,9 @@ const MatchingContent = ({
 }) => {
   const pathname = usePathname();
   const isTeacherView =
-    pathname?.includes('/teacher/view-test/') || pathname?.includes('/teacher/upload-test/');
+    pathname?.includes('/teacher/view-test/') ||
+    pathname?.includes('/teacher/upload-test/') ||
+    pathname?.includes('/teacher/update-test/');
   const showSummary = showResults && !isTeacherView;
 
   const [leftWidth, setLeftWidth] = useState(55);

@@ -43,6 +43,8 @@ import {
 } from '../../../../utils/testTransformers';
 import { getPresignedUrl, uploadToObjectStorage, confirmUpload } from '../../../../api/test';
 import { validateReadingPartPayload } from '../../../../utils/testValidation';
+import { accentBar, addPartBox } from '@/styles/Teacher/Listening/ListeningStyles';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
 
 export default function Page() {
   const router = useRouter();
@@ -574,7 +576,7 @@ export default function Page() {
   };
 
   return (
-    <Box sx={{ ...uploadReadingStyles.mainContainer, minHeight: '100vh' }}>
+    <Box sx={{ ...uploadReadingStyles.mainContainer, minHeight: 'calc(100vh-64px)' }}>
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
@@ -599,6 +601,7 @@ export default function Page() {
         {/* -------- Function Buttons Section --------- */}
         <Box
           sx={{
+            position: 'sticky',
             top: 0,
             zIndex: 1100,
             backgroundColor: '#FFF4E9',
@@ -637,16 +640,9 @@ export default function Page() {
         {!showInlinePreview && (
           <Box sx={uploadReadingStyles.uploadReadingFormSection}>
             {/* -------------------- Basic Information -------------------- */}
-            <Box sx={{ ...uploadReadingStyles.basicInfoContainer, mt: 1 }}>
+            <Box sx={uploadReadingStyles.basicInfoContainer}>
               <Stack direction="row" spacing={2} alignItems="center">
-                <Box
-                  sx={{
-                    width: '4px',
-                    height: '36px',
-                    backgroundColor: 'yellow.main',
-                    borderRadius: '1rem',
-                  }}
-                ></Box>
+                <Box sx={accentBar} />
                 <Typography
                   sx={{
                     ...uploadReadingStyles.basicInfoHeading,
@@ -742,16 +738,6 @@ export default function Page() {
                     },
                   }}
                   IconComponent={KeyboardArrowDownIcon}
-                  MenuProps={{
-                    PaperProps: {
-                      sx: {
-                        '& .MuiMenuItem-root': {
-                          fontFamily: 'inherit',
-                          fontSize: { xs: '0.7rem', md: '0.9rem' },
-                        },
-                      },
-                    },
-                  }}
                   onChange={(e) => {
                     setTest({ ...test, level: e.target.value });
                     if (errors.level) setErrors((prev) => ({ ...prev, level: false }));
@@ -867,13 +853,9 @@ export default function Page() {
               </Box>
             ))}
             {/* -------- Add New Part Button --------- */}
-            <Button
-              startIcon={<AddIcon />}
-              sx={uploadReadingStyles.addPartButton}
-              onClick={() => handleAddPart()}
-            >
-              Add New Part
-            </Button>
+            <Box sx={addPartBox} onClick={() => handleAddPart()}>
+              <AddRoundedIcon sx={{ fontSize: '1.4rem' }} /> Add New Part
+            </Box>
           </Box>
         )}
       </Container>
