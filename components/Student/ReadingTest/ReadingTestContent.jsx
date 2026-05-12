@@ -45,6 +45,23 @@ const formatTimeFromSeconds = (totalSeconds) => {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 };
 
+const getReadingPartTypeLabel = (format) => {
+  switch (format) {
+    case 'F':
+      return 'Multiple Choice (Short Text)';
+    case 'G':
+      return 'Multiple Choice (Long Text)';
+    case 'H':
+      return 'Fill In The Blanks (Multiple Choice)';
+    case 'I':
+      return 'Fill In The Blanks (Text)';
+    case 'J':
+      return 'Matching';
+    default:
+      return 'Unknown Test Type';
+  }
+};
+
 export default function ReadingTestContent({ testId }) {
   const router = useRouter();
 
@@ -551,7 +568,7 @@ export default function ReadingTestContent({ testId }) {
         <Box sx={listeningtestStyles.nameTestAndFormatPart}>
           <Typography sx={listeningtestStyles.nameTest}>{testData.title}</Typography>
           <Typography sx={listeningtestStyles.formatName}>
-            Part {currentPartIndex + 1}: {currentPart.componentType.replace('-', ' ')}
+            Part {currentPartIndex + 1}: {getReadingPartTypeLabel(currentPart.format)}
           </Typography>
         </Box>
 
