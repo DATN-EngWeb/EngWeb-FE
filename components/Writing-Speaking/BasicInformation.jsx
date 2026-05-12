@@ -22,7 +22,9 @@ import {
   TableRow,
   Collapse,
 } from '@mui/material';
-import { InfoOutlined, ExpandLess, ExpandMore } from '@mui/icons-material';
+import { ExpandLess, ExpandMore } from '@mui/icons-material';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { useState, useEffect } from 'react';
 import {
   panelPaper,
@@ -117,13 +119,25 @@ export default function BasicInformation({
         <Box sx={{ pt: 1 }}>
           <Box sx={twoColRow}>
             <Box sx={{ flex: 1 }}>
-              <Typography variant="body2" mb={1}>
-                Title <span style={{ color: 'red' }}>*</span>
+              <Typography
+                variant="body2"
+                color="text.primary"
+                fontSize={{ xs: '0.75rem', md: '0.9rem' }}
+                lineHeight={1.4}
+                fontWeight={500}
+                mb={0.5}
+              >
+                Title <span style={{ color: 'red', ml: 0.4 }}>*</span>
               </Typography>
               <TextField
                 fullWidth
                 size="small"
-                sx={textInput}
+                sx={{
+                  ...textInput,
+                  '& .MuiInputBase-input': {
+                    fontSize: { xs: '0.7rem', md: '0.9rem' },
+                  },
+                }}
                 placeholder="Enter title"
                 value={testName}
                 onChange={(e) => onChange('testName', e.target.value)}
@@ -131,14 +145,26 @@ export default function BasicInformation({
               />
             </Box>
             <Box sx={{ flex: 0.4 }}>
-              <Typography variant="body2" mb={1}>
+              <Typography
+                variant="body2"
+                color="text.primary"
+                fontSize={{ xs: '0.75rem', md: '0.9rem' }}
+                lineHeight={1.4}
+                fontWeight={500}
+                mb={0.5}
+              >
                 Time <span style={{ color: 'red' }}>*</span>
               </Typography>
               <TextField
                 fullWidth
                 size="small"
                 type="number"
-                sx={textInput}
+                sx={{
+                  ...textInput,
+                  '& .MuiInputBase-input': {
+                    fontSize: { xs: '0.7rem', md: '0.9rem' },
+                  },
+                }}
                 placeholder="Enter time"
                 value={timeLimit ?? ''}
                 onChange={(e) => onChange('timeLimit', e.target.value)}
@@ -149,15 +175,42 @@ export default function BasicInformation({
 
           <Box sx={twoColRow}>
             <Box sx={{ flex: 1 }}>
-              <Typography variant="body2" mb={1}>
+              <Typography
+                variant="body2"
+                color="text.primary"
+                fontSize={{ xs: '0.75rem', md: '0.9rem' }}
+                lineHeight={1.4}
+                fontWeight={500}
+                mb={0.5}
+              >
                 Format <span style={{ color: 'red' }}>*</span>
               </Typography>
               <FormControl fullWidth size="small" error={errors?.format} sx={textInput}>
                 <Select
+                  size="small"
                   value={format || ''}
                   onChange={(e) => onChange('format', e.target.value)}
                   displayEmpty
-                  sx={textInput}
+                  sx={{
+                    ...textInput,
+                    fontSize: { xs: '0.7rem', md: '0.9rem' },
+                    '& .MuiSelect-select': {
+                      fontSize: { xs: '0.7rem', md: '0.9rem' },
+                      display: 'flex',
+                      alignItems: 'center',
+                    },
+                    '& .MuiSelect-icon': {
+                      color: 'text.gray',
+                      fontSize: '1.6rem',
+                      right: '8px',
+                      transition: 'transform 0.2s',
+                    },
+                    '& .MuiSelect-iconOpen': {
+                      transform: 'rotate(180deg)',
+                      color: 'text.primary',
+                    },
+                  }}
+                  IconComponent={KeyboardArrowDownIcon}
                   renderValue={(selected) => {
                     if (selected === '' || !selected) {
                       return <span style={{ color: '#a0a0a0' }}>Choose format</span>;
@@ -180,13 +233,40 @@ export default function BasicInformation({
             </Box>
 
             <Box sx={{ flex: 1 }}>
-              <Typography variant="body2" mb={1}>
+              <Typography
+                variant="body2"
+                color="text.primary"
+                fontSize={{ xs: '0.75rem', md: '0.9rem' }}
+                lineHeight={1.4}
+                fontWeight={500}
+                mb={0.5}
+              >
                 Level <span style={{ color: 'red' }}>*</span>
               </Typography>
               <FormControl fullWidth size="small" error={errors?.level} sx={textInput}>
                 <Select
+                  size="small"
                   value={level || ''}
-                  sx={textInput}
+                  sx={{
+                    ...textInput,
+                    fontSize: { xs: '0.7rem', md: '0.9rem' },
+                    '& .MuiSelect-select': {
+                      fontSize: { xs: '0.7rem', md: '0.9rem' },
+                      display: 'flex',
+                      alignItems: 'center',
+                    },
+                    '& .MuiSelect-icon': {
+                      color: 'text.gray',
+                      fontSize: '1.6rem',
+                      right: '8px',
+                      transition: 'transform 0.2s',
+                    },
+                    '& .MuiSelect-iconOpen': {
+                      transform: 'rotate(180deg)',
+                      color: 'text.primary',
+                    },
+                  }}
+                  IconComponent={KeyboardArrowDownIcon}
                   onChange={(e) => onChange('level', e.target.value)}
                   displayEmpty
                   renderValue={(selected) => {
@@ -209,7 +289,14 @@ export default function BasicInformation({
           </Box>
 
           <Box>
-            <Typography variant="body2" mb={1}>
+            <Typography
+              variant="body2"
+              color="text.primary"
+              fontSize={{ xs: '0.75rem', md: '0.9rem' }}
+              lineHeight={1.4}
+              fontWeight={500}
+              mb={0.5}
+            >
               Topics <span style={{ color: 'red' }}>*</span>
             </Typography>
             <TextField
@@ -219,7 +306,12 @@ export default function BasicInformation({
               value={topics || ''}
               onChange={(e) => onChange('topics', e.target.value)}
               error={errors?.topics}
-              sx={{ mb: 2, ...textInput }}
+              sx={{
+                ...textInput,
+                '& .MuiInputBase-input': {
+                  fontSize: { xs: '0.7rem', md: '0.9rem' },
+                },
+              }}
             />
           </Box>
 
@@ -230,7 +322,7 @@ export default function BasicInformation({
                 variant="contained"
                 color="warning"
                 startIcon={
-                  loading ? <CircularProgress size={20} color="inherit" /> : <InfoOutlined />
+                  loading ? <CircularProgress size={20} color="inherit" /> : <OpenInNewIcon />
                 }
                 onClick={(e) => {
                   e.stopPropagation();
