@@ -5,8 +5,8 @@ import { usePathname } from 'next/navigation';
 import { Box, Container, Typography, Select, MenuItem, FormControl } from '@mui/material';
 import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded';
 import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
-import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
 import SumaryPartTab from '../../Student/ListeningTest/part/sumaryPartTab';
+import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
 
 import {
   containerStyles,
@@ -424,16 +424,15 @@ const MatchingContent = ({
                 <Box
                   sx={{
                     ...listeningPartStyles.matchingQuestionAnswerContainerGrid,
-                    gridTemplateColumns: '5fr 5fr',
+                    gridTemplateColumns: '1fr',
                     '@container rightPanel (max-width: 500px)': {
                       display: 'grid',
                       gridTemplateColumns: '1fr !important',
                     },
                   }}
                 >
-                  {/* Danh sách các ô trống để người dùng chọn câu trả lời tương ứng (Select box) */}
-                  <Box sx={listeningPartStyles.questionContainerCol}>
-                    {gaps.map((gapNumber) => {
+                  <Box sx={{ ...listeningPartStyles.questionContainerCol, gap: 2 }}>
+                    {gaps.map((gapNumber, index) => {
                       const q = questions.find((qu) => qu.question_number === gapNumber);
 
                       let userAnsRaw =
@@ -456,6 +455,9 @@ const MatchingContent = ({
                       const isAnswered = userAns.trim().length > 0;
                       const isCorrect = showSummary ? userAns === q?.correctLabel : null;
 
+                      const sentenceText =
+                        processedSentences[index]?.text || q?.text || q?.question_content || '';
+
                       return (
                         <Box
                           key={gapNumber}
@@ -471,10 +473,12 @@ const MatchingContent = ({
                             sx={{
                               ...listeningPartStyles.questionContainerRow,
                               mb: showSummary ? 1 : 0,
-                              justifyContent: 'space-between',
+                              justifyContent: 'flex-start',
+                              alignItems: 'center',
                               gap: 2,
                             }}
                           >
+                            {/* 1. Label: Số thứ tự */}
                             <Typography
                               sx={{
                                 ...listeningPartStyles.questionLabelCircle,
@@ -489,10 +493,23 @@ const MatchingContent = ({
                               {gapNumber}
                             </Typography>
 
+                            {/* 2. Text: Nội dung câu */}
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography
+                                sx={{
+                                  ...multipleChoiceStyles.optionLabel,
+                                  ...textWrapStyles,
+                                  fontWeight: 400,
+                                }}
+                                dangerouslySetInnerHTML={{ __html: sentenceText }}
+                              />
+                            </Box>
+
+                            {/* 3. Select: Cho phép chọn A, B, C, D */}
                             <FormControl
                               sx={{
-                                width: '100%',
-                                maxWidth: '150px',
+                                minWidth: '90px',
+                                flexShrink: 0,
                               }}
                             >
                               <Select
@@ -504,7 +521,7 @@ const MatchingContent = ({
                                   height: 44,
                                   width: '100%',
                                   borderRadius: '1rem',
-                                  fontSize: { xs: '0.7rem', md: '0.9rem' },
+                                  fontSize: { xs: '0.85rem', md: '1rem' },
                                   backgroundColor: '#fff',
                                   '& .MuiSelect-select': {
                                     py: 1,
@@ -561,38 +578,6 @@ const MatchingContent = ({
                       );
                     })}
                   </Box>
-                  {/* Danh sách các câu/đoạn văn bản có thể được chọn (hiển thị kèm chữ cái A, B, C...) */}
-                  <Box sx={{ ...listeningPartStyles.questionContainerCol, gap: 0 }}>
-                    {processedSentences.map((sentence, index) => (
-                      <Box
-                        key={`${sentence.id}-${index}`}
-                        sx={{
-                          ...listeningPartStyles.questionContainerRow,
-                          border: 'none',
-                          alignItems: 'flex-start',
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            ...multipleChoiceStyles.optionLabel,
-                            fontWeight: 700,
-                            flexShrink: 0,
-                            ...textWrapStyles,
-                          }}
-                        >
-                          {String.fromCharCode(65 + index)}.
-                        </Typography>
-                        <Typography
-                          sx={{
-                            ...multipleChoiceStyles.optionLabel,
-                            fontWeight: 400,
-                            ...textWrapStyles, // Cập nhật ngắt dòng
-                          }}
-                          dangerouslySetInnerHTML={{ __html: sentence.text }}
-                        />
-                      </Box>
-                    ))}
-                  </Box>
                 </Box>
               </Box>{' '}
             </Box>
@@ -604,7 +589,6 @@ const MatchingContent = ({
 
   return (
     <Box sx={{ display: 'block', width: '100%', height: '100%' }}>
-      {/* Hiển thị layout chia đôi (kèm bảng tóm tắt) ở chế độ xem kết quả hoặc layout mặc định */}
       {showSummary ? (
         <Container
           maxWidth="xl"
