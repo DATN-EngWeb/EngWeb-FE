@@ -447,10 +447,27 @@ export default function ViewTestFeedbackPage({ params }) {
             {testTitle}
           </Typography>
           <Stack direction="row" spacing={1} mt={1} alignItems="center">
-            <Chip label={skillLabel} sx={{ fontWeight: 700 }} />
+            <Chip
+              label={skillLabel}
+              sx={{ color: 'primary.dark', fontWeight: 700, bgcolor: 'warning.main' }}
+            />
             <Chip
               label={STATUS_LABELS[testStatus] || testStatus || 'Unknown'}
-              color={testStatus === 'I' ? 'info' : testStatus === 'P' ? 'success' : 'warning'}
+              sx={{
+                fontWeight: 700,
+                bgcolor:
+                  testStatus === 'P'
+                    ? 'success.pastel'
+                    : testStatus === 'I'
+                      ? 'info.pastel'
+                      : 'warning.pastel',
+                color:
+                  testStatus === 'P'
+                    ? 'success.dark'
+                    : testStatus === 'I'
+                      ? 'info.dark'
+                      : 'warning.dark',
+              }}
             />
           </Stack>
         </Box>
@@ -467,12 +484,22 @@ export default function ViewTestFeedbackPage({ params }) {
           display: 'grid',
           gap: 2,
           gridTemplateColumns: showAiFeedbackSection ? { xs: '1fr', md: '1fr 1fr' } : '1fr',
-          alignItems: 'start',
+          alignItems: 'stretch',
         }}
       >
         {showAiFeedbackSection && (
-          <Card variant="outlined" sx={{ borderRadius: 3 }}>
-            <CardContent>
+          <Card
+            variant="outlined"
+            sx={{
+              borderRadius: 3,
+              height: { xs: 'auto', md: 620 },
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <CardContent
+              sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}
+            >
               <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
                 <Box
                   component="img"
@@ -485,16 +512,43 @@ export default function ViewTestFeedbackPage({ params }) {
                 </Typography>
               </Stack>
 
-              {loadingFeedbacks ? (
-                <Box display="flex" justifyContent="center" py={3}>
-                  <CircularProgress size={24} />
-                </Box>
-              ) : aiFeedback ? (
-                <FeedbackCard feedback={aiFeedback} isAi />
-              ) : (
-                <Stack spacing={1.5}>
-                  <Alert severity="info">No AI feedback for this test yet.</Alert>
-                  <Box>
+              <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pr: 0.5 }}>
+                {loadingFeedbacks ? (
+                  <Box display="flex" justifyContent="center" py={3}>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : aiFeedback ? (
+                  <FeedbackCard feedback={aiFeedback} isAi />
+                ) : (
+                  <Box
+                    sx={{
+                      minHeight: 260,
+                      border: '1px dashed',
+                      borderColor: 'divider',
+                      borderRadius: 2,
+                      px: 2,
+                      py: 3,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      textAlign: 'center',
+                      gap: 1.5,
+                      bgcolor: 'background.default',
+                    }}
+                  >
+                    <Box
+                      component="img"
+                      src={chatBotIcon.src ?? chatBotIcon}
+                      alt="AI Feedback"
+                      sx={{ width: 34, height: 34, objectFit: 'contain', opacity: 0.9 }}
+                    />
+                    <Typography fontWeight={700} color="text.primary">
+                      No AI feedback yet
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Generate AI review to see summarized insights for this test.
+                    </Typography>
                     <Button
                       variant="contained"
                       onClick={() => setConfirmAISendOpen(true)}
@@ -504,14 +558,24 @@ export default function ViewTestFeedbackPage({ params }) {
                       {reviewLoading ? 'Sending...' : 'Send AI'}
                     </Button>
                   </Box>
-                </Stack>
-              )}
+                )}
+              </Box>
             </CardContent>
           </Card>
         )}
 
-        <Card variant="outlined" sx={{ borderRadius: 3 }}>
-          <CardContent>
+        <Card
+          variant="outlined"
+          sx={{
+            borderRadius: 3,
+            height: showAiFeedbackSection ? { xs: 'auto', md: 620 } : 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <CardContent
+            sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}
+          >
             <Stack
               direction={{ xs: 'column', sm: 'row' }}
               alignItems={{ xs: 'stretch', sm: 'center' }}
@@ -532,40 +596,94 @@ export default function ViewTestFeedbackPage({ params }) {
                 <Select
                   value={teacherOrdering}
                   onChange={handleTeacherOrderingChange}
-                  sx={{ borderRadius: 2, fontSize: 13, height: 36 }}
+                  sx={{
+                    minWidth: 130,
+                    height: 40,
+                    borderRadius: 2,
+                    fontSize: '14px',
+                    color: 'primary.main',
+                    '& .MuiSelect-select': {
+                      height: 40,
+                      display: 'flex',
+                      alignItems: 'center',
+                      py: 0,
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
+                  }}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 2,
+                        mt: 1,
+                      },
+                    },
+                    MenuListProps: { sx: { py: 0.5 } },
+                  }}
                 >
-                  <MenuItem value="-created_at">Newest</MenuItem>
-                  <MenuItem value="created_at">Oldest</MenuItem>
+                  <MenuItem value="-created_at" sx={{ fontSize: '14px', color: 'primary.main' }}>
+                    Newest
+                  </MenuItem>
+                  <MenuItem value="created_at" sx={{ fontSize: '14px', color: 'primary.main' }}>
+                    Oldest
+                  </MenuItem>
                 </Select>
               </FormControl>
             </Stack>
 
-            {loadingFeedbacks || loadingTeacherPage ? (
-              <Box display="flex" justifyContent="center" py={3}>
-                <CircularProgress size={24} />
-              </Box>
-            ) : teacherFeedbacks.length === 0 ? (
-              <Alert severity="info">No teacher feedback found.</Alert>
-            ) : (
-              <Stack spacing={1.5}>
-                {teacherFeedbacks.map((feedback) => (
-                  <FeedbackCard key={feedback.id} feedback={feedback} />
-                ))}
+            <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pr: 0.5 }}>
+              {loadingFeedbacks || loadingTeacherPage ? (
+                <Box display="flex" justifyContent="center" py={3}>
+                  <CircularProgress size={24} />
+                </Box>
+              ) : teacherFeedbacks.length === 0 ? (
+                <Box
+                  sx={{
+                    minHeight: showAiFeedbackSection ? 260 : 360,
+                    border: '1px dashed',
+                    borderColor: 'divider',
+                    borderRadius: 2,
+                    px: 2,
+                    py: 3,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    gap: 1,
+                    bgcolor: 'background.default',
+                  }}
+                >
+                  <ForumIcon sx={{ color: 'primary.main', fontSize: 30 }} />
+                  <Typography fontWeight={700} color="text.primary">
+                    No teacher feedback yet
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Feedback from teachers will appear here once available.
+                  </Typography>
+                </Box>
+              ) : (
+                <Stack spacing={1.5}>
+                  {teacherFeedbacks.map((feedback) => (
+                    <FeedbackCard key={feedback.id} feedback={feedback} />
+                  ))}
 
-                {teacherTotalPages > 1 && (
-                  <Box display="flex" justifyContent="center" pt={0.5}>
-                    <Pagination
-                      count={teacherTotalPages}
-                      page={teacherPage}
-                      onChange={handleTeacherPageChange}
-                      color="primary"
-                      shape="rounded"
-                      size="large"
-                    />
-                  </Box>
-                )}
-              </Stack>
-            )}
+                  {teacherTotalPages > 1 && (
+                    <Box display="flex" justifyContent="center" pt={0.5}>
+                      <Pagination
+                        count={teacherTotalPages}
+                        page={teacherPage}
+                        onChange={handleTeacherPageChange}
+                        color="primary"
+                        shape="rounded"
+                        size="large"
+                      />
+                    </Box>
+                  )}
+                </Stack>
+              )}
+            </Box>
           </CardContent>
         </Card>
       </Box>
