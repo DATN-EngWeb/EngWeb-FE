@@ -315,7 +315,7 @@ export default function BasicInformation({
             />
           </Box>
 
-          {level && skill === 'W' && (
+          {level && skill === 'W' && criteriaData.length > 0 && (
             <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
               <Button
                 size="small"
