@@ -502,6 +502,34 @@ export default function Page() {
     console.error(`Lỗi tại Part ${partId}: ${message}`);
   };
 
+  const handleShowPreview = () => {
+    if (!test.title.trim()) {
+      setSnackbar({
+        open: true,
+        message: 'Test title is required!',
+        severity: 'error',
+      });
+      return;
+    }
+    if (parts.length === 0) {
+      setSnackbar({
+        open: true,
+        message: 'The test need at least one part!',
+        severity: 'error',
+      });
+      return;
+    }
+    if (parts.length === 1 && (parts[0].format === undefined || parts[0].format === null)) {
+      setSnackbar({
+        open: true,
+        message: 'The test need at least one part!',
+        severity: 'error',
+      });
+      return;
+    }
+    setShowInlinePreview((prev) => !prev);
+  };
+
   const renderPartEditor = (part, index) => {
     // 'F': Multiple choice (short text)
     // 'G': Multiple choice (long text)
@@ -611,7 +639,7 @@ export default function Page() {
           }}
         >
           <TestEditorActions
-            onPreview={() => setShowInlinePreview((prev) => !prev)}
+            onPreview={() => handleShowPreview()}
             isPreviewActive={showInlinePreview}
             onSendReview={() => handleUploadParts('I')}
             onSaveDraft={() => handleUploadParts('D')}

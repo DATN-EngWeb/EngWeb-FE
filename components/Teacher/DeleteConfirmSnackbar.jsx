@@ -2,7 +2,7 @@
 
 import { forwardRef } from 'react';
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
-import { Box, Button, Paper, Snackbar, Stack, Typography } from '@mui/material';
+import { Box, Button, Paper, Snackbar, Stack, Typography, Backdrop } from '@mui/material';
 
 const ConfirmCard = forwardRef(function ConfirmCard({ onClose, onConfirm, loading }, ref) {
   return (
@@ -90,22 +90,35 @@ export default function DeleteConfirmSnackbar({
   }
 
   return (
-    <Snackbar
-      open={open}
-      onClose={(_, reason) => {
-        if (reason === 'clickaway' || loading) return;
-        onClose();
-      }}
-      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      sx={{
-        top: '50% !important',
-        left: '50% !important',
-        right: 'auto !important',
-        bottom: 'auto !important',
-        transform: 'translate(-50%, -50%)',
-      }}
-    >
-      <ConfirmCard onClose={onClose} onConfirm={onConfirm} loading={loading} />
-    </Snackbar>
+    <>
+      <Backdrop
+        open={open}
+        onClick={() => {
+          if (!loading) onClose();
+        }}
+        sx={{
+          zIndex: (theme) => theme.zIndex.snackbar - 1,
+          backgroundColor: 'rgba(0, 0, 0, 0.22)',
+          backdropFilter: 'blur(1px)',
+        }}
+      />
+      <Snackbar
+        open={open}
+        onClose={(_, reason) => {
+          if (reason === 'clickaway' || loading) return;
+          onClose();
+        }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        sx={{
+          top: '50% !important',
+          left: '50% !important',
+          right: 'auto !important',
+          bottom: 'auto !important',
+          transform: 'translate(-50%, -50%)',
+        }}
+      >
+        <ConfirmCard onClose={onClose} onConfirm={onConfirm} loading={loading} />
+      </Snackbar>
+    </>
   );
 }

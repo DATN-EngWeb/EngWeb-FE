@@ -745,6 +745,38 @@ export default function Page() {
     console.error(`Lỗi tại Part ${partId}: ${message}`);
   };
 
+  const handleShowPreview = () => {
+    if (!test.title.trim()) {
+      setSnackbar({
+        open: true,
+        message: 'Test title is required!',
+        severity: 'error',
+      });
+      return;
+    }
+    const activeParts = parts.filter((part) => part.action !== 'delete');
+    if (activeParts.length === 0) {
+      setSnackbar({
+        open: true,
+        message: 'The test need at least one part!',
+        severity: 'error',
+      });
+      return;
+    }
+    if (
+      activeParts.length === 1 &&
+      (activeParts[0].format === undefined || activeParts[0].format === null)
+    ) {
+      setSnackbar({
+        open: true,
+        message: 'The test need at least one part!',
+        severity: 'error',
+      });
+      return;
+    }
+    setShowInlinePreview((prev) => !prev);
+  };
+
   const renderPartEditor = (part, index) => {
     const partQuestions = part.questions || [];
 
@@ -858,15 +890,7 @@ export default function Page() {
           }}
         >
           <TestEditorActions
-            onPreview={() => {
-              setShowInlinePreview((prev) => {
-                const next = !prev;
-                if (next) {
-                  setShowFeedbackPanel(false);
-                }
-                return next;
-              });
-            }}
+            onPreview={() => handleShowPreview()}
             isPreviewActive={showInlinePreview}
             onFeedback={
               canShowFeedback
@@ -999,12 +1023,13 @@ export default function Page() {
                     sx={{
                       ...uploadReadingStyles.input,
                       '& .MuiSelect-icon': {
-                        color: 'primary.main',
-                        fontSize: '1.8rem',
+                        color: 'text.gray',
+                        fontSize: '1.6rem',
                         right: '12px',
                         transition: 'transform 0.2s',
                       },
                       '& .MuiSelect-iconOpen': {
+                        color: 'text.primary',
                         transform: 'rotate(180deg)',
                       },
                       '& .MuiSelect-select': {
