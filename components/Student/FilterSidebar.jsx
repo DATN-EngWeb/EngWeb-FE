@@ -60,12 +60,10 @@ const dropdownMenuProps = {
 const YEARS = ['All years', '2024', '2025', '2026'];
 
 const LEVELS = [
-  { value: 'A1', label: 'Basic (A1)' },
-  { value: 'A2', label: 'Basic (A2)' },
-  { value: 'B1', label: 'Intermediate (B1)' },
-  { value: 'B2', label: 'Intermediate (B2)' },
-  { value: 'C1', label: 'Advanced (C1)' },
-  { value: 'C2', label: 'Advanced (C2)' },
+  { value: 'A1', label: 'Beginner (A1)' },
+  { value: 'A2', label: 'Elementary (A2)' },
+  { value: 'B1', label: 'Pre-intermediate (B1)' },
+  { value: 'B2', label: 'Upper-intermediate (B2)' },
 ];
 
 const renderLevelValue = (selected) => {

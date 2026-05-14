@@ -14,7 +14,13 @@ function buildQueryString(params) {
 
   const queryParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
+    if (Array.isArray(value)) {
+      value.forEach((item) => {
+        if (item !== undefined && item !== null && item !== '') {
+          queryParams.append(key, item);
+        }
+      });
+    } else if (value !== undefined && value !== null && value !== '') {
       queryParams.append(key, value);
     }
   });
