@@ -9,17 +9,12 @@ import {
   TextField,
   MenuItem,
   Select,
-  FormControl,
-  InputLabel,
   Checkbox,
   FormControlLabel,
-  Button,
-  Card,
   Pagination,
   InputAdornment,
   Stack,
   CircularProgress,
-  Alert,
 } from '@mui/material';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -42,7 +37,6 @@ const headerSectionStyles = {
 };
 
 export default function ProductiveHub({ Skill }) {
-  const router = useRouter();
   const { user } = useAuth();
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -61,12 +55,28 @@ export default function ProductiveHub({ Skill }) {
     mine: false,
   });
 
-  // Fetch tests
+  const [localTitle, setLocalTitle] = useState(filters.title);
+  const [localTeacher, setLocalTeacher] = useState(filters.teacher);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((prev) => {
+        if (prev.title !== localTitle || prev.teacher !== localTeacher) {
+          setPage(1);
+          return { ...prev, title: localTitle, teacher: localTeacher };
+        }
+        return prev;
+      });
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [localTitle, localTeacher]);
+
+  // Fetch tests (Đã bỏ setTimeout ở đây vì filters đã được debounce ở trên)
   useEffect(() => {
     async function fetchTests() {
       setLoading(true);
       try {
-        // Build API params from filters
         const params = {
           skill: Skill,
           type: 'P',
@@ -97,7 +107,6 @@ export default function ProductiveHub({ Skill }) {
           setTotalPages(1);
         }
       } catch (err) {
-        // eslint-disable-next-line no-console
         console.error('Failed to fetch tests:', err);
         setError(err.message || 'Failed to load tests. Please try again later.');
       } finally {
@@ -113,7 +122,7 @@ export default function ProductiveHub({ Skill }) {
       ...prev,
       [field]: value,
     }));
-    setPage(1); // Reset to page 1 on filter change
+    setPage(1);
   };
 
   const handlePageChange = (event, value) => {

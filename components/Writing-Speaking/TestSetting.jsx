@@ -39,7 +39,14 @@ export default function TestSetting({ skill, timeLimit, minWords, score, onChang
         <Box sx={{ ...twoColRow, pt: 1 }}>
           {skill === 'W' && (
             <Box sx={{ flex: 1 }}>
-              <Typography variant="body2" mb={1}>
+              <Typography
+                variant="body2"
+                color="text.primary"
+                fontSize={{ xs: '0.75rem', md: '0.9rem' }}
+                lineHeight={1.4}
+                fontWeight={500}
+                mb={0.5}
+              >
                 Min words <span style={{ color: 'red' }}>*</span>
               </Typography>
               <TextField
@@ -47,7 +54,12 @@ export default function TestSetting({ skill, timeLimit, minWords, score, onChang
                 type="number"
                 InputProps={{ inputProps: { min: 0 } }}
                 fullWidth
-                sx={textInput}
+                sx={{
+                  ...textInput,
+                  '& .MuiInputBase-input': {
+                    fontSize: { xs: '0.7rem', md: '0.9rem' },
+                  },
+                }}
                 placeholder="200"
                 value={minWords ?? 200}
                 onChange={(e) => {

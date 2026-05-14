@@ -11,7 +11,6 @@ import {
   Select,
   Checkbox,
   FormControlLabel,
-  Button,
   Pagination,
   InputAdornment,
   Stack,
@@ -19,7 +18,6 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import PersonIcon from '@mui/icons-material/Person';
-import { useRouter } from 'next/navigation';
 import { getTestOverview } from '../../../api/tests';
 import TestCard from '../../../components/TestCard';
 import { useAuth } from '../../../hooks/useAuth';
@@ -39,7 +37,6 @@ const headerSectionStyles = {
 };
 
 export default function ListeningHub() {
-  const router = useRouter();
   const { user } = useAuth();
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,6 +55,23 @@ export default function ListeningHub() {
     mine: false,
   });
 
+  const [localTitle, setLocalTitle] = useState(filters.title);
+  const [localTeacher, setLocalTeacher] = useState(filters.teacher);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((prev) => {
+        if (prev.title !== localTitle || prev.teacher !== localTeacher) {
+          setPage(1);
+          return { ...prev, title: localTitle, teacher: localTeacher };
+        }
+        return prev;
+      });
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [localTitle, localTeacher]);
+
   useEffect(() => {
     async function fetchTests() {
       setLoading(true);
@@ -73,6 +87,8 @@ export default function ListeningHub() {
         if (filters.title) params.title = filters.title;
         if (filters.level && filters.level.length > 0) params.level = filters.level;
         if (filters.mine) params.mine = 'true';
+        if (filters.year !== 'All years') params.year = filters.year;
+        if (filters.teacher) params.teacher_name = filters.teacher;
         params.progress_status = true;
         params.submitted = 'true';
 

@@ -1,6 +1,7 @@
 import { Paper, Box, Typography, Grid, TextField, Button, Select, MenuItem } from '@mui/material';
 import { useState, useRef } from 'react';
 import { informationSectionStyles } from '../../styles/Profile/ProfileStyles';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 const getEmploymentTypeLabel = (type) => {
   const labels = {
@@ -45,11 +46,11 @@ export default function InformationSection({ profile, setProfile, onSave, isSavi
         <Typography variant="h6">Information</Typography>
         <Box gap={1} display="flex">
           {edit && (
-            <Button variant="outlined" onClick={handleCancel} disabled={isSaving}>
+            <Button onClick={handleCancel} disabled={isSaving}>
               Cancel
             </Button>
           )}
-          <Button onClick={handleEditToggle} disabled={isSaving}>
+          <Button variant="outlined" onClick={handleEditToggle} disabled={isSaving}>
             {edit ? 'Save' : 'Edit'}
           </Button>
         </Box>
@@ -64,6 +65,24 @@ export default function InformationSection({ profile, setProfile, onSave, isSavi
               size="small"
               value={profile.employmentType || ''}
               onChange={(e) => setProfile({ ...profile, employmentType: e.target.value })}
+              sx={{
+                borderRadius: '1rem',
+                '& .MuiSelect-icon': {
+                  color: 'text.gray',
+                  fontSize: '1.6rem',
+                  right: '12px',
+                  transition: 'transform 0.2s',
+                },
+                '& .MuiSelect-iconOpen': {
+                  color: 'text.primary',
+                  transform: 'rotate(180deg)',
+                },
+                '& .MuiSelect-select': {
+                  display: 'flex',
+                  alignItems: 'center',
+                },
+              }}
+              IconComponent={KeyboardArrowDownIcon}
             >
               <MenuItem value="F">Freelance Teacher</MenuItem>
               <MenuItem value="S">School Teacher</MenuItem>
@@ -82,6 +101,12 @@ export default function InformationSection({ profile, setProfile, onSave, isSavi
               size="small"
               value={profile.experienceYear}
               onChange={(e) => setProfile({ ...profile, experienceYear: e.target.value })}
+              sx={{
+                borderRadius: '1rem',
+                '& .MuiInputBase-root': {
+                  borderRadius: '1rem',
+                },
+              }}
             />
           ) : (
             <Typography>{profile.experienceYear}</Typography>
@@ -96,6 +121,12 @@ export default function InformationSection({ profile, setProfile, onSave, isSavi
               size="small"
               value={profile.workplace}
               onChange={(e) => setProfile({ ...profile, workplace: e.target.value })}
+              sx={{
+                borderRadius: '1rem',
+                '& .MuiInputBase-root': {
+                  borderRadius: '1rem',
+                },
+              }}
             />
           ) : (
             <Typography>{profile.workplace}</Typography>
@@ -110,6 +141,12 @@ export default function InformationSection({ profile, setProfile, onSave, isSavi
               size="small"
               value={profile.introduction}
               onChange={(e) => setProfile({ ...profile, introduction: e.target.value })}
+              sx={{
+                borderRadius: '1rem',
+                '& .MuiInputBase-root': {
+                  borderRadius: '1rem',
+                },
+              }}
             />
           ) : (
             <Typography>{profile.introduction}</Typography>

@@ -9,17 +9,12 @@ import {
   TextField,
   MenuItem,
   Select,
-  FormControl,
-  InputLabel,
   Checkbox,
   FormControlLabel,
-  Button,
-  Card,
   Pagination,
   InputAdornment,
   Stack,
   CircularProgress,
-  Alert,
 } from '@mui/material';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -42,7 +37,6 @@ const headerSectionStyles = {
 };
 
 export default function ReadingHub() {
-  const router = useRouter();
   const { user } = useAuth();
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -61,6 +55,23 @@ export default function ReadingHub() {
     mine: false,
   });
 
+  const [localTitle, setLocalTitle] = useState(filters.title);
+  const [localTeacher, setLocalTeacher] = useState(filters.teacher);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((prev) => {
+        if (prev.title !== localTitle || prev.teacher !== localTeacher) {
+          setPage(1);
+          return { ...prev, title: localTitle, teacher: localTeacher };
+        }
+        return prev;
+      });
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [localTitle, localTeacher]);
+
   // Fetch tests
   useEffect(() => {
     async function fetchTests() {
@@ -77,6 +88,8 @@ export default function ReadingHub() {
         if (filters.title) params.title = filters.title;
         if (filters.level && filters.level.length > 0) params.level = filters.level;
         if (filters.mine) params.mine = 'true';
+        if (filters.year !== 'All years') params.year = filters.year;
+        if (filters.teacher) params.teacher_name = filters.teacher;
         params.progress_status = true;
         params.submitted = 'true';
         params.submitted = 'true';

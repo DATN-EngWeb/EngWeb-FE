@@ -149,11 +149,11 @@ export default function CertificationSection({
         <Typography variant="h6">Certification</Typography>
         <Box gap={1} display="flex">
           {edit && (
-            <Button variant="outlined" onClick={handleCancel} disabled={isSaving}>
+            <Button onClick={handleCancel} disabled={isSaving}>
               Cancel
             </Button>
           )}
-          <Button onClick={handleEditToggle} disabled={isSaving}>
+          <Button variant="outlined" onClick={handleEditToggle} disabled={isSaving}>
             {edit ? 'Save' : 'Edit'}
           </Button>
         </Box>

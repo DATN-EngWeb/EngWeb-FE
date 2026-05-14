@@ -42,12 +42,15 @@ const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButto
   const transformedData = useMemo(() => {
     if (!currentPart) return null;
 
+    const activeQuestions = (currentPart.questions || []).filter((q) => q.action !== 'delete');
+    const filterAnswers = (answers) => (answers || []).filter((a) => a.action !== 'delete');
+
     const commonProps = {
       passage: currentPart.content || '',
       passageTitle: currentPart.description || '',
-      answers: {}, // Preview của giáo viên không cần lưu câu trả lời
+      answers: {},
       onAnswerChange: () => {},
-      showResults: true, // QUAN TRỌNG: Để disabled các input và hiện đáp án
+      showResults: true,
     };
 
     switch (currentPart.format) {
@@ -61,12 +64,12 @@ const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButto
                 content: currentPart.content || '',
                 description: currentPart.description || '',
                 order: currentPart.order || 1,
-                receptive_questions: currentPart.questions.map((q) => ({
+                receptive_questions: activeQuestions.map((q) => ({
                   id: q.id,
                   question_number: q.question_number,
                   content: q.content,
                   explanation: q.explanation,
-                  receptive_answers: (q.answers || []).map((a) => ({
+                  receptive_answers: filterAnswers(q.answers).map((a) => ({
                     id: a.id,
                     option_label: a.option_label,
                     answer_text: a.answer_text,
@@ -110,12 +113,12 @@ const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButto
           component: MultiChoiceContent,
           props: {
             ...commonProps,
-            questions: currentPart.questions.map((q) => ({
+            questions: activeQuestions.map((q) => ({
               id: q.id,
               question_number: q.question_number,
               question: q.content || `Question ${q.question_number}`,
               explanation: q.explanation,
-              options: q.answers.map((a, idx) => ({
+              options: filterAnswers(q.answers).map((a, idx) => ({
                 value: String(a.id || a.option_label),
                 option_label: a.option_label || String.fromCharCode(65 + idx),
                 label: a.answer_text || '',
@@ -131,23 +134,26 @@ const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButto
           component: FillBlanksContent,
           props: {
             ...commonProps,
-            blanks: currentPart.questions.map((q) => q.question_number).sort((a, b) => a - b),
-            questions: currentPart.questions.map((q) => ({
-              id: q.id,
-              question_number: q.question_number,
-              question: q.content || '',
-              explanation: q.explanation,
-              correctText: q.answers?.[0]?.answer_text || '',
-              options:
-                currentPart.format === 'H'
-                  ? q.answers.map((a, idx) => ({
-                      value: String(a.id || a.option_label),
-                      option_label: a.option_label || String.fromCharCode(65 + idx),
-                      label: a.answer_text || '',
-                      isCorrect: a.is_correct || false,
-                    }))
-                  : [],
-            })),
+            blanks: activeQuestions.map((q) => q.question_number).sort((a, b) => a - b),
+            questions: activeQuestions.map((q) => {
+              const activeAnswers = filterAnswers(q.answers);
+              return {
+                id: q.id,
+                question_number: q.question_number,
+                question: q.content || '',
+                explanation: q.explanation,
+                correctText: activeAnswers?.[0]?.answer_text || '',
+                options:
+                  currentPart.format === 'H'
+                    ? activeAnswers.map((a, idx) => ({
+                        value: String(a.id || a.option_label),
+                        option_label: a.option_label || String.fromCharCode(65 + idx),
+                        label: a.answer_text || '',
+                        isCorrect: a.is_correct || false,
+                      }))
+                    : [],
+              };
+            }),
           },
         };
 
@@ -156,17 +162,20 @@ const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButto
           component: MatchingContent,
           props: {
             ...commonProps,
-            sentences: currentPart.questions.map((q) => ({
+            sentences: activeQuestions.map((q) => ({
               id: q.id,
               text: q.content || q.text || '',
             })),
-            gaps: currentPart.questions.map((q) => q.question_number).sort((a, b) => a - b),
-            questions: currentPart.questions.map((q) => ({
-              id: q.id,
-              question_number: q.question_number,
-              explanation: q.explanation,
-              correctLabel: q.answers?.[0]?.option_label || '',
-            })),
+            gaps: activeQuestions.map((q) => q.question_number).sort((a, b) => a - b),
+            questions: activeQuestions.map((q) => {
+              const activeAnswers = filterAnswers(q.answers);
+              return {
+                id: q.id,
+                question_number: q.question_number,
+                explanation: q.explanation,
+                correctLabel: activeAnswers?.[0]?.option_label || '',
+              };
+            }),
           },
         };
 

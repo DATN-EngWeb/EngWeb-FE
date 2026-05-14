@@ -262,7 +262,13 @@ export default function MultipleChoiceForm({
                 placeholder="Enter the score for each question here"
                 defaultValue={part.scoreForEachQuestion}
                 error={!!errors.score}
-                sx={uploadReadingStyles.input}
+                sx={{
+                  ...uploadReadingStyles.input,
+                  '& .MuiOutlinedInput-input': {
+                    py: 1,
+                    px: 1.5,
+                  },
+                }}
                 onBlur={(e) => handleUpdateScoreForEachQuestionPart(partId, e.target.value)}
               />
             </FormControl>
@@ -364,7 +370,10 @@ export default function MultipleChoiceForm({
                               {part.format === 'F' ? (
                                 <FormControl
                                   fullWidth
-                                  sx={{ ...uploadReadingStyles.formControl, position: 'relative' }}
+                                  sx={{
+                                    ...uploadReadingStyles.formControl,
+                                    position: 'relative',
+                                  }}
                                 >
                                   <FormControl
                                     fullWidth
@@ -395,7 +404,13 @@ export default function MultipleChoiceForm({
                                   />
                                 </FormControl>
                               ) : (
-                                <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
+                                <Box
+                                  sx={{
+                                    ...uploadReadingStyles.formControl,
+                                    width: '100%',
+                                    gap: 1,
+                                  }}
+                                >
                                   <OutlinedInput
                                     size="small"
                                     multiline
