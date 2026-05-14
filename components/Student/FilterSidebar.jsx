@@ -34,8 +34,27 @@ const inputSx = {
   borderRadius: 2,
   border: '1px solid',
   borderColor: 'divider',
-  fontSize: 15,
+  fontSize: 14,
   '& fieldset': { border: 'none' },
+};
+
+const dropdownMenuProps = {
+  PaperProps: {
+    sx: {
+      maxHeight: 150,
+      '& .MuiMenuItem-root': {
+        fontSize: 14,
+      },
+    },
+  },
+  anchorOrigin: {
+    vertical: 'bottom',
+    horizontal: 'left',
+  },
+  transformOrigin: {
+    vertical: 'top',
+    horizontal: 'left',
+  },
 };
 
 const YEARS = ['All years', '2024', '2025', '2026'];
@@ -49,7 +68,6 @@ const LEVELS = [
   { value: 'C2', label: 'Advanced (C2)' },
 ];
 
-// Render value hiển thị trên nút dropdown Level
 const renderLevelValue = (selected) => {
   if (!selected || selected.length === 0) return 'All levels';
   if (selected.length === 1) {
@@ -94,11 +112,11 @@ function FieldLabel({ children }) {
 }
 
 export default function FilterSidebar({ filters, handleFilterChange, user }) {
-  // filters.level là array: [] = all, ['A1'], ['A1','B1'], ...
+  // filters.level is array: [] = all, ['A1'], ['A1','B1'], ...
   const selectedLevels = filters.level || [];
 
   const handleLevelChange = (event) => {
-    const value = event.target.value; // MUI trả về array
+    const value = event.target.value; // MUI return array
     handleFilterChange('level', value);
   };
 
@@ -111,6 +129,7 @@ export default function FilterSidebar({ filters, handleFilterChange, user }) {
       (filters.level && filters.level.length > 0) ||
       filters.ordering !== '-created_at' ||
       filters.status !== '' ||
+      filters.my_progress !== '' ||
       filters.mine === true
     );
   };
@@ -183,6 +202,7 @@ export default function FilterSidebar({ filters, handleFilterChange, user }) {
               value={filters.year}
               onChange={(e) => handleFilterChange('year', e.target.value)}
               sx={inputSx}
+              MenuProps={dropdownMenuProps}
             >
               {YEARS.map((year) => (
                 <MenuItem key={year} value={year}>
@@ -201,6 +221,7 @@ export default function FilterSidebar({ filters, handleFilterChange, user }) {
               value={filters.ordering}
               onChange={(e) => handleFilterChange('ordering', e.target.value)}
               sx={inputSx}
+              MenuProps={dropdownMenuProps}
             >
               <MenuItem value="-created_at">Newest first</MenuItem>
               <MenuItem value="created_at">Oldest first</MenuItem>
@@ -226,7 +247,7 @@ export default function FilterSidebar({ filters, handleFilterChange, user }) {
               input={<OutlinedInput />}
               renderValue={renderLevelValue}
               sx={inputSx}
-              MenuProps={{ PaperProps: { sx: { maxHeight: 260 } } }}
+              MenuProps={dropdownMenuProps}
             >
               <MenuItem value="" dense>
                 <Checkbox
@@ -241,7 +262,7 @@ export default function FilterSidebar({ filters, handleFilterChange, user }) {
                 />
                 <ListItemText
                   primary="All levels"
-                  primaryTypographyProps={{ fontSize: 15, fontWeight: 600 }}
+                  primaryTypographyProps={{ fontSize: 14, fontWeight: 600 }}
                 />
               </MenuItem>
               {LEVELS.map((level) => (
@@ -255,13 +276,92 @@ export default function FilterSidebar({ filters, handleFilterChange, user }) {
                       '&.Mui-checked': { color: 'warning.dark' },
                     }}
                   />
-                  <ListItemText primary={level.label} primaryTypographyProps={{ fontSize: 15 }} />
+                  <ListItemText primary={level.label} primaryTypographyProps={{ fontSize: 14 }} />
                 </MenuItem>
               ))}
             </Select>
           </Box>
 
-          {/* Clear all filters button — ẩn nếu không có filter nào */}
+          {/* My Tests Only — only Teacher */}
+          {user?.role === 'T' && (
+            <Box>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={filters.mine}
+                    onChange={(e) => handleFilterChange('mine', e.target.checked)}
+                    size="small"
+                    sx={{
+                      color: 'warning.main',
+                      '&.Mui-checked': { color: 'warning.dark' },
+                    }}
+                  />
+                }
+                label={
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: 14 }}>
+                    My tests only
+                  </Typography>
+                }
+              />
+            </Box>
+          )}
+
+          {/* Progress — only Student */}
+          {user?.role === 'S' && (
+            <Box>
+              <FieldLabel>My Progress</FieldLabel>
+              <Select
+                fullWidth
+                displayEmpty
+                size="small"
+                value={filters.my_progress || ''}
+                onChange={(e) => handleFilterChange('my_progress', e.target.value)}
+                sx={inputSx}
+                MenuProps={dropdownMenuProps}
+                renderValue={(selected) => {
+                  if (!selected) {
+                    return (
+                      <Typography sx={{ color: 'text.secondary', fontSize: 14 }}>
+                        All statuses
+                      </Typography>
+                    );
+                  }
+                  if (selected === 'completed') return 'Done';
+                  if (selected === 'draft') return 'Draft';
+                  if (selected === 'none') return 'New';
+                  return selected;
+                }}
+              >
+                <MenuItem value="">All statuses</MenuItem>
+                <MenuItem value="completed">Done</MenuItem>
+                <MenuItem value="draft">Draft</MenuItem>
+                <MenuItem value="none">New</MenuItem>
+              </Select>
+            </Box>
+          )}
+
+          {/* Status — only Admin */}
+          {user?.role === 'A' && (
+            <Box>
+              <FieldLabel>Status</FieldLabel>
+              <Select
+                fullWidth
+                size="small"
+                value={filters.status}
+                onChange={(e) => handleFilterChange('status', e.target.value)}
+                sx={inputSx}
+                MenuProps={dropdownMenuProps}
+              >
+                <MenuItem value="">All statuses</MenuItem>
+                <MenuItem value="P">Published</MenuItem>
+                <MenuItem value="D">Draft</MenuItem>
+                <MenuItem value="I">In review</MenuItem>
+                <MenuItem value="R">Removed</MenuItem>
+              </Select>
+            </Box>
+          )}
+
+          {/* Clear all filters button — hidding if non filter */}
           {hasActiveFilters() && (
             <Box>
               <Button
@@ -275,6 +375,7 @@ export default function FilterSidebar({ filters, handleFilterChange, user }) {
                   handleFilterChange('level', []);
                   handleFilterChange('ordering', '-created_at');
                   handleFilterChange('status', '');
+                  handleFilterChange('my_progress', '');
                   handleFilterChange('mine', false);
                 }}
                 sx={{
@@ -291,50 +392,6 @@ export default function FilterSidebar({ filters, handleFilterChange, user }) {
               >
                 Clear all filters
               </Button>
-            </Box>
-          )}
-
-          {/* My Tests Only — chỉ Teacher */}
-          {user?.role === 'T' && (
-            <Box>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={filters.mine}
-                    onChange={(e) => handleFilterChange('mine', e.target.checked)}
-                    size="small"
-                    sx={{
-                      color: 'warning.main',
-                      '&.Mui-checked': { color: 'warning.dark' },
-                    }}
-                  />
-                }
-                label={
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: 15 }}>
-                    My tests only
-                  </Typography>
-                }
-              />
-            </Box>
-          )}
-
-          {/* Status — chỉ Admin */}
-          {user?.role === 'A' && (
-            <Box>
-              <FieldLabel>Status</FieldLabel>
-              <Select
-                fullWidth
-                size="small"
-                value={filters.status}
-                onChange={(e) => handleFilterChange('status', e.target.value)}
-                sx={inputSx}
-              >
-                <MenuItem value="">All statuses</MenuItem>
-                <MenuItem value="P">Published</MenuItem>
-                <MenuItem value="D">Draft</MenuItem>
-                <MenuItem value="I">In review</MenuItem>
-                <MenuItem value="R">Removed</MenuItem>
-              </Select>
             </Box>
           )}
         </Stack>

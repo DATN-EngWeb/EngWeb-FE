@@ -45,6 +45,7 @@ export default function ProductiveHub({ Skill }) {
     year: 'All years',
     level: [],
     status: '',
+    my_progress: '',
     ordering: '-created_at',
     mine: false,
   });
@@ -82,7 +83,12 @@ export default function ProductiveHub({ Skill }) {
         if (filters.title) params.title = filters.title;
         if (filters.level && filters.level.length > 0) params.level = filters.level;
         if (filters.mine) params.mine = 'true';
+        if (filters.year !== 'All years') params.year = filters.year;
+        if (filters.teacher) params.teacher_name = filters.teacher;
+        if (filters.my_progress) params.my_progress = filters.my_progress;
+
         params.progress_status = true;
+        params.post_count = 'true';
 
         if (user?.role === 'A') {
           if (filters.status) params.status = filters.status;

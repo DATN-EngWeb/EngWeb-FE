@@ -51,6 +51,7 @@ export default function ReadingHub() {
     year: 'All years',
     level: [],
     status: '',
+    my_progress: '',
     ordering: '-created_at',
     mine: false,
   });
@@ -90,8 +91,9 @@ export default function ReadingHub() {
         if (filters.mine) params.mine = 'true';
         if (filters.year !== 'All years') params.year = filters.year;
         if (filters.teacher) params.teacher_name = filters.teacher;
+        if (filters.my_progress) params.my_progress = filters.my_progress;
+
         params.progress_status = true;
-        params.submitted = 'true';
         params.submitted = 'true';
 
         if (user?.role === 'A') {
