@@ -45,6 +45,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useStreakContext } from '../../context/streakContext';
 import AIGradingLoading from '../Writing-Speaking/AIGradingLoading';
 import SubmitLoadingDialog from '../Writing-Speaking/SubmitLoadingDialog';
+import useUnsavedChangesWarning from '@/hooks/useUnsavedChangesWarning';
 
 export default function SpeakingTest() {
   const params = useParams();
@@ -86,6 +87,8 @@ export default function SpeakingTest() {
   const [audioUrl, setAudioUrl] = useState(null);
   const [isDraftSaved, setIsDraftSaved] = useState(false);
   const audioRef = React.useRef(null);
+
+  useUnsavedChangesWarning(!isReadOnly && submitStatus !== 'submitting');
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const playIntervalRef = useRef(null);

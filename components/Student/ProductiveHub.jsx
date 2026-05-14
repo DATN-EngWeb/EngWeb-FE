@@ -6,13 +6,7 @@ import {
   Container,
   Typography,
   Grid,
-  TextField,
-  MenuItem,
-  Select,
-  Checkbox,
-  FormControlLabel,
   Pagination,
-  InputAdornment,
   Stack,
   CircularProgress,
 } from '@mui/material';
