@@ -42,7 +42,7 @@ export const accentBar = {
 export const twoColRow = {
   display: 'flex',
   gap: 2,
-  mb: 1.5,
+  mb: 2,
   flexDirection: { xs: 'column', md: 'row' },
   '& > *:first-of-type': {
     flex: 1,
@@ -66,7 +66,7 @@ export const addPartBox = {
   borderRadius: '999px',
   backgroundColor: '#fff',
   color: 'primary.main',
-  fontWeight: 600,
+  fontWeight: 500,
   fontSize: { xs: '0.8rem', md: '1rem' },
   '&:hover': {
     backgroundColor: '#fffbeb',

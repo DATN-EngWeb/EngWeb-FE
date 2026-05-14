@@ -20,7 +20,7 @@ export default function ProductivePreview({
           Preview
         </Typography>
       )}
-      <Paper sx={styles.PREVIEW_PAPER_STYLE}>
+      <Paper sx={{ ...styles.PREVIEW_PAPER_STYLE, border: '1px solid', borderColor: 'dark.main' }}>
         <Typography
           variant="h5"
           align="center"
@@ -58,11 +58,11 @@ export default function ProductivePreview({
                 startIcon={<SignpostIcon />}
                 onClick={() => setShowSuggestion(!showSuggestion)}
                 sx={{
-                  mb: 1,
                   ml: 'auto',
-                  borderRadius: '20px',
+                  px: 2,
+                  py: 0.5,
+                  borderRadius: '1rem',
                   textTransform: 'none',
-
                   ...(showSuggestion && {
                     bgcolor: 'primary.main',
                     color: 'primary.contrastText',

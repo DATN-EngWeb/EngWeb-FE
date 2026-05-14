@@ -251,7 +251,13 @@ export default function MatchingForm({
                 placeholder="Enter the score for each question here"
                 defaultValue={part.scoreForEachQuestion}
                 error={!!errors.score}
-                sx={uploadReadingStyles.input}
+                sx={{
+                  ...uploadReadingStyles.input,
+                  '& .MuiOutlinedInput-input': {
+                    py: 1,
+                    px: 1.5,
+                  },
+                }}
                 onBlur={(e) => handleUpdateScoreForEachQuestionPart(partId, e.target.value)}
               />
             </FormControl>

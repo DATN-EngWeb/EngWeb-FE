@@ -332,7 +332,13 @@ export default function FillBlankForm({
                   placeholder="Enter the score for each question here"
                   defaultValue={part.scoreForEachQuestion}
                   error={!!errors.score}
-                  sx={uploadReadingStyles.input}
+                  sx={{
+                    ...uploadReadingStyles.input,
+                    '& .MuiOutlinedInput-input': {
+                      py: 1,
+                      px: 1.5,
+                    },
+                  }}
                   onBlur={(e) => handleUpdateScoreForEachQuestionPart(part.id, e.target.value)}
                 />
               </FormControl>
@@ -488,7 +494,12 @@ export default function FillBlankForm({
                             <Box sx={{ pl: 4, display: 'flex', flexDirection: 'column', gap: 2 }}>
                               {/* ------------- Question and Explanation Section ------------- */}
                               <Box
-                                sx={{ ...uploadReadingStyles.formControl, width: '100%', mt: 0 }}
+                                sx={{
+                                  ...uploadReadingStyles.formControl,
+                                  width: '100%',
+                                  mt: 0,
+                                  gap: 1,
+                                }}
                               >
                                 <OutlinedInput
                                   size="small"

@@ -9,24 +9,15 @@ import {
   TextField,
   MenuItem,
   Select,
-  FormControl,
-  InputLabel,
   Checkbox,
   FormControlLabel,
-  Button,
-  Card,
   Pagination,
   InputAdornment,
   Stack,
   CircularProgress,
-  Alert,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import PersonIcon from '@mui/icons-material/Person';
-import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { getTestOverview } from '../../api/tests';
 import TestCard from '../../components/TestCard';
 import { useAuth } from '../../hooks/useAuth';
@@ -35,13 +26,6 @@ const pageContainerStyles = {
   backgroundColor: 'background.default',
   minHeight: '100vh',
   pb: 8,
-};
-
-const headerSectionStyles = {
-  bgcolor: 'background.paper',
-  px: 4,
-  py: 3,
-  borderRadius: 4,
 };
 
 const filterSidebarStyles = {
@@ -53,7 +37,14 @@ const filterSidebarStyles = {
   top: 24,
 };
 
-const YEARS = ['2024', '2023', '2022', 'All years'];
+const currentYear = new Date().getFullYear();
+
+const YEARS = [
+  'All years',
+  currentYear.toString(),
+  (currentYear - 1).toString(),
+  (currentYear - 2).toString(),
+];
 const LEVELS = [
   { value: 'A1', label: 'Basic (A1)' },
   { value: 'A2', label: 'Basic (A2)' },
@@ -62,7 +53,6 @@ const LEVELS = [
 ];
 
 export default function ProductiveHub({ Skill }) {
-  const router = useRouter();
   const { user } = useAuth();
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -81,12 +71,28 @@ export default function ProductiveHub({ Skill }) {
     mine: false,
   });
 
-  // Fetch tests
+  const [localTitle, setLocalTitle] = useState(filters.title);
+  const [localTeacher, setLocalTeacher] = useState(filters.teacher);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((prev) => {
+        if (prev.title !== localTitle || prev.teacher !== localTeacher) {
+          setPage(1);
+          return { ...prev, title: localTitle, teacher: localTeacher };
+        }
+        return prev;
+      });
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [localTitle, localTeacher]);
+
+  // Fetch tests (Đã bỏ setTimeout ở đây vì filters đã được debounce ở trên)
   useEffect(() => {
     async function fetchTests() {
       setLoading(true);
       try {
-        // Build API params from filters
         const params = {
           skill: Skill,
           type: 'P',
@@ -96,6 +102,8 @@ export default function ProductiveHub({ Skill }) {
 
         if (filters.title) params.title = filters.title;
         if (filters.level) params.level = filters.level;
+        if (filters.year !== 'All years') params.year = filters.year;
+        if (filters.teacher) params.teacher_name = filters.teacher;
         if (filters.mine) params.mine = 'true';
         params.progress_status = true;
 
@@ -116,7 +124,6 @@ export default function ProductiveHub({ Skill }) {
           setTotalPages(1);
         }
       } catch (err) {
-        // eslint-disable-next-line no-console
         console.error('Failed to fetch tests:', err);
         setError(err.message || 'Failed to load tests. Please try again later.');
       } finally {
@@ -132,7 +139,7 @@ export default function ProductiveHub({ Skill }) {
       ...prev,
       [field]: value,
     }));
-    setPage(1); // Reset to page 1 on filter change
+    setPage(1);
   };
 
   const handlePageChange = (event, value) => {
@@ -169,8 +176,8 @@ export default function ProductiveHub({ Skill }) {
                     fullWidth
                     placeholder="Find test name"
                     size="small"
-                    value={filters.title}
-                    onChange={(e) => handleFilterChange('title', e.target.value)}
+                    value={localTitle}
+                    onChange={(e) => setLocalTitle(e.target.value)}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -196,8 +203,8 @@ export default function ProductiveHub({ Skill }) {
                     fullWidth
                     placeholder="Find teacher"
                     size="small"
-                    value={filters.teacher}
-                    onChange={(e) => handleFilterChange('teacher', e.target.value)}
+                    value={localTeacher}
+                    onChange={(e) => setLocalTeacher(e.target.value)}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -269,36 +276,27 @@ export default function ProductiveHub({ Skill }) {
                   <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
                     Level
                   </Typography>
-                  <Stack>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={filters.level === ''}
-                          onChange={() => handleFilterChange('level', '')}
-                          size="small"
-                          sx={{ color: 'warning.main', '&.Mui-checked': { color: 'warning.dark' } }}
-                        />
-                      }
-                      label={<Typography variant="body2">All Levels</Typography>}
-                    />
+                  <Select
+                    fullWidth
+                    size="small"
+                    displayEmpty
+                    value={filters.level}
+                    onChange={(e) => handleFilterChange('level', e.target.value)}
+                    sx={{
+                      bgcolor: 'background.paper',
+                      borderRadius: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      '& fieldset': { border: 'none' },
+                    }}
+                  >
+                    <MenuItem value="">All Levels</MenuItem>
                     {LEVELS.map((level) => (
-                      <FormControlLabel
-                        key={level.value}
-                        control={
-                          <Checkbox
-                            checked={filters.level === level.value}
-                            onChange={() => handleFilterChange('level', level.value)}
-                            size="small"
-                            sx={{
-                              color: 'warning.main',
-                              '&.Mui-checked': { color: 'warning.dark' },
-                            }}
-                          />
-                        }
-                        label={<Typography variant="body2">{level.label}</Typography>}
-                      />
+                      <MenuItem key={level.value} value={level.value}>
+                        {level.label}
+                      </MenuItem>
                     ))}
-                  </Stack>
+                  </Select>
                 </Box>
 
                 {user?.role === 'T' && (
