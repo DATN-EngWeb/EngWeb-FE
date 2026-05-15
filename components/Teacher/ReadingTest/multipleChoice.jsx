@@ -20,7 +20,6 @@ export default function MultipleChoiceForm({
   handleDeletePart,
   handleDeleteOption,
   handleDeleteQuestion,
-  handleUpdateDescriptionPart,
   questions,
   setQuestions,
   handleUpdateScoreForEachQuestionPart,

@@ -1099,9 +1099,6 @@ export const buildReceptiveTestPayload = (test, preparedParts, status) => {
           format: format || '',
           // F ko có content; G, H, I, J ko có description
           ...(format !== 'F' && { content: part.content || '' }),
-          ...(!['G', 'H', 'I', 'J'].includes(format) && {
-            description: part.description || '',
-          }),
 
           receptive_questions: (part.questions || []).map((q) => {
             if (q.action === 'delete') {

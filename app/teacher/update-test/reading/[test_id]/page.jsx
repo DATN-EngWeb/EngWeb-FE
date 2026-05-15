@@ -156,7 +156,6 @@ export default function Page() {
               scoreForEachQuestion: part.receptive_questions?.[0]?.score,
               // F ko có content; G, H, I, J ko có description
               ...(format !== 'F' && { content: part.content }),
-              ...(!['G', 'H', 'I', 'J'].includes(format) && { description: part.description }),
             };
 
             // Fetch nội dung HTML cho Part nếu có content
@@ -371,7 +370,6 @@ export default function Page() {
       id: Date.now(),
       order: activeParts.length + 1,
       format: null,
-      description: '',
       scoreForEachQuestion: 10,
       questions: [],
       ...(test.flag === 'update' && { action: 'create' }),
@@ -712,20 +710,6 @@ export default function Page() {
     );
   };
 
-  const handleUpdateDescriptionPart = (partId, newDescription) => {
-    setParts((prevParts) =>
-      prevParts.map((p) =>
-        p.id === partId
-          ? {
-              ...p,
-              description: newDescription,
-              ...(test.flag === 'update' && !p.action && { action: 'update' }),
-            }
-          : p,
-      ),
-    );
-  };
-
   const handleUpdateContentPart = (partId, newContent) => {
     setParts((prevParts) =>
       prevParts.map((p) =>
@@ -795,7 +779,6 @@ export default function Page() {
             part={part}
             partId={part.id}
             index={index}
-            handleUpdateDescriptionPart={handleUpdateDescriptionPart}
             handleDeletePart={handleDeletePart}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
