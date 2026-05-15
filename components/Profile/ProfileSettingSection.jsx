@@ -2,6 +2,12 @@ import { Paper, Box, Typography, Grid, TextField, Button } from '@mui/material';
 import { useState, useRef } from 'react';
 import { profileSettingsSectionStyles } from '../../styles/Profile/ProfileStyles';
 
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const [year, month, day] = dateString.split('-');
+  return `${day}-${month}-${year}`;
+};
+
 export default function ProfileSettingSection({ profile, setProfile, onSave, isSaving, onError }) {
   const [edit, setEdit] = useState(false);
   const originalProfile = useRef(null);
@@ -40,11 +46,11 @@ export default function ProfileSettingSection({ profile, setProfile, onSave, isS
         <Typography variant="h6">Profile Setting</Typography>
         <Box gap={1} display="flex">
           {edit && (
-            <Button variant="outlined" onClick={handleCancel} disabled={isSaving}>
+            <Button onClick={handleCancel} disabled={isSaving}>
               Cancel
             </Button>
           )}
-          <Button onClick={edit ? handleSave : handleEdit} disabled={isSaving}>
+          <Button variant="outlined" onClick={edit ? handleSave : handleEdit} disabled={isSaving}>
             {edit ? 'Save' : 'Edit'}
           </Button>
         </Box>
@@ -60,6 +66,12 @@ export default function ProfileSettingSection({ profile, setProfile, onSave, isS
               value={profile.fullName}
               onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
               disabled={isSaving}
+              sx={{
+                borderRadius: '1rem',
+                '& .MuiInputBase-root': {
+                  borderRadius: '1rem',
+                },
+              }}
             />
           ) : (
             <Typography>{profile.fullName}</Typography>
@@ -81,9 +93,14 @@ export default function ProfileSettingSection({ profile, setProfile, onSave, isS
               value={profile.dateOfBirth}
               onChange={(e) => setProfile({ ...profile, dateOfBirth: e.target.value })}
               disabled={isSaving}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '1rem',
+                },
+              }}
             />
           ) : (
-            <Typography>{profile.dateOfBirth}</Typography>
+            <Typography>{formatDate(profile.dateOfBirth)}</Typography>
           )}
         </Grid>
 

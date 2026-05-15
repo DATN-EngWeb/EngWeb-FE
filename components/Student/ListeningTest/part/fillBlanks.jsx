@@ -21,7 +21,9 @@ export default function FillBlankPart({
 }) {
   const pathname = usePathname();
   const isTeacherView =
-    pathname?.includes('/teacher/view-test/') || pathname?.includes('/teacher/upload-test/');
+    pathname?.includes('/teacher/view-test/') ||
+    pathname?.includes('/teacher/upload-test/') ||
+    pathname?.includes('/teacher/update-test/');
 
   const showSummary = disabled && !isTeacherView;
 

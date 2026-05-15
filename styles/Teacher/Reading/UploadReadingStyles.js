@@ -110,7 +110,10 @@ export const uploadReadingStyles = {
   // -------- Upload Reading Test Form Section ---------
   nameTestAndTime: {
     display: 'grid',
-    gridTemplateColumns: { xs: '1fr', sm: 'minmax(0, 7fr) minmax(0, 3fr)' },
+    gridTemplateColumns: {
+      xs: '1fr',
+      md: '1fr 0.3fr',
+    },
     gap: 2,
     width: '100%',
   },
@@ -193,13 +196,13 @@ export const uploadReadingStyles = {
   formControl: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 0.25,
   },
   labelInput: {
     color: 'text.primary',
     fontSize: { xs: '0.75rem', md: '0.9rem' },
     lineHeight: 1.4,
     fontWeight: 500,
+    mb: 0.5,
   },
   requiredAsterisk: {
     color: 'error.main',
@@ -209,10 +212,6 @@ export const uploadReadingStyles = {
   input: {
     fontSize: { xs: '0.7rem', md: '0.9rem' },
     borderRadius: '1rem',
-    '& .MuiOutlinedInput-input': {
-      py: 1,
-      px: 1.5,
-    },
   },
   inputMultiline: {
     fontSize: { xs: '0.7rem', md: '0.9rem' },
@@ -234,11 +233,11 @@ export const uploadReadingStyles = {
     alignItems: 'center',
     justifyContent: 'center',
     textAlign: 'center',
-    gap: { xs: 0, md: 1 },
+    gap: { xs: 0, md: 0 },
     width: '100%',
     py: 0.75,
     backgroundColor: '#fff',
-    border: '2px solid',
+    border: '1px solid',
     borderColor: 'yellow.main',
     borderRadius: '999px',
     fontSize: { xs: '0.8rem', md: '1rem' },
