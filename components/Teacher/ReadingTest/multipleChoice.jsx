@@ -75,7 +75,12 @@ export default function MultipleChoiceForm({
   const handleUpdateQuestion = (questionId, value) => {
     const updatedQuestions = questions.map((q) =>
       q.id === questionId
-        ? { ...q, content: value, ...(flag === 'update' && !q.action && { action: 'update' }) }
+        ? {
+            ...q,
+            content: value,
+            ...(flag === 'update' && !q.action && { action: 'update' }),
+            ...(flag === 'update' && part.format === 'F' && { ckeditor: true }),
+          }
         : q,
     );
     setQuestions(updatedQuestions);

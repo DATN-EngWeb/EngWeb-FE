@@ -1135,3 +1135,86 @@ export const buildReceptiveTestPayload = (test, preparedParts, status) => {
     },
   };
 };
+
+export const processCkeditorState = (currentParts, originalMap, testFlag) => {
+  return currentParts.map((p) => {
+    const newPart = { ...p };
+
+    if (testFlag === 'update' && !newPart.ckeditor && originalMap[newPart.id]) {
+      newPart.content = originalMap[newPart.id].content;
+    }
+    delete newPart.ckeditor;
+
+    if (newPart.questions && Array.isArray(newPart.questions)) {
+      newPart.questions = newPart.questions.map((q) => {
+        const newQ = { ...q };
+        if (
+          testFlag === 'update' &&
+          !newQ.ckeditor &&
+          originalMap[newPart.id]?.questions?.[newQ.id]
+        ) {
+          newQ.content = originalMap[newPart.id].questions[newQ.id];
+        }
+        delete newQ.ckeditor;
+        return newQ;
+      });
+    }
+
+    return newPart;
+  });
+};
+
+export const collectFilesUpdateReading = (parts) => {
+  const files = [];
+
+  // Hàm tiện ích: Biến chuỗi HTML (từ CKEditor) thành File object
+  const createHtmlFile = (content, filename, partOrder) => {
+    // Dùng Blob để đảm bảo encoding chuẩn cho HTML
+    const blob = new Blob([content], { type: 'text/html' });
+    const file = new File([blob], filename, { type: 'text/html' });
+
+    return {
+      filename: filename,
+      file: file,
+      fileSize: file.size,
+      mimeType: 'text/html',
+      partOrder: partOrder,
+    };
+  };
+
+  parts.forEach((part, _index) => {
+    if (!part.format) return;
+
+    const partOrder = part.order;
+
+    // 1. Xử lý Content của Part (Ví dụ: Format G, H, I, J)
+    if (
+      part.content &&
+      typeof part.content === 'string' &&
+      part.content.trim().length > 0 &&
+      !part.content.trim().startsWith('http')
+    ) {
+      files.push(createHtmlFile(part.content, `part_${partOrder}_content.html`, partOrder));
+    }
+
+    // 2. Xử lý Content của từng Question (Ví dụ: Format F)
+    if (part.format === 'F' && part.questions && Array.isArray(part.questions)) {
+      part.questions.forEach((q, qIndex) => {
+        const qNum = q.question_number || qIndex + 1;
+
+        if (
+          q.content &&
+          typeof q.content === 'string' &&
+          q.content.trim().length > 0 &&
+          !q.content.trim().startsWith('http')
+        ) {
+          files.push(
+            createHtmlFile(q.content, `part_${partOrder}_question_${qNum}_content.html`, partOrder),
+          );
+        }
+      });
+    }
+  });
+
+  return files;
+};

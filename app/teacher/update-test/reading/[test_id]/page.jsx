@@ -42,10 +42,11 @@ import {
   fetchHtmlContent,
 } from '../../../../../api/teacher/upload-reading';
 import {
-  collectFilesReading,
+  collectFilesUpdateReading,
   transformReadingPartsWithUrls,
   transformFormatUpdateData,
   buildReceptiveTestPayload,
+  processCkeditorState,
 } from '../../../../../utils/testTransformers';
 import { getPresignedUrl, uploadToObjectStorage, confirmUpload } from '../../../../../api/test';
 import { validateReadingPartUpdatePayload } from '../../../../../utils/testValidation';
@@ -70,6 +71,7 @@ export default function Page() {
     status: 'P',
   });
   const [parts, setParts] = useState([]);
+  const originalContentRef = useRef({});
 
   const lastPartRef = useRef(null);
   const prevPartsLengthRef = useRef(parts.length);
@@ -158,6 +160,11 @@ export default function Page() {
               ...(format !== 'F' && { content: part.content }),
             };
 
+            originalContentRef.current[newPart.id] = {
+              content: newPart.content,
+              questions: {},
+            };
+
             // Fetch nội dung HTML cho Part nếu có content
             if (newPart.content?.startsWith?.('http')) {
               newPart.content = await fetchHtmlContent(newPart.content);
@@ -176,6 +183,7 @@ export default function Page() {
                   };
 
                   if (newQ.content?.startsWith?.('http')) {
+                    originalContentRef.current[newPart.id].questions[newQ.id] = newQ.content;
                     newQ.content = await fetchHtmlContent(newQ.content);
                   }
 
@@ -223,7 +231,7 @@ export default function Page() {
 
   useEffect(() => {
     if (parts.length > prevPartsLengthRef.current) {
-      if (lastPartRef.current) {
+      if (lastPartRef.current && test?.flag !== 'update') {
         lastPartRef.current.scrollIntoView({
           behavior: 'smooth',
           block: 'start',
@@ -272,7 +280,9 @@ export default function Page() {
         return;
       }
 
-      const transformedParts = transformFormatUpdateData(parts);
+      const finalParts = processCkeditorState(parts, originalContentRef.current, test.flag);
+
+      const transformedParts = transformFormatUpdateData(finalParts);
       if (status === 'P') {
         const errorMessage = validateReadingPartUpdatePayload(transformedParts, parts);
         if (errorMessage) {
@@ -289,7 +299,7 @@ export default function Page() {
         }
       }
 
-      const files = collectFilesReading(transformedParts);
+      const files = collectFilesUpdateReading(transformedParts);
       const filenameToUrl = {};
       for (const f of files) {
         const currentMimeType = f.mimeType ?? f.file?.type ?? 'text/html';
@@ -718,6 +728,7 @@ export default function Page() {
               ...p,
               content: newContent,
               ...(test.flag === 'update' && !p.action && { action: 'update' }),
+              ...(test.flag === 'update' && { ckeditor: true }),
             }
           : p,
       ),
