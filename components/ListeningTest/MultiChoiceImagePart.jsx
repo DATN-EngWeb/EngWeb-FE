@@ -277,7 +277,7 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
             <Box sx={{ mb: 3 }}>
               <Box sx={rowContent}>
                 <Typography sx={labelText}>
-                  Description <span style={{ color: 'red' }}>*</span>
+                  Instruction <span style={{ color: 'red' }}>*</span>
                 </Typography>
               </Box>
               <TextField

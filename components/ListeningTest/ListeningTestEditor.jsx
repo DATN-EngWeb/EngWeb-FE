@@ -25,7 +25,11 @@ import ScrollToTopButton from '../CreateTest/ScrollToTopButton';
 import ListeningPreview from '../Teacher/ListeningPreview';
 import FeedbackPanel from '../Teacher/Feedback/FeedbackPanel';
 
-import { validateTest, getValidationErrorMessage } from '../../utils/testValidation';
+import {
+  getValidationErrorMessage,
+  validateListeningBasicInfo,
+  validateListeningPartUpdatePayload,
+} from '../../utils/testValidation';
 import {
   collectFiles,
   transformPartsForSubmitWithUrls,
@@ -80,7 +84,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
   const [basicInfo, setBasicInfo] = useState({
     testName: '',
     level: '',
-    time: '',
+    time: '60',
     description: '',
   });
   const [originalBasicInfo, setOriginalBasicInfo] = useState({
@@ -104,13 +108,11 @@ export default function ListeningTestEditor({ testId: propTestId }) {
     ];
   });
   const [originalParts, setOriginalParts] = useState([]);
-  const [errors, setErrors] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(isEditMode);
   const [isPreviewActive, setIsPreviewActive] = useState(false);
   const [isFeedbackActive, setIsFeedbackActive] = useState(false);
-  const [testStatus, setTestStatus] = useState('');
   const [editingTestId, setEditingTestId] = useState(testId || null);
 
   useEffect(() => {
@@ -141,7 +143,6 @@ export default function ListeningTestEditor({ testId: propTestId }) {
         }
 
         setEditingTestId(data.id);
-        setTestStatus(data.status || '');
 
         const loadedBasicInfo = {
           testName: data.title || '',
@@ -278,13 +279,23 @@ export default function ListeningTestEditor({ testId: propTestId }) {
   };
 
   const handlePreview = () => {
-    const validationErrors = validateTest(basicInfo, parts);
-    if (validationErrors) {
-      setErrors(validationErrors);
-      const errorMessage = getValidationErrorMessage(validationErrors);
-      setSnackbar({ open: true, message: errorMessage, severity: 'error' });
+    const basicInfoErrors = validateListeningBasicInfo(basicInfo);
+    if (basicInfoErrors) {
+      const validationErrors = { basicInfo: basicInfoErrors };
+      setSnackbar({
+        open: true,
+        message: getValidationErrorMessage(validationErrors),
+        severity: 'error',
+      });
       return;
     }
+
+    const partValidationMessage = validateListeningPartUpdatePayload(parts);
+    if (partValidationMessage) {
+      setSnackbar({ open: true, message: partValidationMessage, severity: 'error' });
+      return;
+    }
+
     setIsPreviewActive((prev) => {
       const next = !prev;
       if (next) {
@@ -309,15 +320,24 @@ export default function ListeningTestEditor({ testId: propTestId }) {
 
   const handleSubmit = async (status) => {
     setIsSaving(true);
-    const validationErrors = validateTest(basicInfo, parts);
-    if (validationErrors) {
-      setErrors(validationErrors);
-      const errorMessage = getValidationErrorMessage(validationErrors);
-      setSnackbar({ open: true, message: errorMessage, severity: 'error' });
+    const basicInfoErrors = validateListeningBasicInfo(basicInfo);
+    if (basicInfoErrors) {
+      const validationErrors = { basicInfo: basicInfoErrors };
+      setSnackbar({
+        open: true,
+        message: getValidationErrorMessage(validationErrors),
+        severity: 'error',
+      });
       setIsSaving(false);
       return;
     }
-    setErrors(null);
+
+    const partValidationMessage = validateListeningPartUpdatePayload(parts);
+    if (partValidationMessage) {
+      setSnackbar({ open: true, message: partValidationMessage, severity: 'error' });
+      setIsSaving(false);
+      return;
+    }
 
     try {
       let finalTestId = editingTestId;
@@ -401,12 +421,11 @@ export default function ListeningTestEditor({ testId: propTestId }) {
       setOriginalBasicInfo({ testName: '', level: '', time: '', description: '' });
       setParts([]);
       setOriginalParts([]);
-      setErrors(null);
       setIsSaving(false);
 
       setTimeout(() => {
         router.push('/teacher');
-      }, 1000);
+      }, 2000);
     } catch (error) {
       setSnackbar({ open: true, message: `Submit failed: ${error.message}`, severity: 'error' });
       setIsSaving(false);
