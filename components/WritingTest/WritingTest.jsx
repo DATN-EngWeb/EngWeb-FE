@@ -41,6 +41,7 @@ import { levelTheme } from '../TestCard';
 import * as styles from '@/styles/Student/Writing/WritingTestStyles';
 import { useAuth } from '../../hooks/useAuth';
 import { useStreakContext } from '@/context/streakContext';
+import useUnsavedChangesWarning from '@/hooks/useUnsavedChangesWarning';
 
 export default function WritingTest() {
   const params = useParams();
@@ -82,6 +83,10 @@ export default function WritingTest() {
 
   const [startTime, setStartTime] = useState(new Date().toISOString());
   const [isReadOnly, setIsReadOnly] = useState(false);
+
+  useUnsavedChangesWarning(
+    !isReadOnly && submitStatus !== 'submitting' && draftStatus !== 'saving',
+  );
 
   // Word Count Logic
   const wordCount = useMemo(() => {

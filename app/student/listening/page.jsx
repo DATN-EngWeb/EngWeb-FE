@@ -21,6 +21,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import { getTestOverview } from '../../../api/tests';
 import TestCard from '../../../components/TestCard';
 import { useAuth } from '../../../hooks/useAuth';
+import FilterSidebar from '../../../components/Student/FilterSidebar';
 
 const pageContainerStyles = {
   backgroundColor: 'background.default',
@@ -28,29 +29,12 @@ const pageContainerStyles = {
   pb: 8,
 };
 
-const filterSidebarStyles = {
-  backgroundColor: 'background.paper',
-  p: 2,
+const headerSectionStyles = {
+  bgcolor: 'background.paper',
+  px: 4,
+  py: 3,
   borderRadius: 4,
-  height: 'fit-content',
-  position: 'sticky',
-  top: 24,
 };
-
-const currentYear = new Date().getFullYear();
-
-const YEARS = [
-  'All years',
-  currentYear.toString(),
-  (currentYear - 1).toString(),
-  (currentYear - 2).toString(),
-];
-const LEVELS = [
-  { value: 'A1', label: 'Basic (A1)' },
-  { value: 'A2', label: 'Basic (A2)' },
-  { value: 'B1', label: 'Intermediate (B1)' },
-  { value: 'B2', label: 'Intermediate (B2)' },
-];
 
 export default function ListeningHub() {
   const { user } = useAuth();
@@ -65,8 +49,9 @@ export default function ListeningHub() {
     title: '',
     teacher: '',
     year: 'All years',
-    level: '',
+    level: [],
     status: '',
+    my_progress: '',
     ordering: '-created_at',
     mine: false,
   });
@@ -101,11 +86,14 @@ export default function ListeningHub() {
         };
 
         if (filters.title) params.title = filters.title;
-        if (filters.level) params.level = filters.level;
+        if (filters.level && filters.level.length > 0) params.level = filters.level;
         if (filters.mine) params.mine = 'true';
         if (filters.year !== 'All years') params.year = filters.year;
         if (filters.teacher) params.teacher_name = filters.teacher;
+        if (filters.my_progress) params.my_progress = filters.my_progress;
+
         params.progress_status = true;
+        params.submitted = 'true';
 
         if (user?.role === 'A') {
           if (filters.status) params.status = filters.status;
@@ -160,195 +148,7 @@ export default function ListeningHub() {
               display: 'block',
             }}
           >
-            <Box sx={filterSidebarStyles}>
-              <Stack direction="row" alignItems="center" spacing={1} mb={3}>
-                <Box sx={{ width: 4, height: 24, bgcolor: 'warning.main', borderRadius: 1 }} />
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  Search and Filter
-                </Typography>
-              </Stack>
-
-              <Stack spacing={3}>
-                <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                    Test name
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    placeholder="Find test name"
-                    size="small"
-                    value={localTitle}
-                    onChange={(e) => setLocalTitle(e.target.value)}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <SearchIcon color="action" />
-                        </InputAdornment>
-                      ),
-                      sx: {
-                        bgcolor: 'background.paper',
-                        borderRadius: 2,
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        '& fieldset': { border: 'none' },
-                      },
-                    }}
-                  />
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                    Teacher
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    placeholder="Find teacher"
-                    size="small"
-                    value={localTeacher}
-                    onChange={(e) => setLocalTeacher(e.target.value)}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <PersonIcon color="action" />
-                        </InputAdornment>
-                      ),
-                      sx: {
-                        bgcolor: 'background.paper',
-                        borderRadius: 2,
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        '& fieldset': { border: 'none' },
-                      },
-                    }}
-                  />
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                    Year
-                  </Typography>
-                  <Select
-                    fullWidth
-                    size="small"
-                    value={filters.year}
-                    onChange={(e) => handleFilterChange('year', e.target.value)}
-                    sx={{
-                      bgcolor: 'background.paper',
-                      borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      '& fieldset': { border: 'none' },
-                    }}
-                  >
-                    {YEARS.map((year) => (
-                      <MenuItem key={year} value={year}>
-                        {year}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                    Sort by
-                  </Typography>
-                  <Select
-                    fullWidth
-                    size="small"
-                    value={filters.ordering}
-                    onChange={(e) => handleFilterChange('ordering', e.target.value)}
-                    sx={{
-                      bgcolor: 'background.paper',
-                      borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      '& fieldset': { border: 'none' },
-                    }}
-                  >
-                    <MenuItem value="-created_at">Newest First</MenuItem>
-                    <MenuItem value="created_at">Oldest First</MenuItem>
-                    <MenuItem value="-updated_at">Recently Updated</MenuItem>
-                    <MenuItem value="title">Title (A-Z)</MenuItem>
-                    <MenuItem value="-title">Title (Z-A)</MenuItem>
-                  </Select>
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                    Level
-                  </Typography>
-                  <Select
-                    fullWidth
-                    size="small"
-                    displayEmpty
-                    value={filters.level}
-                    onChange={(e) => handleFilterChange('level', e.target.value)}
-                    sx={{
-                      bgcolor: 'background.paper',
-                      borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      '& fieldset': { border: 'none' },
-                    }}
-                  >
-                    <MenuItem value="">All Levels</MenuItem>
-
-                    {LEVELS.map((level) => (
-                      <MenuItem key={level.value} value={level.value}>
-                        {level.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </Box>
-
-                {user?.role === 'T' && (
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={filters.mine}
-                          onChange={(e) => handleFilterChange('mine', e.target.checked)}
-                          size="small"
-                          sx={{ color: 'warning.main', '&.Mui-checked': { color: 'warning.dark' } }}
-                        />
-                      }
-                      label={
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                          My Tests Only
-                        </Typography>
-                      }
-                    />
-                  </Box>
-                )}
-
-                {user?.role === 'A' && (
-                  <Box>
-                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                      Status
-                    </Typography>
-                    <Select
-                      fullWidth
-                      size="small"
-                      value={filters.status}
-                      onChange={(e) => handleFilterChange('status', e.target.value)}
-                      sx={{
-                        bgcolor: 'background.paper',
-                        borderRadius: 2,
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        '& fieldset': { border: 'none' },
-                      }}
-                    >
-                      <MenuItem value="">All Statuses</MenuItem>
-                      <MenuItem value="P">Published</MenuItem>
-                      <MenuItem value="D">Draft</MenuItem>
-                      <MenuItem value="I">In Review</MenuItem>
-                      <MenuItem value="R">Removed</MenuItem>
-                    </Select>
-                  </Box>
-                )}
-              </Stack>
-            </Box>
+            <FilterSidebar filters={filters} handleFilterChange={handleFilterChange} user={user} />
           </Grid>
 
           <Grid

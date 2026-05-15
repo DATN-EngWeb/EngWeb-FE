@@ -40,6 +40,7 @@ import Skeleton from '../ListeningTest/skeleton';
 import { useStreakContext } from '@/context/streakContext';
 import SubmitLoadingDialog from '../../Writing-Speaking/SubmitLoadingDialog';
 import SaveDraftToast from '../../Writing-Speaking/SaveDraftToast';
+import useUnsavedChangesWarning from '@/hooks/useUnsavedChangesWarning';
 
 // Hàm helper format thời gian hiển thị
 const formatTimeFromSeconds = (totalSeconds) => {
@@ -85,6 +86,10 @@ export default function ReadingTestContent({ testId }) {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
   const [submitStatus, setSubmitStatus] = useState('idle');
   const [draftStatus, setDraftStatus] = useState('idle');
+
+  useUnsavedChangesWarning(
+    !isReadOnly && submitStatus !== 'submitting' && draftStatus !== 'saving',
+  );
 
   // Timer Logic
   useEffect(() => {

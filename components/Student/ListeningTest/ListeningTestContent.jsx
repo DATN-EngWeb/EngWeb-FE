@@ -44,6 +44,7 @@ import SummaryTab from './part/sumaryTab';
 import { useStreakContext } from '@/context/streakContext';
 import SubmitLoadingDialog from '../../Writing-Speaking/SubmitLoadingDialog';
 import SaveDraftToast from '../../Writing-Speaking/SaveDraftToast';
+import useUnsavedChangesWarning from '@/hooks/useUnsavedChangesWarning';
 
 export default function ListeningTestContent({ test_id, initialData }) {
   const router = useRouter();
@@ -83,6 +84,10 @@ export default function ListeningTestContent({ test_id, initialData }) {
   const [targetQuestionId, setTargetQuestionId] = useState(null);
 
   const { refreshStreak, setGlobalRewardData } = useStreakContext();
+
+  useUnsavedChangesWarning(
+    !isReadOnly && submitStatus !== 'submitting' && draftStatus !== 'saving',
+  );
 
   const transformAnswers = (answersObj) => {
     const result = [];

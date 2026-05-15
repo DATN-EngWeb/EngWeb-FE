@@ -98,7 +98,7 @@ const TestCard = ({
   status,
   skill,
   created_at,
-  submissions,
+  submitted,
   level,
   test_details,
   role = 'teacher',
@@ -394,13 +394,13 @@ const TestCard = ({
               }}
             >
               <UserIcon sx={{ fontSize: 16 }} />
-              {submissions > 0 && (
+              {submitted > 0 && (
                 <Typography
                   sx={{
                     fontSize: '0.8rem',
                   }}
                 >
-                  {submissions}
+                  {submitted}
                 </Typography>
               )}
             </Box>
