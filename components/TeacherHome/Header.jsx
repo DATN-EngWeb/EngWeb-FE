@@ -90,9 +90,7 @@ export default function TeacherHeader() {
     if (typeof window === 'undefined') return;
     const latestAvatar = localStorage.getItem('avatar_url') || localStorage.getItem('avatar');
     setUserAvatar(latestAvatar || user?.avatar || null);
-    setUserFullName(
-      user?.full_name || localStorage.getItem('full_name') || user?.username || 'User',
-    );
+    setUserFullName(user?.full_name || localStorage.getItem('full_name') || 'Teacher');
     // synced from auth/localStorage
   }, [user]);
 
@@ -102,7 +100,7 @@ export default function TeacherHeader() {
       const latestAvatar = localStorage.getItem('avatar_url') || localStorage.getItem('avatar');
       setUserAvatar(latestAvatar || null);
       const latestFull = localStorage.getItem('full_name');
-      setUserFullName(latestFull || user?.full_name || user?.username || null);
+      setUserFullName(latestFull || user?.full_name || 'Teacher');
     };
     window.addEventListener('auth-user-updated', syncAuth);
     window.addEventListener('storage', syncAuth);
@@ -110,7 +108,7 @@ export default function TeacherHeader() {
       window.removeEventListener('auth-user-updated', syncAuth);
       window.removeEventListener('storage', syncAuth);
     };
-  }, []);
+  }, [user]);
 
   // Fetch teacher profile when `user` changes, like student header does
   useEffect(() => {
@@ -195,9 +193,11 @@ export default function TeacherHeader() {
           const fullFromProfile = profile?.full_name || profile?.fullName || null;
           if (avatarFromProfile) {
             setUserAvatar(avatarFromProfile);
+            localStorage.setItem('avatar', avatarFromProfile);
           }
           if (fullFromProfile) {
             setUserFullName(fullFromProfile);
+            localStorage.setItem('full_name', fullFromProfile);
           }
           try {
             // eslint-disable-next-line no-undef

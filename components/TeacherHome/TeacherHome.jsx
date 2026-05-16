@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useTheme } from '@mui/material/styles';
 import { getListTest } from '../../api/test';
+import { getTeacherSummary } from '../../api/test';
 import Link from 'next/link';
 import TestCard from '../TestCard.jsx';
 import {
   Box,
+  Grid,
   Typography,
   TextField,
   InputAdornment,
@@ -21,12 +24,19 @@ import {
   Add as PlusIcon,
   ChevronLeft,
   ChevronRight,
+  AssignmentOutlined,
+  CheckCircle as SuccessIcon,
+  Description as DraftIcon,
+  Autorenew as PendingIcon,
 } from '@mui/icons-material';
 import { TeacherHomepageStyles as styles } from '../../styles/Teacher/TeacherHomepageStyles.js';
+import { useAuth } from '../../hooks/useAuth';
 
 const PAGE_SIZE = 9;
 
 export default function TeacherHome() {
+  const { user } = useAuth(null);
+  const theme = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [skillFilter, setSkillFilter] = useState('All Skills');
   const [statusFilter, setStatusFilter] = useState('All Status');
@@ -39,6 +49,13 @@ export default function TeacherHome() {
   const [tests, setTests] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState({
+    total_test: 0,
+    published: 0,
+    draft: 0,
+    reviewed: 0,
+  });
+  const [summaryLoading, setSummaryLoading] = useState(true);
 
   const skillMap = useMemo(
     () => ({
@@ -139,6 +156,44 @@ export default function TeacherHome() {
   }, [fetchTests]);
 
   useEffect(() => {
+    let cancelled = false;
+
+    const fetchSummary = async () => {
+      setSummaryLoading(true);
+      try {
+        const result = await getTeacherSummary();
+        if (!cancelled && result) {
+          setSummary({
+            total_test: Number(result.total_test) || 0,
+            published: Number(result.published) || 0,
+            draft: Number(result.draft) || 0,
+            reviewed: Number(result.reviewed) || 0,
+          });
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setSummary({
+            total_test: 0,
+            published: 0,
+            draft: 0,
+            reviewed: 0,
+          });
+        }
+      } finally {
+        if (!cancelled) {
+          setSummaryLoading(false);
+        }
+      }
+    };
+
+    fetchSummary();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
     setMounted(true);
   }, []);
 
@@ -151,28 +206,206 @@ export default function TeacherHome() {
   };
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const displayName = user?.full_name || user?.username || 'Teacher';
+  const summaryCards = [
+    {
+      label: 'TOTAL TESTS',
+      value: summary.total_test,
+      helper: 'All time',
+      tint: '#ffffff',
+      border: 'rgba(148, 163, 184, 0.22)',
+      icon: AssignmentOutlined,
+      color: '#64748b',
+    },
+    {
+      label: 'PUBLISHED',
+      value: summary.published,
+      helper: 'Active now',
+      tint: '#fff',
+      border: 'rgba(251, 146, 60, 0.22)',
+      icon: SuccessIcon,
+      color: 'success.main',
+    },
+    {
+      label: 'DRAFTS',
+      value: summary.draft,
+      helper: 'In progress',
+      tint: '#fff',
+      border: 'rgba(245, 158, 11, 0.18)',
+      icon: DraftIcon,
+      color: 'primary.main',
+    },
+    {
+      label: 'REVIEWS',
+      value: summary.reviewed,
+      helper: 'From others',
+      tint: '#ffffff',
+      border: 'rgba(148, 163, 184, 0.22)',
+      icon: PendingIcon,
+      color: 'warning.main',
+    },
+  ];
+
   return (
     <Box component="main" sx={styles.contentWrapper}>
       <Box
         sx={{
-          backgroundColor: '#fff',
-          borderRadius: 3,
-          p: 3,
+          position: 'relative',
+          overflow: 'hidden',
           mb: 4,
+          borderRadius: 4,
+          background:
+            'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,248,238,0.98) 100%)',
+          border: '1px solid rgba(194, 122, 54, 0.10)',
+          boxShadow: '0 18px 40px rgba(83, 40, 34, 0.06)',
+          p: { xs: 2.5, md: 3 },
+          width: '100%', // Đảm bảo Box cha chiếm 100% chiều rộng khung chứa
         }}
       >
-        <Typography variant="h3" fontWeight={600} color="primary.main">
-          Welcome to Teacher homepage
-        </Typography>
-        <Typography color="text.secondary">Manage and track all your tests in one place</Typography>
-      </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            justifyContent: 'space-between',
+            gap: 2,
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            pt: 1,
+          }}
+        >
+          <Box>
+            <Typography
+              variant="h3"
+              sx={{
+                color: 'primary.main',
+                fontWeight: 700,
+                lineHeight: 1.12,
+                letterSpacing: '-0.03em',
+                fontSize: { xs: '2rem', md: '2.6rem' },
+              }}
+            >
+              <Box
+                component="span"
+                sx={{
+                  fontSize: { xs: '2.75rem', md: '2.5rem' },
+                  display: 'block',
+                  fontFamily: 'Plus Jakarta Sans',
+                  fontStyle: 'italic',
+                }}
+              >
+                Welcome back,
+              </Box>
+              <Box
+                component="span"
+                sx={{
+                  fontSize: { xs: '3.25rem', md: '3.5rem' },
+                  ml: 2,
+                  display: 'block',
+                  fontFamily: 'Clash Display',
+                  color: 'warning.main',
+                }}
+              >
+                {displayName}
+              </Box>
+            </Typography>
+            <Typography
+              color="text.secondary"
+              sx={{ mt: 1, fontSize: { xs: '0.95rem', md: '1rem' }, fontStyle: 'italic' }}
+            >
+              Manage and track all your tests in one place
+            </Typography>
+          </Box>
 
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <Link href="/teacher/upload-test" passHref>
-          <Button variant="contained" startIcon={<PlusIcon />} sx={styles.createBtn}>
-            Create Test
-          </Button>
-        </Link>
+          <Link href="/teacher/upload-test" passHref>
+            <Button variant="outlined" startIcon={<PlusIcon />} sx={styles.createBtn}>
+              Create Test
+            </Button>
+          </Link>
+        </Box>
+
+        <Box
+          sx={{
+            mt: 1.5,
+            display: 'flex',
+            gap: 2,
+            width: '100%',
+          }}
+        >
+          {summaryCards.map((card) => {
+            const IconComponent = card.icon;
+            return (
+              <Box key={card.label} sx={{ flex: 1 }}>
+                <Box
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: 3,
+                    bgcolor: card.tint,
+                    border: '1px solid',
+                    borderColor: card.border,
+                    boxShadow: '0 10px 24px rgba(83, 40, 34, 0.04)',
+                    p: 2.25,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      boxShadow: '0 16px 32px rgba(83, 40, 34, 0.08)',
+                      transform: 'translateY(-2px)',
+                    },
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      mb: 1.5,
+                    }}
+                  >
+                    <Typography
+                      variant="overline"
+                      sx={{
+                        display: 'block',
+                        color: 'text.secondary',
+                        fontWeight: 700,
+                        letterSpacing: '0.08em',
+                        lineHeight: 1.2,
+                        flex: 1,
+                      }}
+                    >
+                      {card.label}
+                    </Typography>
+                    <IconComponent
+                      sx={{
+                        color: card.color,
+                        opacity: 0.6,
+                        fontSize: '1.5rem',
+                      }}
+                    />
+                  </Box>
+                  <Typography
+                    sx={{
+                      fontSize: { xs: '2rem', md: '2.25rem' },
+                      lineHeight: 1,
+                      fontWeight: 700,
+                      color:
+                        card.label === 'PUBLISHED'
+                          ? 'success.main'
+                          : card.label === 'REVIEWS'
+                            ? 'warning.main'
+                            : 'primary.main',
+                      mb: 1,
+                    }}
+                  >
+                    {summaryLoading ? <CircularProgress size={32} sx={{ my: 0.5 }} /> : card.value}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    {card.helper}
+                  </Typography>
+                </Box>
+              </Box>
+            );
+          })}
+        </Box>
       </Box>
 
       <Box sx={styles.filterSection}>

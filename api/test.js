@@ -298,6 +298,15 @@ export const getStatisticsForSkill = async (skill, level) => {
   });
 };
 
+export const getTeacherSummary = async () => {
+  return apiFetch(`${TEST_STATISTICS_BASE_URL}/teacher-summary`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+};
+
 export const getProductiveTestHistory = async (history_id) => {
   return apiFetch(`${TEST_HISTORIES_BASE_URL}/productive/${history_id}`, {
     method: 'GET',
