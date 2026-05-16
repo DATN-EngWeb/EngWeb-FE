@@ -133,13 +133,6 @@ export default function MultipleChoiceQuestionAudio({
           minHeight: 0,
         }}
       >
-        <Box sx={{ width: '100%', height: 'auto' }}>
-          {audioSrc ? (
-            <CustomAudioPlayer src={audioSrc} isActive={isActive} />
-          ) : (
-            <Typography variant="caption">Loading audio...</Typography>
-          )}
-        </Box>
         {/* -------- Instruction --------- */}
         <Box sx={listeningPartStyles.instructionContainer}>
           <InstructionIcon />
@@ -160,9 +153,16 @@ export default function MultipleChoiceQuestionAudio({
                 wordBreak: 'break-word',
               }}
             >
-              Listen to the audio and choose the best answer for each question.
+              {dataPart.description}
             </Typography>
           </Box>
+        </Box>
+        <Box sx={{ width: '100%', height: 'auto' }}>
+          {audioSrc ? (
+            <CustomAudioPlayer src={audioSrc} isActive={isActive} />
+          ) : (
+            <Typography variant="caption">Loading audio...</Typography>
+          )}
         </Box>
         {/* -------- Passage (Optional) --------- */}
         <Box
@@ -245,13 +245,6 @@ export default function MultipleChoiceQuestionAudio({
           },
         }}
       >
-        {/* -------- Inner Instruction --------- */}
-        <Box sx={listeningPartStyles.innerInstruction}>
-          <LightbulbOutlinedIcon />
-          <Typography sx={{ color: 'inherit', fontSize: 'inherit', fontWeight: 'inherit' }}>
-            {dataPart.description}
-          </Typography>
-        </Box>
         {/* -------- Questions Section --------- */}
         {dataPart?.receptive_questions?.map((question, index) => {
           const questionResult =

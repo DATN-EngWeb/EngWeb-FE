@@ -80,13 +80,6 @@ export default function Matching({
     <Box sx={{ ...listeningPartStyles.containerCol, width: '100%' }}>
       {/* -------- Audio and Instruction Section --------- */}
       <Box sx={listeningPartStyles.basicFlexColCenStart}>
-        <Box sx={{ width: '100%', height: 'auto' }}>
-          {audioSrc ? (
-            <CustomAudioPlayer src={audioSrc} isActive={isActive} />
-          ) : (
-            <Typography variant="caption">Loading audio...</Typography>
-          )}
-        </Box>
         {/* -------- Instruction --------- */}
         <Box sx={listeningPartStyles.instructionContainer}>
           <InstructionIcon />
@@ -95,19 +88,20 @@ export default function Matching({
               Instruction
             </Typography>
             <Typography sx={{ color: 'text.primary', fontSize: '0.9rem', lineHeight: 1.5 }}>
-              Listen to the audio. For each question, choose the correct answer.
+              {dataPart.description}
             </Typography>
           </Box>
         </Box>
       </Box>
+      <Box sx={{ width: '100%', height: 'auto' }}>
+        {audioSrc ? (
+          <CustomAudioPlayer src={audioSrc} isActive={isActive} />
+        ) : (
+          <Typography variant="caption">Loading audio...</Typography>
+        )}
+      </Box>
       {/* -------- Question Section --------- */}
       <Box sx={listeningPartStyles.questionSection}>
-        <Box sx={listeningPartStyles.innerInstruction}>
-          <LightbulbOutlinedIcon />
-          <Typography sx={{ color: 'inherit', fontSize: 'inherit', fontWeight: 'inherit' }}>
-            {dataPart.description}
-          </Typography>
-        </Box>
         <Box sx={listeningPartStyles.matchingQuestionAnswerContainerGrid}>
           <Box sx={listeningPartStyles.questionContainerCol}>
             {dataPart?.receptive_questions?.map((question, index) => {

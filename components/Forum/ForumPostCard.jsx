@@ -16,8 +16,12 @@ import {
   DialogActions,
   TextField,
   Alert,
+  ListItemIcon,
+  ListItemText,
+  Divider,
 } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
@@ -28,7 +32,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { reactToPost, editPost, deletePost } from '../../api/forum';
 import ForumPostModal from './ForumPostModal';
-import { formatDate } from '../../utils/stringFormat';
+import { formatDateTime } from '../../utils/stringFormat';
+import styles from '../../styles/Forum/ForumPostCardStyles';
 
 const DEBOUNCE_MS = 800;
 
@@ -41,7 +46,8 @@ export default function ForumPostCard({ post, initialOpen = false }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editTitle, setEditTitle] = useState(post.title);
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editDescription, setEditDescription] = useState(post.description ?? '');
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const router = useRouter();
@@ -50,17 +56,13 @@ export default function ForumPostCard({ post, initialOpen = false }) {
   const debounceRef = useRef(null);
   const pendingLikedRef = useRef(post.is_liked ?? false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  const titleInputRef = useRef(null);
-
-  useEffect(() => {
-    if (isEditingTitle) titleInputRef.current?.focus();
-  }, [isEditingTitle]);
 
   const handleMoreClick = (e) => setAnchorEl(e.currentTarget);
   const handleMoreClose = () => setAnchorEl(null);
   const handleEditClick = () => {
     setEditTitle(post.title);
-    setIsEditingTitle(true);
+    setEditDescription(post.description ?? '');
+    setEditDialogOpen(true);
     handleMoreClose();
   };
   const handleDeleteClick = () => {
@@ -71,15 +73,20 @@ export default function ForumPostCard({ post, initialOpen = false }) {
   const handleEditSave = async () => {
     setEditLoading(true);
     try {
-      if (editTitle === post.title) {
-        setIsEditingTitle(false);
+      const nextTitle = editTitle.trim();
+      const nextDescription = editDescription.trim();
+
+      if (nextTitle === post.title && nextDescription === (post.description ?? '')) {
+        setEditDialogOpen(false);
         setEditLoading(false);
         return;
       }
-      await editPost({ title: editTitle }, post.id);
-      post.title = editTitle;
-      setIsEditingTitle(false);
-      setSnackbar({ open: true, message: 'Post title updated!', severity: 'success' });
+
+      await editPost({ title: nextTitle, description: nextDescription }, post.id);
+      post.title = nextTitle;
+      post.description = nextDescription;
+      setEditDialogOpen(false);
+      setSnackbar({ open: true, message: 'Post updated!', severity: 'success' });
     } catch (err) {
       setSnackbar({ open: true, message: 'Failed to update post.', severity: 'error' });
       // eslint-disable-next-line no-console
@@ -91,7 +98,8 @@ export default function ForumPostCard({ post, initialOpen = false }) {
 
   const handleCancelEdit = () => {
     setEditTitle(post.title);
-    setIsEditingTitle(false);
+    setEditDescription(post.description ?? '');
+    setEditDialogOpen(false);
   };
 
   const handleDeleteConfirm = async () => {
@@ -148,15 +156,15 @@ export default function ForumPostCard({ post, initialOpen = false }) {
   };
 
   return (
-    <Card sx={{ mb: 3, borderRadius: 3 }}>
+    <Card sx={styles.card}>
       <CardContent>
         <Box display="flex" alignItems="center" gap={1}>
           <Avatar src={post.author_avatar} />
           <Box flex={1}>
-            <Typography fontWeight={600}>{post.author_name}</Typography>
+            <Typography sx={styles.authorName}>{post.author_name}</Typography>
             <Box display="flex" gap={1} alignItems="center">
               <Typography variant="caption" color="text.secondary">
-                {formatDate(post.created_at)}
+                {formatDateTime(post.created_at)}
               </Typography>
               <Chip
                 label={post.skill}
@@ -167,19 +175,47 @@ export default function ForumPostCard({ post, initialOpen = false }) {
           </Box>
           {user?.id && String(user.id) === String(post.author_id) && (
             <>
-              <IconButton size="small" onClick={handleMoreClick} sx={{ ml: 'auto' }}>
-                <MoreVertIcon />
+              <IconButton
+                size="small"
+                onClick={handleMoreClick}
+                aria-label="Open post actions"
+                sx={styles.moreButton}
+              >
+                <MoreVertIcon fontSize="small" />
               </IconButton>
               <Menu
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
                 onClose={handleMoreClose}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'right',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                slotProps={{
+                  paper: {
+                    elevation: 0,
+                    sx: styles.menuPaper,
+                  },
+                }}
               >
-                <MenuItem onClick={handleEditClick}>Edit</MenuItem>
-                <MenuItem onClick={handleDeleteClick} sx={{ color: 'error.main' }}>
-                  Delete
+                <MenuItem onClick={handleEditClick} sx={styles.menuItem}>
+                  <ListItemText
+                    primary="Edit"
+                    primaryTypographyProps={{ fontSize: '15px', lineHeight: 1.2 }}
+                  />
+                </MenuItem>
+
+                <Divider sx={{ my: 0.25 }} />
+
+                <MenuItem onClick={handleDeleteClick} sx={styles.deleteMenuItem}>
+                  <ListItemText
+                    primary="Delete"
+                    primaryTypographyProps={{ fontSize: '15px', lineHeight: 1.2 }}
+                  />
                 </MenuItem>
               </Menu>
             </>
@@ -199,32 +235,10 @@ export default function ForumPostCard({ post, initialOpen = false }) {
           </Snackbar>
         </Box>
 
-        {isEditingTitle ? (
-          <TextField
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            onBlur={handleEditSave}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleEditSave();
-              }
-              if (e.key === 'Escape') {
-                handleCancelEdit();
-              }
-            }}
-            inputRef={titleInputRef}
-            fullWidth
-            variant="standard"
-            sx={{ mt: 2 }}
-            InputProps={{ disableUnderline: true, style: { fontWeight: 700, fontSize: '1rem' } }}
-          />
-        ) : (
-          <Typography mt={2} fontWeight={700}>
-            {post.title}
-          </Typography>
-        )}
-        <Typography color="text.secondary" mt={1}>
+        <Typography mt={2} fontWeight={700}>
+          {post.title}
+        </Typography>
+        <Typography color="text.secondary" mt={1} sx={styles.description}>
           {post.description}
         </Typography>
 
@@ -244,7 +258,7 @@ export default function ForumPostCard({ post, initialOpen = false }) {
               border: '1px solid #e8d5c8',
             }}
           >
-            <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
+            <Typography variant="body2" sx={styles.userAnswer}>
               {post.user_answer_text}
             </Typography>
           </Box>
@@ -262,16 +276,7 @@ export default function ForumPostCard({ post, initialOpen = false }) {
               size="medium"
               startIcon={liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
               onClick={handleLike}
-              sx={{
-                textTransform: 'none',
-                color: liked ? 'error.main' : 'text.secondary',
-                fontWeight: 700,
-                fontSize: '0.95rem',
-                minHeight: 34,
-                px: 1.25,
-                '& .MuiButton-startIcon svg': { fontSize: '1.1rem' },
-                '&:hover': { bgcolor: 'transparent', color: 'error.light' },
-              }}
+              sx={{ ...styles.likeButton, color: liked ? 'error.main' : styles.likeButton.color }}
             >
               {liked ? 'Liked' : 'Like'}
             </Button>
@@ -280,16 +285,7 @@ export default function ForumPostCard({ post, initialOpen = false }) {
               size="medium"
               startIcon={<ChatBubbleOutlineIcon />}
               onClick={() => setModalOpen(true)}
-              sx={{
-                textTransform: 'none',
-                color: 'text.secondary',
-                fontWeight: 700,
-                fontSize: '0.95rem',
-                minHeight: 34,
-                px: 1.25,
-                '& .MuiButton-startIcon svg': { fontSize: '1.1rem' },
-                '&:hover': { bgcolor: 'transparent' },
-              }}
+              sx={styles.commentButton}
             >
               Comment
             </Button>
@@ -298,14 +294,14 @@ export default function ForumPostCard({ post, initialOpen = false }) {
           <Box display="flex" gap={2} color="text.secondary">
             <Box display="flex" alignItems="center" gap={0.5}>
               <FavoriteBorderIcon fontSize="small" />
-              <Typography variant="body2" fontWeight={600}>
+              <Typography variant="body2" fontWeight={600} sx={styles.countText}>
                 {likeCount}
               </Typography>
             </Box>
 
             <Box display="flex" alignItems="center" gap={0.5}>
               <ChatBubbleOutlineIcon fontSize="small" />
-              <Typography variant="body2" fontWeight={600}>
+              <Typography variant="body2" fontWeight={600} sx={styles.countText}>
                 {commentCount}
               </Typography>
             </Box>
@@ -326,31 +322,81 @@ export default function ForumPostCard({ post, initialOpen = false }) {
 
       {/* Inline title editing replaces previous edit dialog */}
 
+      <Dialog open={editDialogOpen} onClose={handleCancelEdit} fullWidth maxWidth="sm">
+        <DialogTitle sx={styles.editDialogTitle}>Edit Post</DialogTitle>
+        <DialogContent sx={styles.editDialogContent}>
+          <TextField
+            label="Title"
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            fullWidth
+            margin="normal"
+            autoFocus
+          />
+          <TextField
+            label="Description"
+            value={editDescription}
+            onChange={(e) => setEditDescription(e.target.value)}
+            fullWidth
+            margin="normal"
+            multiline
+            minRows={4}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelEdit} disabled={editLoading}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleEditSave}
+            variant="contained"
+            disabled={editLoading || !editTitle.trim()}
+          >
+            {editLoading ? 'Saving...' : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Dialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         maxWidth="xs"
         fullWidth
+        PaperProps={{ sx: styles.deleteDialogPaper }}
       >
-        <DialogTitle>Delete Post</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete this post? This action cannot be undone.
-          </Typography>
+        <DialogContent sx={styles.deleteDialogContent}>
+          <Box sx={styles.deleteDialogSurface}>
+            <Box sx={styles.deleteIconWrap}>
+              <WarningAmberRoundedIcon fontSize="small" />
+            </Box>
+
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Typography sx={styles.deleteTitle}>Confirm Delete</Typography>
+              <Typography sx={styles.deleteDescription}>
+                Are you sure you want to delete this post? This action cannot be undone.
+              </Typography>
+
+              <DialogActions sx={styles.deleteActions}>
+                <Button
+                  onClick={() => setDeleteDialogOpen(false)}
+                  disabled={deleteLoading}
+                  variant="outlined"
+                  sx={styles.deleteCancelButton}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleDeleteConfirm}
+                  variant="contained"
+                  disabled={deleteLoading}
+                  sx={styles.deleteConfirmButton}
+                >
+                  {deleteLoading ? 'Deleting...' : 'Delete'}
+                </Button>
+              </DialogActions>
+            </Box>
+          </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)} disabled={deleteLoading}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleDeleteConfirm}
-            color="error"
-            variant="contained"
-            disabled={deleteLoading}
-          >
-            {deleteLoading ? 'Deleting...' : 'Delete'}
-          </Button>
-        </DialogActions>
       </Dialog>
     </Card>
   );

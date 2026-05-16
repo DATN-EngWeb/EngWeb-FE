@@ -15,250 +15,9 @@ export const validateBasicInfo = (basicInfo) => {
   return errors;
 };
 
-const getPartScoreMeta = (part) => {
-  const rawScore = part?.score ?? part?.totalScore;
-  const scoreValue = parseFloat(rawScore);
-  return { rawScore, scoreValue };
-};
-
-// Validate MultiChoiceImagePart
-export const validateMultiChoiceImagePart = (part) => {
-  const errors = { questions: {} };
-
-  const { rawScore, scoreValue } = getPartScoreMeta(part);
-  if (
-    rawScore === undefined ||
-    rawScore === null ||
-    rawScore === '' ||
-    isNaN(scoreValue) ||
-    scoreValue === 0
-  ) {
-    errors.totalScore = true;
-  } else if (scoreValue < 0) {
-    errors.totalScoreNegative = true;
-  }
-  if (!part.description?.trim()) errors.description = true;
-  const hasAudio = part.audio?.file || part.audio?.url || part.audio?.name;
-  if (!hasAudio) errors.audio = true;
-
-  if (!part.questions || part.questions.length === 0) {
-    errors.noQuestions = true;
-  }
-
-  part.questions?.forEach((q, qIdx) => {
-    const qErrors = {};
-
-    if (!q.text?.trim()) qErrors.text = true;
-    if (q.correctIndex === null || q.correctIndex === undefined) qErrors.correctIndex = true;
-
-    if (!q.answers || q.answers.length < 2) {
-      qErrors.answers = true;
-    } else {
-      qErrors.answerImages = [];
-      q.answers.forEach((ans) => {
-        const hasImage = ans.image?.file || ans.image?.url || ans.image?.name;
-        qErrors.answerImages.push(!hasImage);
-      });
-      if (!qErrors.answerImages.some(Boolean)) delete qErrors.answerImages;
-    }
-
-    if (Object.keys(qErrors).length > 0) errors.questions[qIdx] = qErrors;
-  });
-
-  return Object.keys(errors.questions || {}).length > 0 ||
-    errors.noQuestions ||
-    errors.totalScore ||
-    errors.totalScoreNegative ||
-    errors.description ||
-    errors.audio
-    ? errors
-    : {};
-};
-
-// Validate MultiChoiceTextPart
-export const validateMultiChoiceTextPart = (part) => {
-  const errors = { questions: {} };
-
-  const { rawScore, scoreValue } = getPartScoreMeta(part);
-  if (
-    rawScore === undefined ||
-    rawScore === null ||
-    rawScore === '' ||
-    isNaN(scoreValue) ||
-    scoreValue === 0
-  ) {
-    errors.totalScore = true;
-  } else if (scoreValue < 0) {
-    errors.totalScoreNegative = true;
-  }
-  if (!part.description?.trim()) errors.description = true;
-
-  if (!part.questions || part.questions.length === 0) {
-    errors.noQuestions = true;
-  }
-
-  // Format C: check part-level audio
-  if (part.audioFormat === 'onetomany') {
-    const hasAudio = part.audio?.file || part.audio?.url || part.audio?.name;
-    if (!hasAudio) errors.partAudio = true;
-  }
-
-  part.questions?.forEach((q, qIdx) => {
-    const qErrors = {};
-
-    if (!q.text?.trim()) qErrors.text = true;
-
-    // Format B: check question-level audio
-    if (part.audioFormat === 'onetoone') {
-      const hasAudio = q.audio?.file || q.audio?.url || q.audio?.name;
-      if (!hasAudio) qErrors.audio = true;
-    }
-
-    if (q.correctIndex === null || q.correctIndex === undefined) qErrors.correctIndex = true;
-
-    if (!q.answers || q.answers.length < 2) {
-      qErrors.answers = true;
-    } else {
-      qErrors.answerTexts = [];
-      q.answers.forEach((ans) => {
-        qErrors.answerTexts.push(!ans.text?.trim());
-      });
-      if (!qErrors.answerTexts.some(Boolean)) delete qErrors.answerTexts;
-    }
-
-    if (Object.keys(qErrors).length > 0) errors.questions[qIdx] = qErrors;
-  });
-
-  return Object.keys(errors.questions || {}).length > 0 ||
-    errors.partAudio ||
-    errors.noQuestions ||
-    errors.totalScore ||
-    errors.totalScoreNegative ||
-    errors.description
-    ? errors
-    : {};
-};
-
-// Validate FillInTheBlankPart
-export const validateFillInTheBlankPart = (part) => {
-  const errors = {};
-
-  const { rawScore, scoreValue } = getPartScoreMeta(part);
-  if (
-    rawScore === undefined ||
-    rawScore === null ||
-    rawScore === '' ||
-    isNaN(scoreValue) ||
-    scoreValue === 0
-  ) {
-    errors.totalScore = true;
-  } else if (scoreValue < 0) {
-    errors.totalScoreNegative = true;
-  }
-  const hasAudio = part.audio?.file || part.audio?.url || part.audio?.name;
-  if (!hasAudio) errors.audio = true;
-  if (!part.description?.trim()) errors.description = true;
-
-  if (!part.answers || part.answers.length === 0) {
-    errors.noAnswers = true;
-  } else {
-    errors.answers = [];
-    part.answers.forEach((ans) => {
-      errors.answers.push(!ans.text?.trim());
-    });
-    if (!errors.answers.some(Boolean)) delete errors.answers;
-  }
-
-  return Object.keys(errors).length > 0 ? errors : {};
-};
-
-// Validate MatchingPart
-export const validateMatchingPart = (part) => {
-  const errors = {};
-
-  const { rawScore, scoreValue } = getPartScoreMeta(part);
-  if (
-    rawScore === undefined ||
-    rawScore === null ||
-    rawScore === '' ||
-    isNaN(scoreValue) ||
-    scoreValue === 0
-  ) {
-    errors.totalScore = true;
-  } else if (scoreValue < 0) {
-    errors.totalScoreNegative = true;
-  }
-  const hasAudio = part.audio?.file || part.audio?.url || part.audio?.name;
-  if (!hasAudio) errors.audio = true;
-  if (!part.description?.trim()) errors.description = true;
-
-  if (!part.questions || part.questions.length === 0) {
-    errors.noQuestions = true;
-  } else {
-    errors.questions = {};
-    part.questions.forEach((q, qIdx) => {
-      const qErrors = {};
-      if (!q.text?.trim()) qErrors.text = true;
-      if (!q.selectedAnswerId) qErrors.selectedAnswerId = true;
-      if (Object.keys(qErrors).length > 0) errors.questions[qIdx] = qErrors;
-    });
-    if (Object.keys(errors.questions).length === 0) delete errors.questions;
-  }
-
-  if (!part.answers || part.answers.length === 0) {
-    errors.noAnswers = true;
-  } else {
-    errors.answers = [];
-    part.answers.forEach((ans) => {
-      errors.answers.push(!ans.text?.trim());
-    });
-    if (!errors.answers.some(Boolean)) delete errors.answers;
-  }
-
-  return Object.keys(errors).length > 0 ? errors : {};
-};
-
-// Main validation
-export const validateTest = (basicInfo, parts) => {
-  const errors = {
-    basicInfo: validateBasicInfo(basicInfo),
-    parts: [],
-  };
-
-  if (!parts || parts.length === 0) {
-    errors.noParts = true;
-    return errors;
-  }
-
-  parts.forEach((part) => {
-    if (!part.type) {
-      errors.parts.push({ noType: true });
-      return;
-    }
-
-    let partErrors = {};
-    switch (part.type) {
-      case 'multichoice_images':
-        partErrors = validateMultiChoiceImagePart(part);
-        break;
-      case 'multichoice_texts':
-        partErrors = validateMultiChoiceTextPart(part);
-        break;
-      case 'fill_in_the_blanks':
-        partErrors = validateFillInTheBlankPart(part);
-        break;
-      case 'matching':
-        partErrors = validateMatchingPart(part);
-        break;
-    }
-
-    errors.parts.push(Object.keys(partErrors).length > 0 ? partErrors : null);
-  });
-
-  const hasErrors =
-    Object.keys(errors.basicInfo).length > 0 || errors.noParts || errors.parts.some(Boolean);
-
-  return hasErrors ? errors : null;
+export const validateListeningBasicInfo = (basicInfo) => {
+  const errors = validateBasicInfo(basicInfo);
+  return Object.keys(errors).length > 0 ? errors : null;
 };
 
 // Get user-friendly error message
@@ -267,10 +26,10 @@ export const getValidationErrorMessage = (errors) => {
 
   // Always show Basic Information errors first.
   if (errors.basicInfo?.testName) return 'Please enter the test title';
-  if (errors.basicInfo?.level) return 'Please select a level';
   if (errors.basicInfo?.time) return 'Please enter a valid test time';
   if (errors.basicInfo?.timeNegative) return 'Test time cannot be negative';
   if (errors.basicInfo?.description) return 'Please enter the test description';
+  if (errors.basicInfo?.level) return 'Please select a level';
 
   if (errors.parts?.some((p) => p?.totalScoreNegative)) return 'Score cannot be negative';
   if (errors.noParts) return 'Test must have at least 1 part';
@@ -521,6 +280,168 @@ export const validateReadingPartUpdatePayload = (transformedParts, originalParts
         const hasCorrectAnswer = activeAnswers.some((a) => a.is_correct === true);
         if (!hasCorrectAnswer) {
           return `Part ${displayPartNum}, Question ${displayQuestionNum}: choose the correct answer.`;
+        }
+      }
+    }
+  }
+
+  return null;
+};
+
+export const validateListeningPartUpdatePayload = (parts) => {
+  const isEmptyText = (text) => {
+    if (!text) return true;
+    return String(text).trim() === '';
+  };
+
+  const formatPartMessage = (partName, message) => `Part ${partName}: ${message}`;
+  const formatQuestionMessage = (partName, qNum, message) =>
+    `Part ${partName}, Question ${qNum}: ${message}`;
+
+  if (!parts || parts.length === 0) {
+    return 'Test must have at least 1 part';
+  }
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    const partName = i + 1;
+    const partType = part.type;
+
+    // 1. Check score (for all types)
+    const score = part.score ?? part.totalScore;
+    const scoreValue = parseFloat(score);
+    if (
+      score === undefined ||
+      score === null ||
+      score === '' ||
+      isNaN(scoreValue) ||
+      scoreValue === 0
+    ) {
+      return formatPartMessage(partName, 'fill in the score');
+    }
+    if (scoreValue < 0) {
+      return formatPartMessage(partName, 'score cannot be negative');
+    }
+
+    // 2. Check description (for all types)
+    if (isEmptyText(part.description)) {
+      return formatPartMessage(partName, 'fill in the description');
+    }
+
+    // 3. Check audio (for multichoice_images, format C multichoice_texts, fill_in_the_blanks, matching)
+    if (['multichoice_images', 'fill_in_the_blanks', 'matching'].includes(partType)) {
+      const hasAudio = part.audio?.file || part.audio?.url || part.audio?.name;
+      if (!hasAudio) {
+        return formatPartMessage(partName, 'upload the audio file');
+      }
+    } else if (partType === 'multichoice_texts') {
+      // Format C: check part-level audio
+      if (part.audioFormat === 'onetomany') {
+        const hasAudio = part.audio?.file || part.audio?.url || part.audio?.name;
+        if (!hasAudio) {
+          return formatPartMessage(partName, 'upload the audio file');
+        }
+      }
+    }
+
+    // 4. Check content (only for fill_in_the_blanks)
+    if (partType === 'fill_in_the_blanks' && isEmptyText(part.content)) {
+      return formatPartMessage(partName, 'fill in the content');
+    }
+
+    // 5. Check questions exist
+    if (!part.questions || part.questions.length === 0) {
+      return formatPartMessage(partName, 'add at least one question');
+    }
+
+    // 6. Check each question
+    for (let j = 0; j < part.questions.length; j++) {
+      const q = part.questions[j];
+      const qNum = j + 1;
+
+      if (partType === 'multichoice_images') {
+        if (isEmptyText(q.text)) {
+          return formatQuestionMessage(partName, qNum, 'fill in the question text');
+        }
+
+        if (!q.answers || q.answers.length < 2) {
+          return formatQuestionMessage(partName, qNum, 'add at least 2 answer options');
+        }
+
+        for (let k = 0; k < q.answers.length; k++) {
+          const ans = q.answers[k];
+          const hasImage = ans.image?.file || ans.image?.url || ans.image?.name;
+          if (!hasImage) {
+            return formatQuestionMessage(partName, qNum, `upload image for option ${k + 1}`);
+          }
+        }
+
+        if (q.correctIndex === null || q.correctIndex === undefined) {
+          return formatQuestionMessage(partName, qNum, 'select the correct answer');
+        }
+      } else if (partType === 'multichoice_texts') {
+        if (isEmptyText(q.text)) {
+          return formatQuestionMessage(partName, qNum, 'fill in the question text');
+        }
+
+        // Format B: check question-level audio
+        if (part.audioFormat === 'onetoone') {
+          const hasAudio = q.audio?.file || q.audio?.url || q.audio?.name;
+          if (!hasAudio) {
+            return formatQuestionMessage(partName, qNum, 'upload the audio file');
+          }
+        }
+
+        if (!q.answers || q.answers.length < 2) {
+          return formatQuestionMessage(partName, qNum, 'add at least 2 answer options');
+        }
+
+        for (let k = 0; k < q.answers.length; k++) {
+          const ans = q.answers[k];
+          if (isEmptyText(ans.text)) {
+            return formatQuestionMessage(partName, qNum, `fill in text for option ${k + 1}`);
+          }
+        }
+
+        if (q.correctIndex === null || q.correctIndex === undefined) {
+          return formatQuestionMessage(partName, qNum, 'select the correct answer');
+        }
+      } else if (partType === 'fill_in_the_blanks') {
+        if (!q.answers || q.answers.length === 0) {
+          return formatQuestionMessage(partName, qNum, 'add at least one answer');
+        }
+
+        for (let k = 0; k < q.answers.length; k++) {
+          const ans = q.answers[k];
+          if (isEmptyText(ans.text)) {
+            return formatQuestionMessage(partName, qNum, `fill in answer ${k + 1}`);
+          }
+        }
+      } else if (partType === 'matching') {
+        if (isEmptyText(q.text)) {
+          return formatQuestionMessage(partName, qNum, 'fill in the question text');
+        }
+
+        if (!q.selectedAnswerId) {
+          return formatQuestionMessage(partName, qNum, 'select the matching answer');
+        }
+
+        if (isEmptyText(q.answer?.text)) {
+          return formatQuestionMessage(partName, qNum, 'fill in the answer text');
+        }
+      }
+    }
+
+    // 7. Check matching answers (only for matching type)
+    if (partType === 'matching') {
+      if (!part.answers || part.answers.length === 0) {
+        return formatPartMessage(partName, 'add at least one matching answer');
+      }
+
+      for (let k = 0; k < part.answers.length; k++) {
+        const ans = part.answers[k];
+        if (isEmptyText(ans.text)) {
+          return formatQuestionMessage(partName, k + 1, 'fill in the matching answer');
         }
       }
     }

@@ -49,6 +49,29 @@ export const formatDate = (dateString) => {
   return `${day}/${month}/${year}`;
 };
 
+// Định dạng: 18:00 24/05/2026
+export const formatDateTime = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+
+  const timePart = new Intl.DateTimeFormat('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'Asia/Ho_Chi_Minh',
+  }).format(date);
+
+  const datePart = new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: 'Asia/Ho_Chi_Minh',
+  }).format(date);
+
+  return `${timePart} ${datePart}`;
+};
+
 // Định dạng: Dec 25, 2023
 export const formatDateFull = (dateString) => {
   if (!dateString) return '';
