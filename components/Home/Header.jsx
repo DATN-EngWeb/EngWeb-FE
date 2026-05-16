@@ -46,6 +46,7 @@ import {
 } from '../../styles/Home/HeaderStyles';
 import RoleSelectionModal from '../Auth/RoleSelectionModal';
 import { useAuth } from '../../hooks/useAuth';
+import { useStreakContext } from '../../context/streakContext';
 import { logout as logoutAPI, getStudentProfile } from '../../api/accounts';
 import AnimatedStreakBadge from '../Streak/animatedStreakBadge';
 import StreakBadge from '../Streak/streakBadge';
@@ -351,6 +352,7 @@ export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, user, logout: logoutHook } = useAuth(null);
+  const { isCelebrationDismissed } = useStreakContext();
   const [popupOpen, setPopupOpen] = useState(false);
   const [userAvatar, setUserAvatar] = useState(null);
   const [studentProfile, setStudentProfile] = useState(null);
@@ -477,7 +479,7 @@ export default function Header() {
                     userAvatar && userAvatar !== 'null' && userAvatar !== 'undefined';
                   return (
                     <>
-                      <AnimatedStreakBadge />
+                      {!isCelebrationDismissed && <AnimatedStreakBadge />}
                       <StreakBadge />
                       <NotificationBell />
 

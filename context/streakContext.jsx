@@ -15,7 +15,14 @@ export const StreakProvider = ({ children }) => {
     last_submitted_date: null,
   });
   const [globalRewardData, setGlobalRewardData] = useState(null);
+  const [isCelebrationDismissed, setIsCelebrationDismissed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (globalRewardData) {
+      setIsCelebrationDismissed(false);
+    }
+  }, [globalRewardData]);
 
   const fetchStreak = useCallback(async () => {
     if (authLoading) return;
@@ -51,12 +58,22 @@ export const StreakProvider = ({ children }) => {
 
   return (
     <StreakContext.Provider
-      value={{ streakData, isLoading, refreshStreak: fetchStreak, setGlobalRewardData }}
+      value={{
+        streakData,
+        isLoading,
+        refreshStreak: fetchStreak,
+        setGlobalRewardData,
+        isCelebrationDismissed,
+        setIsCelebrationDismissed,
+      }}
     >
       {children}
       <StreakRewardOverlay
         rewardData={globalRewardData}
-        onClose={() => setGlobalRewardData(null)}
+        onClose={() => {
+          setGlobalRewardData(null);
+          setIsCelebrationDismissed(true);
+        }}
       />
     </StreakContext.Provider>
   );
