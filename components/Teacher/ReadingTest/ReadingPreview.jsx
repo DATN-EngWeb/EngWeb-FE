@@ -30,6 +30,10 @@ const getReadingPartTypeLabel = (format) => {
 const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButton = true }) => {
   const [currentPartIndex, setCurrentPartIndex] = useState(0);
 
+  if (testData?.parts) {
+    testData.parts.sort((a, b) => a.order - b.order);
+  }
+
   const parts = testData?.parts || [];
   const currentPart = parts[currentPartIndex];
 

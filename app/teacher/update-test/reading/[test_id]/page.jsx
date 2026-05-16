@@ -42,10 +42,11 @@ import {
   fetchHtmlContent,
 } from '../../../../../api/teacher/upload-reading';
 import {
-  collectFilesReading,
+  collectFilesUpdateReading,
   transformReadingPartsWithUrls,
   transformFormatUpdateData,
   buildReceptiveTestPayload,
+  processCkeditorState,
 } from '../../../../../utils/testTransformers';
 import { getPresignedUrl, uploadToObjectStorage, confirmUpload } from '../../../../../api/test';
 import { validateReadingPartUpdatePayload } from '../../../../../utils/testValidation';
@@ -70,6 +71,7 @@ export default function Page() {
     status: 'P',
   });
   const [parts, setParts] = useState([]);
+  const originalContentRef = useRef({});
 
   const lastPartRef = useRef(null);
   const prevPartsLengthRef = useRef(parts.length);
@@ -156,7 +158,11 @@ export default function Page() {
               scoreForEachQuestion: part.receptive_questions?.[0]?.score,
               // F ko có content; G, H, I, J ko có description
               ...(format !== 'F' && { content: part.content }),
-              ...(!['G', 'H', 'I', 'J'].includes(format) && { description: part.description }),
+            };
+
+            originalContentRef.current[newPart.id] = {
+              content: newPart.content,
+              questions: {},
             };
 
             // Fetch nội dung HTML cho Part nếu có content
@@ -177,6 +183,7 @@ export default function Page() {
                   };
 
                   if (newQ.content?.startsWith?.('http')) {
+                    originalContentRef.current[newPart.id].questions[newQ.id] = newQ.content;
                     newQ.content = await fetchHtmlContent(newQ.content);
                   }
 
@@ -224,7 +231,7 @@ export default function Page() {
 
   useEffect(() => {
     if (parts.length > prevPartsLengthRef.current) {
-      if (lastPartRef.current) {
+      if (lastPartRef.current && test?.flag !== 'update') {
         lastPartRef.current.scrollIntoView({
           behavior: 'smooth',
           block: 'start',
@@ -273,24 +280,23 @@ export default function Page() {
         return;
       }
 
-      const transformedParts = transformFormatUpdateData(parts);
-      if (status === 'P') {
-        const errorMessage = validateReadingPartUpdatePayload(transformedParts, parts);
-        if (errorMessage) {
-          // Here we could parse errorMessage to find exactly where it failed,
-          // but for now let's show a general error in parts if it fails.
-          // As requested by user, we should highlight specific fields.
-          setSnackbar({
-            open: true,
-            message: errorMessage,
-            severity: 'error',
-          });
-          setIsLoading(false);
-          return;
-        }
+      const finalParts = processCkeditorState(parts, originalContentRef.current, test.flag);
+      const errorMessage = validateReadingPartUpdatePayload(finalParts);
+      if (errorMessage) {
+        // Here we could parse errorMessage to find exactly where it failed,
+        // but for now let's show a general error in parts if it fails.
+        // As requested by user, we should highlight specific fields.
+        setSnackbar({
+          open: true,
+          message: errorMessage,
+          severity: 'error',
+        });
+        setIsLoading(false);
+        return;
       }
 
-      const files = collectFilesReading(transformedParts);
+      const transformedParts = transformFormatUpdateData(finalParts);
+      const files = collectFilesUpdateReading(transformedParts);
       const filenameToUrl = {};
       for (const f of files) {
         const currentMimeType = f.mimeType ?? f.file?.type ?? 'text/html';
@@ -371,7 +377,6 @@ export default function Page() {
       id: Date.now(),
       order: activeParts.length + 1,
       format: null,
-      description: '',
       scoreForEachQuestion: 10,
       questions: [],
       ...(test.flag === 'update' && { action: 'create' }),
@@ -712,20 +717,6 @@ export default function Page() {
     );
   };
 
-  const handleUpdateDescriptionPart = (partId, newDescription) => {
-    setParts((prevParts) =>
-      prevParts.map((p) =>
-        p.id === partId
-          ? {
-              ...p,
-              description: newDescription,
-              ...(test.flag === 'update' && !p.action && { action: 'update' }),
-            }
-          : p,
-      ),
-    );
-  };
-
   const handleUpdateContentPart = (partId, newContent) => {
     setParts((prevParts) =>
       prevParts.map((p) =>
@@ -734,6 +725,7 @@ export default function Page() {
               ...p,
               content: newContent,
               ...(test.flag === 'update' && !p.action && { action: 'update' }),
+              ...(test.flag === 'update' && { ckeditor: true }),
             }
           : p,
       ),
@@ -795,7 +787,6 @@ export default function Page() {
             part={part}
             partId={part.id}
             index={index}
-            handleUpdateDescriptionPart={handleUpdateDescriptionPart}
             handleDeletePart={handleDeletePart}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
