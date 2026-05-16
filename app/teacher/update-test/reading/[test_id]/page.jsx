@@ -281,24 +281,21 @@ export default function Page() {
       }
 
       const finalParts = processCkeditorState(parts, originalContentRef.current, test.flag);
-
-      const transformedParts = transformFormatUpdateData(finalParts);
-      if (status === 'P') {
-        const errorMessage = validateReadingPartUpdatePayload(transformedParts, parts);
-        if (errorMessage) {
-          // Here we could parse errorMessage to find exactly where it failed,
-          // but for now let's show a general error in parts if it fails.
-          // As requested by user, we should highlight specific fields.
-          setSnackbar({
-            open: true,
-            message: errorMessage,
-            severity: 'error',
-          });
-          setIsLoading(false);
-          return;
-        }
+      const errorMessage = validateReadingPartUpdatePayload(finalParts);
+      if (errorMessage) {
+        // Here we could parse errorMessage to find exactly where it failed,
+        // but for now let's show a general error in parts if it fails.
+        // As requested by user, we should highlight specific fields.
+        setSnackbar({
+          open: true,
+          message: errorMessage,
+          severity: 'error',
+        });
+        setIsLoading(false);
+        return;
       }
 
+      const transformedParts = transformFormatUpdateData(finalParts);
       const files = collectFilesUpdateReading(transformedParts);
       const filenameToUrl = {};
       for (const f of files) {

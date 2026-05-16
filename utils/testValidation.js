@@ -392,25 +392,27 @@ export const validateReadingPartPayload = (parts) => {
   return null;
 };
 
-export const validateReadingPartUpdatePayload = (transformedParts, originalParts) => {
+export const validateReadingPartUpdatePayload = (originalParts) => {
+  // Nếu payload trống hoặc không hợp lệ
   if (!originalParts || !Array.isArray(originalParts) || originalParts.length === 0) {
     return null;
   }
 
-  const activeOriginalParts = originalParts.filter((p) => p.action !== 'delete');
-  const hasDeletedPart = originalParts.some((p) => p.action === 'delete');
+  // Lọc ra các Part đang active (không bị xóa)
+  const activeParts = originalParts.filter((p) => p.action !== 'delete');
 
-  if (hasDeletedPart) {
-    if (activeOriginalParts.length === 0) {
-      return 'The test must have at least one active part.';
-    }
+  if (activeParts.length === 0) {
+    return 'The test must have at least one active part.';
   }
 
-  for (let i = 0; i < activeOriginalParts.length; i++) {
-    const p = activeOriginalParts[i];
-    const displayNum = p.order || i + 1;
-    const score = p.scoreForEachQuestion;
+  // Bắt đầu duyệt từng Part active
+  for (let pIndex = 0; pIndex < activeParts.length; pIndex++) {
+    const part = activeParts[pIndex];
+    const displayPartNum = part.order || pIndex + 1;
+    const partFormat = part.format;
 
+    // 1. Validate Điểm (Score)
+    const score = part.scoreForEachQuestion;
     if (
       score === undefined ||
       score === null ||
@@ -418,109 +420,72 @@ export const validateReadingPartUpdatePayload = (transformedParts, originalParts
       isNaN(score) ||
       Number(score) === 0
     ) {
-      return `Score for each question in Part ${displayNum} has not been filled.`;
-    }
-  }
-
-  for (let pIndex = 0; pIndex < transformedParts.length; pIndex++) {
-    const tPart = transformedParts[pIndex];
-
-    if (tPart.action === 'delete') continue;
-
-    const originalPart = originalParts.find((p) => p.id === tPart.id) || tPart;
-    const displayPartNum =
-      originalPart.order ||
-      tPart.order ||
-      activeOriginalParts.findIndex((p) => p.id === originalPart.id) + 1 ||
-      pIndex + 1;
-
-    const partFormat = originalPart.format || tPart.format;
-
-    if (tPart.action === 'create' || tPart.action === 'update') {
-      if (!partFormat) return `Part ${displayPartNum} is missing a test format.`;
-
-      if (partFormat !== 'F' && (!tPart.content || String(tPart.content).trim() === '')) {
-        return `Part ${displayPartNum} is missing content.`;
-      }
+      return `Score for each question in Part ${displayPartNum} has not been filled.`;
     }
 
-    const originalQuestions = originalPart.questions || [];
-    const activeQuestions = originalQuestions.filter((q) => q.action !== 'delete');
-    const hasDeletedQuestion = originalQuestions.some((q) => q.action === 'delete');
-
-    if (tPart.action === 'create' || hasDeletedQuestion) {
-      if (activeQuestions.length === 0) {
-        return `Part ${displayPartNum} must have at least one question.`;
-      }
+    // 2. Validate Format & Content của Part
+    if (!partFormat) {
+      return `Part ${displayPartNum} is missing a test format.`;
     }
 
-    const tQuestions = tPart.questions || [];
-    for (let qIndex = 0; qIndex < tQuestions.length; qIndex++) {
-      const tQuestion = tQuestions[qIndex];
+    // Format 'F' (Multiple choice - short text): Không bắt buộc nhập content ở cấp độ Part
+    if (partFormat !== 'F' && (!part.content || String(part.content).trim() === '')) {
+      return `Part ${displayPartNum} is missing content.`;
+    }
 
-      if (tQuestion.action === 'delete') continue;
+    // 3. Validate Questions
+    const questions = part.questions || [];
+    const activeQuestions = questions.filter((q) => q.action !== 'delete');
 
-      const originalQuestion = originalQuestions.find((q) => q.id === tQuestion.id) || tQuestion;
-      const displayQuestionNum =
-        originalQuestion.question_number ||
-        activeQuestions.findIndex((q) => q.id === originalQuestion.id) + 1;
+    if (activeQuestions.length === 0) {
+      return `Part ${displayPartNum} must have at least one question.`;
+    }
 
-      if (tQuestion.action === 'create' || tQuestion.action === 'update') {
-        if (
-          !['I', 'H'].includes(partFormat) &&
-          (!tQuestion.content || String(tQuestion.content).trim() === '')
-        ) {
-          return `Part ${displayPartNum}, Question ${displayQuestionNum}: add the question content.`;
-        }
+    for (let qIndex = 0; qIndex < activeQuestions.length; qIndex++) {
+      const question = activeQuestions[qIndex];
+      const displayQuestionNum = question.question_number || qIndex + 1;
+
+      // Bắt buộc nhập content ở cấp độ Question (TRỪ format 'I')
+      if (partFormat !== 'I' && (!question.content || String(question.content).trim() === '')) {
+        return `Part ${displayPartNum}, Question ${displayQuestionNum}: add the question content.`;
       }
 
-      const originalAnswers = originalQuestion.answers || [];
-      const activeAnswers = originalAnswers.filter((a) => a.action !== 'delete');
-      const hasDeletedAnswer = originalAnswers.some((a) => a.action === 'delete');
+      // 4. Validate Answers
+      const answers = question.answers || [];
+      const activeAnswers = answers.filter((a) => a.action !== 'delete');
+      const isMultipleChoice = ['F', 'G', 'H'].includes(partFormat);
 
-      const hasCorrectAnswerChanged = (tQuestion.answers || []).some(
-        (tAns) =>
-          tAns.action === 'update' && Object.prototype.hasOwnProperty.call(tAns, 'is_correct'),
-      );
-
-      if (['F', 'G', 'H'].includes(partFormat)) {
-        if (tQuestion.action === 'create' || hasDeletedAnswer || hasCorrectAnswerChanged) {
-          if (activeAnswers.length < 3) {
-            return `Question ${displayQuestionNum} in Part ${displayPartNum} must have at least 3 answer options.`;
-          }
+      // Rule riêng cho Trắc nghiệm (F, G, H): Tối thiểu 3 đáp án & có 1 đáp án đúng
+      if (isMultipleChoice) {
+        if (activeAnswers.length < 3) {
+          return `Question ${displayQuestionNum} in Part ${displayPartNum} must have at least 3 answer options.`;
         }
-      }
 
-      const tAnswers = tQuestion.answers || [];
-      for (let aIndex = 0; aIndex < tAnswers.length; aIndex++) {
-        const tAns = tAnswers[aIndex];
-
-        if (tAns.action === 'delete') continue;
-
-        if (tAns.action === 'create' || tAns.action === 'update') {
-          // 1. Kiểm tra Option Label (Trừ I)
-          if (
-            partFormat !== 'I' &&
-            (!tAns.option_label || String(tAns.option_label).trim() === '')
-          ) {
-            return `Part ${displayPartNum}, Question ${displayQuestionNum}: choose an option label (A, B, C...).`;
-          }
-
-          if (!tAns.answer_text || String(tAns.answer_text).trim() === '') {
-            const isMultipleChoice = ['F', 'G', 'H'].includes(partFormat);
-            const optionLabel = tAns.option_label ? ` (${tAns.option_label})` : '';
-
-            return isMultipleChoice
-              ? `Part ${displayPartNum}, Question ${displayQuestionNum}: fill in option${optionLabel}.`
-              : `Part ${displayPartNum}, Question ${displayQuestionNum}: fill in the answer.`;
-          }
-        }
-      }
-
-      if (['F', 'G', 'H'].includes(partFormat)) {
         const hasCorrectAnswer = activeAnswers.some((a) => a.is_correct === true);
         if (!hasCorrectAnswer) {
           return `Part ${displayPartNum}, Question ${displayQuestionNum}: choose the correct answer.`;
+        }
+      }
+
+      // Kiểm tra chi tiết từng đáp án active
+      for (let aIndex = 0; aIndex < activeAnswers.length; aIndex++) {
+        const answer = activeAnswers[aIndex];
+        const optionLabel = answer.option_label;
+        const answerText = answer.answer_text;
+
+        // Format 'I' (Fill blank - text): Không bắt buộc có option label (A, B, C...)
+        if (partFormat !== 'I' && (!optionLabel || String(optionLabel).trim() === '')) {
+          return `Part ${displayPartNum}, Question ${displayQuestionNum}: choose an option label (A, B, C...).`;
+        }
+
+        // Format 'J' (Matching): Không bắt buộc nhập answer_text ở các option
+        if (partFormat !== 'J' && (!answerText || String(answerText).trim() === '')) {
+          const optionLabelDisplay = optionLabel ? ` (${optionLabel})` : '';
+
+          // Lời cảnh báo trả ra khác nhau dựa trên định dạng
+          return isMultipleChoice
+            ? `Part ${displayPartNum}, Question ${displayQuestionNum}: fill in option${optionLabelDisplay}.`
+            : `Part ${displayPartNum}, Question ${displayQuestionNum}: fill in the answer.`;
         }
       }
     }

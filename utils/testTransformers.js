@@ -1045,6 +1045,8 @@ export const transformFormatUpdateData = (data) => {
     .map((part) => {
       const { id, scoreForEachQuestion, questions, ...restPart } = part;
 
+      const isFormatJ = restPart.format === 'J';
+
       const updatedQuestions = (questions || [])
         .filter((q) => validActions.includes(q.action))
         .map((question) => {
@@ -1054,6 +1056,12 @@ export const transformFormatUpdateData = (data) => {
             .filter((ans) => validActions.includes(ans.action))
             .map((ans) => {
               const { id, ...restAnswer } = ans;
+
+              // Nếu là format J, xóa answer_text khỏi payload của answer
+              if (isFormatJ) {
+                delete restAnswer.answer_text;
+              }
+
               return {
                 ...(restAnswer.action !== 'create' && { id }),
                 ...restAnswer,
@@ -1124,7 +1132,8 @@ export const buildReceptiveTestPayload = (test, preparedParts, status) => {
                   id: ans.id || 0,
                   // I không có option_label
                   ...(format !== 'I' && { option_label: ans.option_label || '' }),
-                  answer_text: ans.answer_text || '',
+                  // J không lấy answer_text
+                  ...(format !== 'J' && { answer_text: ans.answer_text || '' }),
                   is_correct: !!ans.is_correct,
                 };
               }),
