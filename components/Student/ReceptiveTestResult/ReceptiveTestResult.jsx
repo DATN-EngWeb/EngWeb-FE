@@ -89,7 +89,7 @@ export default function ReceptiveTestResult({
         ]);
 
         const partsData = testRes.receptive_test?.receptive_parts || [];
-
+        partsData.sort((a, b) => a.order - b.order);
         // Preload resources
         const preloadPromises = partsData.map(async (part) => {
           if (part.format === 'A') {
