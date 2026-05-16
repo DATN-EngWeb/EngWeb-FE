@@ -17,6 +17,7 @@ import {
   TextField,
   Tooltip,
   Typography,
+  Divider,
 } from '@mui/material';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import AddCommentRoundedIcon from '@mui/icons-material/AddCommentRounded';
@@ -264,8 +265,8 @@ export default function ConversationSidebar({
                               anchorEl={menuAnchorEl}
                               open={menuConversationId === conversationKey && !!menuAnchorEl}
                               onClose={onMenuClose}
-                              PaperProps={{
-                                sx: conversationSidebarStyles.menuPaper,
+                              slotProps={{
+                                paper: { sx: conversationSidebarStyles.menuPaper },
                               }}
                             >
                               <MenuItem
@@ -277,6 +278,7 @@ export default function ConversationSidebar({
                               >
                                 Edit
                               </MenuItem>
+                              <Divider sx={{ my: 0.25 }} />
                               <MenuItem
                                 onClick={(event) => {
                                   event.stopPropagation();

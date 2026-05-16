@@ -46,6 +46,7 @@ export default function ForumPostsPageContent({
   const [count, setCount] = useState(0);
   const [ordering, setOrdering] = useState(defaultOrdering);
   const [search, setSearch] = useState('');
+  const [queryInput, setQueryInput] = useState('');
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -90,6 +91,16 @@ export default function ForumPostsPageContent({
       fetchPosts();
     }
   }, [page, ordering, search, tab, testId, showTabs]);
+
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      if (search !== queryInput) {
+        setSearch(queryInput);
+        setPage(1);
+      }
+    }, 800);
+    return () => clearTimeout(handle);
+  }, [queryInput]);
 
   const renderTestContextContent = () => {
     if (testContextLoading) {
@@ -184,10 +195,10 @@ export default function ForumPostsPageContent({
         ) : null}
 
         <Box display="flex" gap={1.5} alignItems="center">
-          {!showTabs ? (
+          {previewData && (
             <Button
               variant="outlined"
-              startIcon={<VisibilityOutlinedIcon sx={{ fontSize: 20 }} />}
+              startIcon={<VisibilityOutlinedIcon sx={{ fontSize: 18 }} />}
               onClick={() => setIsTestModalOpen(true)}
               sx={{
                 textTransform: 'none',
@@ -207,22 +218,24 @@ export default function ForumPostsPageContent({
                 },
               }}
             >
-              Show Test
+              View test
             </Button>
-          ) : null}
+          )}
 
           <TextField
             placeholder="Find post"
             size="small"
-            value={search}
+            value={queryInput}
             onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
+              setQueryInput(e.target.value);
             }}
-            sx={{ width: 200 }}
+            sx={{
+              width: 200,
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
+            }}
             slotProps={{
               input: {
-                sx: { height: 40 },
+                sx: { height: 40, fontSize: '14px', color: 'text.primary' },
                 startAdornment: (
                   <InputAdornment position="start">
                     <SearchIcon sx={{ fontSize: 18, color: '#999' }} />
@@ -242,18 +255,34 @@ export default function ForumPostsPageContent({
               minWidth: 130,
               height: 40,
               borderRadius: 2,
-              fontSize: 14,
+              fontSize: '14px',
+              color: 'primary.main',
               '& .MuiSelect-select': {
                 height: 40,
                 display: 'flex',
                 alignItems: 'center',
                 py: 0,
               },
-              '& .MuiOutlinedInput-notchedOutline': { borderColor: '#ccc' },
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
+            }}
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  mt: 1,
+                },
+              },
+              MenuListProps: { sx: { py: 0.5 } },
             }}
           >
-            <MenuItem value="-created_at">Newest</MenuItem>
-            <MenuItem value="-like_count">Most liked</MenuItem>
+            <MenuItem value="-created_at" sx={{ fontSize: '14px' }}>
+              Newest
+            </MenuItem>
+            <MenuItem value="-like_count" sx={{ fontSize: '14px' }}>
+              Most liked
+            </MenuItem>
           </Select>
         </Box>
       </Box>
@@ -283,7 +312,7 @@ export default function ForumPostsPageContent({
         />
       </Box>
 
-      {!showTabs ? (
+      {isTestModalOpen && (
         <Dialog
           open={isTestModalOpen}
           onClose={() => setIsTestModalOpen(false)}
@@ -319,7 +348,7 @@ export default function ForumPostsPageContent({
             </Box>
           </DialogContent>
         </Dialog>
-      ) : null}
+      )}
     </Container>
   );
 }

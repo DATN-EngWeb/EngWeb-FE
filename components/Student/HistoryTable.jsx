@@ -18,7 +18,6 @@ import {
 import StarIcon from '@mui/icons-material/Star';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import DescriptionIcon from '@mui/icons-material/Description';
-import ShareIcon from '@mui/icons-material/Share';
 import * as styles from '@/styles/Student/HistoryTestStyles';
 import { formatDate } from '../../utils/stringFormat';
 
@@ -52,7 +51,7 @@ export default function HistoryTable({ data, skill, onViewDetail, onShare, onOpe
               </>
             )}
             <TableCell>DETAILS</TableCell>
-            <TableCell align="right">ACTIONS</TableCell>
+            <TableCell align="center">ACTIONS</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -140,8 +139,8 @@ export default function HistoryTable({ data, skill, onViewDetail, onShare, onOpe
                     )}
                   </Stack>
                 </TableCell>
-                <TableCell align="right">
-                  <Stack direction="row" spacing={1} justifyContent="flex-end">
+                <TableCell align="center">
+                  <Stack direction="row" spacing={1} justifyContent="center">
                     <Button
                       variant="contained"
                       size="small"
@@ -159,13 +158,22 @@ export default function HistoryTable({ data, skill, onViewDetail, onShare, onOpe
                       View Detail
                     </Button>
                     {onShare && (
-                      <IconButton
+                      <Button
+                        variant="contained"
                         size="small"
-                        sx={{ bgcolor: '#f5f5f5' }}
+                        sx={{
+                          bgcolor: '#f5f5f5',
+                          color: '#4e342e',
+                          boxShadow: 'none',
+                          textTransform: 'none',
+                          fontWeight: 700,
+                          borderRadius: '8px',
+                          '&:hover': { bgcolor: '#eeeeee' },
+                        }}
                         onClick={() => onShare(item)}
                       >
-                        <ShareIcon fontSize="small" />
-                      </IconButton>
+                        {item.is_shared ? 'View Post' : 'Share to Forum'}
+                      </Button>
                     )}
                   </Stack>
                 </TableCell>

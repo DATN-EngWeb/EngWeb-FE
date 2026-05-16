@@ -14,9 +14,10 @@ import {
   Button,
   Select,
   MenuItem,
-  FormControl,
+  DialogActions,
   Menu,
   Alert,
+  DialogTitle,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -25,11 +26,21 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import CloseIcon from '@mui/icons-material/Close';
 import CustomAudioPlayer from '../Test/customAudioPlayer';
 import { useState, useEffect, useRef } from 'react';
-import { getComments, createComment, editComment, deleteComment } from '../../api/forum';
+import {
+  getComments,
+  createComment,
+  editComment,
+  deleteComment,
+  editPost,
+  deletePost,
+} from '../../api/forum';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import Snackbar from '@mui/material/Snackbar';
 import { useAuth } from '../../hooks/useAuth';
-import { formatDate } from '../../utils/stringFormat';
+import { formatDateTime } from '../../utils/stringFormat';
+import postCardStyles from '../../styles/Forum/ForumPostCardStyles';
+import modalStyles from '../../styles/Forum/ForumPostModal';
 
 const PAGE_SIZE = 10;
 
@@ -58,6 +69,15 @@ export default function ForumPostModal({
   const [editLoading, setEditLoading] = useState(false);
   const [deleteLoadingId, setDeleteLoadingId] = useState(null);
   const [anchorElMap, setAnchorElMap] = useState({});
+  const [postMenuAnchorEl, setPostMenuAnchorEl] = useState(null);
+  const [editPostTitle, setEditPostTitle] = useState(post.title);
+  const [editPostDescription, setEditPostDescription] = useState(post.description ?? '');
+  const [editPostDialogOpen, setEditPostDialogOpen] = useState(false);
+  const [editPostLoading, setEditPostLoading] = useState(false);
+  const [deletePostDialogOpen, setDeletePostDialogOpen] = useState(false);
+  const [deletePostLoading, setDeletePostLoading] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [pendingDeleteComment, setPendingDeleteComment] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   const fetchPage = async (page = 1, append = false, order = ordering) => {
@@ -93,6 +113,78 @@ export default function ForumPostModal({
     fetchPage(1, false, newOrder);
   };
 
+  const handlePostMenuOpen = (event) => {
+    setPostMenuAnchorEl(event.currentTarget);
+  };
+
+  const handlePostMenuClose = () => {
+    setPostMenuAnchorEl(null);
+  };
+
+  const handleEditPostClick = () => {
+    setEditPostTitle(post.title);
+    setEditPostDescription(post.description ?? '');
+    setEditPostDialogOpen(true);
+    handlePostMenuClose();
+  };
+
+  const handleDeletePostClick = () => {
+    setDeletePostDialogOpen(true);
+    handlePostMenuClose();
+  };
+
+  const handleCancelEditPost = () => {
+    setEditPostTitle(post.title);
+    setEditPostDescription(post.description ?? '');
+    setEditPostDialogOpen(false);
+  };
+
+  const handleSaveEditPost = async () => {
+    setEditPostLoading(true);
+    try {
+      const nextTitle = editPostTitle.trim();
+      const nextDescription = editPostDescription.trim();
+
+      if (nextTitle === post.title && nextDescription === (post.description ?? '')) {
+        setEditPostDialogOpen(false);
+        return;
+      }
+
+      await editPost({ title: nextTitle, description: nextDescription }, post.id);
+      post.title = nextTitle;
+      post.description = nextDescription;
+      setEditPostDialogOpen(false);
+      setSnackbar({ open: true, message: 'Post updated', severity: 'success' });
+    } catch (err) {
+      setSnackbar({ open: true, message: 'Failed to update post', severity: 'error' });
+      // eslint-disable-next-line no-console
+      console.error(err);
+    } finally {
+      setEditPostLoading(false);
+    }
+  };
+
+  const handleCancelDeletePost = () => {
+    setDeletePostDialogOpen(false);
+  };
+
+  const handleConfirmDeletePost = async () => {
+    setDeletePostLoading(true);
+    try {
+      await deletePost(post.id);
+      setDeletePostDialogOpen(false);
+      setSnackbar({ open: true, message: 'Post deleted successfully', severity: 'success' });
+      onClose?.();
+      setTimeout(() => window.location.reload(), 1200);
+    } catch (err) {
+      setSnackbar({ open: true, message: 'Failed to delete post', severity: 'error' });
+      // eslint-disable-next-line no-console
+      console.error(err);
+    } finally {
+      setDeletePostLoading(false);
+    }
+  };
+
   const handleSend = async () => {
     const text = commentText.trim();
     if (!text || submitting) return;
@@ -118,12 +210,24 @@ export default function ForumPostModal({
     }
   };
 
-  const handleDeleteComment = async (comment) => {
-    setDeleteLoadingId(comment.id);
+  const handleRequestDeleteComment = (comment) => {
     setAnchorElMap((prev) => ({ ...prev, [comment.id]: null }));
+    setPendingDeleteComment(comment);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleCancelDeleteComment = () => {
+    setDeleteConfirmOpen(false);
+    setPendingDeleteComment(null);
+  };
+
+  const handleConfirmDeleteComment = async () => {
+    if (!pendingDeleteComment) return;
+
+    setDeleteLoadingId(pendingDeleteComment.id);
     try {
-      await deleteComment(comment.id);
-      setComments((prev) => prev.filter((com) => com.id !== comment.id));
+      await deleteComment(pendingDeleteComment.id);
+      setComments((prev) => prev.filter((com) => com.id !== pendingDeleteComment.id));
       setSnackbar({
         open: true,
         message: 'Comment deleted',
@@ -137,6 +241,8 @@ export default function ForumPostModal({
       });
     } finally {
       setDeleteLoadingId(null);
+      setDeleteConfirmOpen(false);
+      setPendingDeleteComment(null);
     }
   };
 
@@ -168,28 +274,56 @@ export default function ForumPostModal({
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth="md"
       fullWidth
       PaperProps={{ sx: { borderRadius: 3, maxHeight: '90vh' } }}
     >
-      <DialogContent
-        sx={{ p: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}
-      >
-        <Box sx={{ flex: 1, overflowY: 'auto', minHeight: 0, px: 3, py: 2 }}>
+      <DialogContent sx={modalStyles.dialogContent}>
+        <Box sx={modalStyles.scrollableContent}>
           <Box display="flex" alignItems="center" gap={1.5} mb={1.5}>
             <Avatar src={post.author_avatar} />
             <Box flex={1}>
               <Typography fontWeight={700}>{post.author_name}</Typography>
               <Box display="flex" gap={1} alignItems="center">
                 <Typography variant="caption" color="text.secondary">
-                  {formatDate(post.created_at)}
+                  {formatDateTime(post.created_at)}
                 </Typography>
-                <Chip label={post.skill} size="small" sx={{ bgcolor: '#6B2C1F', color: '#fff' }} />
+                <Chip label={post.skill} size="small" sx={modalStyles.skillChip} />
               </Box>
             </Box>
-            <IconButton size="small" onClick={onClose} sx={{ ml: 'auto', color: 'text.secondary' }}>
-              <CloseIcon fontSize="small" />
-            </IconButton>
+            <Box sx={modalStyles.postMenuBox}>
+              <IconButton size="small" onClick={onClose} sx={modalStyles.closeButton}>
+                <CloseIcon fontSize="small" />
+              </IconButton>
+              {user?.id && String(user.id) === String(post.author_id) && (
+                <>
+                  <IconButton size="small" onClick={handlePostMenuOpen} sx={modalStyles.moreButton}>
+                    <MoreVertIcon fontSize="small" />
+                  </IconButton>
+                  <Menu
+                    anchorEl={postMenuAnchorEl}
+                    open={Boolean(postMenuAnchorEl)}
+                    onClose={handlePostMenuClose}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                    transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                    slotProps={{
+                      paper: {
+                        elevation: 0,
+                        sx: modalStyles.menuPaper,
+                      },
+                    }}
+                  >
+                    <MenuItem onClick={handleEditPostClick} sx={modalStyles.menuItem}>
+                      Edit
+                    </MenuItem>
+                    <Divider sx={{ my: 0.25 }} />
+                    <MenuItem onClick={handleDeletePostClick} sx={modalStyles.deleteMenuItem}>
+                      Delete
+                    </MenuItem>
+                  </Menu>
+                </>
+              )}
+            </Box>
           </Box>
 
           <Typography fontWeight={700} mb={0.5}>
@@ -206,8 +340,8 @@ export default function ForumPostModal({
           )}
 
           {post.user_answer_text && (
-            <Box mb={2} p={2} sx={{ bgcolor: '#f0f0f0', borderRadius: 2 }}>
-              <Typography variant="body2" sx={{ whiteSpace: 'pre-line', color: '#333' }}>
+            <Box mb={2} p={2} sx={{ bgcolor: '#f8eee7', borderRadius: 2 }}>
+              <Typography variant="body2" sx={modalStyles.userAnswerText}>
                 {post.user_answer_text}
               </Typography>
             </Box>
@@ -217,19 +351,15 @@ export default function ForumPostModal({
             display="flex"
             justifyContent="space-between"
             alignItems="center"
-            sx={{ borderTop: '1px solid #f0f0f0', pt: 2, mt: 2, mb: 2 }}
+            sx={modalStyles.likeCommentBox}
           >
             <Button
               size="small"
               startIcon={liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
               onClick={onLikeToggle}
               sx={{
-                textTransform: 'none',
+                ...modalStyles.likeButton,
                 color: liked ? 'error.main' : 'text.secondary',
-                fontWeight: 700,
-                p: 0,
-                minWidth: 'auto',
-                '&:hover': { bgcolor: 'transparent', color: 'error.light' },
               }}
             >
               {liked ? 'Liked' : 'Like'}
@@ -251,27 +381,22 @@ export default function ForumPostModal({
             </Box>
           </Box>
 
-          <Divider sx={{ mb: 2 }} />
+          <Divider sx={{ mb: 1 }} />
           <Box display="flex" justifyContent="flex-end" mb={1}>
-            <FormControl size="small" sx={{ minWidth: 120 }}>
-              <Select
-                value={ordering}
-                onChange={handleOrderingChange}
-                sx={{
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  bgcolor: '#fafafa',
-                  '& .MuiSelect-select': { py: 0.5 },
-                }}
-              >
-                <MenuItem value="-created_at" sx={{ fontSize: '13px' }}>
-                  Newest first
-                </MenuItem>
-                <MenuItem value="created_at" sx={{ fontSize: '13px' }}>
-                  Oldest first
-                </MenuItem>
-              </Select>
-            </FormControl>
+            <Select
+              value={ordering}
+              onChange={handleOrderingChange}
+              size="small"
+              sx={modalStyles.selectSort}
+              MenuProps={modalStyles.selectMenuProps}
+            >
+              <MenuItem value="-created_at" sx={modalStyles.selectMenuItem}>
+                Newest first
+              </MenuItem>
+              <MenuItem value="created_at" sx={modalStyles.selectMenuItem}>
+                Oldest first
+              </MenuItem>
+            </Select>
           </Box>
 
           {loadingComments ? (
@@ -288,18 +413,9 @@ export default function ForumPostModal({
                 const isAuthor = user?.id && String(user.id) === String(c.author_id);
                 const isEditing = editingCommentId === c.id;
                 return (
-                  <Box key={c.id ?? i} display="flex" gap={1.5} mb={2}>
-                    <Avatar src={c.author_avatar} sx={{ width: 36, height: 36 }} />
-                    <Box
-                      flex={1}
-                      sx={{
-                        bgcolor: '#f0f0f0',
-                        borderRadius: 2,
-                        px: 2,
-                        py: 1.5,
-                        position: 'relative',
-                      }}
-                    >
+                  <Box key={c.id ?? i} display="flex" gap={1.5} mb={1.5}>
+                    <Avatar src={c.author_avatar} sx={modalStyles.commentAvatar} />
+                    <Box flex={1} sx={modalStyles.commentBubble}>
                       <Box display="flex" alignItems="center">
                         <Typography fontWeight={700} variant="body2" flex={1}>
                           {c.author_name}
@@ -308,19 +424,17 @@ export default function ForumPostModal({
                           <Typography
                             variant="caption"
                             sx={{
-                              position: 'absolute',
-                              top: 10,
+                              ...modalStyles.commentTimestamp,
                               right: isAuthor && !isEditing ? 36 : 12,
-                              color: '#6B2C1F',
                             }}
                           >
-                            {formatDate(c.created_at)}
+                            {formatDateTime(c.created_at)}
                           </Typography>
                         )}
                         {isAuthor && !isEditing && (
                           <IconButton
                             size="small"
-                            sx={{ position: 'absolute', top: 2, right: 4 }}
+                            sx={modalStyles.commentMoreButton}
                             onClick={(e) =>
                               setAnchorElMap((prev) => ({ ...prev, [c.id]: e.currentTarget }))
                             }
@@ -335,6 +449,19 @@ export default function ForumPostModal({
                             onClose={() => setAnchorElMap((prev) => ({ ...prev, [c.id]: null }))}
                             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                             transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                            slotProps={{
+                              paper: {
+                                sx: {
+                                  mt: 1,
+                                  minWidth: 100,
+                                  borderRadius: 2,
+                                  overflow: 'hidden',
+                                  border: '1px solid',
+                                  borderColor: 'grey.200',
+                                  boxShadow: '0px 8px 20px rgba(0,0,0,0.06)',
+                                },
+                              },
+                            }}
                           >
                             <MenuItem
                               onClick={() => {
@@ -342,13 +469,15 @@ export default function ForumPostModal({
                                 setEditCommentText(c.content);
                                 setAnchorElMap((prev) => ({ ...prev, [c.id]: null }));
                               }}
+                              sx={postCardStyles.menuItem}
                             >
                               Edit
                             </MenuItem>
+                            <Divider sx={{ my: 0.25 }} />
                             <MenuItem
-                              onClick={() => handleDeleteComment(c)}
-                              sx={{ color: 'error.main' }}
+                              onClick={() => handleRequestDeleteComment(c)}
                               disabled={deleteLoadingId === c.id}
+                              sx={postCardStyles.deleteMenuItem}
                             >
                               {deleteLoadingId === c.id ? 'Deleting...' : 'Delete'}
                             </MenuItem>
@@ -365,14 +494,14 @@ export default function ForumPostModal({
                             multiline
                             minRows={1}
                             maxRows={4}
-                            sx={{ background: '#fff', borderRadius: 1 }}
+                            sx={modalStyles.editCommentField}
                           />
                           <Button
                             size="small"
                             variant="contained"
                             disabled={editLoading || !editCommentText.trim()}
                             onClick={() => handleEditComment(c)}
-                            sx={{ minWidth: 0, px: 1.5, borderRadius: 2 }}
+                            sx={modalStyles.editCommentButton}
                           >
                             Save
                           </Button>
@@ -380,7 +509,7 @@ export default function ForumPostModal({
                             size="small"
                             variant="text"
                             onClick={() => setEditingCommentId(null)}
-                            sx={{ minWidth: 0, px: 1.5, borderRadius: 2 }}
+                            sx={modalStyles.editCommentButton}
                           >
                             Cancel
                           </Button>
@@ -389,7 +518,7 @@ export default function ForumPostModal({
                         <Typography
                           variant="body2"
                           color="text.secondary"
-                          sx={{ whiteSpace: 'pre-line', mt: 1 }}
+                          sx={modalStyles.commentContent}
                         >
                           {c.content}
                         </Typography>
@@ -417,9 +546,9 @@ export default function ForumPostModal({
                     size="small"
                     onClick={() => fetchPage(nextPage, true)}
                     disabled={loadingMore}
-                    sx={{ textTransform: 'none', color: '#6B2C1F' }}
+                    sx={modalStyles.loadMoreButton}
                   >
-                    {loadingMore && <CircularProgress size={14} sx={{ mr: 1 }} />}
+                    {loadingMore && <CircularProgress size={14} sx={modalStyles.loadMoreSpinner} />}
                     Load more
                   </Button>
                 </Box>
@@ -429,17 +558,159 @@ export default function ForumPostModal({
           <div ref={bottomRef} />
         </Box>
 
-        <Box
-          sx={{
-            borderTop: '1px solid #eee',
-            px: 2,
-            py: 1.5,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            bgcolor: '#fff',
+        <Dialog open={editPostDialogOpen} onClose={handleCancelEditPost} fullWidth maxWidth="sm">
+          <DialogTitle sx={modalStyles.editDialogTitle}>Edit Post</DialogTitle>
+          <DialogContent sx={modalStyles.editDialogContent}>
+            <TextField
+              label="Title"
+              value={editPostTitle}
+              onChange={(e) => setEditPostTitle(e.target.value)}
+              fullWidth
+              margin="normal"
+              autoFocus
+            />
+            <TextField
+              label="Description"
+              value={editPostDescription}
+              onChange={(e) => setEditPostDescription(e.target.value)}
+              fullWidth
+              margin="normal"
+              multiline
+              minRows={4}
+            />
+          </DialogContent>
+          <DialogActions sx={modalStyles.editDialogActions}>
+            <Button
+              onClick={handleCancelEditPost}
+              disabled={editPostLoading}
+              sx={modalStyles.editDialogButton}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveEditPost}
+              variant="contained"
+              disabled={editPostLoading || !editPostTitle.trim()}
+              sx={modalStyles.editDialogButton}
+            >
+              {editPostLoading ? 'Saving...' : 'Save'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+          open={deletePostDialogOpen}
+          onClose={handleCancelDeletePost}
+          maxWidth="xs"
+          fullWidth
+          PaperProps={{ sx: modalStyles.deleteDialogPaper }}
+        >
+          <DialogContent sx={modalStyles.deleteDialogContent}>
+            <Box sx={modalStyles.deleteDialogSurface}>
+              <Box sx={modalStyles.deleteIconWrap}>
+                <WarningAmberRoundedIcon fontSize="small" />
+              </Box>
+
+              <Box sx={{ minWidth: 0, flex: 1 }}>
+                <Typography sx={modalStyles.deleteTitle}>Confirm Delete</Typography>
+                <Typography sx={modalStyles.deleteDescription}>
+                  Are you sure you want to delete this post? This action cannot be undone.
+                </Typography>
+
+                <DialogActions sx={modalStyles.deleteActions}>
+                  <Button
+                    onClick={handleCancelDeletePost}
+                    disabled={deletePostLoading}
+                    variant="outlined"
+                    sx={modalStyles.deleteCancelButton}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleConfirmDeletePost}
+                    variant="contained"
+                    disabled={deletePostLoading}
+                    sx={modalStyles.deleteConfirmButton}
+                  >
+                    {deletePostLoading ? 'Deleting...' : 'Delete'}
+                  </Button>
+                </DialogActions>
+              </Box>
+            </Box>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={deleteConfirmOpen}
+          onClose={handleCancelDeleteComment}
+          maxWidth="xs"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              border: '1px solid #f2c36f',
+              bgcolor: 'white',
+              boxShadow: '0 12px 32px rgba(83, 40, 34, 0.12)',
+              overflow: 'hidden',
+            },
           }}
         >
+          <DialogContent sx={{ p: 0 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                width: '100%',
+                gap: 1.5,
+                px: 2.25,
+                py: 2.25,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: '50%',
+                  display: 'grid',
+                  placeItems: 'center',
+                  color: '#6B2C1F',
+                  flexShrink: 0,
+                  bgcolor: 'rgba(107, 44, 31, 0.08)',
+                }}
+              >
+                <WarningAmberRoundedIcon fontSize="small" />
+              </Box>
+
+              <Box sx={{ minWidth: 0, flex: 1 }}>
+                <Typography sx={modalStyles.deleteTitle}>Confirm Delete</Typography>
+                <Typography sx={modalStyles.deleteDescription}>
+                  This comment will be removed from the post. This action cannot be undone.
+                </Typography>
+
+                <DialogActions sx={modalStyles.deleteActions}>
+                  <Button
+                    onClick={handleCancelDeleteComment}
+                    disabled={deleteLoadingId === pendingDeleteComment?.id}
+                    variant="outlined"
+                    sx={modalStyles.deleteCancelButton}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleConfirmDeleteComment}
+                    variant="contained"
+                    disabled={deleteLoadingId === pendingDeleteComment?.id}
+                    sx={modalStyles.deleteConfirmButton}
+                  >
+                    {deleteLoadingId === pendingDeleteComment?.id ? 'Deleting...' : 'Delete'}
+                  </Button>
+                </DialogActions>
+              </Box>
+            </Box>
+          </DialogContent>
+        </Dialog>
+
+        <Box sx={modalStyles.commentInputBox}>
           <Avatar sx={{ width: 32, height: 32 }} />
           <TextField
             fullWidth
@@ -453,12 +724,12 @@ export default function ForumPostModal({
                 handleSend();
               }
             }}
-            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 6 } }}
+            sx={modalStyles.commentInput}
           />
           <IconButton
             onClick={handleSend}
             disabled={!commentText.trim() || submitting}
-            sx={{ color: '#6B2C1F' }}
+            sx={modalStyles.sendButton}
           >
             {submitting ? <CircularProgress size={20} /> : <SendIcon />}
           </IconButton>

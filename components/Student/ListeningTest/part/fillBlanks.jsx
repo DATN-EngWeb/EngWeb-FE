@@ -239,26 +239,19 @@ export default function FillBlankPart({
                 fontSize: '0.9rem',
                 lineHeight: 1.5,
                 display: '-webkit-box',
-                WebkitLineClamp: 2,
+                WebkitLineClamp: 3,
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 wordBreak: 'break-word',
               }}
             >
-              Listen to the audio. For each question, write the correct answer in the gap. Write one
-              or two words or a number or a date or a time.
+              {dataPart.description}{' '}
             </Typography>
           </Box>
         </Box>
         {/* -------- Question Section --------- */}
         <Box sx={listeningPartStyles.questionSection}>
-          <Box sx={listeningPartStyles.innerInstruction}>
-            <LightbulbOutlinedIcon />
-            <Typography sx={{ color: 'inherit', fontSize: 'inherit', fontWeight: 'inherit' }}>
-              {dataPart.description}
-            </Typography>
-          </Box>
           <Box
             sx={{
               ...listeningPartStyles.listQuestionContainerGrid,

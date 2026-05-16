@@ -65,13 +65,6 @@ export default function MultipleChoiceImagePart({
     >
       {/* -------- Audio And Instruction Section --------- */}
       <Box sx={listeningPartStyles.basicFlexColCenStart}>
-        <Box sx={{ width: '100%', height: 'auto' }}>
-          {audioSrc ? (
-            <CustomAudioPlayer src={audioSrc} isActive={isActive} />
-          ) : (
-            <Typography variant="caption">Loading audio...</Typography>
-          )}
-        </Box>
         <Box sx={listeningPartStyles.instructionContainer}>
           <InstructionIcon />
           <Box sx={listeningPartStyles.instructionWrapper}>
@@ -91,6 +84,13 @@ export default function MultipleChoiceImagePart({
                 'Listen to the audio and look at the pictures. Choose the correct picture for each questions.'}
             </Typography>
           </Box>
+        </Box>
+        <Box sx={{ width: '100%', height: 'auto' }}>
+          {audioSrc ? (
+            <CustomAudioPlayer src={audioSrc} isActive={isActive} />
+          ) : (
+            <Typography variant="caption">Loading audio...</Typography>
+          )}
         </Box>
       </Box>
 
