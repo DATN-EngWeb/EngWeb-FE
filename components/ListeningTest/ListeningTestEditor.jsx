@@ -492,80 +492,116 @@ export default function ListeningTestEditor({ testId: propTestId }) {
           ) : (
             <Box sx={{ filter: isSaving ? 'blur' : 'none' }}>
               <Box sx={contentWrap}>
-                <Box sx={{ px: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <BasicInformation {...basicInfo} onChange={handleBasicInfoChange} />
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: { xs: 'column', lg: 'row' },
+                    alignItems: 'flex-start',
+                    gap: 2,
+                    width: '100%',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      flex: 1,
+                      minWidth: 0,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 2,
+                    }}
+                  >
+                    <BasicInformation {...basicInfo} onChange={handleBasicInfoChange} />
 
-                  {parts
-                    .sort((a, b) => (a.order || 0) - (b.order || 0))
-                    .map((part, index) => (
-                      <Box key={part.id} sx={uploadReadingStyles.basicInfoContainer}>
-                        {!part.type ? (
-                          <SelectPartType
-                            partTypes={PART_TYPES}
-                            onSelectType={(typeId) => handleSelectPartType(part.id, typeId)}
-                            onCancel={() => handleCancelPart(part.id)}
-                          />
-                        ) : (
-                          <>
-                            {part.type === 'multichoice_images' && (
-                              <MultiChoiceImagePart
-                                index={index}
-                                part={part}
-                                onChange={(updatedPart) =>
-                                  setParts((prev) =>
-                                    prev.map((p) => (p.id === part.id ? updatedPart : p)),
-                                  )
-                                }
-                                onDelete={() => handleCancelPart(part.id)}
-                              />
-                            )}
+                    {parts
+                      .sort((a, b) => (a.order || 0) - (b.order || 0))
+                      .map((part, index) => (
+                        <Box key={part.id} sx={uploadReadingStyles.basicInfoContainer}>
+                          {!part.type ? (
+                            <SelectPartType
+                              partTypes={PART_TYPES}
+                              onSelectType={(typeId) => handleSelectPartType(part.id, typeId)}
+                              onCancel={() => handleCancelPart(part.id)}
+                            />
+                          ) : (
+                            <>
+                              {part.type === 'multichoice_images' && (
+                                <MultiChoiceImagePart
+                                  index={index}
+                                  part={part}
+                                  onChange={(updatedPart) =>
+                                    setParts((prev) =>
+                                      prev.map((p) => (p.id === part.id ? updatedPart : p)),
+                                    )
+                                  }
+                                  onDelete={() => handleCancelPart(part.id)}
+                                />
+                              )}
 
-                            {part.type === 'multichoice_texts' && (
-                              <MultiChoiceTextPart
-                                index={index}
-                                part={part}
-                                onChange={(updatedPart) =>
-                                  setParts((prev) =>
-                                    prev.map((p) => (p.id === part.id ? updatedPart : p)),
-                                  )
-                                }
-                                onDelete={() => handleCancelPart(part.id)}
-                              />
-                            )}
+                              {part.type === 'multichoice_texts' && (
+                                <MultiChoiceTextPart
+                                  index={index}
+                                  part={part}
+                                  onChange={(updatedPart) =>
+                                    setParts((prev) =>
+                                      prev.map((p) => (p.id === part.id ? updatedPart : p)),
+                                    )
+                                  }
+                                  onDelete={() => handleCancelPart(part.id)}
+                                />
+                              )}
 
-                            {part.type === 'fill_in_the_blanks' && (
-                              <FillInTheBlankPart
-                                index={index}
-                                part={part}
-                                onChange={(updatedPart) =>
-                                  setParts((prev) =>
-                                    prev.map((p) => (p.id === part.id ? updatedPart : p)),
-                                  )
-                                }
-                                onDelete={() => handleCancelPart(part.id)}
-                              />
-                            )}
+                              {part.type === 'fill_in_the_blanks' && (
+                                <FillInTheBlankPart
+                                  index={index}
+                                  part={part}
+                                  onChange={(updatedPart) =>
+                                    setParts((prev) =>
+                                      prev.map((p) => (p.id === part.id ? updatedPart : p)),
+                                    )
+                                  }
+                                  onDelete={() => handleCancelPart(part.id)}
+                                />
+                              )}
 
-                            {part.type === 'matching' && (
-                              <MatchingPart
-                                index={index}
-                                part={part}
-                                onChange={(updatedPart) =>
-                                  setParts((prev) =>
-                                    prev.map((p) => (p.id === part.id ? updatedPart : p)),
-                                  )
-                                }
-                                onDelete={() => handleCancelPart(part.id)}
-                              />
-                            )}
-                          </>
-                        )}
-                      </Box>
-                    ))}
+                              {part.type === 'matching' && (
+                                <MatchingPart
+                                  index={index}
+                                  part={part}
+                                  onChange={(updatedPart) =>
+                                    setParts((prev) =>
+                                      prev.map((p) => (p.id === part.id ? updatedPart : p)),
+                                    )
+                                  }
+                                  onDelete={() => handleCancelPart(part.id)}
+                                />
+                              )}
+                            </>
+                          )}
+                        </Box>
+                      ))}
 
-                  <Box sx={addPartBox} onClick={handleAddPart}>
-                    <AddRoundedIcon sx={{ fontSize: '1.4rem' }} /> Add New Part
+                    <Box sx={addPartBox} onClick={handleAddPart}>
+                      <AddRoundedIcon sx={{ fontSize: '1.4rem' }} /> Add New Part
+                    </Box>
                   </Box>
+
+                  {canShowFeedback && isFeedbackActive && (
+                    <Box
+                      sx={{
+                        width: { xs: '100%', lg: '320px' },
+                        flexShrink: 0,
+                        minWidth: { lg: '280px' },
+                        alignSelf: 'flex-start',
+                        position: { lg: 'sticky' },
+                        top: { lg: 16 },
+                        height: { lg: 'calc(100vh - 140px)' },
+                        maxHeight: { lg: 'calc(100vh - 140px)' },
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <FeedbackPanel testId={editingTestId} compact readOnly />
+                    </Box>
+                  )}
                 </Box>
               </Box>
             </Box>

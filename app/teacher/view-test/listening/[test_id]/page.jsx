@@ -35,9 +35,13 @@ export default function ViewListeningTestPage({ params }) {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchData = async () => {
       try {
         const data = await getReceptiveTestDetails(test_id);
+        if (cancelled) return;
+
         if (!data.is_owner) {
           setSnackbar({
             open: true,
@@ -66,15 +70,22 @@ export default function ViewListeningTestPage({ params }) {
             return part;
           }),
         );
+        if (cancelled) return;
+
         setParts(transformedParts);
-      } catch (err) {
-        setError(`Failed to load test: ${err.message}`);
-      } finally {
         setLoading(false);
+      } catch (err) {
+        if (cancelled) return;
+        setLoading(false);
+        setError(`Failed to load test: ${err.message}`);
       }
     };
 
     fetchData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [test_id]);
 
   if (loading) {
