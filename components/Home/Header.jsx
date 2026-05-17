@@ -112,13 +112,20 @@ function UserPopup({ user, studentProfile, userAvatar, onClose, onLogout, onNavi
 
   const isTeacher = user?.role === 'T';
 
-  // Lấy dữ liệu thực từ studentProfile, nếu chưa có thì dùng giá trị mặc định
+  const displayName =
+    (studentProfile && (studentProfile.full_name || studentProfile.fullName)) ||
+    user?.full_name ||
+    localStorage.getItem('full_name') ||
+    user?.username ||
+    'User';
+
+  // For students, show level and XP. For teachers, these are not applicable.
   const level = studentProfile?.level?.level_number || 1;
   const levelTitle = studentProfile?.level?.level_title || 'Beginner';
   const currentXP = studentProfile?.cumulative_point || 0;
   const maxXP = studentProfile?.level?.max_xp || 100;
 
-  // Hiện tại weeklyTurns, bonusTurns có thể chưa có ở API nên tạm giữ số fallback
+  // AI turns data for students
   const weeklyTurns = studentProfile?.weekly_ai_turn ?? 0;
   const bonusTurns = studentProfile?.bonus_ai_turn ?? 0;
 
@@ -163,7 +170,7 @@ function UserPopup({ user, studentProfile, userAvatar, onClose, onLogout, onNavi
             <div style={userPopupAvatarWrapperStyles}>
               <Avatar
                 src={isValidAvatar ? userAvatar : undefined}
-                alt={user?.username}
+                alt={displayName}
                 sx={{
                   width: '100%',
                   height: '100%',
@@ -172,11 +179,11 @@ function UserPopup({ user, studentProfile, userAvatar, onClose, onLogout, onNavi
                   fontWeight: 700,
                 }}
               >
-                {user?.username?.[0]?.toUpperCase() || 'U'}
+                {displayName?.[0]?.toUpperCase() || 'U'}
               </Avatar>
             </div>
             <div>
-              <div style={userPopupUsernameStyles}>{user?.username || 'User'}</div>
+              <div style={userPopupUsernameStyles}>{displayName || 'User'}</div>
               {!isTeacher && (
                 <div style={userPopupLevelStyles}>
                   LEVEL {level} • {levelTitle.toUpperCase()}
@@ -359,6 +366,12 @@ export default function Header() {
   const [modalOpen, setModalOpen] = useState(false);
   const [actionType, setActionType] = useState('register');
   const avatarWrapperRef = useRef(null);
+  const topDisplayName =
+    (studentProfile && (studentProfile.full_name || studentProfile.fullName)) ||
+    user?.full_name ||
+    (typeof window !== 'undefined' ? localStorage.getItem('full_name') : null) ||
+    user?.username ||
+    'User';
 
   const fetchProfile = async () => {
     if (user && user.role !== 'T') {
@@ -377,15 +390,25 @@ export default function Header() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    setUserAvatar(studentProfile?.avatar_url || null);
+    const latest =
+      localStorage.getItem('avatar_url') ||
+      localStorage.getItem('avatar') ||
+      studentProfile?.avatar_url ||
+      null;
+    setUserAvatar(latest);
   }, [studentProfile]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const syncAvatar = () => {
-      const latestAvatar = localStorage.getItem('avatar');
+      const latestAvatar = localStorage.getItem('avatar_url') || localStorage.getItem('avatar');
+      const latestFull = localStorage.getItem('full_name');
       setUserAvatar(latestAvatar || null);
-      setStudentProfile((prev) => (prev ? { ...prev, avatar_url: latestAvatar || '' } : prev));
+      setStudentProfile((prev) =>
+        prev
+          ? { ...prev, avatar_url: latestAvatar || '', full_name: latestFull || prev.full_name }
+          : prev,
+      );
     };
     window.addEventListener('auth-user-updated', syncAvatar);
     window.addEventListener('storage', syncAvatar);
@@ -530,7 +553,7 @@ export default function Header() {
                           >
                             <Avatar
                               src={isValidAvatar ? userAvatar : undefined}
-                              alt={user.username || 'User'}
+                              alt={topDisplayName || 'User'}
                               sx={{
                                 backgroundColor: 'primary.main',
                                 width: 40,
@@ -540,7 +563,7 @@ export default function Header() {
                                 transition: 'border-color 0.2s',
                               }}
                             >
-                              {user.username?.[0]?.toUpperCase() || 'U'}
+                              {topDisplayName?.[0]?.toUpperCase() || 'U'}
                             </Avatar>
                           </Badge>
                           {/* <Typography

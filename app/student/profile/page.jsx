@@ -51,6 +51,10 @@ export default function StudentProfile() {
         const mapped = mapProfileData(data);
         setProfile(mapped);
         originalProfile.current = mapped;
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('full_name', mapped.fullName || '');
+          localStorage.setItem('avatar', mapped.avatarUrl || '');
+        }
       })
       .catch((err) => {
         showSnackbar('Failed to load profile', 'error');
@@ -89,6 +93,7 @@ export default function StudentProfile() {
       originalProfile.current = mapped;
       if (typeof window !== 'undefined') {
         localStorage.setItem('avatar', mapped.avatarUrl || '');
+        localStorage.setItem('full_name', mapped.fullName || '');
         // eslint-disable-next-line no-undef
         window.dispatchEvent(new Event('auth-user-updated'));
       }

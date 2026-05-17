@@ -266,10 +266,12 @@ export async function facebookLogin(code, role) {
 }
 
 export async function getTeacherProfile(teacherId) {
-  return apiFetch(`${ACCOUNTS_BASE_URL}/teachers/${teacherId}`, {
+  const response = await apiFetch(`${ACCOUNTS_BASE_URL}/teachers/${teacherId}`, {
     method: 'GET',
     cache: 'no-store',
   });
+  console.log('getTeacherProfile response:', response);
+  return response;
 }
 
 export async function updateTeacherProfile(teacherId, formData) {

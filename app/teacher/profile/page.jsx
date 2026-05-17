@@ -99,7 +99,9 @@ export default function TeacherProfile() {
         const mapped = mapProfileData(response?.data);
         setProfile(mapped);
         if (typeof window !== 'undefined') {
-          localStorage.setItem('avatar', mapped.avatarUrl || '');
+          // store canonical `avatar_url` and `full_name` for header display
+          localStorage.setItem('avatar_url', mapped.avatarUrl || '');
+          localStorage.setItem('full_name', mapped.fullName || '');
           // eslint-disable-next-line no-undef
           window.dispatchEvent(new Event('auth-user-updated'));
         }
@@ -178,6 +180,7 @@ export default function TeacherProfile() {
     getTeacherProfile(user.id, token)
       .then((data) => {
         setProfile(mapProfileData(data));
+        localStorage.setItem('full_name', data.fullName || '');
       })
       .catch((err) => {
         setError(err?.message || 'Failed to load profile');
