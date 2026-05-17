@@ -233,7 +233,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
   };
 
   return (
-    <Box>
+    <Box sx={{ width: '100%', alignSelf: 'stretch' }}>
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
@@ -244,7 +244,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
           {snackbar.message}
         </Alert>
       </Snackbar>
-      <Box sx={partHeader}>
+      <Box sx={{ ...partHeader, alignSelf: 'stretch' }}>
         <Box sx={sectionHeader}>
           <Box sx={accentBar} />
           <Box>
@@ -279,6 +279,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
             flexDirection: { xs: 'column', lg: 'row' },
             gap: { xs: 3, lg: 0 },
             mt: 1,
+            alignItems: 'stretch',
           }}
         >
           {/* -------------- Left Column: Config & Audio -------------- */}
@@ -286,7 +287,8 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
             sx={{
               flex: { xs: '1 1 auto', lg: `0 0 ${leftPaneWidth}%` },
               minWidth: 0,
-              pr: { lg: 1.5 },
+              width: '100%',
+              pr: { xs: 0, lg: 1.5 },
             }}
           >
             <Box sx={{ mb: 3 }}>
@@ -456,7 +458,8 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
             sx={{
               flex: { xs: '1 1 auto', lg: '1 1 0' },
               minWidth: 0,
-              pl: { lg: 1.5 },
+              width: '100%',
+              pl: { xs: 0, lg: 1.5 },
             }}
           >
             <Box sx={rowContent}>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Box, Container, Typography, Button } from '@mui/material';
+import { Box, Container, Typography, Button, CircularProgress } from '@mui/material';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import { getListeningTestTypeLabel } from '../../utils/stringFormat';
@@ -25,6 +25,7 @@ export default function ListeningPreview({
   const [indexPart, setIndexPart] = useState(0);
   const [receptiveParts, setReceptiveParts] = useState([]);
   const [mediaResources, setMediaResources] = useState({});
+  const [loadingResources, setLoadingResources] = useState(true);
 
   const goNextPart = () => {
     if (indexPart < parts.length - 1) {
@@ -44,11 +45,14 @@ export default function ListeningPreview({
     if (!parts || parts.length === 0) {
       setReceptiveParts([]);
       setMediaResources({});
+      setLoadingResources(false);
       return;
     }
 
     let mounted = true;
     let loadedResources = {};
+
+    setLoadingResources(true);
 
     const buildPreviewData = async () => {
       const newParts = parts.map((part) => {
@@ -144,6 +148,7 @@ export default function ListeningPreview({
 
       setReceptiveParts(newParts);
       setMediaResources(resourcesMap);
+      setLoadingResources(false);
     };
 
     buildPreviewData();
@@ -281,7 +286,20 @@ export default function ListeningPreview({
         className="no-print"
         sx={{ width: '100%', height: 'auto', backgroundColor: 'background.gray' }}
       >
-        {receptiveParts.map((part, index) => renderPart(part, index))}
+        {loadingResources ? (
+          <Box
+            sx={{
+              minHeight: '40vh',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        ) : (
+          receptiveParts.map((part, index) => renderPart(part, index))
+        )}
       </Box>
 
       <Box

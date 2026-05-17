@@ -244,49 +244,148 @@ const generatePartPayload = (originalPart, currentPart, urlMap, _defaultAction) 
 
   const isUpdate = originalPart !== null;
 
+  const buildFillInTheBlanksQuestions = (answers, fallbackScore) =>
+    (answers || []).map((ans, idx) => {
+      let questionId = ans.id;
+      if (typeof ans.id === 'string' && ans.id.startsWith('blank-')) {
+        const numericId = ans.id.replace('blank-', '');
+        questionId = isNaN(numericId) ? ans.id : parseInt(numericId, 10);
+      }
+
+      return {
+        id: questionId,
+        question_number: idx + 1,
+        text: ans.text || '',
+        explanation: ans.explanation || '',
+        score: ans.score || fallbackScore || 0,
+        answers: [
+          {
+            id: ans.id || `answer-${idx}`,
+            option_label: ans.option_label || String.fromCharCode(65 + idx),
+            answer_text: ans.text || '',
+            is_correct: true,
+          },
+        ],
+      };
+    });
+
+  const hasFillInTheBlanksAnswerChanges = (originalAnswers, currentAnswers) => {
+    const originalList = Array.isArray(originalAnswers) ? originalAnswers : [];
+    const currentList = Array.isArray(currentAnswers) ? currentAnswers : [];
+
+    if (originalList.length !== currentList.length) return true;
+
+    for (let i = 0; i < currentList.length; i++) {
+      const originalAnswer = originalList[i] || {};
+      const currentAnswer = currentList[i] || {};
+
+      const originalText = originalAnswer.text ?? originalAnswer.answer_text ?? '';
+      const currentText = currentAnswer.text ?? currentAnswer.answer_text ?? '';
+      const originalExplanation = originalAnswer.explanation || '';
+      const currentExplanation = currentAnswer.explanation || '';
+      const originalScore = parseFloat(originalAnswer.score ?? 0) || 0;
+      const currentScore = parseFloat(currentAnswer.score ?? 0) || 0;
+      const originalLabel = originalAnswer.option_label || originalAnswer.label || '';
+      const currentLabel = currentAnswer.option_label || currentAnswer.label || '';
+
+      if (
+        originalText !== currentText ||
+        originalExplanation !== currentExplanation ||
+        originalScore !== currentScore ||
+        originalLabel !== currentLabel
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  if (currentPart.type === 'fill_in_the_blanks') {
+    const originalAnswers = originalPart?.answers || [];
+    const currentAnswers = currentPart.answers || [];
+    const answersChanged = hasFillInTheBlanksAnswerChanges(originalAnswers, currentAnswers);
+
+    const orderChanged = originalPart.order !== currentPart.order;
+    const formatChanged =
+      getFormatCode(originalPart.type, originalPart.audioFormat) !==
+      getFormatCode(currentPart.type, currentPart.audioFormat);
+    const audioFormatChanged = originalPart.audioFormat !== currentPart.audioFormat;
+    const descriptionChanged = (originalPart.description || '') !== (currentPart.description || '');
+    const contentChanged = (originalPart.content || '') !== (currentPart.content || '');
+    const scoreChanged =
+      (originalPart.score ?? originalPart.totalScore ?? 0) !==
+      (currentPart.score ?? currentPart.totalScore ?? 0);
+
+    const originalAudio = originalPart.audio?.url || originalPart.audio?.name || '';
+    const currentAudio =
+      currentPart.audio?.url || currentPart.audio?.name || currentPart.audio?.file?.name || '';
+    const audioChanged = originalAudio !== currentAudio;
+
+    if (
+      !orderChanged &&
+      !formatChanged &&
+      !audioFormatChanged &&
+      !descriptionChanged &&
+      !contentChanged &&
+      !scoreChanged &&
+      !audioChanged &&
+      !answersChanged
+    ) {
+      return null;
+    }
+
+    const payload = {
+      action: 'update',
+      id: originalPart.id,
+      order: currentPart.order ?? originalPart.order,
+    };
+
+    if (formatChanged) payload.format = getFormatCode(currentPart.type, currentPart.audioFormat);
+    if (scoreChanged) payload.score = currentPart.score ?? currentPart.totalScore ?? 0;
+    if (descriptionChanged) payload.description = currentPart.description || '';
+
+    if (contentChanged) {
+      if (currentPart.content) {
+        const contentFilename = `part${currentPart.order}_content.html`;
+        payload.content = resolve(contentFilename);
+      } else {
+        payload.content = originalPart.content;
+      }
+    } else if (audioFormatChanged && currentPart.audioFormat === 'onetomany') {
+      if (currentPart.content) {
+        const contentFilename = `part${currentPart.order}_content.html`;
+        payload.content = resolve(contentFilename);
+      }
+    }
+
+    if (audioChanged) {
+      if (!payload.resources) payload.resources = {};
+      if (currentPart.audio?.file || currentPart.audio?.name || currentPart.audio?.url) {
+        const audioName = resolve(currentPart.audio?.file?.name || currentPart.audio?.name);
+        payload.resources.audio = audioName;
+      } else if (originalPart?.audio?.name || originalPart?.audio?.url) {
+        payload.resources.audio = originalPart.audio.url || originalPart.audio.name;
+      }
+    } else if (audioFormatChanged && currentPart.audioFormat === 'onetomany') {
+      if (currentPart.audio?.file || currentPart.audio?.name || currentPart.audio?.url) {
+        if (!payload.resources) payload.resources = {};
+        const audioName = resolve(currentPart.audio?.file?.name || currentPart.audio?.name);
+        payload.resources.audio = audioName;
+      }
+    }
+
+    if (answersChanged) {
+      payload.receptive_questions = buildFillInTheBlanksQuestions(
+        currentAnswers,
+        currentPart.score ?? currentPart.totalScore ?? 0,
+      );
+    }
+
+    return payload;
+  }
+
   let partToProcess = currentPart;
-  if (currentPart.type === 'fill_in_the_blanks' && currentPart.answers && currentPart.questions) {
-    partToProcess = {
-      ...currentPart,
-      questions: (currentPart.questions || []).map((q, qIdx) => ({
-        ...q,
-        score: currentPart.answers?.[qIdx]?.score ?? q.score,
-      })),
-    };
-  }
-
-  if (
-    currentPart.type === 'fill_in_the_blanks' &&
-    currentPart.answers &&
-    currentPart.answers.length > 0
-  ) {
-    partToProcess = {
-      ...partToProcess,
-      questions: currentPart.answers.map((ans, idx) => {
-        let questionId = ans.id;
-        if (typeof ans.id === 'string' && ans.id.startsWith('blank-')) {
-          const numericId = ans.id.replace('blank-', '');
-          questionId = isNaN(numericId) ? ans.id : parseInt(numericId);
-        }
-
-        return {
-          id: questionId,
-          question_number: idx + 1,
-          text: ans.text || '',
-          explanation: ans.explanation || '',
-          score: ans.score || partToProcess.score || partToProcess.totalScore || 0,
-          answers: [
-            {
-              id: ans.id || `answer-${idx}`,
-              option_label: ans.option_label || String.fromCharCode(65 + idx),
-              answer_text: ans.text || '',
-              is_correct: true,
-            },
-          ],
-        };
-      }),
-    };
-  }
 
   const originalQuestionMap = new Map(originalPart?.questions?.map((q) => [q.id, q]) || []);
   const currentQuestionMap = new Map(partToProcess.questions?.map((q) => [q.id, q]) || []);

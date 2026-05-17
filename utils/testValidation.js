@@ -262,6 +262,8 @@ export const validateListeningPartUpdatePayload = (parts) => {
   const formatPartMessage = (partName, message) => `Part ${partName}: ${message}`;
   const formatQuestionMessage = (partName, qNum, message) =>
     `Part ${partName}, Question ${qNum}: ${message}`;
+  const formatAnswerMessage = (partName, answerNum, message) =>
+    `Part ${partName}, Answer ${answerNum}: ${message}`;
 
   if (!parts || parts.length === 0) {
     return 'Test must have at least 1 part';
@@ -290,7 +292,7 @@ export const validateListeningPartUpdatePayload = (parts) => {
 
     // 2. Check description (for all types)
     if (isEmptyText(part.description)) {
-      return formatPartMessage(partName, 'fill in the description');
+      return formatPartMessage(partName, 'fill in the instruction');
     }
 
     // 3. Check audio (for multichoice_images, format C multichoice_texts, fill_in_the_blanks, matching)
@@ -314,8 +316,27 @@ export const validateListeningPartUpdatePayload = (parts) => {
       return formatPartMessage(partName, 'fill in the content');
     }
 
+    if (partType === 'fill_in_the_blanks') {
+      const activeAnswers = (part.answers || []).filter((answer) => answer.action !== 'delete');
+
+      if (activeAnswers.length === 0) {
+        return formatPartMessage(partName, 'add at least one answer');
+      }
+
+      for (let k = 0; k < activeAnswers.length; k++) {
+        const answer = activeAnswers[k];
+        const answerText = answer.text ?? answer.answer_text;
+
+        if (isEmptyText(answerText)) {
+          return formatAnswerMessage(partName, k + 1, 'fill in the answer text');
+        }
+      }
+
+      continue;
+    }
+
     // 5. Check questions exist
-    if (!part.questions || part.questions.length === 0) {
+    if (partType !== 'fill_in_the_blanks' && (!part.questions || part.questions.length === 0)) {
       return formatPartMessage(partName, 'add at least one question');
     }
 
@@ -391,7 +412,10 @@ export const validateListeningPartUpdatePayload = (parts) => {
           return formatQuestionMessage(partName, qNum, 'select the matching answer');
         }
 
-        if (isEmptyText(q.answer?.text)) {
+        const selectedAnswer = (part.answers || []).find(
+          (answer) => answer.id === q.selectedAnswerId,
+        );
+        if (!selectedAnswer || isEmptyText(selectedAnswer.text)) {
           return formatQuestionMessage(partName, qNum, 'fill in the answer text');
         }
       }
