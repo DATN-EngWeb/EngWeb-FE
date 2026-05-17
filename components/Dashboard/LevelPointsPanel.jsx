@@ -34,8 +34,6 @@ const getStatusChip = (status) => {
   return null;
 };
 
-const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
-
 export default function LevelPointsPanel({
   isLevelLoading,
   currentLevel,
@@ -153,7 +151,7 @@ export default function LevelPointsPanel({
                   </Box>
                 </Stack>
 
-                <Box sx={{ position: 'relative', width: '100%' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, width: '100%' }}>
                   <LinearProgress
                     variant="determinate"
                     value={currentLevel ? currentLevelProgress : 0}
@@ -166,38 +164,18 @@ export default function LevelPointsPanel({
                       },
                     }}
                   />
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      inset: 0,
-                      width: `${currentLevel ? currentLevelProgress : 0}%`,
-                      overflow: 'hidden',
-                      borderRadius: 999,
-                      pointerEvents: 'none',
-                    }}
-                  >
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        position: 'absolute',
-                        inset: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 800,
-                        fontSize: '0.7rem',
-                        color: '#fff',
-                        letterSpacing: 0.1,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {cumulativePoint.toLocaleString()} XP
-                    </Typography>
-                  </Box>
                 </Box>
 
                 {currentLevel && (
-                  <>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'flex-end',
+                      alignItems: 'center',
+                      gap: 1,
+                      width: '100%',
+                    }}
+                  >
                     <Typography
                       variant="caption"
                       sx={{
@@ -205,13 +183,13 @@ export default function LevelPointsPanel({
                         fontWeight: 500,
                         fontSize: '0.75rem',
                         fontStyle: 'italic',
+                        textAlign: 'right',
                       }}
                     >
-                      {nextLevel
-                        ? `${pointsToNextLevel.toLocaleString()} XP to Level ${nextLevel.level_number} - ${nextLevel.level_title}`
-                        : 'Max level reached'}
+                      {cumulativePoint.toLocaleString()} /{' '}
+                      {currentLevel?.max_xp?.toLocaleString() || '0'} XP
                     </Typography>
-                  </>
+                  </Box>
                 )}
               </Stack>
             </Paper>
