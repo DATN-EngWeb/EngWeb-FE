@@ -13,28 +13,32 @@
     "lint-staged": "lint-staged"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-react": "^11.0.1",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
-    "@mui/icons-material": "^7.3.4",
-    "@mui/material": "^7.3.4",
+    "@mui/icons-material": "^7.3.9",
+    "@mui/material": "^7.3.9",
     "@mui/styled-engine-sc": "^7.3.3",
+    "animate.css": "^4.1.1",
+    "diff": "^8.0.4",
+    "gsap": "^3.14.2",
+    "html2pdf.js": "^0.10.3",
     "next": "15.5.7",
     "next-auth": "^4.24.11",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "styled-components": "^6.1.19",
-    "typescript-eslint": "^8.45.0"
+    "react-resizable-panels": "^4.3.3",
+    "recharts": "^3.7.0",
+    "styled-components": "^6.1.19"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.1.0",
     "@commitlint/config-conventional": "^20.0.0",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/diff": "^7.0.2",
     "eslint": "^9.37.0",
-    "eslint-config-next": "^15.5.4",
+    "eslint-config-next": "^16.0.7",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-react": "^7.37.5",
@@ -44,10 +48,10 @@
     "lint-staged": "^16.2.3",
     "prettier": "^3.6.2",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^6.0.2"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,json,css,md}": [
+    "*.{js,jsx,json,css,md}": [
       "eslint --fix",
       "prettier --write"
     ]

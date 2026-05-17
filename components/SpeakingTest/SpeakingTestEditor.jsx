@@ -1,0 +1,149 @@
+'use client';
+import { useState, useEffect } from 'react';
+import ProductiveTestEditor from './../Writing-Speaking/ProductiveTestEditor';
+import ProductiveEditor from './../Writing-Speaking/ProductiveEditor';
+import ProductivePreview from './../Writing-Speaking/ProductivePreview';
+import { createTest, submitProductiveTest } from '../../api/test';
+import { uploadHtmlContent, uploadMediaFile } from '../../utils/uploadHelpers';
+import { validateProductiveTestData, parseApiError } from '../../utils/productiveTestValidation';
+import { useRouter } from 'next/navigation';
+
+export default function SpeakingTestEditor() {
+  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  const [testData, setTestData] = useState({
+    skill: 'S',
+    testName: '',
+    level: '',
+    topics: '',
+    format: '',
+  });
+  const [settings, setSettings] = useState({
+    skill: 'S',
+    timeLimit: 30,
+    score: 10,
+  });
+  const [question, setQuestion] = useState({
+    description: '',
+    suggestion: '',
+    audio: null,
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [basicOpen, setBasicOpen] = useState(true);
+  const [settingOpen, setSettingOpen] = useState(true);
+  const [errors, setErrors] = useState(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'error',
+  });
+
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+
+  const handleSubmit = async (status) => {
+    // Client-side validation
+    const validationError = validateProductiveTestData(testData, settings, question);
+    if (validationError) {
+      setSnackbar({
+        open: true,
+        message: validationError,
+        severity: 'error',
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const basicInfo = {
+        title: testData.testName,
+        level: testData.level,
+        type: 'P',
+        skill: 'S',
+        status: status === 'Draft' ? 'D' : status === 'In review' ? 'I' : 'P',
+        time: parseInt(settings.timeLimit),
+        completed_bonus: settings.score,
+        description: 'Speaking test',
+      };
+
+      const res = await createTest(basicInfo);
+      const contentUrl = await uploadHtmlContent(question.description, res.id);
+      const audioUrl = question.audio?.file
+        ? await uploadMediaFile(question.audio.file, res.id)
+        : null;
+
+      const formatMapper = {
+        Narrative: 'G',
+        Description: 'H',
+        'Social Argument': 'I',
+        'Reading Aloud': 'J',
+      };
+
+      const detailedData = {
+        format: formatMapper[testData.format] || 'A',
+        topic: testData.topics,
+        description: contentUrl,
+        min_word: 0,
+        glue_text: question.suggestion,
+        glue_resources: {
+          image: null,
+          audio: audioUrl || null,
+        },
+      };
+
+      await submitProductiveTest({ testId: res.id, data: detailedData });
+      setSnackbar({ open: true, message: 'Test submitted successfully', severity: 'success' });
+      setIsSaving(false);
+      setTestData({ skill: 'S', testName: '', level: '', topics: '', format: '' });
+      setSettings({ timeLimit: 30, score: 10 });
+      setQuestion({ description: '', suggestion: '', audio: null });
+      setErrors(null);
+      setIsSaving(false);
+      setTimeout(() => {
+        router.push(`/teacher`);
+      }, 1000);
+    } catch (error) {
+      const errorMsg = parseApiError(error);
+      setSnackbar({ open: true, message: `Submit failed: ${errorMsg}`, severity: 'error' });
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <ProductiveTestEditor
+      title="Create New Speaking Test"
+      testData={testData}
+      setTestData={setTestData}
+      settings={settings}
+      setSettings={setSettings}
+      isSaving={isSaving}
+      handleSubmit={handleSubmit}
+      showPreview={showPreview}
+      setShowPreview={setShowPreview}
+      basicOpen={basicOpen}
+      setBasicOpen={setBasicOpen}
+      settingOpen={settingOpen}
+      setSettingOpen={setSettingOpen}
+      showTestSettings={false}
+      snackbar={snackbar}
+      setSnackbar={setSnackbar}
+      previewContent={
+        <ProductivePreview
+          title={testData.testName}
+          description={question.description}
+          suggestion={question.suggestion}
+          audio={question.audio?.url}
+          preview={false}
+        />
+      }
+      errors={errors}
+    >
+      <ProductiveEditor
+        question={question}
+        onChange={(field, value) => setQuestion((p) => ({ ...p, [field]: value }))}
+        showAudio={true}
+      />
+    </ProductiveTestEditor>
+  );
+}
