@@ -4,11 +4,11 @@
 
 ## Tech Stack
 
-- **Framework:** Next.js 16.0.7 (with Turbopack)
-- **Language:** TypeScript 5
+- **Framework:** Next.js 15.5.7 (with Turbopack)
+- **Language:** JavaScript / JSX
 - **UI Library:** React 19.1.0
-- **Styling:** TailwindCSS 4 + PostCSS
-- **Authentication:** NextAuth.js v5
+- **Styling:** MUI + Emotion, TailwindCSS 4 + PostCSS
+- **Authentication:** NextAuth.js v4
 - **Code Quality:**
   - ESLint 9 (Flat Config)
   - Prettier 3
@@ -23,42 +23,26 @@
 ## Folder Structure
 
 ```bash
-english_app_fe/
-├── .husky/ # Git hooks (pre-commit, etc.)
-├── .next/ # Next.js build output
-│
-├── app/ # App Router (Next.js 13+)
-│ ├── api/ # API routes (server functions)
-│ ├── assets/ # Static assets (fonts, images…)
-│ │ ├── fonts/
-│ │ └── images/
-│ ├── hooks/ # Custom React hooks
-│ ├── lib/ # Utilities, constants, helper functions
-│ ├── pages/ # (Optional) Legacy pages router (if needed)
-│ ├── styles/ # Local styles for components/routes
-│ ├── components/ # Reusable global UI components
-│ ├── theme/ # MUI theme (light/dark, palette, typography)
-│ ├── utils/ # General utility functions
-│ ├── favicon.ico
-│ ├── globals.css # Global CSS (imported once)
-│ ├── layout.tsx # Root layout (applies to all routes)
-│ └── page.tsx # Root page (/)
-│
-├── node_modules/ # Dependencies
-│
-├── .env.example # Example environment variables
-├── .gitignore # Git ignore rules
-├── .prettierrc # Prettier config for code formatting
-├── commitlint.config.js # Commit message convention rules
-├── eslint.config.mjs # ESLint config
-├── next-env.d.ts # Next.js TypeScript definitions
-├── next.config.ts # Next.js configuration file
-├── package-lock.json # npm lockfile
-├── package.json # Project dependencies and scripts
-├── postcss.config.mjs # PostCSS configuration (for TailwindCSS)
-├── README.md # Project documentation
-├── tsconfig.json # TypeScript compiler options
-└── .env # (optional) Actual environment file (not committed)
+engweb-fe/
+├── app/ # App Router pages and layouts
+├── api/ # API helpers and request wrappers
+├── components/ # Reusable UI components by feature
+├── context/ # React context providers
+├── hooks/ # Custom React hooks
+├── lib/ # Registry setup
+├── assets/ # Static assets such as images and icons
+├── styles/ # Shared style objects and theme-specific styles
+├── theme/ # Theme provider and palette setup
+├── utils/ # Utility functions and transformers
+├── .env # Environment configuration
+├── .prettierrc # Prettier configuration
+├── commitlint.config.js # Commit message rules
+├── eslint.config.mjs # ESLint flat config
+├── middleware.js # Next.js middleware
+├── next.config.js # Next.js config
+├── package.json # Project scripts and dependencies
+├── postcss.config.mjs # PostCSS / Tailwind config
+└── README.md # Project documentation
 ```
 
 ## Getting Started
@@ -67,7 +51,7 @@ english_app_fe/
 
 ```bash
 git clone <repository-url>
-cd english_app_fe
+cd engweb-fe
 ```
 
 ### 2. Install dependencies
@@ -112,17 +96,15 @@ Configuration file: `eslint.config.mjs` (ESLint Flat Config)
 
 **Plugins:**
 
-- `@typescript-eslint` - TypeScript support
 - `eslint-plugin-react` - React best practices
 - `eslint-plugin-unicorn` - Additional code quality rules
 - `eslint-plugin-prettier` - Prettier integration
 
 **Key Rules:**
 
-- TypeScript strict mode
 - React hooks validation
 - Unused variables detection (with `_` prefix exception)
-- Console statements warning in JSX/TSX files
+- Console statements warning in JSX files
 
 ### Prettier
 
@@ -207,7 +189,7 @@ Configuration in `package.json`:
 ```json
 {
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,json,css,md}": ["eslint --fix", "prettier --write"]
+    "*.{js,jsx,json,css,md}": ["eslint --fix", "prettier --write"]
   }
 }
 ```
@@ -246,8 +228,8 @@ taskkill /PID <PID> /F
 $env:PORT=3001; npm run dev
 ```
 
-### TypeScript errors
+### Editor errors
 
-Make sure your editor is using the workspace TypeScript version:
+Make sure your editor is using the workspace settings:
 
-- In VS Code: `Ctrl+Shift+P` "TypeScript: Select TypeScript Version" "Use Workspace Version"
+- In VS Code: `Ctrl+Shift+P` "Preferences: Open Workspace Settings"
