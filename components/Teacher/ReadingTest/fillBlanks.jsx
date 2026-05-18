@@ -75,7 +75,6 @@ export default function FillBlankForm({
         };
 
         if (part.format === 'H') {
-          newQuestion.content = '';
           newQuestion.answers = [
             {
               id: Date.now() + i + 100,
@@ -501,21 +500,19 @@ export default function FillBlankForm({
                                   gap: 1,
                                 }}
                               >
-                                <OutlinedInput
-                                  size="small"
-                                  key={`${part.format}-${question.id}`}
-                                  multiline
-                                  placeholder={
-                                    part.format === 'H' ? 'Enter question' : 'Enter correct answer'
-                                  }
-                                  defaultValue={
-                                    part.format === 'H'
-                                      ? question.content
-                                      : question.answers[0].answer_text
-                                  }
-                                  sx={uploadReadingStyles.inputMultiline}
-                                  onBlur={(e) => handleUpdateQuestion(question.id, e.target.value)}
-                                />
+                                {part.format !== 'H' && (
+                                  <OutlinedInput
+                                    size="small"
+                                    key={`${part.format}-${question.id}`}
+                                    multiline
+                                    placeholder="Enter correct answer"
+                                    defaultValue={question.answers[0].answer_text}
+                                    sx={uploadReadingStyles.inputMultiline}
+                                    onBlur={(e) =>
+                                      handleUpdateQuestion(question.id, e.target.value)
+                                    }
+                                  />
+                                )}
                                 <OutlinedInput
                                   size="small"
                                   multiline

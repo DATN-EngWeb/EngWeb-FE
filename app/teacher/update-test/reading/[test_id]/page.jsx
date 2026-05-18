@@ -178,8 +178,8 @@ export default function Page() {
                     question_number: q.question_number,
                     explanation: q.explanation,
                     score: q.score,
-                    // I ko có content
-                    ...(!['I'].includes(format) && { content: q.content }),
+                    // I, H ko có content
+                    ...(!['I', 'H'].includes(format) && { content: q.content }),
                   };
 
                   if (newQ.content?.startsWith?.('http')) {
@@ -296,6 +296,7 @@ export default function Page() {
       }
 
       const transformedParts = transformFormatUpdateData(finalParts);
+
       const files = collectFilesUpdateReading(transformedParts);
       const filenameToUrl = {};
       for (const f of files) {
@@ -427,8 +428,7 @@ export default function Page() {
             };
 
             if (newFormat === 'H') {
-              // Loại H: Cần content và mảng answers có option_label
-              newQuestion.content = '';
+              // Loại H: Không cần content và mảng answers có option_label
               newQuestion.answers = [
                 {
                   id: Date.now() + i + 100,

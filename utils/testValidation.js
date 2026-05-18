@@ -113,7 +113,6 @@ export const validateReadingPartPayload = (parts) => {
         }
       }
 
-      // Đã xóa 'H' khỏi mảng kiểm tra này để bỏ qua validate q.content cho Format H
       if (['F', 'G', 'J'].includes(format)) {
         if (isEmptyText(q.content)) {
           return formatQuestionMessage(partName, qNum, 'add the question content.');
@@ -204,8 +203,11 @@ export const validateReadingPartUpdatePayload = (originalParts) => {
       const question = activeQuestions[qIndex];
       const displayQuestionNum = question.question_number || qIndex + 1;
 
-      // Bắt buộc nhập content ở cấp độ Question (TRỪ format 'I')
-      if (partFormat !== 'I' && (!question.content || String(question.content).trim() === '')) {
+      // Bắt buộc nhập content ở cấp độ Question (TRỪ format 'I', 'H')
+      if (
+        !['I', 'H'].includes(partFormat) &&
+        (!question.content || String(question.content).trim() === '')
+      ) {
         return `Part ${displayPartNum}, Question ${displayQuestionNum}: add the question content.`;
       }
 

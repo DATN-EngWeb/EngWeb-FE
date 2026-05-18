@@ -197,8 +197,6 @@ export default function Page() {
         return;
       }
 
-      console.log('Transformed Parts:', transformedParts);
-
       const newTestId = await handleUploadTest(status);
       if (!newTestId) {
         setIsLoading(false);
@@ -314,7 +312,6 @@ export default function Page() {
             };
 
             if (newFormat === 'H') {
-              newQuestion.content = '';
               newQuestion.answers = [
                 {
                   id: Date.now() + i + 100,
