@@ -1,3 +1,5 @@
+/* global URLSearchParams */
+
 import { NextResponse } from 'next/server';
 
 const AUTH_PAGES = new Set(['/login', '/register']);
@@ -55,6 +57,26 @@ export function middleware(request) {
 
   if (loggedIn && isAuthPage) {
     return NextResponse.redirect(new URL(getDefaultRouteByRole(role), request.url));
+  }
+
+  if (pathname === '/login') {
+    const url = request.nextUrl.clone();
+    const currentRole = url.searchParams.get('role');
+    const redirectUrl = url.searchParams.get('redirect');
+
+    const validRole =
+      currentRole === 'teacher' || currentRole === 'student' ? currentRole : 'student';
+
+    const cleanParams = new URLSearchParams();
+    cleanParams.set('role', validRole);
+    if (redirectUrl) {
+      cleanParams.set('redirect', redirectUrl);
+    }
+
+    if (url.searchParams.toString() !== cleanParams.toString()) {
+      url.search = cleanParams.toString();
+      return NextResponse.redirect(url);
+    }
   }
 
   if (role === 'T' && isHomeRoute) {

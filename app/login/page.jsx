@@ -4,13 +4,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-
 import {
   Box,
   Button,
-  Checkbox,
   Divider,
-  FormControlLabel,
   IconButton,
   InputAdornment,
   Stack,
@@ -18,8 +15,7 @@ import {
   Typography,
   Alert,
 } from '@mui/material';
-import { Visibility, VisibilityOff, ArrowBack } from '@mui/icons-material';
-import Logo from '../../assets/img/logo.png';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import loginImage from '../../assets/img/login.png';
 import googleImage from '../../assets/img/google.png';
 import facebookImage from '../../assets/img/facebook-2.png';
