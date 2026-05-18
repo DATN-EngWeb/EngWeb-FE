@@ -333,9 +333,11 @@ export default function FillBlankPart({
                       : null;
                   const isCorrect = questionResult?.is_correct;
 
-                  const correctAnswerText = question.receptive_answers?.find(
-                    (a) => a.is_correct,
-                  )?.answer_text;
+                  const correctAnswers =
+                    question.receptive_answers
+                      ?.filter((a) => a.is_correct)
+                      ?.map((a) => a.answer_text) || [];
+                  const correctAnswerText = correctAnswers.join(' / ');
 
                   return (
                     <Box
