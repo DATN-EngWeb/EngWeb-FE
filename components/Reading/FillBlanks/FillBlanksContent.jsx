@@ -6,12 +6,11 @@ import { Box, Container, Typography, TextField, Radio, RadioGroup, Chip } from '
 import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CircleIcon from '@mui/icons-material/Circle';
-
+import 'ckeditor5/ckeditor5.css';
 import {
   containerStyles,
   passageTitleStyles,
   rightPaneStyles,
-  richTextStyles,
 } from '@/styles/Reading/FillBlanksStyles';
 import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
@@ -120,27 +119,6 @@ const FillBlanksContent = ({
     onAnswerChange({ ...answers, [questionOrBlankId]: value });
   };
 
-  // Biến đổi văn bản bài đọc: thay thế các ký tự đánh dấu thành khối UI số thứ tự hoặc đường gạch dưới
-  const renderPassageWithBlanks = () => {
-    if (!passageContent) return null;
-
-    // Bước 1: Thay thế số (câu) một cách an toàn - Bỏ qua nếu nằm trong thẻ HTML (<[^>]+>)
-    let processPassage = passageContent.replace(
-      /(<[^>]+>)|(\((\d+)\))/g,
-      (match, tag, parenMatch, number) => {
-        if (tag) return tag; // Nếu là thẻ HTML thì giữ nguyên, không thay thế
-        return `<span style="display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; margin: 0 4px; vertical-align: middle; background-color: #FFF3E0; color: #E65100; border: 1px solid #FFB74D; border-radius: 6px; font-weight: 700; font-size: 0.9rem; cursor: default; user-select: none;">${number}</span>`;
-      },
-    );
-
-    // Bước 2: Thay thế dấu gạch dưới một cách an toàn - Bỏ qua nếu nằm trong thẻ HTML
-    processPassage = processPassage.replace(/(<[^>]+>)|(_+)/g, (match, tag, underscores) => {
-      if (tag) return tag; // Nếu là thẻ HTML thì giữ nguyên
-      return `<span style="display: inline-flex; width: 120px; height: 28px; margin: 0 4px; vertical-align: middle; border: 1px solid #B0BEC5; border-radius: 14px; background-color: transparent;"></span>`;
-    });
-
-    return <div dangerouslySetInnerHTML={{ __html: processPassage }} />;
-  };
   const isMultiChoiceFormat =
     questions && questions.length > 0 && questions.some((q) => q.options && q.options.length > 1);
 
@@ -264,18 +242,21 @@ const FillBlanksContent = ({
               </Typography>
             )}
             <Box
+              className="ck-content"
               sx={{
                 ...listeningPartStyles.passageContainer,
                 ...textWrapStyles,
-                ...richTextStyles,
-                fontSize: '1rem',
-                lineHeight: 1.8,
-                color: 'text.primary',
-                whiteSpace: 'normal',
+                '& a': {
+                  color: '#0000EE',
+                  textDecoration: 'underline',
+                  ['&:hover']: {
+                    color: '#000099',
+                    cursor: 'pointer',
+                  },
+                },
               }}
-            >
-              {renderPassageWithBlanks()}
-            </Box>
+              dangerouslySetInnerHTML={{ __html: passageContent }}
+            />
           </Box>
           {/* Thanh điều khiển (divider) cho phép người dùng kéo qua lại để đổi chiều rộng cột */}
           <Box

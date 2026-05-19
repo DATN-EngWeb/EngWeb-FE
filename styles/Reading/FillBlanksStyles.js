@@ -17,7 +17,6 @@ import {
   backLinkStyles,
   sectionInfoStyles,
   nextButtonStyles,
-  richTextStyles,
 } from './SharedStyles';
 
 export {
@@ -39,7 +38,6 @@ export {
   backLinkStyles,
   sectionInfoStyles,
   nextButtonStyles,
-  richTextStyles,
 };
 
 export const passageContainerStyles = {

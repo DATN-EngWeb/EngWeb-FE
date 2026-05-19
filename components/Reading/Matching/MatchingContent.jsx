@@ -11,8 +11,8 @@ import {
   containerStyles,
   passageTitleStyles,
   rightPaneStyles,
-  richTextStyles,
 } from '@/styles/Reading/MatchingStyles';
+import 'ckeditor5/ckeditor5.css';
 
 const textWrapStyles = {
   wordBreak: 'break-word',
@@ -40,6 +40,9 @@ const MatchingContent = ({
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = React.useRef(null);
   const [passageContent, setPassageContent] = useState(passage);
+  useEffect(() => {
+    console.log('passageContent: ', passageContent);
+  }, [passageContent]);
   const [processedSentences, setProcessedSentences] = useState(sentences);
 
   const [targetQuestionId, setTargetQuestionId] = useState(null);
@@ -253,17 +256,6 @@ const MatchingContent = ({
     setTargetQuestionId(questionId);
   };
 
-  // Xử lý văn bản bài đọc: thay thế các tag đánh dấu (ví dụ [1]) thành khối UI số thứ tự
-  const renderPassageWithGaps = () => {
-    if (!passageContent) return null;
-
-    const processedPassage = passageContent.replace(/\[(\d+)\]/g, (match, number) => {
-      return `<span style="display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; margin: 0 4px; vertical-align: middle; background-color: #FFF3E0; color: #E65100; border: 1px solid #FFB74D; border-radius: 6px; font-weight: 700; font-size: 0.9rem; cursor: default; user-select: none;">${number}</span>`;
-    });
-
-    return <div dangerouslySetInnerHTML={{ __html: processedPassage }} />;
-  };
-
   const mainContent = (
     <Box sx={{ ...containerStyles, flex: 1, width: '100%', overflow: 'hidden' }}>
       <Container maxWidth={false} disableGutters sx={{ height: '100%', px: 0 }}>
@@ -303,17 +295,21 @@ const MatchingContent = ({
               </Typography>
             )}
             <Box
+              className="ck-content"
               sx={{
                 ...listeningPartStyles.passageContainer,
                 ...textWrapStyles,
-                ...richTextStyles,
-                fontSize: '1rem',
-                lineHeight: 1.8,
-                color: 'text.primary',
+                '& a': {
+                  color: '#0000EE',
+                  textDecoration: 'underline',
+                  ['&:hover']: {
+                    color: '#000099',
+                    cursor: 'pointer',
+                  },
+                },
               }}
-            >
-              {renderPassageWithGaps()}
-            </Box>
+              dangerouslySetInnerHTML={{ __html: passageContent }}
+            />
           </Box>
           {/* Thanh điều khiển (divider) cho phép người dùng kéo qua lại để đổi chiều rộng 2 cột */}
           <Box

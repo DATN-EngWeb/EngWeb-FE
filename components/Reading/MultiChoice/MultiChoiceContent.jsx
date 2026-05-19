@@ -10,12 +10,12 @@ import {
   containerStyles,
   passageTitleStyles,
   passageTextStyles,
-  richTextStyles,
 } from '@/styles/Reading/MultiChoiceReadingStyles';
 import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
 import SumaryPartTab from '../../Student/ListeningTest/part/sumaryPartTab';
 import { fetchHtmlContent } from '@/api/test';
+import 'ckeditor5/ckeditor5.css';
 
 const textWrapStyles = {
   wordBreak: 'break-word',
@@ -410,12 +410,20 @@ const MultiChoiceContent = ({
                       if (!hasMedia) {
                         return (
                           <Box
+                            className="ck-content"
                             component="div"
                             sx={{
                               ...passageTextStyles,
                               ...passageResponsiveMediaSx,
-                              ...textWrapStyles, // Cập nhật ngắt dòng
-                              ...richTextStyles,
+                              ...textWrapStyles,
+                              '& a': {
+                                color: '#0000EE',
+                                textDecoration: 'underline',
+                                ['&:hover']: {
+                                  color: '#000099',
+                                  cursor: 'pointer',
+                                },
+                              },
                             }}
                             dangerouslySetInnerHTML={{ __html: passageContent }}
                           />
@@ -439,12 +447,20 @@ const MultiChoiceContent = ({
                                 </Typography>
                                 <Box
                                   component="div"
+                                  className="ck-content"
                                   sx={{
                                     ...passageTextStyles,
                                     ...stimulusFigureMediaSx,
                                     ...textWrapStyles,
-                                    ...richTextStyles,
-                                  }} // Cập nhật ngắt dòng
+                                    '& a': {
+                                      color: '#0000EE',
+                                      textDecoration: 'underline',
+                                      ['&:hover']: {
+                                        color: '#000099',
+                                        cursor: 'pointer',
+                                      },
+                                    },
+                                  }}
                                   dangerouslySetInnerHTML={{ __html: html }}
                                 />
                               </Box>
@@ -452,14 +468,22 @@ const MultiChoiceContent = ({
                           </Box>
                           {restHtml ? (
                             <Box
+                              className="ck-content"
                               component="div"
                               sx={{
                                 ...passageTextStyles,
                                 mt: 2,
                                 ...passageResponsiveMediaSx,
                                 ...textWrapStyles,
-                                ...richTextStyles,
-                              }} // Cập nhật ngắt dòng
+                                '& a': {
+                                  color: '#0000EE',
+                                  textDecoration: 'underline',
+                                  ['&:hover']: {
+                                    color: '#000099',
+                                    cursor: 'pointer',
+                                  },
+                                },
+                              }}
                               dangerouslySetInnerHTML={{ __html: restHtml }}
                             />
                           ) : null}
@@ -482,13 +506,21 @@ const MultiChoiceContent = ({
                             {i + 1}
                           </Typography>
                           <Box
+                            className="ck-content"
                             component="div"
                             sx={{
                               ...passageTextStyles,
                               ...stimulusFigureMediaSx,
                               ...textWrapStyles,
-                              ...richTextStyles,
-                            }} // Cập nhật ngắt dòng
+                              '& a': {
+                                color: '#0000EE',
+                                textDecoration: 'underline',
+                                ['&:hover']: {
+                                  color: '#000099',
+                                  cursor: 'pointer',
+                                },
+                              },
+                            }}
                             dangerouslySetInnerHTML={{
                               __html:
                                 stimulusHtmlByIndex[i] ??
@@ -509,12 +541,20 @@ const MultiChoiceContent = ({
                           </Typography>
                         )}
                         <Box
+                          className="ck-content"
                           component="div"
                           sx={{
                             ...passageTextStyles,
                             ...passageResponsiveMediaSx,
                             ...textWrapStyles,
-                            ...richTextStyles,
+                            '& a': {
+                              color: '#0000EE',
+                              textDecoration: 'underline',
+                              ['&:hover']: {
+                                color: '#000099',
+                                cursor: 'pointer',
+                              },
+                            },
                           }}
                           dangerouslySetInnerHTML={{ __html: passage }}
                         />
@@ -549,7 +589,14 @@ const MultiChoiceContent = ({
                               ...passageTextStyles,
                               ...stimulusFigureMediaSx,
                               ...textWrapStyles,
-                              ...richTextStyles,
+                              '& a': {
+                                color: '#0000EE',
+                                textDecoration: 'underline',
+                                ['&:hover']: {
+                                  color: '#000099',
+                                  cursor: 'pointer',
+                                },
+                              },
                             }}
                             dangerouslySetInnerHTML={{ __html: contentHtml }}
                           />
@@ -665,7 +712,18 @@ const MultiChoiceContent = ({
                         {question.question_number ?? question.questionNumber ?? index + 1}
                       </Typography>
                       <Typography
-                        sx={{ ...listeningPartStyles.questionText, ...textWrapStyles }} // Cập nhật ngắt dòng
+                        sx={{
+                          ...listeningPartStyles.questionText,
+                          ...textWrapStyles,
+                          '& a': {
+                            color: '#0000EE',
+                            textDecoration: 'underline',
+                            ['&:hover']: {
+                              color: '#000099',
+                              cursor: 'pointer',
+                            },
+                          },
+                        }}
                         dangerouslySetInnerHTML={{ __html: displayHtml }}
                       />
                     </Box>
