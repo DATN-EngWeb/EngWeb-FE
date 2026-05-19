@@ -10,6 +10,7 @@ import {
   containerStyles,
   passageTitleStyles,
   passageTextStyles,
+  richTextStyles,
 } from '@/styles/Reading/MultiChoiceReadingStyles';
 import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
@@ -408,12 +409,13 @@ const MultiChoiceContent = ({
                         extractNumberedMediaParts(passageContent);
                       if (!hasMedia) {
                         return (
-                          <Typography
+                          <Box
                             component="div"
                             sx={{
                               ...passageTextStyles,
                               ...passageResponsiveMediaSx,
                               ...textWrapStyles, // Cập nhật ngắt dòng
+                              ...richTextStyles,
                             }}
                             dangerouslySetInnerHTML={{ __html: passageContent }}
                           />
@@ -441,6 +443,7 @@ const MultiChoiceContent = ({
                                     ...passageTextStyles,
                                     ...stimulusFigureMediaSx,
                                     ...textWrapStyles,
+                                    ...richTextStyles,
                                   }} // Cập nhật ngắt dòng
                                   dangerouslySetInnerHTML={{ __html: html }}
                                 />
@@ -455,6 +458,7 @@ const MultiChoiceContent = ({
                                 mt: 2,
                                 ...passageResponsiveMediaSx,
                                 ...textWrapStyles,
+                                ...richTextStyles,
                               }} // Cập nhật ngắt dòng
                               dangerouslySetInnerHTML={{ __html: restHtml }}
                             />
@@ -483,6 +487,7 @@ const MultiChoiceContent = ({
                               ...passageTextStyles,
                               ...stimulusFigureMediaSx,
                               ...textWrapStyles,
+                              ...richTextStyles,
                             }} // Cập nhật ngắt dòng
                             dangerouslySetInnerHTML={{
                               __html:
@@ -503,12 +508,13 @@ const MultiChoiceContent = ({
                             {passageTitle}
                           </Typography>
                         )}
-                        <Typography
+                        <Box
                           component="div"
                           sx={{
                             ...passageTextStyles,
                             ...passageResponsiveMediaSx,
                             ...textWrapStyles,
+                            ...richTextStyles,
                           }}
                           dangerouslySetInnerHTML={{ __html: passage }}
                         />
@@ -543,6 +549,7 @@ const MultiChoiceContent = ({
                               ...passageTextStyles,
                               ...stimulusFigureMediaSx,
                               ...textWrapStyles,
+                              ...richTextStyles,
                             }}
                             dangerouslySetInnerHTML={{ __html: contentHtml }}
                           />

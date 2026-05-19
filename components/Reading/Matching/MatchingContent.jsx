@@ -4,14 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { Box, Container, Typography, Select, MenuItem, FormControl } from '@mui/material';
 import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded';
-import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import SumaryPartTab from '../../Student/ListeningTest/part/sumaryPartTab';
+import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
-
 import {
   containerStyles,
   passageTitleStyles,
   rightPaneStyles,
+  richTextStyles,
 } from '@/styles/Reading/MatchingStyles';
 
 const textWrapStyles = {
@@ -302,7 +302,16 @@ const MatchingContent = ({
                 {passageTitle}
               </Typography>
             )}
-            <Box sx={{ ...listeningPartStyles.passageContainer, ...textWrapStyles }}>
+            <Box
+              sx={{
+                ...listeningPartStyles.passageContainer,
+                ...textWrapStyles,
+                ...richTextStyles,
+                fontSize: '1rem',
+                lineHeight: 1.8,
+                color: 'text.primary',
+              }}
+            >
               {renderPassageWithGaps()}
             </Box>
           </Box>
