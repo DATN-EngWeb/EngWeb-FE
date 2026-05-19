@@ -26,6 +26,7 @@ export const transformApiResponseToParts = (apiData) => {
   };
 
   return apiData.receptive_test.receptive_parts
+    .sort((a, b) => (a.order || 0) - (b.order || 0))
     .map((part) => {
       const type = formatMap[part.format];
       if (!type) return null;
@@ -467,23 +468,24 @@ const generatePartPayload = (originalPart, currentPart, urlMap, _defaultAction) 
     return false;
   };
 
-  if (currentPart.type === 'fill_in_the_blanks') {
+  if (isUpdate && currentPart.type === 'fill_in_the_blanks') {
     const originalAnswers = originalPart?.answers || [];
     const currentAnswers = currentPart.answers || [];
     const answersChanged = hasFillInTheBlanksAnswerChanges(originalAnswers, currentAnswers);
 
-    const orderChanged = originalPart.order !== currentPart.order;
+    const orderChanged = originalPart?.order !== currentPart.order;
     const formatChanged =
-      getFormatCode(originalPart.type, originalPart.audioFormat) !==
+      getFormatCode(originalPart?.type, originalPart?.audioFormat) !==
       getFormatCode(currentPart.type, currentPart.audioFormat);
-    const audioFormatChanged = originalPart.audioFormat !== currentPart.audioFormat;
-    const descriptionChanged = (originalPart.description || '') !== (currentPart.description || '');
-    const contentChanged = (originalPart.content || '') !== (currentPart.content || '');
+    const audioFormatChanged = originalPart?.audioFormat !== currentPart.audioFormat;
+    const descriptionChanged =
+      (originalPart?.description || '') !== (currentPart.description || '');
+    const contentChanged = (originalPart?.content || '') !== (currentPart.content || '');
     const scoreChanged =
-      (originalPart.score ?? originalPart.totalScore ?? 0) !==
+      (originalPart?.score ?? originalPart?.totalScore ?? 0) !==
       (currentPart.score ?? currentPart.totalScore ?? 0);
 
-    const originalAudio = originalPart.audio?.url || originalPart.audio?.name || '';
+    const originalAudio = originalPart?.audio?.url || originalPart?.audio?.name || '';
     const currentAudio =
       currentPart.audio?.url || currentPart.audio?.name || currentPart.audio?.file?.name || '';
     const audioChanged = originalAudio !== currentAudio;
@@ -544,6 +546,48 @@ const generatePartPayload = (originalPart, currentPart, urlMap, _defaultAction) 
     if (answersChanged) {
       payload.receptive_questions = buildFillInTheBlanksQuestions(
         originalAnswers,
+        currentAnswers,
+        currentPart.score ?? currentPart.totalScore ?? 0,
+      );
+    }
+
+    return payload;
+  }
+
+  // Handle fill_in_the_blanks create
+  if (!isUpdate && currentPart.type === 'fill_in_the_blanks') {
+    const partOrder = currentPart.order || 1;
+
+    const payload = {
+      action: 'create',
+      order: partOrder,
+      format: getFormatCode(currentPart.type, currentPart.audioFormat),
+      description: currentPart.description || '',
+    };
+
+    // Handle content
+    if (currentPart.content) {
+      const contentFilename = `part${partOrder}_content.html`;
+      const resolvedContent = resolve(contentFilename);
+      payload.content = resolvedContent || currentPart.content;
+    }
+
+    // Handle audio
+    if (currentPart.audio?.file || currentPart.audio?.name || currentPart.audio?.url) {
+      const audioName = resolve(currentPart.audio?.file?.name || currentPart.audio?.name);
+      payload.resources = { audio: audioName };
+    }
+
+    // Handle score
+    if (currentPart.score) {
+      payload.score = currentPart.score;
+    }
+
+    // Build questions from answers
+    const currentAnswers = currentPart.answers || [];
+    if (currentAnswers.length > 0) {
+      payload.receptive_questions = buildFillInTheBlanksQuestions(
+        [],
         currentAnswers,
         currentPart.score ?? currentPart.totalScore ?? 0,
       );
@@ -817,7 +861,7 @@ const generateQuestionPayload = (
       continue;
     }
 
-    const aPayload = generateAnswerPayload(originalA, currentA, urlMap, 'update');
+    const aPayload = generateAnswerPayload(originalA, currentA, urlMap, 'update', partType);
     if (aPayload) {
       receptiveAnswers.push(aPayload);
       hasAnswerChanges = true;
@@ -826,7 +870,7 @@ const generateQuestionPayload = (
 
   for (const [aId, currentA] of currentAnswerMap.entries()) {
     if (!originalAnswerMap.has(aId)) {
-      const aPayload = generateAnswerPayload(null, currentA, urlMap, 'create');
+      const aPayload = generateAnswerPayload(null, currentA, urlMap, 'create', partType);
       if (aPayload) {
         receptiveAnswers.push(aPayload);
       }
@@ -934,7 +978,7 @@ const generateQuestionPayload = (
   return payload;
 };
 
-const generateAnswerPayload = (originalA, currentA, urlMap, _defaultAction) => {
+const generateAnswerPayload = (originalA, currentA, urlMap, _defaultAction, partType) => {
   const resolve = (name) => {
     if (!name) return '';
     return urlMap[name] || name;
@@ -977,7 +1021,8 @@ const generateAnswerPayload = (originalA, currentA, urlMap, _defaultAction) => {
     };
 
     if (labelChanged) payload.option_label = currentA.option_label || currentA.label || '';
-    if (textChanged) payload.answer_text = currentA.answer_text || currentA.text || '';
+    if (textChanged && partType !== 'multichoice_images')
+      payload.answer_text = currentA.answer_text || currentA.text || '';
     if (correctChanged) payload.is_correct = currentA.is_correct || false;
 
     // Handle answer resources
@@ -1012,7 +1057,7 @@ const generateAnswerPayload = (originalA, currentA, urlMap, _defaultAction) => {
   const payload = {
     action: 'create',
     option_label: optionLabel,
-    answer_text: answerText,
+    ...(partType !== 'multichoice_images' && { answer_text: answerText }),
     is_correct: currentA.is_correct || false,
   };
 
