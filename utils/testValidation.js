@@ -325,10 +325,20 @@ export const validateListeningPartUpdatePayload = (parts) => {
 
       for (let k = 0; k < activeAnswers.length; k++) {
         const answer = activeAnswers[k];
-        const answerText = answer.text ?? answer.answer_text;
 
-        if (isEmptyText(answerText)) {
-          return formatAnswerMessage(partName, k + 1, 'fill in the answer text');
+        // Check acceptedAnswers (new structure) or text (old structure for backward compatibility)
+        if (answer.acceptedAnswers && Array.isArray(answer.acceptedAnswers)) {
+          for (let v = 0; v < answer.acceptedAnswers.length; v++) {
+            if (isEmptyText(answer.acceptedAnswers[v].text)) {
+              return formatAnswerMessage(partName, k + 1, 'fill in the answer text');
+            }
+          }
+        } else {
+          // Backward compatibility for old format
+          const answerText = answer.text ?? answer.answer_text;
+          if (isEmptyText(answerText)) {
+            return formatAnswerMessage(partName, k + 1, 'fill in the answer text');
+          }
         }
       }
 

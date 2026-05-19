@@ -11,10 +11,12 @@ import {
   Snackbar,
   Alert,
   Collapse,
+  Button,
 } from '@mui/material';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import AudioUploader from '../Upload/AudioUploader';
 import ClientSideCustomEditor from '../Editor/ClientSideCustomEditor';
 import { useEffect, useRef, useState } from 'react';
@@ -91,6 +93,18 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
     return doc.querySelectorAll('.blank-element').length;
   };
 
+  const normalizeAnswer = (ans) => {
+    if (ans.acceptedAnswers && Array.isArray(ans.acceptedAnswers)) {
+      return ans;
+    }
+    return {
+      ...ans,
+      acceptedAnswers: ans.text
+        ? [{ id: ans.id + '-v0', text: ans.text }]
+        : [{ id: ans.id + '-v0', text: '' }],
+    };
+  };
+
   const syncAnswersWithBlanks = (newContent) => {
     const blankCount = countBlanks(newContent);
     const currentAnswerCount = answers.length;
@@ -102,7 +116,12 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
       for (let i = currentAnswerCount; i < blankCount; i++) {
         newAnswers.push({
           id: `${Date.now()}-${i}`,
-          text: '',
+          acceptedAnswers: [
+            {
+              id: `${Date.now()}-${i}-0`,
+              text: '',
+            },
+          ],
         });
       }
     } else if (blankCount < currentAnswerCount) {
@@ -110,11 +129,69 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
       newAnswers = newAnswers.slice(0, blankCount);
     }
 
+    newAnswers = newAnswers.map(normalizeAnswer);
+
     updatePart({ ...part, content: newContent, answers: newAnswers });
   };
 
-  const setAnswerText = (aIdx, text) => {
-    const newAnswers = answers.map((ans, i) => (i === aIdx ? { ...ans, text } : ans));
+  const setVariantText = (aIdx, vIdx, text) => {
+    const newAnswers = answers.map((ans, i) => {
+      if (i === aIdx) {
+        const normalizedAns = normalizeAnswer(ans);
+        const newAcceptedAnswers = normalizedAns.acceptedAnswers.map((v, j) =>
+          j === vIdx ? { ...v, text } : v,
+        );
+        return { ...normalizedAns, acceptedAnswers: newAcceptedAnswers };
+      }
+      return ans;
+    });
+    updatePart({ ...part, answers: newAnswers });
+  };
+
+  const addVariant = (aIdx) => {
+    const newAnswers = answers.map((ans, i) => {
+      if (i === aIdx) {
+        const normalizedAns = normalizeAnswer(ans);
+        const acceptedAnswers = normalizedAns.acceptedAnswers || [];
+        return {
+          ...normalizedAns,
+          acceptedAnswers: [
+            ...acceptedAnswers,
+            {
+              id: `${Date.now()}-${aIdx}-${acceptedAnswers.length}`,
+              text: '',
+            },
+          ],
+        };
+      }
+      return ans;
+    });
+    updatePart({ ...part, answers: newAnswers });
+  };
+
+  const removeVariant = (aIdx, vIdx) => {
+    const newAnswers = answers.map((ans, i) => {
+      if (i === aIdx) {
+        const normalizedAns = normalizeAnswer(ans);
+        const acceptedAnswers = normalizedAns.acceptedAnswers || [];
+        // Keep at least 1 answer
+        if (acceptedAnswers.length === 1) return normalizedAns;
+        const newAcceptedAnswers = acceptedAnswers.filter((_, j) => j !== vIdx);
+        return { ...normalizedAns, acceptedAnswers: newAcceptedAnswers };
+      }
+      return ans;
+    });
+    updatePart({ ...part, answers: newAnswers });
+  };
+
+  const setAnswerExplanation = (aIdx, explanation) => {
+    const newAnswers = answers.map((ans, i) => {
+      if (i === aIdx) {
+        const normalizedAns = normalizeAnswer(ans);
+        return { ...normalizedAns, explanation };
+      }
+      return ans;
+    });
     updatePart({ ...part, answers: newAnswers });
   };
 
@@ -189,10 +266,13 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
                 value={part.score ?? ''}
                 onChange={(e) => {
                   const scoreValue = parseFloat(e.target.value) || 0;
-                  const newAnswers = answers.map((a) => ({
-                    ...a,
-                    score: scoreValue,
-                  }));
+                  const newAnswers = answers.map((a) => {
+                    const normalizedAns = normalizeAnswer(a);
+                    return {
+                      ...normalizedAns,
+                      score: scoreValue,
+                    };
+                  });
                   updatePart({ ...part, score: scoreValue, answers: newAnswers });
                 }}
                 sx={textInput}
@@ -310,52 +390,104 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
               </Box>
             ) : (
               <Stack spacing={2}>
-                {answers.map((answer, aIdx) => (
-                  <Paper key={answer.id} variant="outlined" sx={outlinedCard}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0, mb: 1 }}>
-                      <Box sx={numberIndicator}>{aIdx + 1}</Box>
-                      <Box sx={{ flexGrow: 1 }} />
-                      <IconButton onClick={() => toggleQuestionCollapse(answer.id)}>
-                        <ExpandLessRoundedIcon
-                          sx={{
-                            fontSize: '1.4rem',
-                            transition: 'transform 0.3s ease',
-                            transform: collapsedQuestions[answer.id]
-                              ? 'rotate(180deg)'
-                              : 'rotate(0deg)',
-                          }}
-                        />
-                      </IconButton>
-                    </Box>
-
-                    <Collapse in={!collapsedQuestions[answer.id]} sx={{ width: '100%' }}>
-                      <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <TextField
-                          size="small"
-                          fullWidth
-                          placeholder="Enter answer text"
-                          value={answer.text}
-                          onChange={(e) => setAnswerText(aIdx, e.target.value)}
-                          sx={textInput}
-                        />
-
-                        <TextField
-                          size="small"
-                          fullWidth
-                          placeholder="Enter explanation"
-                          value={answer.explanation || ''}
-                          onChange={(e) => {
-                            const newAnswers = answers.map((ans, i) =>
-                              i === aIdx ? { ...ans, explanation: e.target.value } : ans,
-                            );
-                            updatePart({ ...part, answers: newAnswers });
-                          }}
-                          sx={textInput}
-                        />
+                {answers.map((answer, aIdx) => {
+                  const normalizedAnswer = normalizeAnswer(answer);
+                  const acceptedAnswers = normalizedAnswer.acceptedAnswers || [];
+                  return (
+                    <Paper key={normalizedAnswer.id} variant="outlined" sx={outlinedCard}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0, mb: 1 }}>
+                        <Box sx={numberIndicator}>{aIdx + 1}</Box>
+                        <Box sx={{ flexGrow: 1 }} />
+                        <IconButton onClick={() => toggleQuestionCollapse(normalizedAnswer.id)}>
+                          <ExpandLessRoundedIcon
+                            sx={{
+                              fontSize: '1.4rem',
+                              transition: 'transform 0.3s ease',
+                              transform: collapsedQuestions[normalizedAnswer.id]
+                                ? 'rotate(180deg)'
+                                : 'rotate(0deg)',
+                            }}
+                          />
+                        </IconButton>
                       </Box>
-                    </Collapse>
-                  </Paper>
-                ))}
+
+                      <Collapse
+                        in={!collapsedQuestions[normalizedAnswer.id]}
+                        sx={{ width: '100%' }}
+                      >
+                        <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          {/* Correct Answers Section */}
+                          <Box>
+                            <Typography
+                              sx={{
+                                fontSize: '0.875rem',
+                                fontWeight: 500,
+                                mb: 1.5,
+                                color: 'text.secondary',
+                              }}
+                            >
+                              Correct Answer(s)
+                            </Typography>
+                            <Stack spacing={1}>
+                              {acceptedAnswers.map((answer, vIdx) => (
+                                <Box
+                                  key={answer.id}
+                                  sx={{
+                                    display: 'flex',
+                                    gap: 1,
+                                    alignItems: 'flex-start',
+                                  }}
+                                >
+                                  <TextField
+                                    size="small"
+                                    fullWidth
+                                    placeholder={`Option ${vIdx + 1}`}
+                                    value={answer.text}
+                                    onChange={(e) => setVariantText(aIdx, vIdx, e.target.value)}
+                                    sx={textInput}
+                                  />
+                                  {acceptedAnswers.length > 1 && (
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => removeVariant(aIdx, vIdx)}
+                                      sx={{
+                                        mt: 0.5,
+                                      }}
+                                    >
+                                      <DeleteRoundedIcon sx={{ fontSize: '1.2rem' }} />
+                                    </IconButton>
+                                  )}
+                                </Box>
+                              ))}
+                            </Stack>
+                            <Button
+                              size="small"
+                              startIcon={<AddRoundedIcon sx={{ fontSize: '1.4rem' }} />}
+                              onClick={() => addVariant(aIdx)}
+                              sx={{
+                                mt: 1,
+                                textTransform: 'none',
+                                color: 'primary.main',
+                              }}
+                            >
+                              Add option
+                            </Button>
+                          </Box>
+
+                          {/* Explanation Section */}
+                          <TextField
+                            size="small"
+                            fullWidth
+                            placeholder="Enter explanation"
+                            value={normalizedAnswer.explanation || ''}
+                            onChange={(e) => setAnswerExplanation(aIdx, e.target.value)}
+                            sx={textInput}
+                          />
+                        </Box>
+                      </Collapse>
+                    </Paper>
+                  );
+                })}
               </Stack>
             )}
           </Box>
