@@ -19,7 +19,7 @@ import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import AudioUploader from '../Upload/AudioUploader';
 import ClientSideCustomEditor from '../Editor/ClientSideCustomEditor';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   sectionHeader,
   accentBar,
@@ -38,8 +38,6 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
   const answers = Array.isArray(part.answers) ? part.answers : [];
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [collapsedQuestions, setCollapsedQuestions] = useState({});
-  const [leftPaneWidth, setLeftPaneWidth] = useState(50);
-  const [isDraggingSplitter, setIsDraggingSplitter] = useState(false);
   const layoutRef = useRef(null);
 
   const toggleQuestionCollapse = (questionId) => {
@@ -54,38 +52,6 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
   const updatePart = (newPart) => {
     if (onChange) onChange(newPart);
   };
-
-  const clampWidth = (value) => Math.min(65, Math.max(35, value));
-
-  const updateSplitterWidth = (clientX) => {
-    const layout = layoutRef.current;
-    if (!layout) return;
-
-    const rect = layout.getBoundingClientRect();
-    const nextWidth = ((clientX - rect.left) / rect.width) * 100;
-    setLeftPaneWidth(clampWidth(nextWidth));
-  };
-
-  useEffect(() => {
-    if (!isDraggingSplitter) return;
-
-    const handleMouseMove = (event) => {
-      updateSplitterWidth(event.clientX);
-      event.preventDefault();
-    };
-
-    const handleMouseUp = () => {
-      setIsDraggingSplitter(false);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDraggingSplitter]);
 
   const countBlanks = (html) => {
     const parser = new DOMParser();
@@ -240,17 +206,15 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
           sx={{
             width: '100%',
             display: 'flex',
-            flexDirection: { xs: 'column', lg: 'row' },
-            gap: { xs: 3, lg: 0 },
+            flexDirection: 'column',
+            gap: 3,
             mt: 1,
           }}
         >
-          {/* -------------- Left Column: Config & Content -------------- */}
           <Box
             sx={{
-              flex: { xs: '1 1 auto', lg: `0 0 ${leftPaneWidth}%` },
+              flex: '1 1 auto',
               minWidth: 0,
-              pr: { lg: 1.5 },
             }}
           >
             <Box sx={{ mb: 3 }}>
@@ -306,60 +270,8 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
                 sx={textInput}
               />
             </Box>
-          </Box>
 
-          <Box
-            onMouseDown={() => setIsDraggingSplitter(true)}
-            sx={{
-              display: { xs: 'none', lg: 'flex' },
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '22px',
-              flexShrink: 0,
-              cursor: 'col-resize',
-              userSelect: 'none',
-              position: 'relative',
-              zIndex: 2,
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                bottom: 0,
-                left: '50%',
-                width: '2px',
-                transform: 'translateX(-50%)',
-                backgroundColor: '#D9D9D9',
-              },
-            }}
-          >
-            <Box
-              sx={{
-                width: '34px',
-                height: '34px',
-                borderRadius: '999px',
-                bgcolor: '#fff',
-                border: '1px solid #E0E0E0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                color: 'text.secondary',
-                fontSize: '1.2rem',
-              }}
-            >
-              ↔
-            </Box>
-          </Box>
-
-          {/* -------------- Right Column: Answers -------------- */}
-          <Box
-            sx={{
-              flex: { xs: '1 1 auto', lg: '1 1 0' },
-              minWidth: 0,
-              pl: { lg: 1.5 },
-            }}
-          >
-            <Box sx={{ mb: 3 }}>
+            <Box sx={{ mb: -4 }}>
               <Box sx={rowContent}>
                 <Typography sx={labelText}>
                   Content <span style={{ color: 'red' }}>*</span>
@@ -395,8 +307,22 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
                   const acceptedAnswers = normalizedAnswer.acceptedAnswers || [];
                   return (
                     <Paper key={normalizedAnswer.id} variant="outlined" sx={outlinedCard}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0, mb: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
                         <Box sx={numberIndicator}>{aIdx + 1}</Box>
+                        {collapsedQuestions[normalizedAnswer.id] && (
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: 'text.secondary',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              ml: 0.5,
+                            }}
+                          >
+                            {acceptedAnswers[0]?.text || ''}
+                          </Typography>
+                        )}
                         <Box sx={{ flexGrow: 1 }} />
                         <IconButton onClick={() => toggleQuestionCollapse(normalizedAnswer.id)}>
                           <ExpandLessRoundedIcon
@@ -444,6 +370,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
                                     placeholder={`Option ${vIdx + 1}`}
                                     value={answer.text}
                                     onChange={(e) => setVariantText(aIdx, vIdx, e.target.value)}
+                                    multiline
                                     sx={textInput}
                                   />
                                   {acceptedAnswers.length > 1 && (
@@ -481,6 +408,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
                             placeholder="Enter explanation"
                             value={normalizedAnswer.explanation || ''}
                             onChange={(e) => setAnswerExplanation(aIdx, e.target.value)}
+                            multiline
                             sx={textInput}
                           />
                         </Box>

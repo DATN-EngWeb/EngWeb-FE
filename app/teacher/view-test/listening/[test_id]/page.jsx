@@ -70,6 +70,18 @@ export default function ViewListeningTestPage({ params }) {
             return part;
           }),
         );
+
+        // Sort parts by order
+        transformedParts.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+        // Sort questions within each part by question_number
+        transformedParts = transformedParts.map((part) => ({
+          ...part,
+          questions: Array.isArray(part.questions)
+            ? part.questions.sort((a, b) => (a.question_number || 0) - (b.question_number || 0))
+            : part.questions,
+        }));
+
         if (cancelled) return;
 
         setParts(transformedParts);
