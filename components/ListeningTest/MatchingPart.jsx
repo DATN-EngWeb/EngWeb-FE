@@ -183,17 +183,15 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
           sx={{
             width: '100%',
             display: 'flex',
-            flexDirection: { xs: 'column', lg: 'row' },
-            gap: { xs: 3, lg: 0 },
+            flexDirection: 'column',
+            gap: 3,
             mt: 1,
           }}
         >
-          {/* -------------- Left Column: Config & Audio -------------- */}
           <Box
             sx={{
-              flex: { xs: '1 1 auto', lg: `0 0 ${leftPaneWidth}%` },
+              flex: '1 1 auto',
               minWidth: 0,
-              pr: { lg: 1.5 },
             }}
           >
             <Box sx={{ mb: 3 }}>
@@ -246,62 +244,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                 sx={textInput}
               />
             </Box>
-          </Box>
 
-          <Box
-            onMouseDown={() => setIsDraggingSplitter(true)}
-            sx={{
-              display: { xs: 'none', lg: 'flex' },
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '22px',
-              flexShrink: 0,
-              cursor: 'col-resize',
-              userSelect: 'none',
-              position: 'relative',
-              zIndex: 2,
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                bottom: 0,
-                left: '50%',
-                width: '2px',
-                transform: 'translateX(-50%)',
-                backgroundColor: '#D9D9D9',
-              },
-            }}
-          >
-            <Box
-              sx={{
-                width: '34px',
-                height: '34px',
-                borderRadius: '999px',
-                bgcolor: '#fff',
-                border: '1px solid #E0E0E0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                color: 'text.secondary',
-                fontSize: '1.2rem',
-              }}
-            >
-              ↔
-            </Box>
-          </Box>
-
-          {/* -------------- Right Column: Questions & Answers -------------- */}
-          <Box
-            sx={{
-              flex: { xs: '1 1 auto', lg: '1 1 0' },
-              minWidth: 0,
-              pl: { lg: 1.5 },
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 2,
-            }}
-          >
             {/* -------------- Questions Section -------------- */}
             <Box>
               <Box sx={rowContent}>
@@ -327,8 +270,22 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                   {' '}
                   {questions.map((question, qIdx) => (
                     <Paper key={question.id} variant="outlined" sx={outlinedCard}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0, mb: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
                         <Box sx={numberIndicator}>{qIdx + 1}</Box>
+                        {collapsedQuestions[question.id] && (
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: 'text.secondary',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              ml: 0.5,
+                            }}
+                          >
+                            {question.text || ''}
+                          </Typography>
+                        )}
                         <Box sx={{ flexGrow: 1 }} />
                         <IconButton onClick={() => removeQuestion(qIdx)} sx={trashIconButton}>
                           <DeleteRoundedIcon sx={{ fontSize: '1.2rem' }} />
@@ -354,6 +311,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                               placeholder="Question text..."
                               value={question.text}
                               onChange={(e) => setQuestionText(qIdx, e.target.value)}
+                              multiline
                               sx={{ ...textInput, flex: 1 }}
                             />
 
@@ -396,6 +354,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                               );
                               updatePart({ ...part, questions: newQs });
                             }}
+                            multiline
                             sx={textInput}
                           />
                         </Box>
@@ -446,6 +405,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                           placeholder="Answer text"
                           value={answer.text}
                           onChange={(e) => setAnswerText(aIdx, e.target.value)}
+                          multiline
                           sx={{
                             ...answerTextInput,
                             flex: 1,
