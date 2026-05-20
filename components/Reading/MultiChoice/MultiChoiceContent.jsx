@@ -23,72 +23,15 @@ const textWrapStyles = {
 };
 
 /**
- * Tách khối hình ảnh / media khỏi phần chữ trong HTML stem (short text).
- * Dùng regex để kết quả giống nhau giữa SSR và client, tránh lệch hydrate.
+ * Dọn dẹp các thẻ p, div rỗng hoặc chỉ chứa khoảng trắng/ngắt dòng
+ * Không đụng chạm đến cấu trúc của ảnh hay các thẻ khác.
  */
-function splitHtmlImagesAndRest(html) {
-  if (!html || typeof html !== 'string') return { imagesHtml: '', restHtml: '' };
-
-  const blockRe = /(?:<picture\b[\s\S]*?<\/picture>|<img\b[^>]*(?:\/)?>|<svg\b[\s\S]*?<\/svg>)/gi;
-  const fragments = [];
-  let m;
-  blockRe.lastIndex = 0;
-  while ((m = blockRe.exec(html)) !== null) {
-    fragments.push(m[0]);
-  }
-  if (fragments.length === 0) return { imagesHtml: '', restHtml: html };
-
-  let rest = html;
-  fragments.forEach((frag) => {
-    rest = rest.replace(frag, '');
-  });
-  rest = rest
-    .replace(/<p>\s*<\/p>/gi, '')
-    .replace(/<div>\s*<\/div>/gi, '')
+function cleanEmptyTags(html) {
+  if (!html || typeof html !== 'string') return '';
+  return html
+    .replace(/<p>(?:\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, '')
+    .replace(/<div>(?:\s|&nbsp;|<br\s*\/?>)*<\/div>/gi, '')
     .trim();
-
-  return {
-    imagesHtml: fragments.join(''),
-    restHtml: rest,
-  };
-}
-
-const passageResponsiveMediaSx = {
-  '& img, & svg': { maxWidth: '100%', height: 'auto', display: 'block' },
-  '& picture': { display: 'block', maxWidth: '100%' },
-};
-
-const stimulusFigureMediaSx = {
-  flex: 1,
-  minWidth: 0,
-  ...passageResponsiveMediaSx,
-};
-
-/** Tách từng khối ảnh/SVG trong passage để render badge số giống cột choice. */
-function extractNumberedMediaParts(html) {
-  if (!html || typeof html !== 'string') {
-    return { items: [], restHtml: '', hasMedia: false };
-  }
-  const blockRe = /(?:<picture\b[\s\S]*?<\/picture>|<img\b[^>]*(?:\/)?>|<svg\b[\s\S]*?<\/svg>)/gi;
-  const frags = [];
-  let m;
-  blockRe.lastIndex = 0;
-  while ((m = blockRe.exec(html)) !== null) {
-    frags.push(m[0]);
-  }
-  if (frags.length === 0) return { items: [], restHtml: html, hasMedia: false };
-
-  let rest = html;
-  frags.forEach((frag) => {
-    rest = rest.replace(frag, '');
-  });
-  rest = rest
-    .replace(/<p>\s*<\/p>/gi, '')
-    .replace(/<div>\s*<\/div>/gi, '')
-    .trim();
-
-  const items = frags.map((frag, i) => ({ n: i + 1, html: frag }));
-  return { items, restHtml: rest, hasMedia: true };
 }
 
 function computeShortTextSplits(questions, questionBodyByKey) {
@@ -104,13 +47,22 @@ function computeShortTextSplits(questions, questionBodyByKey) {
         : (raw ?? '');
 
     if (typeof html !== 'string' || html.startsWith('http')) {
-      splits[qKey] = { imagesHtml: '', restHtml: '', pendingFetch: true };
+      splits[qKey] = { cleanedHtml: '', pendingFetch: true };
       return;
     }
 
-    const s = splitHtmlImagesAndRest(html);
-    splits[qKey] = { ...s, fullHtml: html, pendingFetch: false };
-    if (s.imagesHtml) hasMedia = true;
+    // Kiểm tra nhanh xem câu hỏi có chứa thẻ media không để xử lý UI flex
+    if (
+      /(?:<picture\b[\s\S]*?<\/picture>|<img\b[^>]*(?:\/)?>|<svg\b[\s\S]*?<\/svg>)/gi.test(html)
+    ) {
+      hasMedia = true;
+    }
+
+    splits[qKey] = {
+      cleanedHtml: cleanEmptyTags(html), // Trả về HTML đã dọn dẹp
+      fullHtml: html,
+      pendingFetch: false,
+    };
   });
 
   return { splits, hasMedia };
@@ -126,12 +78,25 @@ const MultiChoiceContent = ({
   hidePassage = false,
   stimulusPageUrls = null,
 }) => {
+  useEffect(() => {
+    console.log('passage', passage);
+    console.log('questions', questions);
+  }, [passage, questions]);
   const pathname = usePathname();
   const isTeacherView =
     pathname?.includes('/teacher/view-test/') ||
     pathname?.includes('/teacher/upload-test/') ||
     pathname?.includes('/teacher/update-test/');
   const showSummary = showResults && !isTeacherView;
+
+  const sortedQuestions = React.useMemo(() => {
+    if (!questions) return [];
+    return [...questions].sort((a, b) => {
+      const numA = a.question_number ?? a.questionNumber ?? 0;
+      const numB = b.question_number ?? b.questionNumber ?? 0;
+      return numA - numB;
+    });
+  }, [questions]);
 
   const [leftWidth, setLeftWidth] = useState(55);
   const [isDragging, setIsDragging] = useState(false);
@@ -149,19 +114,19 @@ const MultiChoiceContent = ({
 
   const questionUrlFetchKey = React.useMemo(
     () =>
-      questions
+      sortedQuestions
         .map((q, i) => {
           const id = q?.id ?? `__idx_${i}`;
           const text = q?.question;
           return `${id}|${typeof text === 'string' ? text : ''}`;
         })
         .join(';;'),
-    [questions],
+    [sortedQuestions],
   );
 
   const shortTextLayout = React.useMemo(
-    () => (hidePassage ? computeShortTextSplits(questions, questionBodyByKey) : null),
-    [hidePassage, questions, questionBodyByKey],
+    () => (hidePassage ? computeShortTextSplits(sortedQuestions, questionBodyByKey) : null),
+    [hidePassage, sortedQuestions, questionBodyByKey],
   );
 
   const usePassageColumn =
@@ -195,7 +160,7 @@ const MultiChoiceContent = ({
     const loadQuestionBodies = async () => {
       const next = {};
       await Promise.all(
-        questions.map(async (q, i) => {
+        sortedQuestions.map(async (q, i) => {
           const key = q?.id ?? `__idx_${i}`;
           const raw = q?.question;
           if (typeof raw !== 'string' || !raw.startsWith('http')) return;
@@ -212,7 +177,7 @@ const MultiChoiceContent = ({
     return () => {
       cancelled = true;
     };
-  }, [questionUrlFetchKey, questions]);
+  }, [questionUrlFetchKey, sortedQuestions]);
 
   useEffect(() => {
     if (hidePassage) return;
@@ -338,7 +303,7 @@ const MultiChoiceContent = ({
   }, [targetQuestionId, showSummary]);
 
   const partQuestions = showSummary
-    ? questions.map((q) => {
+    ? sortedQuestions.map((q) => {
         const selectedValue = answers[q.id];
         const isAnswered =
           selectedValue !== undefined && selectedValue !== null && selectedValue !== '';
@@ -404,92 +369,29 @@ const MultiChoiceContent = ({
                         {passageTitle}
                       </Typography>
                     )}
-                    {(() => {
-                      const { items, restHtml, hasMedia } =
-                        extractNumberedMediaParts(passageContent);
-                      if (!hasMedia) {
-                        return (
-                          <Box
-                            className="ck-content"
-                            component="div"
-                            sx={{
-                              ...passageTextStyles,
-                              ...passageResponsiveMediaSx,
-                              ...textWrapStyles,
-                              '& a': {
-                                color: '#0000EE',
-                                textDecoration: 'underline',
-                                ['&:hover']: {
-                                  color: '#000099',
-                                  cursor: 'pointer',
-                                },
-                              },
-                            }}
-                            dangerouslySetInnerHTML={{ __html: passageContent }}
-                          />
-                        );
-                      }
-                      return (
-                        <>
-                          <Box
-                            sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}
-                          >
-                            {items.map(({ n, html }) => (
-                              <Box
-                                key={n}
-                                sx={{
-                                  ...listeningPartStyles.questionTextContainer,
-                                  alignItems: 'flex-start',
-                                }}
-                              >
-                                <Typography sx={listeningPartStyles.questionLabelRectangle}>
-                                  {n}
-                                </Typography>
-                                <Box
-                                  component="div"
-                                  className="ck-content"
-                                  sx={{
-                                    ...passageTextStyles,
-                                    ...stimulusFigureMediaSx,
-                                    ...textWrapStyles,
-                                    '& a': {
-                                      color: '#0000EE',
-                                      textDecoration: 'underline',
-                                      ['&:hover']: {
-                                        color: '#000099',
-                                        cursor: 'pointer',
-                                      },
-                                    },
-                                  }}
-                                  dangerouslySetInnerHTML={{ __html: html }}
-                                />
-                              </Box>
-                            ))}
-                          </Box>
-                          {restHtml ? (
-                            <Box
-                              className="ck-content"
-                              component="div"
-                              sx={{
-                                ...passageTextStyles,
-                                mt: 2,
-                                ...passageResponsiveMediaSx,
-                                ...textWrapStyles,
-                                '& a': {
-                                  color: '#0000EE',
-                                  textDecoration: 'underline',
-                                  ['&:hover']: {
-                                    color: '#000099',
-                                    cursor: 'pointer',
-                                  },
-                                },
-                              }}
-                              dangerouslySetInnerHTML={{ __html: restHtml }}
-                            />
-                          ) : null}
-                        </>
-                      );
-                    })()}
+                    <Box
+                      className="ck-content"
+                      component="div"
+                      sx={{
+                        ...passageTextStyles,
+                        ...textWrapStyles,
+                        '& p > img': {
+                          display: 'inline-block',
+                          verticalAlign: 'bottom',
+                          margin: '0 8px',
+                          maxWidth: '100%',
+                        },
+                        '& a': {
+                          color: '#0000EE',
+                          textDecoration: 'underline',
+                          '&:hover': {
+                            color: '#000099',
+                            cursor: 'pointer',
+                          },
+                        },
+                      }}
+                      dangerouslySetInnerHTML={{ __html: passageContent }}
+                    />
                   </Box>
                 ) : stimulusPageUrls?.length ? (
                   <Box sx={listeningPartStyles.passageContainer}>
@@ -510,8 +412,13 @@ const MultiChoiceContent = ({
                             component="div"
                             sx={{
                               ...passageTextStyles,
-                              ...stimulusFigureMediaSx,
                               ...textWrapStyles,
+                              '& p > img': {
+                                display: 'inline-block',
+                                verticalAlign: 'bottom',
+                                margin: '0 8px',
+                                maxWidth: '100%',
+                              },
                               '& a': {
                                 color: '#0000EE',
                                 textDecoration: 'underline',
@@ -545,8 +452,13 @@ const MultiChoiceContent = ({
                           component="div"
                           sx={{
                             ...passageTextStyles,
-                            ...passageResponsiveMediaSx,
                             ...textWrapStyles,
+                            '& p > img': {
+                              display: 'inline-block',
+                              verticalAlign: 'bottom',
+                              margin: '0 8px',
+                              maxWidth: '100%',
+                            },
                             '& a': {
                               color: '#0000EE',
                               textDecoration: 'underline',
@@ -560,14 +472,14 @@ const MultiChoiceContent = ({
                         />
                       </Box>
                     )}
-                    {questions.map((q, i) => {
+                    {sortedQuestions.map((q, i) => {
                       const qKey = q.id ?? `__idx_${i}`;
                       const split = shortTextLayout?.splits?.[qKey];
                       const contentHtml = split
-                        ? split.fullHtml
+                        ? split.cleanedHtml
                         : typeof q.question === 'string' && q.question.startsWith('http')
-                          ? (questionBodyByKey[qKey] ?? '')
-                          : (q.question ?? '');
+                          ? cleanEmptyTags(questionBodyByKey[qKey] ?? '')
+                          : cleanEmptyTags(q.question ?? '');
 
                       if (!contentHtml) return null;
                       const labelN = q.question_number ?? q.questionNumber ?? i + 1;
@@ -577,18 +489,24 @@ const MultiChoiceContent = ({
                           sx={{
                             ...listeningPartStyles.questionTextContainer,
                             alignItems: 'flex-start',
-                            mb: questions.length > 1 ? 2 : 0,
+                            mb: sortedQuestions.length > 1 ? 2 : 0,
                           }}
                         >
                           <Typography sx={listeningPartStyles.questionLabelRectangle}>
                             {labelN}
                           </Typography>
                           <Box
+                            className="ck-content"
                             component="div"
                             sx={{
                               ...passageTextStyles,
-                              ...stimulusFigureMediaSx,
                               ...textWrapStyles,
+                              '& p > img': {
+                                display: 'inline-block',
+                                verticalAlign: 'bottom',
+                                margin: '0 8px',
+                                maxWidth: '100%',
+                              },
                               '& a': {
                                 color: '#0000EE',
                                 textDecoration: 'underline',
@@ -688,7 +606,7 @@ const MultiChoiceContent = ({
             </Box>
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, width: '100%' }}>
-              {questions.map((question, index) => {
+              {sortedQuestions.map((question, index) => {
                 const qKey = question.id ?? `__idx_${index}`;
                 const rawQuestion = question.question;
                 const questionHtml =
@@ -728,7 +646,10 @@ const MultiChoiceContent = ({
                       />
                     </Box>
                     <Box
-                      sx={{ ...listeningPartStyles.audioAndOptionsContainer, pl: { xs: 0, md: 4 } }}
+                      sx={{
+                        ...listeningPartStyles.audioAndOptionsContainer,
+                        pl: { xs: 0, md: 4 },
+                      }}
                     >
                       <Box sx={listeningPartStyles.optionsGridRow}>
                         <RadioGroup

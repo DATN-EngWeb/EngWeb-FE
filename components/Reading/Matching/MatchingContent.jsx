@@ -299,6 +299,12 @@ const MatchingContent = ({
               sx={{
                 ...listeningPartStyles.passageContainer,
                 ...textWrapStyles,
+                '& p > img': {
+                  display: 'inline-block',
+                  verticalAlign: 'bottom',
+                  margin: '0 8px',
+                  maxWidth: '100%',
+                },
                 '& a': {
                   color: '#0000EE',
                   textDecoration: 'underline',
