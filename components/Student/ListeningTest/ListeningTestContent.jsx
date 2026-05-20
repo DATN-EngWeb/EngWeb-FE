@@ -185,7 +185,10 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
         if (response?.streak_reward_notice) {
           setGlobalRewardData(response.streak_reward_notice);
-        } else if (response?.streak_notice?.current_streak === 1) {
+        } else if (
+          response?.streak_notice?.current_streak === 1 &&
+          response?.streak_notice?.is_first_submission_today === true
+        ) {
           setGlobalRewardData(response.streak_notice);
         }
 
