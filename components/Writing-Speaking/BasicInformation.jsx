@@ -21,7 +21,9 @@ import {
   TableHead,
   TableRow,
   Collapse,
+  IconButton,
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -50,6 +52,19 @@ export default function BasicInformation({
   const [loading, setLoading] = useState(false);
 
   const [criteriaData, setCriteriaData] = useState([]);
+  const isSpeaking = skill === 'S';
+  const criteriaColumns = isSpeaking
+    ? [
+        { key: 'grammar_and_vocabulary', label: 'Grammar & Vocabulary' },
+        { key: 'discourse_management', label: 'Discourse Management' },
+        { key: 'pronunciation', label: 'Pronunciation' },
+        { key: 'task_achievement', label: 'Task Achievement' },
+      ]
+    : [
+        { key: 'content', label: 'Content' },
+        { key: 'organisation', label: 'Organisation' },
+        { key: 'language', label: 'Language' },
+      ];
   const writingFormats = [
     { value: 'Email', label: 'Email' },
     { value: 'Article', label: 'Article' },
@@ -67,12 +82,11 @@ export default function BasicInformation({
   ];
 
   useEffect(() => {
-    if (skill !== 'W') return;
     const fetchCriteriaData = async () => {
-      if (!level) return;
+      if (!level || !skill) return;
       setLoading(true);
       try {
-        const data = await getCriteria(level);
+        const data = await getCriteria(skill, level);
 
         setCriteriaData(Array.isArray(data) ? data : []);
       } catch (error) {
@@ -87,7 +101,7 @@ export default function BasicInformation({
   }, [level, skill]);
 
   useEffect(() => {
-    if (skill !== 'W') {
+    if (skill !== 'W' && skill !== 'S') {
       setCriteriaData([]);
     }
   }, [skill]);
@@ -315,7 +329,7 @@ export default function BasicInformation({
             />
           </Box>
 
-          {level && skill === 'W' && criteriaData.length > 0 && (
+          {level && criteriaData.length > 0 && (
             <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
               <Button
                 size="small"
@@ -339,60 +353,71 @@ export default function BasicInformation({
       </Collapse>
 
       {/* ===== CRITERIA MODAL ===== */}
-      {skill === 'W' && (
-        <Dialog open={openCriteria} onClose={() => setOpenCriteria(false)} maxWidth="md" fullWidth>
-          <DialogTitle sx={{ fontWeight: 700, color: 'primary.main' }}>
-            Writing Criteria – Level {level}
-          </DialogTitle>
-          <DialogContent dividers>
-            {loading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                <CircularProgress />
-              </Box>
-            ) : Array.isArray(criteriaData) && criteriaData.length > 0 ? (
-              <TableContainer component={Box}>
-                <Table size="small" stickyHeader>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                        Band
+
+      <Dialog open={openCriteria} onClose={() => setOpenCriteria(false)} maxWidth="md" fullWidth>
+        <DialogTitle sx={{ fontWeight: 700, color: 'primary.main' }}>
+          {isSpeaking ? 'Speaking Criteria' : 'Writing Criteria'} – Level {level}
+        </DialogTitle>
+        <IconButton
+          aria-label="close"
+          onClick={() => setOpenCriteria(false)}
+          sx={{
+            position: 'absolute',
+            right: 1,
+            top: 1,
+            color: 'primary.main',
+          }}
+          size="large"
+        >
+          <CloseIcon />
+        </IconButton>
+        <DialogContent dividers>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress />
+            </Box>
+          ) : Array.isArray(criteriaData) && criteriaData.length > 0 ? (
+            <TableContainer component={Box}>
+              <Table size="small" stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
+                      Band
+                    </TableCell>
+                    {criteriaColumns.map((column) => (
+                      <TableCell
+                        key={column.key}
+                        sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}
+                      >
+                        {column.label}
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                        Content
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                        Organisation
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>
-                        Language
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {criteriaData.map((item) => (
-                      <TableRow key={item.id} hover>
-                        <TableCell sx={{ fontWeight: 'bold', color: 'orange' }}>
-                          {item.band}
-                        </TableCell>
-                        <TableCell>{item.content}</TableCell>
-                        <TableCell>{item.organisation}</TableCell>
-                        <TableCell>{item.language}</TableCell>
-                      </TableRow>
                     ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            ) : (
-              <Typography>No criteria data found.</Typography>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenCriteria(false)} variant="outlined">
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
-      )}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {criteriaData.map((item) => (
+                    <TableRow key={item.id} hover>
+                      <TableCell sx={{ fontWeight: 'bold', color: 'orange' }}>
+                        {item.band}
+                      </TableCell>
+                      {criteriaColumns.map((column) => (
+                        <TableCell key={column.key}>{item[column.key]}</TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            <Typography>No criteria data found.</Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenCriteria(false)} variant="outlined">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 }
