@@ -39,6 +39,7 @@ import * as styles from '@/styles/Student/Writing/WritingTestStyles';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import SendIcon from '@mui/icons-material/Send';
+import CloseIcon from '@mui/icons-material/Close';
 import { uploadMediaFile } from '../../utils/uploadHelpers';
 import CustomAudioPlayer from '../Test/customAudioPlayer';
 import { useAuth } from '../../hooks/useAuth';
@@ -662,13 +663,24 @@ export default function SpeakingTest() {
         >
           <Tooltip
             title={
-              totalAITurns <= 0 ? 'You have run out of AI turns. Cannot use this feature.' : ''
+              totalAITurns <= 0
+                ? 'You have run out of AI turns. Cannot use this feature.'
+                : !hasRecorded
+                  ? 'Please record your answer to enable AI Feedback'
+                  : isRecording
+                    ? 'Please stop recording to enable AI Feedback'
+                    : isReadOnly
+                      ? 'AI Feedback is not available in read-only mode'
+                      : 'Get AI feedback on your speaking answer'
             }
             placement="top"
           >
             <span
               style={{
-                cursor: totalAITurns <= 0 ? 'not-allowed' : 'pointer',
+                cursor:
+                  totalAITurns <= 0 || !hasRecorded || isRecording || isReadOnly
+                    ? 'not-allowed'
+                    : 'pointer',
               }}
             >
               <Button
@@ -695,49 +707,72 @@ export default function SpeakingTest() {
                   minWidth: 'auto',
                   textTransform: 'none',
                   fontWeight: 700,
-                  pointerEvents: totalAITurns <= 0 ? 'none' : 'auto',
+                  pointerEvents:
+                    totalAITurns <= 0 || !hasRecorded || isRecording || isReadOnly
+                      ? 'none'
+                      : 'auto',
                 }}
               >
                 AI Feedback
               </Button>
             </span>
           </Tooltip>
-          <Button
-            variant="contained"
-            sx={{
-              ...styles.submitButton(!hasRecorded || isRecording || isReadOnly),
-              py: 1,
-              px: 2,
-              borderRadius: '12px',
-              fontSize: '0.8125rem',
-              minWidth: 'auto',
-              textTransform: 'none',
-              fontWeight: 700,
-            }}
-            startIcon={<SendIcon />}
-            onClick={() => {
-              if (isReadOnly) return;
-              if (isRecording) {
-                setSnackbar({
-                  open: true,
-                  message: 'Please stop recording before submitting.',
-                  severity: 'warning',
-                });
-                return;
-              }
-              if (!hasRecorded) {
-                setSnackbar({
-                  open: true,
-                  message: 'Please record your answer before submitting.',
-                  severity: 'warning',
-                });
-                return;
-              }
-              setOpenShareModal(true);
-            }}
+          <Tooltip
+            title={
+              !hasRecorded
+                ? 'Please record your answer to enable sharing'
+                : isRecording
+                  ? 'Please stop recording to enable sharing'
+                  : isReadOnly
+                    ? 'Sharing is not available in read-only mode'
+                    : 'Submit and share your test result to the forum and get feedback from peers!'
+            }
+            placement="top"
           >
-            Submit Test
-          </Button>
+            <span
+              style={{
+                cursor: !hasRecorded || isRecording || isReadOnly ? 'not-allowed' : 'pointer',
+              }}
+            >
+              <Button
+                variant="contained"
+                sx={{
+                  ...styles.submitButton(!hasRecorded || isRecording || isReadOnly),
+                  py: 1,
+                  px: 2,
+                  borderRadius: '12px',
+                  fontSize: '0.8125rem',
+                  minWidth: 'auto',
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  pointerEvents: !hasRecorded || isRecording || isReadOnly ? 'none' : 'auto',
+                }}
+                startIcon={<SendIcon />}
+                onClick={() => {
+                  if (isReadOnly) return;
+                  if (isRecording) {
+                    setSnackbar({
+                      open: true,
+                      message: 'Please stop recording before submitting.',
+                      severity: 'warning',
+                    });
+                    return;
+                  }
+                  if (!hasRecorded) {
+                    setSnackbar({
+                      open: true,
+                      message: 'Please record your answer before submitting.',
+                      severity: 'warning',
+                    });
+                    return;
+                  }
+                  setOpenShareModal(true);
+                }}
+              >
+                Submit Test
+              </Button>
+            </span>
+          </Tooltip>
         </Box>
       </Box>
 
@@ -945,7 +980,13 @@ export default function SpeakingTest() {
         <Dialog
           open={openShareModal}
           onClose={() => setOpenShareModal(false)}
-          slotProps={{ paper: { sx: styles.forumBox } }}
+          // fullWidth
+          // maxWidth="sm"
+          slotProps={{
+            paper: {
+              sx: styles.forumBox,
+            },
+          }}
         >
           <DialogTitle
             sx={{
@@ -953,9 +994,18 @@ export default function SpeakingTest() {
               color: 'primary.main',
               justifyContent: 'center',
               textAlign: 'center',
+              position: 'relative',
             }}
           >
             Submit
+            <IconButton
+              aria-label="close"
+              onClick={() => setOpenShareModal(false)}
+              sx={{ position: 'absolute', right: 1, top: 1, color: 'text.secondary' }}
+              size="large"
+            >
+              <CloseIcon />
+            </IconButton>
           </DialogTitle>
           <DialogContent>
             <Typography variant="body2" display="block">

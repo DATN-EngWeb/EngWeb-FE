@@ -18,9 +18,11 @@ import {
   DialogContent,
   DialogActions,
   Tooltip,
+  IconButton,
 } from '@mui/material';
 import { useParams, useRouter } from 'next/navigation';
 import SendIcon from '@mui/icons-material/Send';
+import CloseIcon from '@mui/icons-material/Close';
 import ShareIcon from '@mui/icons-material/Share';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
@@ -607,29 +609,60 @@ export default function WritingTest() {
             >
               Save Draft
             </Button>
-            <Button
-              variant="contained"
-              startIcon={<SendIcon />}
-              onClick={handleSubmit}
-              sx={{
-                ...styles.submitButton(wordCount < settings.minWords),
-                py: 1,
-                px: 2,
-                borderRadius: '12px',
-                fontSize: '0.8125rem',
-                minWidth: 'auto',
-                textTransform: 'none',
-                fontWeight: 700,
-              }}
+            <Tooltip
+              title={
+                wordCount < settings.minWords
+                  ? 'You have not reached the minimum word count. Cannot submit.'
+                  : 'Submit or share your test to the forum!'
+              }
+              placement="top"
             >
-              Submit Test
-            </Button>
+              <span
+                style={{
+                  display: 'inline-block',
+                  cursor: wordCount < settings.minWords ? 'not-allowed' : 'pointer',
+                }}
+              >
+                <Button
+                  variant="contained"
+                  startIcon={<SendIcon />}
+                  onClick={() => {
+                    if (wordCount < settings.minWords) {
+                      setSnackbar({
+                        open: true,
+                        message: 'You have not reached the minimum word count. Cannot submit.',
+                        severity: 'warning',
+                      });
+                      return;
+                    }
+                    handleSubmit();
+                  }}
+                  disabled={wordCount < settings.minWords}
+                  sx={{
+                    ...styles.submitButton(wordCount < settings.minWords),
+                    py: 1,
+                    px: 2,
+                    borderRadius: '12px',
+                    fontSize: '0.8125rem',
+                    minWidth: 'auto',
+                    textTransform: 'none',
+                    fontWeight: 700,
+                  }}
+                >
+                  Submit Test
+                </Button>
+              </span>
+            </Tooltip>
           </Stack>
 
           {/* Row 2: AI Feedback */}
           <Tooltip
             title={
-              totalAITurns <= 0 ? 'You have run out of AI turns. Cannot use this feature.' : ''
+              totalAITurns <= 0
+                ? 'You have run out of AI turns. Cannot use this feature.'
+                : wordCount < settings.minWords
+                  ? 'You have not reached the minimum word count. Cannot use AI feedback.'
+                  : 'Get instant AI feedback to improve your writing! (Consumes 1 AI turn)'
             }
             placement="top"
           >
@@ -637,7 +670,8 @@ export default function WritingTest() {
               style={{
                 display: 'block',
                 width: '100%',
-                cursor: totalAITurns <= 0 ? 'not-allowed' : 'pointer',
+                cursor:
+                  wordCount < settings.minWords || totalAITurns <= 0 ? 'not-allowed' : 'pointer',
               }}
             >
               <Button
@@ -836,6 +870,19 @@ export default function WritingTest() {
             }}
           >
             Submit Test
+            <IconButton
+              aria-label="close"
+              onClick={() => setOpenShareModal(false)}
+              sx={{
+                position: 'absolute',
+                top: 1,
+                right: 1,
+                color: 'text.secondary',
+              }}
+              size="large"
+            >
+              <CloseIcon />
+            </IconButton>
           </DialogTitle>
           <DialogContent>
             <Typography variant="body2" display="block">
