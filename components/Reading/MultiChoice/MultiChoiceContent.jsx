@@ -155,6 +155,8 @@ const MultiChoiceContent = ({
   }, [stimulusFetchKey, stimulusPageUrls]);
 
   useEffect(() => {
+    if (!hidePassage) return;
+
     let cancelled = false;
 
     const loadQuestionBodies = async () => {
@@ -177,7 +179,7 @@ const MultiChoiceContent = ({
     return () => {
       cancelled = true;
     };
-  }, [questionUrlFetchKey, sortedQuestions]);
+  }, [questionUrlFetchKey, sortedQuestions, hidePassage]);
 
   useEffect(() => {
     if (hidePassage) return;

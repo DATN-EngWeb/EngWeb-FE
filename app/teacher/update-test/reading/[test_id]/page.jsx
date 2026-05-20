@@ -182,7 +182,7 @@ export default function Page() {
                     ...(!['I', 'H'].includes(format) && { content: q.content }),
                   };
 
-                  if (newQ.content?.startsWith?.('http')) {
+                  if (newQ.content?.startsWith?.('http') && format !== 'G' && format !== 'J') {
                     originalContentRef.current[newPart.id].questions[newQ.id] = newQ.content;
                     newQ.content = await fetchHtmlContent(newQ.content);
                   }
