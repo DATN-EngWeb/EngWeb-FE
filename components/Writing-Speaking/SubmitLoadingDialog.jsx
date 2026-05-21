@@ -8,6 +8,7 @@ import {
   Chip,
   Dialog,
   DialogContent,
+  IconButton,
   LinearProgress,
   Paper,
   Stack,
@@ -15,6 +16,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
+import CloseIcon from '@mui/icons-material/Close';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import StarIcon from '@mui/icons-material/Star';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -631,6 +633,7 @@ export default function SubmitLoadingDialog({
       PaperProps={{
         elevation: 0,
         sx: {
+          position: 'relative',
           borderRadius: '20px',
           border: '0.5px solid',
           borderColor: 'divider',
@@ -654,6 +657,24 @@ export default function SubmitLoadingDialog({
         backdrop: { sx: { backdropFilter: 'blur(3px)', bgcolor: 'rgba(0,0,0,0.35)' } },
       }}
     >
+      {onClose && status !== 'submitting' && (
+        <IconButton
+          aria-label="close"
+          onClick={onClose}
+          sx={{
+            position: 'absolute',
+            top: 10,
+            right: 10,
+            zIndex: 2,
+            bgcolor: 'rgba(255,255,255,0.85)',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+            '&:hover': { bgcolor: 'rgba(255,255,255,1)' },
+          }}
+          size="small"
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      )}
       <DialogContent sx={{ p: status === 'submitted' ? 0 : 3 }}>
         {status === 'submitting' && <SubmittingState />}
         {status === 'submitted' && (

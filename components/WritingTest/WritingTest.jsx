@@ -2,7 +2,7 @@
 /* global sessionStorage, setInterval, clearInterval */
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -51,7 +51,8 @@ export default function WritingTest() {
   const attempt = params.attempt;
   const router = useRouter();
   const { user } = useAuth(null);
-  const { refreshStreak, setGlobalRewardData } = useStreakContext();
+  const { refreshStreak, setGlobalRewardData, isCelebrationDismissed } = useStreakContext();
+  const shareRedirectTimerRef = useRef(null);
 
   // States
   const [text, setText] = useState('');
@@ -74,6 +75,8 @@ export default function WritingTest() {
   const [note, setNote] = useState('');
   const [historyID, setHistoryID] = useState(0);
   const [pendingShareHistoryID, setPendingShareHistoryID] = useState(null);
+  const [shareRedirectPending, setShareRedirectPending] = useState(false);
+  const [shareCelebrationPending, setShareCelebrationPending] = useState(false);
   const [serverErrorOpen, setServerErrorOpen] = useState(false);
   const [isFetchingFeedback, setIsFetchingFeedback] = useState(false);
   const [remainingAITurns, setRemainingAITurns] = useState({ weekly_ai_turn: 0, bonus_ai_turn: 0 });
@@ -190,15 +193,52 @@ export default function WritingTest() {
 
   // Share-to-forum
   useEffect(() => {
-    if (submitStatus !== 'submitted' || submitMode !== 'share' || !pendingShareHistoryID) return;
+    if (!shareRedirectPending || submitMode !== 'share' || !pendingShareHistoryID) return;
 
-    const timer = setTimeout(() => {
+    if (shareCelebrationPending && !isCelebrationDismissed) return;
+
+    if (shareRedirectTimerRef.current) {
+      clearTimeout(shareRedirectTimerRef.current);
+    }
+
+    shareRedirectTimerRef.current = setTimeout(() => {
       setSubmitStatus('idle');
-      router.push(`/student/writing/${testId}/share/${pendingShareHistoryID}`);
-    }, 2500);
+      setShareRedirectPending(false);
+      setShareCelebrationPending(false);
+      shareRedirectTimerRef.current = null;
+      router.replace(`/student/writing/${testId}/share/${pendingShareHistoryID}`);
+    }, 5000);
 
-    return () => clearTimeout(timer);
-  }, [submitStatus, submitMode, pendingShareHistoryID, testId, router]);
+    return () => {
+      if (shareRedirectTimerRef.current) {
+        clearTimeout(shareRedirectTimerRef.current);
+        shareRedirectTimerRef.current = null;
+      }
+    };
+  }, [
+    submitStatus,
+    submitMode,
+    pendingShareHistoryID,
+    shareRedirectPending,
+    shareCelebrationPending,
+    isCelebrationDismissed,
+    testId,
+    router,
+  ]);
+
+  const handleCloseShareCongrat = () => {
+    if (shareRedirectTimerRef.current) {
+      clearTimeout(shareRedirectTimerRef.current);
+      shareRedirectTimerRef.current = null;
+    }
+
+    setSubmitStatus('idle');
+    if (pendingShareHistoryID) {
+      setShareRedirectPending(false);
+      setShareCelebrationPending(false);
+      router.replace(`/student/writing/${testId}/share/${pendingShareHistoryID}`);
+    }
+  };
 
   if (!isMounted) {
     return <Box sx={styles.mainContainer} />;
@@ -285,6 +325,8 @@ export default function WritingTest() {
   const handleAIFeedback = async () => {
     setOpenShareModal(false);
     setPendingShareHistoryID(null);
+    setShareRedirectPending(false);
+    setShareCelebrationPending(false);
     setIsFetchingFeedback(true);
     let newHistoryID = null;
 
@@ -456,6 +498,8 @@ export default function WritingTest() {
     setOpenShareModal(false);
     setSubmitStatus('submitting');
     setSubmitMode('share');
+    setShareRedirectPending(false);
+    setShareCelebrationPending(false);
 
     try {
       const response = await createProductiveTest({
@@ -475,6 +519,14 @@ export default function WritingTest() {
       setHistoryID(historyId);
       setPendingShareHistoryID(historyId);
       setFinalTimeStr(formatDuration(secondsElapsed));
+      setShareRedirectPending(true);
+      setShareCelebrationPending(
+        Boolean(
+          response?.streak_reward_notice ||
+            (response?.streak_notice?.current_streak === 1 &&
+              response?.streak_notice?.is_first_submission_today === true),
+        ),
+      );
 
       // Reset form
       setText('');
@@ -493,7 +545,7 @@ export default function WritingTest() {
         setGlobalRewardData(response.streak_reward_notice);
       } else if (
         response?.streak_notice?.current_streak === 1 &&
-        response?.streak_notice?.continued
+        response?.streak_notice?.is_first_submission_today === true
       ) {
         setGlobalRewardData(response.streak_notice);
       }
@@ -501,6 +553,8 @@ export default function WritingTest() {
       console.error('Share submit error:', error);
       setSubmitStatus('error');
       setSubmitMode('');
+      setShareRedirectPending(false);
+      setShareCelebrationPending(false);
     }
   };
   const FormatMapper = {
@@ -938,16 +992,16 @@ export default function WritingTest() {
           leveledUp={levelData ? levelData.leveled_up : false}
           testType="writing"
           onClose={
-            submitMode === 'share' || pendingShareHistoryID
-              ? undefined
+            submitMode === 'share'
+              ? handleCloseShareCongrat
               : () => handleGlobalClose(pendingShareHistoryID)
           }
           onViewResults={
             submitMode === 'share' || pendingShareHistoryID ? undefined : handleViewResultAction
           }
           onContinue={
-            submitMode === 'share' || pendingShareHistoryID
-              ? undefined
+            submitMode === 'share'
+              ? handleCloseShareCongrat
               : () => handleGlobalClose(pendingShareHistoryID)
           }
         />

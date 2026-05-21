@@ -54,7 +54,8 @@ export default function SpeakingTest() {
   const attempt = params.attempt;
   const router = useRouter();
   const { user } = useAuth(null);
-  const { refreshStreak, setGlobalRewardData } = useStreakContext();
+  const { refreshStreak, setGlobalRewardData, isCelebrationDismissed } = useStreakContext();
+  const shareRedirectTimerRef = useRef(null);
 
   // States
   const [isRecording, setIsRecording] = useState(false);
@@ -83,6 +84,8 @@ export default function SpeakingTest() {
   const [isMounted, setIsMounted] = useState(false);
   const [openShareModal, setOpenShareModal] = useState(false);
   const [pendingShareHistoryID, setPendingShareHistoryID] = useState(null);
+  const [shareRedirectPending, setShareRedirectPending] = useState(false);
+  const [shareCelebrationPending, setShareCelebrationPending] = useState(false);
   const [startTime, setStartTime] = useState(new Date().toISOString());
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
@@ -221,17 +224,53 @@ export default function SpeakingTest() {
     return () => clearInterval(interval);
   }, [isRecording]);
 
-  // Share-to-forum: hiển thị SubmitDialog 5s rồi redirect sang trang share
+  // Share-to-forum
   useEffect(() => {
-    if (submitStatus !== 'submitted' || submitMode !== 'share' || !pendingShareHistoryID) return;
+    if (!shareRedirectPending || submitMode !== 'share' || !pendingShareHistoryID) return;
 
-    const timer = setTimeout(() => {
+    if (shareCelebrationPending && !isCelebrationDismissed) return;
+
+    if (shareRedirectTimerRef.current) {
+      clearTimeout(shareRedirectTimerRef.current);
+    }
+
+    shareRedirectTimerRef.current = setTimeout(() => {
       setSubmitStatus('idle');
-      router.push(`/student/speaking/${testId}/share/${pendingShareHistoryID}`);
+      setShareRedirectPending(false);
+      setShareCelebrationPending(false);
+      shareRedirectTimerRef.current = null;
+      router.replace(`/student/speaking/${testId}/share/${pendingShareHistoryID}`);
     }, 5000);
 
-    return () => clearTimeout(timer);
-  }, [submitStatus, submitMode, pendingShareHistoryID, testId, router]);
+    return () => {
+      if (shareRedirectTimerRef.current) {
+        clearTimeout(shareRedirectTimerRef.current);
+        shareRedirectTimerRef.current = null;
+      }
+    };
+  }, [
+    submitMode,
+    pendingShareHistoryID,
+    shareRedirectPending,
+    shareCelebrationPending,
+    isCelebrationDismissed,
+    testId,
+    router,
+  ]);
+
+  const handleCloseShareCongrat = () => {
+    if (shareRedirectTimerRef.current) {
+      clearTimeout(shareRedirectTimerRef.current);
+      shareRedirectTimerRef.current = null;
+    }
+
+    setSubmitStatus('idle');
+    if (pendingShareHistoryID) {
+      setShareRedirectPending(false);
+      setShareCelebrationPending(false);
+      router.replace(`/student/speaking/${testId}/share/${pendingShareHistoryID}`);
+    }
+  };
 
   if (!isMounted) {
     return <Box sx={styles.mainContainer} />;
@@ -309,6 +348,8 @@ export default function SpeakingTest() {
     setOpenShareModal(false);
     setSubmitStatus('submitting');
     setSubmitMode('share');
+    setShareRedirectPending(false);
+    setShareCelebrationPending(false);
     try {
       if (!audioBlob) {
         setSubmitStatus('idle');
@@ -341,6 +382,14 @@ export default function SpeakingTest() {
       setFinalTimeStr(formatTime(secondsElapsed));
       setHistoryID(historyId);
       setPendingShareHistoryID(historyId);
+      setShareRedirectPending(true);
+      setShareCelebrationPending(
+        Boolean(
+          response?.streak_reward_notice ||
+            (response?.streak_notice?.current_streak === 1 &&
+              response?.streak_notice?.is_first_submission_today === true),
+        ),
+      );
 
       // Reset
       setIsDraftSaved(true);
@@ -368,6 +417,8 @@ export default function SpeakingTest() {
       console.error('Share submit error:', error);
       setSubmitStatus('error');
       setSubmitMode('');
+      setShareRedirectPending(false);
+      setShareCelebrationPending(false);
     }
   };
 
@@ -1063,9 +1114,9 @@ export default function SpeakingTest() {
           levelTitle={levelData ? levelData.current_level?.level_title : undefined}
           leveledUp={levelData ? levelData.leveled_up : false}
           testType="speaking"
-          onClose={submitMode === 'share' ? undefined : handleCloseSubmitDialog}
+          onClose={submitMode === 'share' ? handleCloseShareCongrat : handleCloseSubmitDialog}
           onViewResults={submitMode === 'ai' ? handleCloseSubmitDialog : undefined}
-          onContinue={submitMode === 'share' ? undefined : handleCloseSubmitDialog}
+          onContinue={submitMode === 'share' ? handleCloseShareCongrat : handleCloseSubmitDialog}
         />
 
         <Dialog
