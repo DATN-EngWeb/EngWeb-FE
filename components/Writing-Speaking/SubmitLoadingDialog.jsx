@@ -108,6 +108,7 @@ function LevelUpConfetti() {
         height: '100%',
         pointerEvents: 'none',
         borderRadius: 4,
+        zIndex: 3,
       }}
     />
   );
@@ -244,14 +245,16 @@ function SubmittedState({
 
   return (
     <Box sx={{ position: 'relative', overflow: 'hidden' }}>
-      <ConfettiCanvas />
+      <Box sx={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 3 }}>
+        <ConfettiCanvas />
+      </Box>
 
       <Stack
         spacing={2}
         alignItems="center"
         textAlign="center"
         py={1}
-        sx={{ position: 'relative', zIndex: 1 }}
+        sx={{ position: 'relative', zIndex: 2 }}
       >
         {/* Trophy */}
         <Box
@@ -665,7 +668,8 @@ export default function SubmitLoadingDialog({
             position: 'absolute',
             top: 10,
             right: 10,
-            zIndex: 2,
+            zIndex: 30,
+            pointerEvents: 'auto',
             bgcolor: 'rgba(255,255,255,0.85)',
             boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
             '&:hover': { bgcolor: 'rgba(255,255,255,1)' },
