@@ -85,8 +85,12 @@ export const submitTestParts = async ({ testId, parts }) => {
   });
 };
 
-export const getCriteria = async (level) => {
-  return apiFetch(`${TESTS_BASE_URL}/writing-criteria?level=${level}`, {
+export const getCriteria = async (skill, level) => {
+  let skillParam = '';
+  if (skill === 'W') skillParam = 'writing';
+  else if (skill === 'S') skillParam = 'speaking';
+  else throw new Error('Invalid skill type');
+  return apiFetch(`${TESTS_BASE_URL}/${skillParam}-criteria?&level=${level}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
