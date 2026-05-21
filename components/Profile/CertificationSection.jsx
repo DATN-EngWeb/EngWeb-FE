@@ -1,5 +1,17 @@
-import { Paper, Box, Typography, Grid, Button, IconButton } from '@mui/material';
+import {
+  Paper,
+  Box,
+  Typography,
+  Grid,
+  Button,
+  IconButton,
+  Dialog,
+  DialogContent,
+} from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import CloseIcon from '@mui/icons-material/Close';
 import { useEffect, useRef, useState } from 'react';
 import { certificationSectionStyles } from '../../styles/Profile/ProfileStyles';
 
@@ -17,6 +29,11 @@ const normalizeCredentials = (credentials) =>
     };
   });
 
+const isPdfFile = (url = '', name = '') => {
+  const source = `${url} ${name}`.toLowerCase();
+  return source.includes('.pdf');
+};
+
 export default function CertificationSection({
   credentials,
   credentialsChanges,
@@ -27,6 +44,7 @@ export default function CertificationSection({
 }) {
   const [edit, setEdit] = useState(false);
   const [certs, setCerts] = useState(() => normalizeCredentials(credentials));
+  const [preview, setPreview] = useState({ open: false, url: '', name: '', isPdf: false });
   const originalStateRef = useRef({ certs: [], changes: {} });
 
   useEffect(() => {
@@ -88,6 +106,24 @@ export default function CertificationSection({
   };
 
   const handleAddCredential = (file) => {
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    const isValidType =
+      allowedTypes.includes(file.type) || ['pdf', 'jpg', 'jpeg', 'png'].includes(fileExtension);
+
+    if (!isValidType) {
+      if (onError) onError('Only PDF, JPG, and PNG files are allowed', 'error');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSizeBytes = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSizeBytes) {
+      if (onError) onError('File size must not exceed 5MB', 'error');
+      return;
+    }
+
     // Check maximum limit
     if (certs.length >= 3) {
       if (onError) onError('Maximum 3 credentials are allowed', 'error');
@@ -160,44 +196,194 @@ export default function CertificationSection({
       </Box>
 
       {edit && (
-        <Button component="label" sx={{ mb: 2 }} disabled={certs.length >= 3}>
-          + Add certification {certs.length >= 3 && '(Max 3)'}
-          <input
-            hidden
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              handleAddCredential(file);
-            }}
-            disabled={certs.length >= 3}
-          />
-        </Button>
+        <>
+          <Button component="label" sx={{ mb: 1 }} disabled={certs.length >= 3}>
+            + Add certification {certs.length >= 3 && '(Max 3)'}
+            <input
+              hidden
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                handleAddCredential(file);
+              }}
+              disabled={certs.length >= 3}
+            />
+          </Button>
+          <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+            Accepted: PDF, JPG, PNG (Max 5MB)
+          </Typography>
+        </>
       )}
 
-      <Grid container spacing={2} sx={certificationSectionStyles.gridContainer}>
-        {certs.map((cert, idx) => (
-          <Grid item key={cert.id ?? idx}>
-            <Box sx={certificationSectionStyles.certImage}>
-              <img
-                src={cert.url}
-                alt={cert.name || `credential-${idx}`}
-                style={certificationSectionStyles.certImageTag}
-              />
+      {certs.length > 0 ? (
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+            gap: 1.5,
+          }}
+        >
+          {certs.map((cert, idx) => (
+            <Box
+              key={cert.id ?? idx}
+              sx={{
+                position: 'relative',
+                overflow: 'hidden',
+                borderRadius: '8px',
+                bgcolor: '#ffffff',
+                border: '1px solid #e3e8ef',
+                '&:hover .doc-overlay': {
+                  opacity: 1,
+                  pointerEvents: 'auto',
+                },
+              }}
+            >
+              {isPdfFile(cert.url, cert.name) ? (
+                <Box
+                  sx={{
+                    minHeight: 180,
+                    p: 2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: 1,
+                    textAlign: 'center',
+                  }}
+                >
+                  <PictureAsPdfIcon sx={{ color: '#ef4444', fontSize: 42 }} />
+                  <Typography sx={{ fontSize: 13, color: '#334155', wordBreak: 'break-word' }}>
+                    {cert.name || 'Document.pdf'}
+                  </Typography>
+                </Box>
+              ) : (
+                <Box
+                  component="img"
+                  src={cert.url}
+                  alt={cert.name || `credential-${idx}`}
+                  sx={{
+                    width: '100%',
+                    height: 180,
+                    objectFit: 'contain',
+                    objectPosition: 'center',
+                    backgroundColor: '#ffffff',
+                    display: 'block',
+                  }}
+                />
+              )}
+
+              {!edit && (
+                <Box
+                  className="doc-overlay"
+                  sx={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'rgba(15, 23, 42, 0.35)',
+                    opacity: 0,
+                    pointerEvents: 'none',
+                    transition: 'opacity 0.18s ease',
+                  }}
+                >
+                  <Button
+                    startIcon={<VisibilityOutlinedIcon />}
+                    onClick={() =>
+                      setPreview({
+                        open: true,
+                        url: cert.url,
+                        name: cert.name,
+                        isPdf: isPdfFile(cert.url, cert.name),
+                      })
+                    }
+                    sx={{
+                      textTransform: 'none',
+                      fontSize: 13,
+                      minWidth: 96,
+                      borderRadius: '8px',
+                      bgcolor: '#ffffff',
+                      color: '#334155',
+                      border: '1px solid #cbd5e1',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.16)',
+                      '&:hover': {
+                        bgcolor: '#f8fafc',
+                        borderColor: '#94a3b8',
+                      },
+                    }}
+                  >
+                    View
+                  </Button>
+                </Box>
+              )}
 
               {edit && (
                 <IconButton
-                  sx={certificationSectionStyles.deleteButton}
+                  sx={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    bgcolor: 'white',
+                  }}
                   onClick={() => handleDeleteCredential(cert)}
                 >
                   <DeleteIcon />
                 </IconButton>
               )}
             </Box>
-          </Grid>
-        ))}
-      </Grid>
+          ))}
+        </Box>
+      ) : (
+        <Typography sx={{ color: '#9aa0a6', fontSize: 14 }}>No documents uploaded</Typography>
+      )}
+
+      {/* Preview Dialog */}
+      <Dialog
+        open={preview.open}
+        onClose={() => setPreview({ open: false, url: '', name: '', isPdf: false })}
+        maxWidth="md"
+        fullWidth
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
+          <Typography variant="h6">{preview.name}</Typography>
+          <IconButton
+            onClick={() => setPreview({ open: false, url: '', name: '', isPdf: false })}
+            size="small"
+          >
+            <CloseIcon />
+          </IconButton>
+        </Box>
+        <DialogContent sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+          {preview.url &&
+            (preview.isPdf ? (
+              <iframe
+                src={preview.url}
+                style={{
+                  width: '100%',
+                  height: '75vh',
+                  border: 0,
+                  backgroundColor: '#fff',
+                }}
+                title="PDF Preview"
+              />
+            ) : (
+              <Box
+                component="img"
+                src={preview.url}
+                alt="Preview"
+                sx={{
+                  width: '100%',
+                  maxHeight: '75vh',
+                  objectFit: 'contain',
+                  display: 'block',
+                  backgroundColor: '#fff',
+                }}
+              />
+            ))}
+        </DialogContent>
+      </Dialog>
     </Paper>
   );
 }

@@ -64,6 +64,7 @@ export default function ForumPostModal({
   const bottomRef = useRef(null);
 
   const { user } = useAuth();
+  const [userAvatar, setUserAvatar] = useState(null);
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editCommentText, setEditCommentText] = useState('');
   const [editLoading, setEditLoading] = useState(false);
@@ -106,6 +107,21 @@ export default function ForumPostModal({
     if (!open) return;
     fetchPage(1, false, ordering);
   }, [open, post.id]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const syncAvatar = () => {
+      const latestAvatar = localStorage.getItem('avatar_url') || localStorage.getItem('avatar');
+      setUserAvatar(latestAvatar || null);
+    };
+    syncAvatar();
+    window.addEventListener('auth-user-updated', syncAvatar);
+    window.addEventListener('storage', syncAvatar);
+    return () => {
+      window.removeEventListener('auth-user-updated', syncAvatar);
+      window.removeEventListener('storage', syncAvatar);
+    };
+  }, []);
 
   const handleOrderingChange = (e) => {
     const newOrder = e.target.value;
@@ -711,7 +727,13 @@ export default function ForumPostModal({
         </Dialog>
 
         <Box sx={modalStyles.commentInputBox}>
-          <Avatar sx={{ width: 32, height: 32 }} />
+          <Avatar
+            src={userAvatar || undefined}
+            sx={{ width: 32, height: 32 }}
+            alt={user?.username || 'User'}
+          >
+            {user?.username?.[0]?.toUpperCase() || 'U'}
+          </Avatar>
           <TextField
             fullWidth
             size="small"
