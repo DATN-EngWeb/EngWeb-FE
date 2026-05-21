@@ -6,7 +6,7 @@ import { Box, Container, Typography, TextField, Radio, RadioGroup, Chip } from '
 import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CircleIcon from '@mui/icons-material/Circle';
-
+import 'ckeditor5/ckeditor5.css';
 import {
   containerStyles,
   passageTitleStyles,
@@ -119,21 +119,12 @@ const FillBlanksContent = ({
     onAnswerChange({ ...answers, [questionOrBlankId]: value });
   };
 
-  // Biến đổi văn bản bài đọc: thay thế các ký tự đánh dấu thành khối UI số thứ tự hoặc đường gạch dưới
-  const renderPassageWithBlanks = () => {
-    if (!passageContent) return null;
-    const processPassage = passageContent
-      .replace(/\((\d+)\)/g, (match, number) => {
-        return `<span style="display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; margin: 0 4px; vertical-align: middle; background-color: #FFF3E0; color: #E65100; border: 1px solid #FFB74D; border-radius: 6px; font-weight: 700; font-size: 0.9rem; cursor: default; user-select: none;">${number}</span>`;
-      })
-      .replace(/_+/g, () => {
-        return `<span style="display: inline-flex; width: 120px; height: 28px; margin: 0 4px; vertical-align: middle; border: 1px solid #B0BEC5; border-radius: 14px; background-color: transparent;"></span>`;
-      });
-    return <div dangerouslySetInnerHTML={{ __html: processPassage }} />;
-  };
-
   const isMultiChoiceFormat =
-    questions && questions.length > 0 && questions.some((q) => q.options && q.options.length > 1);
+    questions &&
+    questions.length > 0 &&
+    questions.some(
+      (q) => q.options && q.options.length > 1 && q.options.some((opt) => !!opt.option_label),
+    );
 
   // Tự động cuộn mượt và tạo hiệu ứng nhún (bounce) tới câu hỏi được click từ bảng tóm tắt
   useEffect(() => {
@@ -204,8 +195,17 @@ const FillBlanksContent = ({
           const questionId = qInfo?.id || num;
           const userAns = answers[questionId] || '';
           const isAnswered = userAns.trim().length > 0;
-          const isCorrect =
-            userAns.toLowerCase().trim() === (qInfo?.correctText || '').toLowerCase().trim();
+
+          const correctOptions = qInfo?.options?.filter((o) => o.isCorrect) || [];
+          const correctTexts = correctOptions
+            .map((o) => o.answer_text || o.label || '')
+            .filter((t) => t.trim() !== '');
+          const allCorrectTexts =
+            correctTexts.length > 0 ? correctTexts : [qInfo?.correctText || ''];
+
+          const isCorrect = allCorrectTexts.some(
+            (text) => userAns.toLowerCase().trim() === text.toLowerCase().trim(),
+          );
 
           return { id: questionId, isAnswered, isCorrect };
         })
@@ -254,9 +254,28 @@ const FillBlanksContent = ({
                 {passageTitle}
               </Typography>
             )}
-            <Box sx={{ ...listeningPartStyles.passageContainer, ...textWrapStyles }}>
-              {renderPassageWithBlanks()}
-            </Box>
+            <Box
+              className="ck-content"
+              sx={{
+                ...listeningPartStyles.passageContainer,
+                ...textWrapStyles,
+                '& p > img': {
+                  display: 'inline-block',
+                  verticalAlign: 'bottom',
+                  margin: '0 8px',
+                  maxWidth: '100%',
+                },
+                '& a': {
+                  color: '#0000EE',
+                  textDecoration: 'underline',
+                  ['&:hover']: {
+                    color: '#000099',
+                    cursor: 'pointer',
+                  },
+                },
+              }}
+              dangerouslySetInnerHTML={{ __html: passageContent }}
+            />
           </Box>
           {/* Thanh điều khiển (divider) cho phép người dùng kéo qua lại để đổi chiều rộng cột */}
           <Box
@@ -549,9 +568,19 @@ const FillBlanksContent = ({
                         const questionId = qInfo?.id || num;
                         const userAns = answers[questionId] || '';
                         const isAnswered = userAns.trim().length > 0;
-                        const isCorrect =
-                          userAns.toLowerCase().trim() ===
-                          (qInfo?.correctText || '').toLowerCase().trim();
+
+                        const correctOptions = qInfo?.options?.filter((o) => o.isCorrect) || [];
+                        const correctTexts = correctOptions
+                          .map((o) => o.answer_text || o.label || '')
+                          .filter((t) => t.trim() !== '');
+                        const allCorrectTexts =
+                          correctTexts.length > 0 ? correctTexts : [qInfo?.correctText || ''];
+
+                        const isCorrect = allCorrectTexts.some(
+                          (text) => userAns.toLowerCase().trim() === text.toLowerCase().trim(),
+                        );
+
+                        const displayCorrectText = allCorrectTexts.join(' / ');
 
                         return (
                           <Box
@@ -620,7 +649,7 @@ const FillBlanksContent = ({
                                 <Typography
                                   sx={{ ...listeningPartStyles.correctText, ...textWrapStyles }}
                                 >
-                                  Correct Answer: {qInfo?.correctText}
+                                  Correct Answer: {displayCorrectText}
                                 </Typography>
                                 {qInfo?.explanation && (
                                   <Typography

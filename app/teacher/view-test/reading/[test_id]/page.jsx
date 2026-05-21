@@ -42,7 +42,7 @@ async function transformReadingData(data) {
             content: !['I'].includes(format) ? q.content || '' : undefined,
           };
 
-          if (newQ.content?.startsWith?.('http')) {
+          if (newQ.content?.startsWith?.('http') && format !== 'G' && format !== 'J') {
             newQ.content = await fetchHtmlContent(newQ.content);
           }
 

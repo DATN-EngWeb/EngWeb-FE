@@ -1442,8 +1442,8 @@ export const buildReceptiveTestPayload = (test, preparedParts, status) => {
               action: q.action,
               id: q.id || 0,
               question_number: q.question_number || 0,
-              // I ko có content
-              ...(!['I'].includes(format) && { content: q.content || '' }),
+              // I, H không có content
+              ...(!['I', 'H'].includes(format) && { content: q.content || '' }),
               explanation: q.explanation || '',
               score: q.score || 0,
 
