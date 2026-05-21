@@ -1,15 +1,14 @@
 import React from 'react';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
-import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
-import { Checkbox } from '@mui/material';
-import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CircleIcon from '@mui/icons-material/Circle';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import { Checkbox } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { FormControl, FormLabel, OutlinedInput, Collapse } from '@mui/material';
 import { multipleChoiceStyles } from '../../../styles/Teacher/Reading/QuesitonTypeStyles';
 import { uploadReadingStyles } from '../../../styles/Teacher/Reading/UploadReadingStyles';
-import { Box, Typography } from '@mui/material';
 import ClientSideCustomEditor from '../../../components/Editor/ClientSideCustomEditor';
 
 export default function MultipleChoiceForm({
@@ -336,10 +335,25 @@ export default function MultipleChoiceForm({
                       .filter((question) => question.action !== 'delete')
                       .sort((a, b) => (a.question_number || 0) - (b.question_number || 0))
                       .map((question, qIndex) => (
-                        <Box key={question.id} sx={multipleChoiceStyles.questionsContainer}>
+                        <Box
+                          key={question.id}
+                          sx={{
+                            ...multipleChoiceStyles.questionsContainer,
+                            ...(collapsedQuestions[question.id] && { gap: 0 }),
+                          }}
+                        >
                           <Box sx={multipleChoiceStyles.labelQuestionsContainer}>
                             <Box sx={multipleChoiceStyles.questionLabel}>{qIndex + 1}</Box>
-                            <Box sx={{ flexGrow: 1 }} />
+                            {!collapsedQuestions[question.id] && <Box sx={{ flexGrow: 1 }} />}
+                            {collapsedQuestions[question.id] && (
+                              <Typography
+                                noWrap
+                                onClick={() => toggleQuestionCollapse(question.id)}
+                                sx={uploadReadingStyles.collapsedQuestions}
+                              >
+                                {question.content ? question.content.replace(/<[^>]+>/g, '') : ''}
+                              </Typography>
+                            )}
                             {/* ---------------- Question Controls ---------------- */}
                             <Box
                               sx={{
@@ -347,7 +361,7 @@ export default function MultipleChoiceForm({
                                 flexDirection: 'row',
                                 gap: 1,
                                 alignItems: 'center',
-                                mt: 0.2,
+                                alignSelf: 'center',
                               }}
                             >
                               <DeleteRoundedIcon

@@ -2,11 +2,7 @@ import React from 'react';
 import { useEffect } from 'react';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
-import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
-import { Checkbox } from '@mui/material';
-import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-import CircleIcon from '@mui/icons-material/Circle';
 import { FormControl, FormLabel, OutlinedInput, Select, MenuItem } from '@mui/material';
 import {
   multipleChoiceStyles,

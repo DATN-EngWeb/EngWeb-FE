@@ -13,7 +13,6 @@ import {
 } from '@mui/material';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
-import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CircleIcon from '@mui/icons-material/Circle';
@@ -459,11 +458,25 @@ export default function FillBlankForm({
                       .map((question, qIndex) => (
                         <Box
                           key={`${part.format}-${question.id}`}
-                          sx={multipleChoiceStyles.questionsContainer}
+                          sx={{
+                            ...multipleChoiceStyles.questionsContainer,
+                            ...(collapsedQuestions[question.id] && { gap: 0 }),
+                          }}
                         >
                           <Box sx={multipleChoiceStyles.labelQuestionsContainer}>
                             <Box sx={multipleChoiceStyles.questionLabel}>{qIndex + 1}</Box>
-                            <Box sx={{ flexGrow: 1 }} />
+                            <Box
+                              sx={{
+                                flexGrow: 1,
+                                alignSelf: 'stretch',
+                                ...(collapsedQuestions[question.id] && { cursor: 'pointer' }),
+                                backgroundColor: 'transparent',
+                              }}
+                              onClick={() =>
+                                collapsedQuestions[question.id] &&
+                                toggleQuestionCollapse(question.id)
+                              }
+                            />
                             {/* ---------------- Question Controls ---------------- */}
                             <Box
                               sx={{
@@ -471,7 +484,7 @@ export default function FillBlankForm({
                                 flexDirection: 'row',
                                 gap: 1,
                                 alignItems: 'center',
-                                mt: 0.2,
+                                alignSelf: 'center',
                               }}
                             >
                               <ExpandLessRoundedIcon

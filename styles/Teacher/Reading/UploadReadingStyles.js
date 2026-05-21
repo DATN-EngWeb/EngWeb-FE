@@ -302,4 +302,16 @@ export const uploadReadingStyles = {
     width: '100%', // Đảm bảo nó chiếm hết chiều rộng để xác định điểm cắt
     display: 'block',
   },
+  collapsedQuestions: {
+    flexGrow: 1,
+    alignSelf: 'center',
+    minWidth: 0,
+    cursor: 'pointer',
+    color: 'text.gray',
+    fontSize: '0.95rem',
+    mr: 2,
+    '&:hover': {
+      color: 'text.primary',
+    },
+  },
 };
