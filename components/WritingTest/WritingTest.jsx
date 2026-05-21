@@ -274,6 +274,12 @@ export default function WritingTest() {
         setGlobalRewardData(response.streak_notice);
       }
 
+      // Dispatch event to refetch profile in Header
+      if (typeof window !== 'undefined') {
+        // eslint-disable-next-line no-undef
+        window.dispatchEvent(new Event('profile-updated'));
+      }
+
       return response.id;
     } catch (error) {
       await new Promise((resolve) => setTimeout(resolve, 400));
@@ -496,6 +502,12 @@ export default function WritingTest() {
         response?.streak_notice?.continued
       ) {
         setGlobalRewardData(response.streak_notice);
+      }
+
+      // Dispatch event to refetch profile in Header
+      if (typeof window !== 'undefined') {
+        // eslint-disable-next-line no-undef
+        window.dispatchEvent(new Event('profile-updated'));
       }
     } catch (error) {
       console.error('Share submit error:', error);

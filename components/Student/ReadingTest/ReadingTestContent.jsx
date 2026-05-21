@@ -446,6 +446,12 @@ export default function ReadingTestContent({ testId }) {
         ) {
           setGlobalRewardData(response.streak_notice);
         }
+
+        // Dispatch event to refetch profile in Header
+        if (typeof window !== 'undefined') {
+          // eslint-disable-next-line no-undef
+          window.dispatchEvent(new Event('profile-updated'));
+        }
       }
     } catch (err) {
       console.error('Submission error:', err);

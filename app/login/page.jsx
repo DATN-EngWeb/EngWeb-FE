@@ -164,7 +164,6 @@ function LoginContent() {
           localStorage.setItem('username', response.username || '');
           localStorage.setItem('userRole', roleFromToken || '');
           localStorage.setItem('avatar', response.avatar || '');
-          localStorage.setItem('full_name', response.full_name || '');
           localStorage.setItem('userStatus', response.status || '');
 
           // Save role to cookie for middleware

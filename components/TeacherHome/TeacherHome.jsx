@@ -206,7 +206,7 @@ export default function TeacherHome() {
   };
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
-  const displayName = user?.full_name || user?.username || 'Teacher';
+  const displayName = user?.username || 'Teacher';
   const summaryCards = [
     {
       label: 'TOTAL TESTS',

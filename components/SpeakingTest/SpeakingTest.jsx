@@ -292,6 +292,12 @@ export default function SpeakingTest() {
       ) {
         setGlobalRewardData(response.streak_notice);
       }
+
+      // Dispatch event to refetch profile in Header
+      if (typeof window !== 'undefined') {
+        // eslint-disable-next-line no-undef
+        window.dispatchEvent(new Event('profile-updated'));
+      }
     } catch (error) {
       if (
         error?.status >= 500 ||
@@ -362,6 +368,12 @@ export default function SpeakingTest() {
         response?.streak_notice?.is_first_submission_today === true
       ) {
         setGlobalRewardData(response.streak_notice);
+      }
+
+      // Dispatch event to refetch profile in Header
+      if (typeof window !== 'undefined') {
+        // eslint-disable-next-line no-undef
+        window.dispatchEvent(new Event('profile-updated'));
       }
     } catch (error) {
       // eslint-disable-next-line no-console
