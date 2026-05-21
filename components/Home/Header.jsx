@@ -558,7 +558,7 @@ export default function Header() {
                                 backgroundColor: 'primary.main',
                                 width: 40,
                                 height: 40,
-                                border: '2px solid',
+                                border: '1px solid',
                                 borderColor: popupOpen ? 'warning.main' : 'secondary.main',
                                 transition: 'border-color 0.2s',
                               }}
