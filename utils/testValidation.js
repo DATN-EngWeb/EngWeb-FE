@@ -130,9 +130,11 @@ export const validateReadingPartPayload = (parts) => {
       }
 
       if (format === 'I') {
-        const correctAns = q.answers.find((a) => a.is_correct);
-        if (correctAns && isEmptyText(correctAns.answer_text)) {
-          return formatQuestionMessage(partName, qNum, 'fill in the correct answer.');
+        for (let k = 0; k < q.answers.length; k++) {
+          const ans = q.answers[k];
+          if (ans.is_correct && isEmptyText(ans.answer_text)) {
+            return formatQuestionMessage(partName, qNum, 'fill in all correct answers.');
+          }
         }
       }
 
@@ -216,16 +218,30 @@ export const validateReadingPartUpdatePayload = (originalParts) => {
       const activeAnswers = answers.filter((a) => a.action !== 'delete');
       const isMultipleChoice = ['F', 'G', 'H'].includes(partFormat);
 
-      // Rule riêng cho Trắc nghiệm (F, G, H): Tối thiểu 3 đáp án & có 1 đáp án đúng
+      if (activeAnswers.length === 0) {
+        return `Part ${displayPartNum}, Question ${displayQuestionNum}: add at least one answer.`;
+      }
+
+      // Rule riêng cho Trắc nghiệm (F, G, H): Tối thiểu 3 đáp án
       if (isMultipleChoice) {
         if (activeAnswers.length < 3) {
           return `Question ${displayQuestionNum} in Part ${displayPartNum} must have at least 3 answer options.`;
         }
+      }
 
-        const hasCorrectAnswer = activeAnswers.some((a) => a.is_correct === true);
-        if (!hasCorrectAnswer) {
-          return `Part ${displayPartNum}, Question ${displayQuestionNum}: choose the correct answer.`;
+      // Format I riêng
+      if (partFormat === 'I') {
+        for (let aIndex = 0; aIndex < activeAnswers.length; aIndex++) {
+          const ans = activeAnswers[aIndex];
+          if (ans.is_correct && (!ans.answer_text || String(ans.answer_text).trim() === '')) {
+            return `Part ${displayPartNum}, Question ${displayQuestionNum}: fill in all correct answers.`;
+          }
         }
+      }
+
+      const hasCorrectAnswer = activeAnswers.some((a) => a.is_correct === true);
+      if (!hasCorrectAnswer) {
+        return `Part ${displayPartNum}, Question ${displayQuestionNum}: choose the correct answer.`;
       }
 
       // Kiểm tra chi tiết từng đáp án active
@@ -240,7 +256,11 @@ export const validateReadingPartUpdatePayload = (originalParts) => {
         }
 
         // Format 'J' (Matching): Không bắt buộc nhập answer_text ở các option
-        if (partFormat !== 'J' && (!answerText || String(answerText).trim() === '')) {
+        if (
+          partFormat !== 'J' &&
+          partFormat !== 'I' &&
+          (!answerText || String(answerText).trim() === '')
+        ) {
           const optionLabelDisplay = optionLabel ? ` (${optionLabel})` : '';
 
           // Lời cảnh báo trả ra khác nhau dựa trên định dạng

@@ -120,7 +120,11 @@ const FillBlanksContent = ({
   };
 
   const isMultiChoiceFormat =
-    questions && questions.length > 0 && questions.some((q) => q.options && q.options.length > 1);
+    questions &&
+    questions.length > 0 &&
+    questions.some(
+      (q) => q.options && q.options.length > 1 && q.options.some((opt) => !!opt.option_label),
+    );
 
   // Tự động cuộn mượt và tạo hiệu ứng nhún (bounce) tới câu hỏi được click từ bảng tóm tắt
   useEffect(() => {
@@ -191,8 +195,17 @@ const FillBlanksContent = ({
           const questionId = qInfo?.id || num;
           const userAns = answers[questionId] || '';
           const isAnswered = userAns.trim().length > 0;
-          const isCorrect =
-            userAns.toLowerCase().trim() === (qInfo?.correctText || '').toLowerCase().trim();
+
+          const correctOptions = qInfo?.options?.filter((o) => o.isCorrect) || [];
+          const correctTexts = correctOptions
+            .map((o) => o.answer_text || o.label || '')
+            .filter((t) => t.trim() !== '');
+          const allCorrectTexts =
+            correctTexts.length > 0 ? correctTexts : [qInfo?.correctText || ''];
+
+          const isCorrect = allCorrectTexts.some(
+            (text) => userAns.toLowerCase().trim() === text.toLowerCase().trim(),
+          );
 
           return { id: questionId, isAnswered, isCorrect };
         })
@@ -555,9 +568,19 @@ const FillBlanksContent = ({
                         const questionId = qInfo?.id || num;
                         const userAns = answers[questionId] || '';
                         const isAnswered = userAns.trim().length > 0;
-                        const isCorrect =
-                          userAns.toLowerCase().trim() ===
-                          (qInfo?.correctText || '').toLowerCase().trim();
+
+                        const correctOptions = qInfo?.options?.filter((o) => o.isCorrect) || [];
+                        const correctTexts = correctOptions
+                          .map((o) => o.answer_text || o.label || '')
+                          .filter((t) => t.trim() !== '');
+                        const allCorrectTexts =
+                          correctTexts.length > 0 ? correctTexts : [qInfo?.correctText || ''];
+
+                        const isCorrect = allCorrectTexts.some(
+                          (text) => userAns.toLowerCase().trim() === text.toLowerCase().trim(),
+                        );
+
+                        const displayCorrectText = allCorrectTexts.join(' / ');
 
                         return (
                           <Box
@@ -626,7 +649,7 @@ const FillBlanksContent = ({
                                 <Typography
                                   sx={{ ...listeningPartStyles.correctText, ...textWrapStyles }}
                                 >
-                                  Correct Answer: {qInfo?.correctText}
+                                  Correct Answer: {displayCorrectText}
                                 </Typography>
                                 {qInfo?.explanation && (
                                   <Typography

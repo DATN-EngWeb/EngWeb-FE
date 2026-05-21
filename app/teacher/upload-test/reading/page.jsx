@@ -593,6 +593,7 @@ export default function Page() {
             handleUpdateContentPart={handleUpdateContentPart}
             handleEditorError={handleEditorError}
             errors={errors}
+            setSnackbar={setSnackbar}
           />
         );
       default:
