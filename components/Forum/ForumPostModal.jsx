@@ -295,6 +295,12 @@ export default function ForumPostModal({
       PaperProps={{ sx: { borderRadius: 3, maxHeight: '90vh' } }}
     >
       <DialogContent sx={modalStyles.dialogContent}>
+        <Box sx={modalStyles.stickyHeader}>
+          <IconButton size="small" onClick={onClose} sx={modalStyles.stickyCloseButton}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+
         <Box sx={modalStyles.scrollableContent}>
           <Box display="flex" alignItems="center" gap={1.5} mb={1.5}>
             <Avatar src={post.author_avatar} />
@@ -308,9 +314,6 @@ export default function ForumPostModal({
               </Box>
             </Box>
             <Box sx={modalStyles.postMenuBox}>
-              <IconButton size="small" onClick={onClose} sx={modalStyles.closeButton}>
-                <CloseIcon fontSize="small" />
-              </IconButton>
               {user?.id && String(user.id) === String(post.author_id) && (
                 <>
                   <IconButton size="small" onClick={handlePostMenuOpen} sx={modalStyles.moreButton}>
