@@ -15,9 +15,9 @@ import {
   Stack,
   Snackbar,
   Container,
+  DialogTitle,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
@@ -768,7 +768,7 @@ export default function ReadingTestContent({ testId }) {
         PaperProps={{
           sx: {
             borderRadius: '20px',
-            padding: '12px',
+            p: 1.5,
             maxWidth: '480px',
             width: '100%',
             position: 'relative',
@@ -777,38 +777,59 @@ export default function ReadingTestContent({ testId }) {
           },
         }}
       >
-        <IconButton
-          onClick={() => setOpenSubmitDialog(false)}
+        <DialogTitle
           sx={{
-            position: 'absolute',
-            right: 16,
-            top: 16,
-            color: 'primary.dark',
-            '&:hover': { backgroundColor: '#efebe9' },
+            fontWeight: 800,
+            color: 'primary.main',
+            justifyContent: 'center',
+            textAlign: 'center',
+            position: 'relative',
+            pt: 2,
+            pb: 1,
           }}
-          disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
         >
-          <CloseIcon fontSize="small" />
-        </IconButton>
-        <DialogContent sx={{ textAlign: 'center', pt: 6, pb: 2 }}>
-          <Stack spacing={4} alignItems="center">
-            <Box
-              sx={{
-                width: '90px',
-                height: '90px',
-                borderRadius: '50%',
-                backgroundColor: '#efebe9',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '2px solid #a1887f',
-              }}
-            >
-              <InfoOutlinedIcon sx={{ fontSize: 48, color: 'primary.dark' }} />
-            </Box>
+          {submitType === 'S' ? '' : 'Save Draft'}
+          <IconButton
+            aria-label="close"
+            onClick={() => setOpenSubmitDialog(false)}
+            sx={{ position: 'absolute', right: 1, top: 1, color: 'text.secondary' }}
+            size="large"
+            disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent sx={{ textAlign: 'center', pt: 2, pb: 1 }}>
+          <Stack spacing={3} alignItems="center">
+            {submitType === 'S' && checkCompletionStatus(testData, answers) !== 'S' && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                size="large"
+              >
+                <WarningAmberIcon sx={{ fontSize: 48, color: '#ef6c00' }} />
+              </Box>
+            )}
+            {submitType === 'S' && checkCompletionStatus(testData, answers) === 'S' && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                size="large"
+              >
+                <SendIcon sx={{ fontSize: 48, color: 'primary.main' }} />
+              </Box>
+            )}
+
             <Typography
               sx={{
-                fontSize: '1.25rem',
+                fontSize: '1.15rem',
                 fontWeight: 700,
                 color: 'primary.main',
                 lineHeight: 1.4,
@@ -818,21 +839,22 @@ export default function ReadingTestContent({ testId }) {
             >
               {submitType === 'S'
                 ? checkCompletionStatus(testData, answers) === 'S'
-                  ? 'Are you sure you want to submit your test?'
-                  : 'You have not finished all questions. Are you sure you want to submit your test?'
+                  ? 'Great job! Are you sure to submit your test?'
+                  : 'You have unanswered questions. Do you still want to submit?'
                 : 'Do you want to save your progress as a draft?'}
             </Typography>
           </Stack>
         </DialogContent>
-        <DialogActions sx={{ gap: 2, pb: 6, pt: 2, px: 4, justifyContent: 'center' }}>
+
+        <DialogActions sx={{ gap: 2, pb: 3.5, pt: 1.5, px: 3, justifyContent: 'center' }}>
           <Button
             onClick={() => setOpenSubmitDialog(false)}
             variant="outlined"
             disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
             sx={{
-              borderRadius: '50px',
+              borderRadius: '12px',
               px: 4,
-              py: 1.2,
+              py: 1,
               textTransform: 'none',
               fontWeight: 700,
               fontSize: '0.875rem',
@@ -854,9 +876,9 @@ export default function ReadingTestContent({ testId }) {
             variant="contained"
             disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
             sx={{
-              borderRadius: '50px',
+              borderRadius: '12px',
               px: 4,
-              py: 1.2,
+              py: 1,
               textTransform: 'none',
               fontWeight: 700,
               fontSize: '0.875rem',
@@ -865,7 +887,7 @@ export default function ReadingTestContent({ testId }) {
               fontFamily: '"Outfit", sans-serif',
               boxShadow: '0 4px 14px 0 rgba(93, 64, 55, 0.39)',
               '&:hover': {
-                backgroundColor: 'primary.dark',
+                backgroundColor: 'warning.main',
                 boxShadow: '0 6px 20px rgba(93, 64, 55, 0.23)',
               },
             }}

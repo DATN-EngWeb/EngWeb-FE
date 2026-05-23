@@ -78,7 +78,7 @@ export default function WritingSharePage() {
         severity: 'success',
       });
       setTimeout(() => {
-        router.push(`/student/writing/${test_id}`);
+        router.replace(`/student/writing/${test_id}`);
       }, 2000);
     } catch (error) {
       setSnackbar({

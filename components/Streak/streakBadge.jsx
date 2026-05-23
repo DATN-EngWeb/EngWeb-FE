@@ -248,7 +248,7 @@ export default function StreakBadge({ isHaveText = true }) {
             justifyContent: 'center',
             gap: 0,
             cursor: streak_count > 0 ? 'pointer' : 'default',
-            borderRadius: '24px',
+            borderRadius: '40px',
             backgroundColor: is_streak_lit_today ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
             transition: 'all 0.3s ease',
             '&:hover': {
@@ -260,8 +260,8 @@ export default function StreakBadge({ isHaveText = true }) {
           <Box
             sx={{
               position: 'relative',
-              width: 35,
-              height: 35,
+              width: 40,
+              height: 40,
               filter: activeStyle.shadow,
               transition: 'filter 0.3s ease',
             }}
@@ -298,7 +298,7 @@ export default function StreakBadge({ isHaveText = true }) {
             <Typography
               sx={{
                 fontWeight: 800,
-                fontSize: { xs: '0.875rem', sm: '1rem', md: '1.1rem' },
+                fontSize: { xs: '0.875rem', sm: '1rem', md: '1.25rem' },
                 color: activeStyle.color,
                 transition: 'color 0.3s ease',
               }}
