@@ -34,7 +34,9 @@ const FillBlanksContent = ({
   const isTeacherView =
     pathname?.includes('/teacher/view-test/') ||
     pathname?.includes('/teacher/upload-test/') ||
-    pathname?.includes('/teacher/update-test/');
+    pathname?.includes('/teacher/update-test/') ||
+    pathname?.includes('/teacher/review-test/');
+
   const showSummary = showResults && !isTeacherView;
 
   const [leftWidth, setLeftWidth] = useState(55);

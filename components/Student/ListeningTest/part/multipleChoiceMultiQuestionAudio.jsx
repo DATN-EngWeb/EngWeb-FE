@@ -26,7 +26,8 @@ export default function MultipleChoiceQuestionAudio({
   const isTeacherView =
     pathname?.includes('/teacher/view-test/') ||
     pathname?.includes('/teacher/upload-test/') ||
-    pathname?.includes('/teacher/update-test/');
+    pathname?.includes('/teacher/update-test/') ||
+    pathname?.includes('/teacher/review-test/');
 
   const showSummary = disabled && !isTeacherView;
 

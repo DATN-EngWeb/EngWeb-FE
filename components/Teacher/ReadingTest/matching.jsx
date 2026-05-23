@@ -1,3 +1,6 @@
+/* global IntersectionObserver */
+'use client';
+
 import React from 'react';
 import { useEffect } from 'react';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
@@ -39,6 +42,32 @@ export default function MatchingForm({
       option_label: String.fromCharCode(65 + i),
     }));
   });
+
+  const [openSelectId, setOpenSelectId] = React.useState(null);
+
+  useEffect(() => {
+    if (openSelectId === null) return;
+
+    const element = document.getElementById(`select-${openSelectId}`);
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            setOpenSelectId(null);
+          }
+        });
+      },
+      { root: null, threshold: 0 },
+    );
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [openSelectId]);
 
   const activeCount = questions.filter((q) => q.action !== 'delete').length;
 
@@ -354,6 +383,7 @@ export default function MatchingForm({
                               />
                             </Box>
                             <FormControl
+                              id={`select-${question.id}`}
                               size="small"
                               sx={{
                                 ...uploadReadingStyles.formControl,
@@ -373,8 +403,12 @@ export default function MatchingForm({
                                 onChange={(e) =>
                                   handleUpdateCorrectAnswer(question.id, e.target.value)
                                 }
+                                open={openSelectId === question.id}
+                                onOpen={() => setOpenSelectId(question.id)}
+                                onClose={() => setOpenSelectId(null)}
                                 displayEmpty
                                 sx={matchingStyles.selectAnswer}
+                                MenuProps={{ disableScrollLock: true }}
                               >
                                 <MenuItem value="" disabled>
                                   <em>Select</em>

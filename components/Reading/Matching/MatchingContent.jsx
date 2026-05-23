@@ -1,3 +1,4 @@
+/* global IntersectionObserver */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -33,7 +34,9 @@ const MatchingContent = ({
   const isTeacherView =
     pathname?.includes('/teacher/view-test/') ||
     pathname?.includes('/teacher/upload-test/') ||
-    pathname?.includes('/teacher/update-test/');
+    pathname?.includes('/teacher/update-test/') ||
+    pathname?.includes('/teacher/review-test/');
+
   const showSummary = showResults && !isTeacherView;
 
   const [leftWidth, setLeftWidth] = useState(55);
@@ -44,6 +47,32 @@ const MatchingContent = ({
   const [processedSentences, setProcessedSentences] = useState(sentences);
 
   const [targetQuestionId, setTargetQuestionId] = useState(null);
+
+  const [openSelectId, setOpenSelectId] = useState(null);
+
+  useEffect(() => {
+    if (openSelectId === null) return;
+
+    const element = document.getElementById(`select-${openSelectId}`);
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            setOpenSelectId(null);
+          }
+        });
+      },
+      { root: null, threshold: 0 },
+    );
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [openSelectId]);
 
   // Lấy nội dung bài đọc từ URL nếu passage là một link lưu trữ (Google Cloud Storage)
   useEffect(() => {
@@ -536,6 +565,7 @@ const MatchingContent = ({
 
                             {/* 3. Select: Cho phép chọn A, B, C, D */}
                             <FormControl
+                              id={`select-${gapNumber}`}
                               sx={{
                                 minWidth: '90px',
                                 flexShrink: 0,
@@ -544,8 +574,12 @@ const MatchingContent = ({
                               <Select
                                 value={userAns}
                                 onChange={(e) => handleAnswerChangeLocal(gapNumber, e.target.value)}
+                                open={openSelectId === gapNumber}
+                                onOpen={() => setOpenSelectId(gapNumber)}
+                                onClose={() => setOpenSelectId(null)}
                                 displayEmpty
                                 disabled={showResults}
+                                MenuProps={{ disableScrollLock: true }}
                                 sx={{
                                   height: 44,
                                   width: '100%',
