@@ -633,7 +633,6 @@ export default function Page() {
             backgroundColor: '#FFF4E9',
             pt: 0.5,
             pb: 0.5,
-            px: 2,
           }}
         >
           <TestEditorActions
