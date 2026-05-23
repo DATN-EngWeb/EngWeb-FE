@@ -40,9 +40,7 @@ const MatchingContent = ({
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = React.useRef(null);
   const [passageContent, setPassageContent] = useState(passage);
-  useEffect(() => {
-    console.log('passageContent: ', passageContent);
-  }, [passageContent]);
+
   const [processedSentences, setProcessedSentences] = useState(sentences);
 
   const [targetQuestionId, setTargetQuestionId] = useState(null);
@@ -163,10 +161,28 @@ const MatchingContent = ({
     const question = questions.find((q) => q.question_number === gapNumber);
     if (!question) return;
 
-    onAnswerChange({
-      ...answers,
-      [question.id]: value,
-    });
+    const newAnswers = { ...answers };
+
+    if (value !== '') {
+      Object.keys(newAnswers).forEach((key) => {
+        let existingValue = String(newAnswers[key]).trim();
+        if (/^\d+$/.test(existingValue)) {
+          const sentenceIndex = processedSentences.findIndex(
+            (s) => s.id === parseInt(existingValue, 10),
+          );
+          if (sentenceIndex !== -1) {
+            existingValue = String.fromCharCode(65 + sentenceIndex);
+          }
+        }
+        if (existingValue === value) {
+          delete newAnswers[key];
+        }
+      });
+    }
+
+    newAnswers[question.id] = value;
+
+    onAnswerChange(newAnswers);
   };
 
   // Tự động cuộn mượt và tạo hiệu ứng nhún (bounce) tới câu hỏi được click từ bảng tóm tắt

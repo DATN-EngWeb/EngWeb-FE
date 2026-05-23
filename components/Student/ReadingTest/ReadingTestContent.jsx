@@ -339,7 +339,12 @@ export default function ReadingTestContent({ testId }) {
                   a.id === parseInt(userAnswer),
               );
 
-              if (!selectedAnswer && typeof userAnswer === 'string' && userAnswer.length === 1) {
+              if (
+                !selectedAnswer &&
+                typeof userAnswer === 'string' &&
+                userAnswer.length === 1 &&
+                !['J', 'E'].includes(part.format)
+              ) {
                 const allAnswers = [...(q.receptive_answers || [])].sort((a, b) => {
                   if (a.option_label && b.option_label)
                     return a.option_label.localeCompare(b.option_label);
