@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Box,
   Button,
+  Divider,
   IconButton,
   InputAdornment,
   Stack,
@@ -18,6 +19,8 @@ import {
 import { Visibility, VisibilityOff, ArrowBack } from '@mui/icons-material';
 import Logo from '../../assets/img/logo.png';
 import registerImage from '../../assets/img/register.png';
+import googleImage from '../../assets/img/google.png';
+// Force Turbopack reload
 import { loginStyles } from '../../styles/Login/LoginStyles';
 import { registerUser } from '../../api/accounts.jsx';
 
@@ -45,6 +48,29 @@ function RegisterContent() {
   }, [searchParams]);
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
+
+  const handleGoogleLogin = () => {
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
+    const scope = 'email profile';
+
+    if (!clientId) {
+      setServerError('Google OAuth is not configured. Please contact support.');
+      return;
+    }
+
+    if (!redirectUri) {
+      setServerError('Google redirect URI is not configured. Please contact support.');
+      return;
+    }
+
+    const backendRole = currentRole === 'teacher' ? 'T' : 'S';
+    const state = encodeURIComponent(JSON.stringify({ role: backendRole }));
+
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent&state=${state}`;
+
+    window.location.href = authUrl;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -347,6 +373,17 @@ function RegisterContent() {
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Creating account...' : 'Create account'}
+              </Button>
+            </Box>
+
+            <Divider sx={{ ...loginStyles.divider, my: 1.5 }}>Continue with</Divider>
+
+            <Box sx={loginStyles.socialRow}>
+              <Button variant="outlined" sx={loginStyles.socialButton} onClick={handleGoogleLogin}>
+                <Box sx={loginStyles.socialButtonContent}>
+                  <Image src={googleImage} alt="Google" width={15} height={15} />
+                  Google
+                </Box>
               </Button>
             </Box>
           </Box>
