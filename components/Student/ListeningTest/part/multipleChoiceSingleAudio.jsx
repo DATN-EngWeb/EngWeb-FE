@@ -208,7 +208,7 @@ export default function MultipleChoiceSingleAudio({
                         >
                           {option.answer_text || option.text}
                         </Typography>
-                        {correctAnswer.option_label === option.option_label && showSummary && (
+                        {correctAnswer?.option_label === option.option_label && showSummary && (
                           <Chip
                             label="Correct"
                             size="small"

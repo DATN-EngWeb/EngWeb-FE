@@ -112,3 +112,13 @@ export async function getCompletedBonus() {
     cache: 'no-store',
   });
 }
+
+export async function getFullReceptiveTestReview(testId) {
+  return apiFetch(`${TESTS_BASE_URL}/full-test/receptive/${testId}/review`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    cache: 'no-store',
+  });
+}
