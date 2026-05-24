@@ -207,19 +207,14 @@ const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButto
         maxWidth="lg"
         sx={{ ...listeningtestStyles.testHeadingContainer, mx: 'auto', width: '100%' }}
       >
-        <Box sx={{ ...listeningtestStyles.timeLeft, visibility: 'hidden' }}>
-          <AccessTimeIcon sx={{ fontSize: 28, mr: 0.5 }} />
-          00:00
-        </Box>
-        <Box sx={listeningtestStyles.nameTestAndFormatPart}>
+        <Box sx={{ minWidth: 120 }} />
+        <Box sx={{ ...listeningtestStyles.nameTestAndFormatPart, order: 0 }}>
           <Typography sx={listeningtestStyles.nameTest}>{testData?.title || 'Preview'}</Typography>
           <Typography sx={listeningtestStyles.formatName}>
             Part {currentPartIndex + 1}: {getReadingPartTypeLabel(currentPart?.format)}
           </Typography>
         </Box>
-        <Box sx={{ ...listeningtestStyles.summitButtonWrapper, visibility: 'hidden' }}>
-          <Button disabled>Submit</Button>
-        </Box>
+        <Box sx={{ minWidth: 120 }} />{' '}
       </Box>
 
       {/* KHỐI 2: LIST PART SELECTION */}
