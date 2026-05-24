@@ -13,6 +13,8 @@ import {
   Typography,
   Badge,
   Tooltip,
+  Drawer,
+  IconButton,
 } from '@mui/material';
 import Logo from '../../assets/img/logo.png';
 import Image from 'next/image';
@@ -35,9 +37,11 @@ import {
   userPopupMenuItemLogoutStyles,
 } from '../../styles/Home/HeaderStyles';
 import { useAuth } from '../../hooks/useAuth';
-import { logout as logoutAPI, getTeacherProfile } from '../../api/accounts';
+import { logout as logoutAPI } from '../../api/accounts';
 import NotificationBell from '../Notifications/NotificationBell';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
 
 // Icon components (copied from student header for consistent UI)
 const ProfileIcon = () => (
@@ -78,9 +82,9 @@ export default function TeacherHeader() {
   const pathname = usePathname();
   const { isAuthenticated, user, logout: logoutHook } = useAuth(null);
   const [popupOpen, setPopupOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userAvatar, setUserAvatar] = useState(null);
-  const [userFullName, setUserFullName] = useState(null);
-  const [teacherProfile, setTeacherProfile] = useState(null);
+  const [userName, setUserName] = useState(null);
   const avatarWrapperRef = useRef(null);
   const popupRef = useRef(null);
   const usernameRef = useRef(null);
@@ -88,19 +92,19 @@ export default function TeacherHeader() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const latestAvatar = localStorage.getItem('avatar_url') || localStorage.getItem('avatar');
+    const latestAvatar = localStorage.getItem('avatar');
     setUserAvatar(latestAvatar || user?.avatar || null);
-    setUserFullName(user?.full_name || localStorage.getItem('full_name') || 'Teacher');
-    // synced from auth/localStorage
+    const username = localStorage.getItem('username') || user?.username || 'Teacher';
+    setUserName(username);
   }, [user]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const syncAuth = () => {
-      const latestAvatar = localStorage.getItem('avatar_url') || localStorage.getItem('avatar');
+      const latestAvatar = localStorage.getItem('avatar');
       setUserAvatar(latestAvatar || null);
-      const latestFull = localStorage.getItem('full_name');
-      setUserFullName(latestFull || user?.full_name || 'Teacher');
+      const username = localStorage.getItem('username') || user?.username || 'Teacher';
+      setUserName(username);
     };
     window.addEventListener('auth-user-updated', syncAuth);
     window.addEventListener('storage', syncAuth);
@@ -109,35 +113,6 @@ export default function TeacherHeader() {
       window.removeEventListener('storage', syncAuth);
     };
   }, [user]);
-
-  // Fetch teacher profile when `user` changes, like student header does
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user || user.role !== 'T' || !user.id) return;
-      try {
-        const profile = await getTeacherProfile(user.id);
-        setTeacherProfile(profile || null);
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to fetch teacher profile:', err);
-      }
-    };
-
-    fetchProfile();
-  }, [user]);
-
-  // When teacherProfile updates, sync avatar and fullname into header state
-  useEffect(() => {
-    if (!teacherProfile) return;
-    const avatarFromProfile = teacherProfile?.avatar_url || teacherProfile?.avatar || null;
-    const fullFromProfile = teacherProfile?.full_name || teacherProfile?.fullName || null;
-    if (avatarFromProfile) {
-      setUserAvatar(avatarFromProfile);
-    }
-    if (fullFromProfile) {
-      setUserFullName(fullFromProfile);
-    }
-  }, [teacherProfile]);
 
   useLayoutEffect(() => {
     const el = usernameRef.current;
@@ -148,7 +123,7 @@ export default function TeacherHeader() {
     checkOverflow();
     window.addEventListener('resize', checkOverflow);
     return () => window.removeEventListener('resize', checkOverflow);
-  }, [user?.full_name, userFullName]);
+  }, [userName]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -181,37 +156,7 @@ export default function TeacherHeader() {
   }, []);
 
   const handleMenuOpen = () => {
-    const next = !popupOpen;
-    if (!popupOpen) {
-      // opening: fetch latest profile to ensure fullname/avatar are up-to-date
-      (async () => {
-        if (typeof window === 'undefined') return;
-        if (!user?.id || user?.role !== 'T') return;
-        try {
-          const profile = await getTeacherProfile(user.id);
-          const avatarFromProfile = profile?.avatar_url || profile?.avatar || null;
-          const fullFromProfile = profile?.full_name || profile?.fullName || null;
-          if (avatarFromProfile) {
-            setUserAvatar(avatarFromProfile);
-            localStorage.setItem('avatar', avatarFromProfile);
-          }
-          if (fullFromProfile) {
-            setUserFullName(fullFromProfile);
-            localStorage.setItem('full_name', fullFromProfile);
-          }
-          try {
-            // eslint-disable-next-line no-undef
-            window.dispatchEvent(new Event('auth-user-updated'));
-          } catch (e) {
-            // ignore
-          }
-        } catch (err) {
-          // eslint-disable-next-line no-console
-          console.error('Failed to fetch teacher profile on popup open:', err);
-        }
-      })();
-    }
-    setPopupOpen(next);
+    setPopupOpen((prev) => !prev);
   };
 
   const handleMenuClose = () => {
@@ -252,44 +197,59 @@ export default function TeacherHeader() {
       }}
     >
       <Container maxWidth="lg">
-        <Toolbar sx={toolbarStyles}>
-          <Box sx={navBoxStyles}>
+        <Toolbar sx={{ ...toolbarStyles, minHeight: 'auto', py: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0 }}>
             <Link href="/teacher" style={logoLinkStyles}>
               <Image src={Logo} alt="NENS" width={32} height={24} />
             </Link>
-            {menuItems.map((item) => {
-              const isActive =
-                item.href === '/teacher' ? pathname === '/teacher' : pathname?.includes(item.href);
-              return (
-                <Link key={item.href} href={item.href} style={navLinkStyles}>
-                  <Button
-                    color="inherit"
-                    disableRipple
-                    sx={{
-                      ...navButtonStyles,
-                      backgroundColor: 'transparent',
-                      color: isActive ? 'secondary.main' : 'primary.main',
-                      borderRadius: 0,
-                      borderBottom: isActive ? '3px solid' : 'none',
-                      borderColor: isActive ? 'secondary.main' : 'transparent',
-                      padding: '8px 4px',
-                      marginRight: '50px',
-                      fontWeight: isActive ? 700 : 500,
-                      '&:hover': {
+            <IconButton
+              sx={{
+                display: { xs: 'flex', md: 'none' },
+                color: 'primary.main',
+                p: 0,
+                ml: -2,
+              }}
+              onClick={() => setMobileMenuOpen(true)}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Box sx={navBoxStyles}>
+              {menuItems.map((item) => {
+                const isActive =
+                  item.href === '/teacher'
+                    ? pathname === '/teacher'
+                    : pathname?.includes(item.href);
+                return (
+                  <Link key={item.href} href={item.href} style={navLinkStyles}>
+                    <Button
+                      color="inherit"
+                      disableRipple
+                      sx={{
+                        ...navButtonStyles,
                         backgroundColor: 'transparent',
-                        color: 'secondary.main',
-                        borderColor: 'secondary.main',
-                      },
-                    }}
-                  >
-                    {item.label}
-                  </Button>
-                </Link>
-              );
-            })}
+                        color: isActive ? 'secondary.main' : 'primary.main',
+                        borderRadius: 0,
+                        borderBottom: isActive ? '3px solid' : 'none',
+                        borderColor: isActive ? 'secondary.main' : 'transparent',
+                        padding: '8px 4px',
+                        marginRight: '50px',
+                        fontWeight: isActive ? 700 : 500,
+                        '&:hover': {
+                          backgroundColor: 'transparent',
+                          color: 'secondary.main',
+                          borderColor: 'secondary.main',
+                        },
+                      }}
+                    >
+                      {item.label}
+                    </Button>
+                  </Link>
+                );
+              })}
+            </Box>
           </Box>
 
-          <Box sx={actionBoxStyles}>
+          <Box sx={{ ...actionBoxStyles, justifyContent: 'flex-end' }}>
             {isAuthenticated && user ? (
               <>
                 <NotificationBell />
@@ -336,7 +296,7 @@ export default function TeacherHeader() {
                     >
                       <Avatar
                         src={userAvatar || undefined}
-                        alt={userFullName || 'User'}
+                        alt={userName || 'User'}
                         sx={{
                           width: 40,
                           height: 40,
@@ -347,7 +307,7 @@ export default function TeacherHeader() {
                             'Poppins, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, sans-serif',
                         }}
                       >
-                        {userFullName?.[0]?.toUpperCase() || 'U'}
+                        {userName?.[0]?.toUpperCase() || 'U'}
                       </Avatar>
                     </Badge>
                   </Box>
@@ -361,15 +321,15 @@ export default function TeacherHeader() {
                             <div style={userPopupAvatarWrapperStyles}>
                               <Avatar
                                 src={userAvatar || undefined}
-                                alt={userFullName || 'User'}
+                                alt={userName || 'User'}
                                 sx={{ width: '100%', height: '100%' }}
                               >
-                                {userFullName?.[0]?.toUpperCase() || 'U'}
+                                {userName?.[0]?.toUpperCase() || 'U'}
                               </Avatar>
                             </div>
                             <div>
                               {isNameOverflow ? (
-                                <Tooltip title={userFullName || 'User'}>
+                                <Tooltip title={userName || 'User'}>
                                   <div
                                     ref={usernameRef}
                                     style={{
@@ -382,7 +342,7 @@ export default function TeacherHeader() {
                                         'Poppins, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, sans-serif',
                                     }}
                                   >
-                                    {userFullName || 'User'}
+                                    {userName || 'User'}
                                   </div>
                                 </Tooltip>
                               ) : (
@@ -396,7 +356,7 @@ export default function TeacherHeader() {
                                     whiteSpace: 'nowrap',
                                   }}
                                 >
-                                  {userFullName || 'User'}
+                                  {userName || 'User'}
                                 </div>
                               )}
                               <div style={userPopupLevelStyles}>Teacher account</div>
@@ -457,6 +417,59 @@ export default function TeacherHeader() {
           </Box>
         </Toolbar>
       </Container>
+
+      {/* Mobile Menu Drawer */}
+      <Drawer
+        anchor="left"
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        variant="temporary"
+        sx={{
+          '& .MuiBackdrop-root': {
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          },
+          '& .MuiDrawer-paper': {
+            width: '100%',
+            maxWidth: '280px',
+            backgroundColor: 'background.default',
+            zIndex: 1301,
+          },
+        }}
+      >
+        <Box sx={{ padding: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+          <IconButton onClick={() => setMobileMenuOpen(false)}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+        <Box sx={{ padding: '8px 16px' }}>
+          {menuItems.map((item) => {
+            const isActive =
+              item.href === '/teacher' ? pathname === '/teacher' : pathname?.includes(item.href);
+            return (
+              <Link key={item.href} href={item.href} style={{ textDecoration: 'none' }}>
+                <Button
+                  fullWidth
+                  onClick={() => setMobileMenuOpen(false)}
+                  sx={{
+                    justifyContent: 'flex-start',
+                    color: isActive ? 'secondary.main' : 'primary.main',
+                    fontWeight: isActive ? 600 : 500,
+                    fontSize: '1rem',
+                    padding: '12px 16px',
+                    marginBottom: '8px',
+                    '&:hover': {
+                      backgroundColor: 'rgba(25,118,210,0.06)',
+                      color: 'secondary.main',
+                    },
+                  }}
+                >
+                  {item.label}
+                </Button>
+              </Link>
+            );
+          })}
+        </Box>
+      </Drawer>
     </AppBar>
   );
 }

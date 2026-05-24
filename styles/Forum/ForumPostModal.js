@@ -25,6 +25,26 @@ const closeButton = {
   color: 'text.secondary',
 };
 
+const stickyHeader = {
+  position: 'sticky',
+  top: 0,
+  bgcolor: '#f5f5f5',
+  display: 'flex',
+  justifyContent: 'flex-end',
+  alignItems: 'center',
+  px: 1,
+  py: 0.5,
+  zIndex: 10,
+  borderBottom: '1px solid #e0e0e0',
+};
+
+const stickyCloseButton = {
+  color: 'text.secondary',
+  '&:hover': {
+    bgcolor: 'grey.200',
+  },
+};
+
 const skillChip = {
   bgcolor: '#6B2C1F',
   color: '#fff',
@@ -283,6 +303,8 @@ export default {
   scrollableContent,
   headerBox,
   closeButton,
+  stickyHeader,
+  stickyCloseButton,
   skillChip,
   userAnswerBox,
   userAnswerText,

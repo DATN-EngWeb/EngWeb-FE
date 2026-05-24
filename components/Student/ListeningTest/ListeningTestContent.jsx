@@ -209,6 +209,13 @@ export default function ListeningTestContent({ test_id, initialData }) {
         window.sessionStorage.setItem('current_receptive_attempt', stringifiedData);
         setIsInitial(true);
         setIndexPart(0);
+
+        // Dispatch event to refetch profile in Header
+        if (typeof window !== 'undefined') {
+          // eslint-disable-next-line no-undef
+          window.dispatchEvent(new Event('profile-updated'));
+        }
+
         await refreshStreak();
       } else {
         setDraftStatus('saved');

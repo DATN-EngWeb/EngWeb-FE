@@ -160,7 +160,7 @@ export default function SecuritySection({ username, email, onSave, isSaving, onE
         <Typography fontWeight={500}>Password</Typography>
         <Box display="flex" justifyContent="space-between" mt={1} alignItems="center">
           <Typography color="text.secondary">••••••••••••</Typography>
-          <Button size="small" onClick={handleOpenPasswordModal}>
+          <Button variant="outlined" onClick={handleOpenPasswordModal} disabled={isSaving}>
             Change
           </Button>
         </Box>

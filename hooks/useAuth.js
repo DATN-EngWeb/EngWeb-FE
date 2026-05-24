@@ -99,7 +99,6 @@ export function useAuth(redirectTo = '/login') {
         username: username,
         role: role,
         avatar: avatar,
-        full_name: localStorage.getItem('full_name') || null,
         status: status,
       });
       setIsAuthenticated(true);
