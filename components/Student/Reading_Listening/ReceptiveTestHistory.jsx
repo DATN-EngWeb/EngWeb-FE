@@ -7,7 +7,7 @@ import EditNoteIcon from '@mui/icons-material/EditNote';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import Edit from '@mui/icons-material/Edit';
 import InfoIcon from '@mui/icons-material/Info';
-import * as styles from '@/styles/Student/HistoryTestStyles';
+import * as styles from '@/styles/student/HistoryTestStyles';
 import HistoryItem from './HistoryItem';
 import HistoryTable from '../HistoryTable';
 import { levelTheme } from '../../TestCard';

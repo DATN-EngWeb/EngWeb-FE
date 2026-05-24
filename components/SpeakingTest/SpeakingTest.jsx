@@ -23,10 +23,11 @@ import {
 import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
 import ShareIcon from '@mui/icons-material/Share';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ReplayIcon from '@mui/icons-material/Replay';
-import PauseIcon from '@mui/icons-material/Pause';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useParams, useRouter } from 'next/navigation';
+import { useTheme, useMediaQuery } from '@mui/material';
 import HistoryEduIcon from '@mui/icons-material/HistoryEdu';
 import TimerIcon from '@mui/icons-material/Timer';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -53,9 +54,13 @@ export default function SpeakingTest() {
   const testId = params.test_id;
   const attempt = params.attempt;
   const router = useRouter();
+  const theme = useTheme();
+  const isShortViewport = useMediaQuery('(max-height: 700px)');
+  const isCompactLayout = useMediaQuery(theme.breakpoints.down('md')) || isShortViewport;
   const { user } = useAuth(null);
   const { refreshStreak, setGlobalRewardData, isCelebrationDismissed } = useStreakContext();
   const shareRedirectTimerRef = useRef(null);
+  const [mobileHeaderOpen, setMobileHeaderOpen] = useState(false);
 
   // States
   const [isRecording, setIsRecording] = useState(false);
@@ -106,6 +111,7 @@ export default function SpeakingTest() {
     bonus_ai_turn: Number(turns?.bonus_ai_turn) || 0,
   });
   const totalAITurns = remainingAITurns.weekly_ai_turn + remainingAITurns.bonus_ai_turn;
+  const desktopPanelMinWidth = 420;
   const getAudioDuration = (url) => {
     return new Promise((resolve, reject) => {
       const audio = new Audio(url);
@@ -657,376 +663,660 @@ export default function SpeakingTest() {
     setIsPlaying(false);
   };
 
-  return (
-    <Box>
-      <Box sx={styles.testHeaderContainer}>
-        {/* time counter*/}
-        <Box sx={{ width: 320, display: 'flex', justifyContent: 'flex-start' }}>
-          <Box sx={styles.timerBox}>
-            <AccessTimeIcon sx={{ fontSize: 28 }} />
-            <Typography variant="inherit">
-              {isMounted ? formatTime(secondsElapsed) : '00:00'}
+  const promptPanel = (
+    <Box sx={{ height: '100%', minHeight: 0, overflowY: 'auto', pr: { xs: 0, md: 1 } }}>
+      <ProductivePreview
+        preview={false}
+        title={testData.title}
+        description={question.description}
+        suggestion={question.suggestion}
+        audio={question.audio?.url}
+      />
+    </Box>
+  );
+
+  const speakingPanel = (
+    <Box
+      sx={{
+        ...styles.speakingTestBox,
+        ml: isCompactLayout ? 0 : 2,
+        p: isCompactLayout ? 2 : 3,
+        height: isCompactLayout ? 'auto' : '100%',
+        minHeight: 0,
+        overflow: 'hidden',
+      }}
+    >
+      <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+        {/*Instruction */}
+        <Box sx={{ ...styles.instructionBoxStyles, mt: 1, mb: 2 }}>
+          <Box sx={styles.instructionIconStyles}>
+            <InfoOutlinedIcon fontSize="medium" />
+          </Box>
+          <Box>
+            <Typography
+              sx={{
+                fontWeight: 600,
+                fontSize: '1rem',
+                color: 'secondary.main',
+                mb: 0.5,
+              }}
+            >
+              Instruction
+            </Typography>
+            <Typography
+              sx={{
+                fontSize: '0.9rem',
+                color: 'text.primary',
+                lineHeight: 1.5,
+              }}
+            >
+              You will have {testData.time} minutes to complete this speaking test. Please speak
+              clearly into the microphone. Once you start recording, the timer will begin. You can
+              stop and review your recording before submitting. Good luck!
             </Typography>
           </Box>
         </Box>
-
-        {/* Test title and Level */}
-        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <Stack direction="row" alignItems="center">
-            <Typography variant="h6" sx={{ fontWeight: 800, color: '#4e342e' }}>
-              {testData.title || 'Practice Test Name'}
-            </Typography>
-            <Box
-              sx={{
-                px: 2,
-                py: 0.5,
-                borderRadius: '8px',
-                border: `1px solid`,
-                borderColor: levelTheme[testData.level]?.border,
-                color: levelTheme[testData.level]?.text,
-                bgcolor: levelTheme[testData.level]?.bg,
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                ml: 2,
-              }}
-            >
-              Level {testData.level || 'Level A1'}
-            </Box>
-          </Stack>
-          <Stack
-            direction="row"
-            spacing={3}
-            alignItems="center"
-            sx={{ mt: 1 }}
-            divider={<Box sx={styles.divider} />}
-          >
-            <Box sx={{ ...styles.groupIcon }}>
-              <HistoryEduIcon />
-              <Typography variant="body2">
-                {FormatMapper[testData.type] || 'General Speaking Task'}
-              </Typography>
-            </Box>
-            <Box sx={{ ...styles.groupIcon }}>
-              <TimerIcon />
-              <Typography variant="body2">{testData.time} mins</Typography>
-            </Box>
-          </Stack>
-        </Box>
-
-        {/* Action Buttons on the Right, visible but logic-gated */}
         <Box
           sx={{
-            width: 320,
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'flex-end',
             alignItems: 'center',
-            gap: 1.5,
+            textAlign: 'center',
+            justifyContent: 'center',
           }}
         >
-          <Tooltip
-            title={
-              totalAITurns <= 0
-                ? 'You have run out of AI turns. Cannot use this feature.'
-                : !hasRecorded
-                  ? 'Please record your answer to enable AI Feedback'
-                  : isRecording
-                    ? 'Please stop recording to enable AI Feedback'
-                    : isReadOnly
-                      ? 'AI Feedback is not available in read-only mode'
-                      : 'Get AI feedback on your speaking answer'
-            }
-            placement="top"
-          >
-            <span
-              style={{
-                cursor:
-                  totalAITurns <= 0 || !hasRecorded || isRecording || isReadOnly
-                    ? 'not-allowed'
-                    : 'pointer',
-              }}
-            >
-              <Button
-                variant="contained"
-                disabled={!hasRecorded || isRecording || isReadOnly || totalAITurns <= 0}
-                onClick={() => {
-                  if (totalAITurns <= 0) {
-                    setSnackbar({
-                      open: true,
-                      message: 'You have run out of AI turns. Cannot use this feature.',
-                      severity: 'warning',
-                    });
-                    return;
-                  }
-                  handleAIFeedback();
-                }}
-                startIcon={<AutoAwesomeIcon />}
+          {!isRecording && !hasRecorded && (
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="h6" fontWeight={700} gutterBottom>
+                Ready to record
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Click the microphone to start speaking.
+              </Typography>
+            </Box>
+          )}
+
+          {/* case: recording */}
+          {isRecording && (
+            <Typography variant="h5" color="error" fontWeight={700} sx={{ mb: 1 }}>
+              Recording...
+            </Typography>
+          )}
+
+          {/* case: recorded */}
+          {hasRecorded && !isRecording && !isReadOnly && (
+            <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>
+              Analysis Complete
+            </Typography>
+          )}
+
+          {isReadOnly && (
+            <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>
+              Your submission
+            </Typography>
+          )}
+
+          {/* button (Micro / Stop / Play) */}
+          <Box sx={{ position: 'relative', my: 4 }}>
+            {!hasRecorded ? (
+              <IconButton
+                onClick={handleToggleRecording}
                 sx={{
-                  ...styles.aiButton,
-                  py: 1,
-                  px: 2,
-                  borderRadius: '12px',
-                  fontSize: '0.8125rem',
-                  minWidth: 'auto',
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  pointerEvents:
-                    totalAITurns <= 0 || !hasRecorded || isRecording || isReadOnly
-                      ? 'none'
-                      : 'auto',
+                  width: 80,
+                  height: 80,
+                  bgcolor: isRecording ? theme.palette.error.light : theme.palette.error.main,
+                  color: theme.palette.background.paper,
+                  '&:hover': { bgcolor: theme.palette.error.dark },
                 }}
               >
-                AI Feedback
-              </Button>
-            </span>
-          </Tooltip>
-          <Tooltip
-            title={
-              !hasRecorded
-                ? 'Please record your answer to enable sharing'
-                : isRecording
-                  ? 'Please stop recording to enable sharing'
-                  : isReadOnly
-                    ? 'Sharing is not available in read-only mode'
-                    : 'Submit and share your test result to the forum and get feedback from peers!'
-            }
-            placement="top"
-          >
-            <span
-              style={{
-                cursor: !hasRecorded || isRecording || isReadOnly ? 'not-allowed' : 'pointer',
-              }}
-            >
-              <Button
-                variant="contained"
-                sx={{
-                  ...styles.submitButton(!hasRecorded || isRecording || isReadOnly),
-                  py: 1,
-                  px: 2,
-                  borderRadius: '12px',
-                  fontSize: '0.8125rem',
-                  minWidth: 'auto',
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  pointerEvents: !hasRecorded || isRecording || isReadOnly ? 'none' : 'auto',
-                }}
-                startIcon={<SendIcon />}
-                onClick={() => {
-                  if (isReadOnly) return;
-                  if (isRecording) {
-                    setSnackbar({
-                      open: true,
-                      message: 'Please stop recording before submitting.',
-                      severity: 'warning',
-                    });
-                    return;
-                  }
-                  if (!hasRecorded) {
-                    setSnackbar({
-                      open: true,
-                      message: 'Please record your answer before submitting.',
-                      severity: 'warning',
-                    });
-                    return;
-                  }
-                  setOpenShareModal(true);
-                }}
-              >
-                Submit Test
-              </Button>
-            </span>
-          </Tooltip>
+                {isRecording ? (
+                  <StopIcon sx={{ fontSize: 40 }} />
+                ) : (
+                  <MicIcon sx={{ fontSize: 40 }} />
+                )}
+              </IconButton>
+            ) : (
+              <Box sx={{ width: '100%', mt: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                  {!isReadOnly && (
+                    <IconButton
+                      onClick={() => handleReplay()}
+                      sx={{
+                        border: `1px solid ${theme.palette.gray.light}`,
+                        p: 1,
+                        color: 'text.secondary',
+                        '&:hover': {
+                          bgcolor: theme.palette.background.gray,
+                          color: 'error.main',
+                        },
+                      }}
+                      title="Replay / Delete recording"
+                    >
+                      <ReplayIcon sx={{ fontSize: 20 }} />
+                    </IconButton>
+                  )}
+                </Box>
+
+                <CustomAudioPlayer src={audioUrl} isActive={true} />
+              </Box>
+            )}
+          </Box>
+
+          {/* timer - only show when recording */}
+          {!hasRecorded && (
+            <Typography variant="h3" fontWeight={500} sx={{ mb: 4, fontFamily: 'monospace' }}>
+              {formatTime(recordingTime)}
+            </Typography>
+          )}
         </Box>
       </Box>
+    </Box>
+  );
 
-      <Box sx={styles.mainContainer}>
-        <Box sx={styles.contentWrapper}>
-          <PanelGroup direction="horizontal" id="writing-test-layout">
-            {/* test  data */}
-            <Panel defaultSize={50} minSize={40}>
-              <Box sx={{ height: '100%', overflowY: 'auto', mr: 2 }}>
-                <ProductivePreview
-                  preview={false}
-                  title={testData.title}
-                  description={question.description}
-                  suggestion={question.suggestion}
-                  audio={question.audio?.url}
-                />
-              </Box>
-            </Panel>
+  const actionButtons = (
+    <>
+      <Tooltip
+        title={
+          totalAITurns <= 0
+            ? 'You have run out of AI turns. Cannot use this feature.'
+            : !hasRecorded
+              ? 'Please record your answer to enable AI Feedback'
+              : isRecording
+                ? 'Please stop recording to enable AI Feedback'
+                : isReadOnly
+                  ? 'AI Feedback is not available in read-only mode'
+                  : 'Get AI feedback on your speaking answer'
+        }
+        placement="top"
+      >
+        <span
+          style={{
+            cursor:
+              totalAITurns <= 0 || !hasRecorded || isRecording || isReadOnly
+                ? 'not-allowed'
+                : 'pointer',
+          }}
+        >
+          <Button
+            variant="contained"
+            disabled={!hasRecorded || isRecording || isReadOnly || totalAITurns <= 0}
+            onClick={() => {
+              if (totalAITurns <= 0) {
+                setSnackbar({
+                  open: true,
+                  message: 'You have run out of AI turns. Cannot use this feature.',
+                  severity: 'warning',
+                });
+                return;
+              }
+              handleAIFeedback();
+            }}
+            startIcon={<AutoAwesomeIcon />}
+            sx={{
+              ...styles.aiButton,
+              py: 1,
+              px: 2,
+              borderRadius: '12px',
+              fontSize: '0.8125rem',
+              minWidth: 'auto',
+              textTransform: 'none',
+              fontWeight: 700,
+              pointerEvents:
+                totalAITurns <= 0 || !hasRecorded || isRecording || isReadOnly ? 'none' : 'auto',
+            }}
+          >
+            AI Feedback
+          </Button>
+        </span>
+      </Tooltip>
+      <Tooltip
+        title={
+          !hasRecorded
+            ? 'Please record your answer to enable sharing'
+            : isRecording
+              ? 'Please stop recording to enable sharing'
+              : isReadOnly
+                ? 'Sharing is not available in read-only mode'
+                : 'Submit and share your test result to the forum and get feedback from peers!'
+        }
+        placement="top"
+      >
+        <span
+          style={{
+            cursor: !hasRecorded || isRecording || isReadOnly ? 'not-allowed' : 'pointer',
+          }}
+        >
+          <Button
+            variant="contained"
+            sx={{
+              ...styles.submitButton(!hasRecorded || isRecording || isReadOnly),
+              py: 1,
+              px: 2,
+              borderRadius: '12px',
+              fontSize: '0.8125rem',
+              minWidth: 'auto',
+              textTransform: 'none',
+              fontWeight: 700,
+              pointerEvents: !hasRecorded || isRecording || isReadOnly ? 'none' : 'auto',
+            }}
+            startIcon={<SendIcon />}
+            onClick={() => {
+              if (isReadOnly) return;
+              if (isRecording) {
+                setSnackbar({
+                  open: true,
+                  message: 'Please stop recording before submitting.',
+                  severity: 'warning',
+                });
+                return;
+              }
+              if (!hasRecorded) {
+                setSnackbar({
+                  open: true,
+                  message: 'Please record your answer before submitting.',
+                  severity: 'warning',
+                });
+                return;
+              }
+              setOpenShareModal(true);
+            }}
+          >
+            Submit Test
+          </Button>
+        </span>
+      </Tooltip>
+    </>
+  );
 
-            <PanelResizeHandle
-              id="resize-handle"
-              style={{
-                width: '12px',
-                cursor: 'col-resize',
-                position: 'relative',
+  return (
+    <Box>
+      <Box
+        sx={{
+          ...styles.testHeaderContainer,
+          flexDirection: isCompactLayout ? 'column' : 'row',
+          alignItems: isCompactLayout ? 'stretch' : 'center',
+          gap: isCompactLayout ? 1.5 : 0,
+        }}
+      >
+        {isCompactLayout ? (
+          <>
+            <Box
+              sx={{
+                width: '100%',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
+                justifyContent: 'space-between',
+                gap: 1,
               }}
             >
-              {/* Vertical Line */}
-              <Box sx={{ width: '2px', height: '100%', bgcolor: '#e0e0e0' }} />
-              {/* Circular Handle */}
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: 28,
-                  height: 28,
-                  bgcolor: 'white',
-                  borderRadius: '50%',
+              <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                <Box sx={styles.timerBox}>
+                  <AccessTimeIcon sx={{ fontSize: 28 }} />
+                  <Typography variant="inherit">
+                    {isMounted ? formatTime(secondsElapsed) : '00:00'}
+                  </Typography>
+                </Box>
+              </Box>
+
+              <IconButton
+                size="small"
+                onClick={() => setMobileHeaderOpen((prev) => !prev)}
+                sx={{ flexShrink: 0, color: 'primary.main' }}
+                aria-label={mobileHeaderOpen ? 'Collapse header' : 'Expand header'}
+              >
+                {mobileHeaderOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+            </Box>
+
+            <Box
+              sx={{
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: 1,
+                flexWrap: 'wrap',
+              }}
+            >
+              {actionButtons}
+            </Box>
+
+            {mobileHeaderOpen && (
+              <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                <Box
+                  sx={{
+                    flex: 1,
+                    minWidth: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    textAlign: 'center',
+                  }}
+                >
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    sx={{ flexWrap: 'wrap', justifyContent: 'center' }}
+                  >
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: 800, color: theme.palette.primary.main }}
+                    >
+                      {testData.title || 'Practice Test Name'}
+                    </Typography>
+                    <Box
+                      sx={{
+                        px: 2,
+                        py: 0.5,
+                        borderRadius: '8px',
+                        border: `1px solid`,
+                        borderColor: levelTheme[testData.level]?.border,
+                        color: levelTheme[testData.level]?.text,
+                        bgcolor: levelTheme[testData.level]?.bg,
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        ml: 1.5,
+                      }}
+                    >
+                      Level {testData.level || 'Level A1'}
+                    </Box>
+                  </Stack>
+                  <Stack
+                    direction="row"
+                    spacing={2}
+                    alignItems="center"
+                    sx={{ mt: 1, flexWrap: 'wrap', justifyContent: 'center' }}
+                    divider={<Box sx={styles.divider} />}
+                  >
+                    <Box sx={{ ...styles.groupIcon }}>
+                      <HistoryEduIcon />
+                      <Typography variant="body2">
+                        {FormatMapper[testData.type] || 'General Speaking Task'}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ ...styles.groupIcon }}>
+                      <TimerIcon />
+                      <Typography variant="body2">{testData.time} mins</Typography>
+                    </Box>
+                  </Stack>
+                </Box>
+              </Box>
+            )}
+          </>
+        ) : (
+          <>
+            {/* time counter*/}
+            <Box
+              sx={{
+                width: { xs: '100%', md: 320 },
+                display: 'flex',
+                justifyContent: isCompactLayout ? 'center' : 'flex-start',
+              }}
+            >
+              <Box sx={styles.timerBox}>
+                <AccessTimeIcon sx={{ fontSize: 28 }} />
+                <Typography variant="inherit">
+                  {isMounted ? formatTime(secondsElapsed) : '00:00'}
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Test title and Level */}
+            <Box
+              sx={{
+                flex: 1,
+                minWidth: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                textAlign: 'center',
+              }}
+            >
+              <Stack direction="row" alignItems="center">
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 800, color: theme.palette.primary.main }}
+                >
+                  {testData.title || 'Practice Test Name'}
+                </Typography>
+                <Box
+                  sx={{
+                    px: 2,
+                    py: 0.5,
+                    borderRadius: '8px',
+                    border: `1px solid`,
+                    borderColor: levelTheme[testData.level]?.border,
+                    color: levelTheme[testData.level]?.text,
+                    bgcolor: levelTheme[testData.level]?.bg,
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    ml: 2,
+                  }}
+                >
+                  Level {testData.level || 'Level A1'}
+                </Box>
+              </Stack>
+              <Stack
+                direction="row"
+                spacing={3}
+                alignItems="center"
+                sx={{ mt: 1 }}
+                divider={<Box sx={styles.divider} />}
+              >
+                <Box sx={{ ...styles.groupIcon }}>
+                  <HistoryEduIcon />
+                  <Typography variant="body2">
+                    {FormatMapper[testData.type] || 'General Speaking Task'}
+                  </Typography>
+                </Box>
+                <Box sx={{ ...styles.groupIcon }}>
+                  <TimerIcon />
+                  <Typography variant="body2">{testData.time} mins</Typography>
+                </Box>
+              </Stack>
+            </Box>
+
+            {/* Action Buttons on the Right, visible but logic-gated */}
+            <Box
+              sx={{
+                width: { xs: '100%', md: 320 },
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: isCompactLayout ? 'center' : 'flex-end',
+                alignItems: 'center',
+                gap: 1.5,
+                flexWrap: 'wrap',
+              }}
+            >
+              <Tooltip
+                title={
+                  totalAITurns <= 0
+                    ? 'You have run out of AI turns. Cannot use this feature.'
+                    : !hasRecorded
+                      ? 'Please record your answer to enable AI Feedback'
+                      : isRecording
+                        ? 'Please stop recording to enable AI Feedback'
+                        : isReadOnly
+                          ? 'AI Feedback is not available in read-only mode'
+                          : 'Get AI feedback on your speaking answer'
+                }
+                placement="top"
+              >
+                <span
+                  style={{
+                    cursor:
+                      totalAITurns <= 0 || !hasRecorded || isRecording || isReadOnly
+                        ? 'not-allowed'
+                        : 'pointer',
+                  }}
+                >
+                  <Button
+                    variant="contained"
+                    disabled={!hasRecorded || isRecording || isReadOnly || totalAITurns <= 0}
+                    onClick={() => {
+                      if (totalAITurns <= 0) {
+                        setSnackbar({
+                          open: true,
+                          message: 'You have run out of AI turns. Cannot use this feature.',
+                          severity: 'warning',
+                        });
+                        return;
+                      }
+                      handleAIFeedback();
+                    }}
+                    startIcon={<AutoAwesomeIcon />}
+                    sx={{
+                      ...styles.aiButton,
+                      py: 1,
+                      px: 2,
+                      borderRadius: '12px',
+                      fontSize: '0.8125rem',
+                      minWidth: 'auto',
+                      textTransform: 'none',
+                      fontWeight: 700,
+                      pointerEvents:
+                        totalAITurns <= 0 || !hasRecorded || isRecording || isReadOnly
+                          ? 'none'
+                          : 'auto',
+                    }}
+                  >
+                    AI Feedback
+                  </Button>
+                </span>
+              </Tooltip>
+              <Tooltip
+                title={
+                  !hasRecorded
+                    ? 'Please record your answer to enable sharing'
+                    : isRecording
+                      ? 'Please stop recording to enable sharing'
+                      : isReadOnly
+                        ? 'Sharing is not available in read-only mode'
+                        : 'Submit and share your test result to the forum and get feedback from peers!'
+                }
+                placement="top"
+              >
+                <span
+                  style={{
+                    cursor: !hasRecorded || isRecording || isReadOnly ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <Button
+                    variant="contained"
+                    sx={{
+                      ...styles.submitButton(!hasRecorded || isRecording || isReadOnly),
+                      py: 1,
+                      px: 2,
+                      borderRadius: '12px',
+                      fontSize: '0.8125rem',
+                      minWidth: 'auto',
+                      textTransform: 'none',
+                      fontWeight: 700,
+                      pointerEvents: !hasRecorded || isRecording || isReadOnly ? 'none' : 'auto',
+                    }}
+                    startIcon={<SendIcon />}
+                    onClick={() => {
+                      if (isReadOnly) return;
+                      if (isRecording) {
+                        setSnackbar({
+                          open: true,
+                          message: 'Please stop recording before submitting.',
+                          severity: 'warning',
+                        });
+                        return;
+                      }
+                      if (!hasRecorded) {
+                        setSnackbar({
+                          open: true,
+                          message: 'Please record your answer before submitting.',
+                          severity: 'warning',
+                        });
+                        return;
+                      }
+                      setOpenShareModal(true);
+                    }}
+                  >
+                    Submit Test
+                  </Button>
+                </span>
+              </Tooltip>
+            </Box>
+          </>
+        )}
+      </Box>
+
+      <Box sx={{ ...styles.mainContainer, flex: 1, overflow: 'hidden' }}>
+        <Box sx={{ ...styles.contentWrapper, overflowY: 'auto', height: '100%' }}>
+          {isCompactLayout ? (
+            <Box
+              sx={{ display: 'flex', flexDirection: 'column', minHeight: '94%', gap: 1.5, pb: 2 }}
+            >
+              <Box sx={{ ...styles.writingPaper, height: 'auto', minHeight: 0 }}>{promptPanel}</Box>
+              <Box sx={{ ...styles.writingPaper, height: 'auto', minHeight: 0 }}>
+                {speakingPanel}
+              </Box>
+            </Box>
+          ) : (
+            <PanelGroup direction="horizontal" id="writing-test-layout" style={{ height: '100%' }}>
+              {/* test  data */}
+              <Panel
+                defaultSize={50}
+                minSize={desktopPanelMinWidth}
+                style={{ minWidth: desktopPanelMinWidth, height: '100%' }}
+              >
+                <Box sx={{ height: '100%', overflowY: 'auto', minHeight: 0 }}>{promptPanel}</Box>
+              </Panel>
+
+              <PanelResizeHandle
+                id="resize-handle"
+                style={{
+                  width: '12px',
+                  cursor: 'col-resize',
+                  position: 'relative',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 0 4px rgba(0,0,0,0.15)',
-                  border: '1px solid #eee',
-                  zIndex: 2,
-                  fontSize: 14,
-                  color: 'text.secondary',
-                  userSelect: 'none',
-                  '&:hover': {
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                  },
                 }}
               >
-                ⇔
-              </Box>
-            </PanelResizeHandle>
-
-            {/* student test */}
-            <Panel defaultSize={50} minSize={40}>
-              <Box sx={styles.speakingTestBox}>
-                {/*Instruction */}
-                <Box sx={{ ...styles.instructionBoxStyles, mt: 1, mb: 2 }}>
-                  <Box sx={styles.instructionIconStyles}>
-                    <InfoOutlinedIcon fontSize="medium" />
-                  </Box>
-                  <Box>
-                    <Typography
-                      sx={{
-                        fontWeight: 600,
-                        fontSize: '1rem',
-                        color: 'secondary.main',
-                        mb: 0.5,
-                      }}
-                    >
-                      Instruction
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontSize: '0.9rem',
-                        color: 'text.primary',
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      You will have {testData.time} minutes to complete this speaking test. Please
-                      speak clearly into the microphone. Once you start recording, the timer will
-                      begin. You can stop and review your recording before submitting. Good luck!
-                    </Typography>
-                  </Box>
-                </Box>
+                {/* Vertical Line */}
+                <Box sx={{ width: '2px', height: '100%', bgcolor: theme.palette.gray.light }} />
+                {/* Circular Handle */}
                 <Box
                   sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: 28,
+                    height: 28,
+                    bgcolor: 'white',
+                    borderRadius: '50%',
+                    display: 'flex',
                     alignItems: 'center',
-                    textAlign: 'center',
                     justifyContent: 'center',
+                    boxShadow: '0 0 4px rgba(0,0,0,0.15)',
+                    border: `1px solid ${theme.palette.gray.light}`,
+                    zIndex: 2,
+                    fontSize: 14,
+                    color: 'text.secondary',
+                    userSelect: 'none',
+                    '&:hover': {
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                    },
                   }}
                 >
-                  {!isRecording && !hasRecorded && (
-                    <Box sx={{ mb: 4 }}>
-                      <Typography variant="h6" fontWeight={700} gutterBottom>
-                        Ready to record
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Click the microphone to start speaking.
-                      </Typography>
-                    </Box>
-                  )}
-
-                  {/* case: recording */}
-                  {isRecording && (
-                    <Typography variant="h5" color="error" fontWeight={700} sx={{ mb: 1 }}>
-                      Recording...
-                    </Typography>
-                  )}
-
-                  {/* case: recorded */}
-                  {hasRecorded && !isRecording && !isReadOnly && (
-                    <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>
-                      Analysis Complete
-                    </Typography>
-                  )}
-
-                  {isReadOnly && (
-                    <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>
-                      Your submission
-                    </Typography>
-                  )}
-
-                  {/* button (Micro / Stop / Play) */}
-                  <Box sx={{ position: 'relative', my: 4 }}>
-                    {!hasRecorded ? (
-                      // case: recording or not yet recorded
-                      <IconButton
-                        onClick={handleToggleRecording}
-                        sx={{
-                          width: 80,
-                          height: 80,
-                          bgcolor: isRecording ? '#ff5252' : '#f44336',
-                          color: 'white',
-                          '&:hover': { bgcolor: '#d32f2f' },
-                        }}
-                      >
-                        {isRecording ? (
-                          <StopIcon sx={{ fontSize: 40 }} />
-                        ) : (
-                          <MicIcon sx={{ fontSize: 40 }} />
-                        )}
-                      </IconButton>
-                    ) : (
-                      // case: recorded
-                      <Box sx={{ width: '100%', mt: 2 }}>
-                        {/* replay button sitting above the bar or integrated */}
-                        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-                          {!isReadOnly && (
-                            <IconButton
-                              onClick={() => handleReplay()}
-                              sx={{
-                                border: '1px solid #ddd',
-                                p: 1,
-                                color: 'text.secondary',
-                                '&:hover': { bgcolor: '#f5f5f5', color: 'error.main' },
-                              }}
-                              title="Replay / Delete recording"
-                            >
-                              <ReplayIcon sx={{ fontSize: 20 }} />
-                            </IconButton>
-                          )}
-                        </Box>
-
-                        <CustomAudioPlayer src={audioUrl} isActive={true} />
-                      </Box>
-                    )}
-                  </Box>
-
-                  {/* timer - only show when recording */}
-                  {!hasRecorded && (
-                    <Typography
-                      variant="h3"
-                      fontWeight={500}
-                      sx={{ mb: 4, fontFamily: 'monospace' }}
-                    >
-                      {formatTime(recordingTime)}
-                    </Typography>
-                  )}
+                  ⇔
                 </Box>
-              </Box>
-            </Panel>
-          </PanelGroup>
+              </PanelResizeHandle>
+
+              {/* student test */}
+              <Panel
+                defaultSize={50}
+                minSize={desktopPanelMinWidth}
+                style={{ minWidth: desktopPanelMinWidth, height: '100%' }}
+              >
+                {speakingPanel}
+              </Panel>
+            </PanelGroup>
+          )}
         </Box>
 
         {/* snackbar */}
@@ -1109,7 +1399,10 @@ export default function SpeakingTest() {
           </DialogActions>
         </Dialog>
         <Backdrop
-          sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 999 }}
+          sx={{
+            color: theme.palette.background.paper,
+            zIndex: (theme) => theme.zIndex.drawer + 999,
+          }}
           open={isFetchingFeedback}
         >
           <AIGradingLoading />

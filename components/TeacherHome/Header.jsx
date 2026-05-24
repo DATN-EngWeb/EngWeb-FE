@@ -16,6 +16,8 @@ import {
   Drawer,
   IconButton,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import Logo from '../../assets/img/logo.png';
 import Image from 'next/image';
 import {
@@ -89,6 +91,8 @@ export default function TeacherHeader() {
   const popupRef = useRef(null);
   const usernameRef = useRef(null);
   const [isNameOverflow, setIsNameOverflow] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -185,6 +189,103 @@ export default function TeacherHeader() {
     { label: 'Upload Test', href: '/teacher/upload-test' },
     { label: 'Forum', href: '/teacher/forum' },
   ];
+
+  const avatarMenuContent = (
+    <>
+      <div style={userPopupHeaderStyles}>
+        <div style={userPopupAvatarNameBoxStyles}>
+          <div style={userPopupAvatarWrapperStyles}>
+            <Avatar
+              src={userAvatar || undefined}
+              alt={userName || 'User'}
+              sx={{ width: '100%', height: '100%' }}
+            >
+              {userName?.[0]?.toUpperCase() || 'U'}
+            </Avatar>
+          </div>
+          <div>
+            {isNameOverflow ? (
+              <Tooltip title={userName || 'User'}>
+                <div
+                  ref={usernameRef}
+                  style={{
+                    ...userPopupUsernameStyles,
+                    maxWidth: 160,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    fontFamily:
+                      'Poppins, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, sans-serif',
+                  }}
+                >
+                  {userName || 'User'}
+                </div>
+              </Tooltip>
+            ) : (
+              <div
+                ref={usernameRef}
+                style={{
+                  ...userPopupUsernameStyles,
+                  maxWidth: 160,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {userName || 'User'}
+              </div>
+            )}
+            <div style={userPopupLevelStyles}>Teacher account</div>
+          </div>
+        </div>
+      </div>
+
+      <Box sx={{ padding: '8px 12px' }}>
+        <Box
+          onClick={() => {
+            handleMenuClose();
+            router.push('/teacher/profile');
+          }}
+          sx={{
+            ...userPopupMenuItemStyles,
+            alignItems: 'center',
+            cursor: 'pointer',
+            display: 'flex',
+            gap: 1,
+            color: 'text.primary',
+            '&:hover': {
+              bgcolor: 'rgba(25,118,210,0.06)',
+              color: 'primary.main',
+              borderRadius: 1,
+            },
+          }}
+        >
+          <ProfileIcon />
+          <Typography sx={{ fontWeight: 600 }}>Profile</Typography>
+        </Box>
+
+        <Box
+          onClick={handleLogout}
+          sx={{
+            ...userPopupMenuItemLogoutStyles,
+            alignItems: 'center',
+            cursor: 'pointer',
+            display: 'flex',
+            gap: 1,
+            color: 'error.main',
+            '&:hover': {
+              bgcolor: 'rgba(211,47,47,0.06)',
+              color: 'error.main',
+              borderRadius: 1,
+            },
+          }}
+        >
+          <LogoutIcon />
+          <Typography sx={{ fontWeight: 600 }}>Logout</Typography>
+        </Box>
+      </Box>
+    </>
+  );
 
   return (
     <AppBar
@@ -314,101 +415,28 @@ export default function TeacherHeader() {
 
                   {popupOpen && (
                     <>
-                      <div style={userPopupBackdropStyles} onClick={handleMenuClose} />
-                      <div style={{ ...userPopupContainerStyles, width: 260 }} ref={popupRef}>
-                        <div style={userPopupHeaderStyles}>
-                          <div style={userPopupAvatarNameBoxStyles}>
-                            <div style={userPopupAvatarWrapperStyles}>
-                              <Avatar
-                                src={userAvatar || undefined}
-                                alt={userName || 'User'}
-                                sx={{ width: '100%', height: '100%' }}
-                              >
-                                {userName?.[0]?.toUpperCase() || 'U'}
-                              </Avatar>
-                            </div>
-                            <div>
-                              {isNameOverflow ? (
-                                <Tooltip title={userName || 'User'}>
-                                  <div
-                                    ref={usernameRef}
-                                    style={{
-                                      ...userPopupUsernameStyles,
-                                      maxWidth: 160,
-                                      overflow: 'hidden',
-                                      textOverflow: 'ellipsis',
-                                      whiteSpace: 'nowrap',
-                                      fontFamily:
-                                        'Poppins, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, sans-serif',
-                                    }}
-                                  >
-                                    {userName || 'User'}
-                                  </div>
-                                </Tooltip>
-                              ) : (
-                                <div
-                                  ref={usernameRef}
-                                  style={{
-                                    ...userPopupUsernameStyles,
-                                    maxWidth: 160,
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap',
-                                  }}
-                                >
-                                  {userName || 'User'}
-                                </div>
-                              )}
-                              <div style={userPopupLevelStyles}>Teacher account</div>
-                            </div>
+                      {isMobile ? (
+                        <Drawer
+                          anchor="bottom"
+                          open={popupOpen}
+                          onClose={handleMenuClose}
+                          sx={{
+                            '& .MuiDrawer-paper': {
+                              borderTopLeftRadius: 12,
+                              borderTopRightRadius: 12,
+                            },
+                          }}
+                        >
+                          <Box sx={{ px: 2, pt: 2, pb: 3 }}>{avatarMenuContent}</Box>
+                        </Drawer>
+                      ) : (
+                        <>
+                          <div style={userPopupBackdropStyles} onClick={handleMenuClose} />
+                          <div style={{ ...userPopupContainerStyles, width: 260 }} ref={popupRef}>
+                            {avatarMenuContent}
                           </div>
-                        </div>
-
-                        <Box sx={{ padding: '8px 12px' }}>
-                          <Box
-                            onClick={() => {
-                              handleMenuClose();
-                              router.push('/teacher/profile');
-                            }}
-                            sx={{
-                              ...userPopupMenuItemStyles,
-                              alignItems: 'center',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              gap: 1,
-                              color: 'text.primary',
-                              '&:hover': {
-                                bgcolor: 'rgba(25,118,210,0.06)',
-                                color: 'primary.main',
-                                borderRadius: 1,
-                              },
-                            }}
-                          >
-                            <ProfileIcon />
-                            <Typography sx={{ fontWeight: 600 }}>Profile</Typography>
-                          </Box>
-
-                          <Box
-                            onClick={handleLogout}
-                            sx={{
-                              ...userPopupMenuItemLogoutStyles,
-                              alignItems: 'center',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              gap: 1,
-                              color: 'error.main',
-                              '&:hover': {
-                                bgcolor: 'rgba(211,47,47,0.06)',
-                                color: 'error.main',
-                                borderRadius: 1,
-                              },
-                            }}
-                          >
-                            <LogoutIcon />
-                            <Typography sx={{ fontWeight: 600 }}>Logout</Typography>
-                          </Box>
-                        </Box>
-                      </div>
+                        </>
+                      )}
                     </>
                   )}
                 </Box>

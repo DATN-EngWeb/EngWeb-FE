@@ -19,19 +19,6 @@ export default function ProductiveEditor({
         </Typography>
       </Box>
 
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="body2" sx={{ mb: 1 }}>
-          Description test <span style={{ color: 'red' }}>*</span>
-        </Typography>
-        <Box className="editor-container">
-          <ClientSideCustomEditor
-            data={question.description}
-            onChange={(data) => onChange('description', data)}
-            isReadOnly={isReadOnly}
-          />
-        </Box>
-      </Box>
-
       {showAudio && (
         <Box sx={{ mb: 2 }}>
           <Box
@@ -61,6 +48,19 @@ export default function ProductiveEditor({
           />
         </Box>
       )}
+
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="body2" sx={{ mb: 1 }}>
+          Description test <span style={{ color: 'red' }}>*</span>
+        </Typography>
+        <Box className="editor-container">
+          <ClientSideCustomEditor
+            data={question.description}
+            onChange={(data) => onChange('description', data)}
+            isReadOnly={isReadOnly}
+          />
+        </Box>
+      </Box>
 
       <Box>
         <Typography variant="body2" sx={{ mb: 1 }}>

@@ -66,6 +66,8 @@ const LEVELS = [
   { value: 'B2', label: 'Upper-intermediate (B2)' },
 ];
 
+const ALL_LEVELS_VALUE = '__ALL_LEVELS__';
+
 const renderLevelValue = (selected) => {
   if (!selected || selected.length === 0) return 'All levels';
   if (selected.length === 1) {
@@ -111,11 +113,19 @@ function FieldLabel({ children }) {
 
 export default function FilterSidebar({ filters, handleFilterChange, user }) {
   // filters.level is array: [] = all, ['A1'], ['A1','B1'], ...
-  const selectedLevels = filters.level || [];
+  const selectedLevels = (filters.level || []).filter((value) =>
+    LEVELS.some((level) => level.value === value),
+  );
 
   const handleLevelChange = (event) => {
-    const value = event.target.value; // MUI return array
-    handleFilterChange('level', value);
+    const value = event.target.value; // MUI returns array
+    if (value.includes(ALL_LEVELS_VALUE)) {
+      handleFilterChange('level', []);
+      return;
+    }
+
+    const normalized = value.filter((item) => LEVELS.some((level) => level.value === item));
+    handleFilterChange('level', normalized);
   };
 
   // Check if any filters are active
@@ -247,7 +257,7 @@ export default function FilterSidebar({ filters, handleFilterChange, user }) {
               sx={inputSx}
               MenuProps={dropdownMenuProps}
             >
-              <MenuItem value="" dense>
+              <MenuItem value={ALL_LEVELS_VALUE} dense>
                 <Checkbox
                   checked={selectedLevels.length === 0}
                   indeterminate={selectedLevels.length > 0 && selectedLevels.length < LEVELS.length}

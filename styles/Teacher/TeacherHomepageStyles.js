@@ -86,8 +86,6 @@ export const TeacherHomepageStyles = {
       lg: '1fr 1fr 1fr',
     },
     gap: '24px',
-    marginBottom: '48px',
-    minHeight: '400px',
     alignContent: 'start',
   },
   paginationContainer: {

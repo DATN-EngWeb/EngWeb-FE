@@ -1,5 +1,5 @@
 'use client';
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
   Table,
   TableBody,
@@ -15,9 +15,14 @@ import {
   Stack,
   Box,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import StarIcon from '@mui/icons-material/Star';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import DescriptionIcon from '@mui/icons-material/Description';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import ShareIcon from '@mui/icons-material/Share';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import * as styles from '@/styles/Student/HistoryTestStyles';
 import { formatDate } from '../../utils/stringFormat';
 
@@ -33,9 +38,12 @@ const wordCount = (data) => {
 };
 
 export default function HistoryTable({ data, skill, onViewDetail, onShare, onOpenAIReviewed }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
   return (
     <TableContainer sx={styles.tableContainer}>
-      <Table sx={{ minWidth: 650 }}>
+      <Table sx={{ minWidth: isMobile ? 560 : 650 }}>
         <TableHead sx={styles.tableHead}>
           <TableRow>
             <TableCell>DATE</TableCell>
@@ -117,7 +125,7 @@ export default function HistoryTable({ data, skill, onViewDetail, onShare, onOpe
                   </Typography>
                 </TableCell>
                 <TableCell>
-                  <Stack direction="row" spacing={2}>
+                  <Stack direction={isMobile ? 'column' : 'row'} spacing={isMobile ? 0.5 : 2}>
                     <Typography
                       variant="caption"
                       fontWeight={700}
@@ -140,27 +148,33 @@ export default function HistoryTable({ data, skill, onViewDetail, onShare, onOpe
                   </Stack>
                 </TableCell>
                 <TableCell align="center">
-                  <Stack direction="row" spacing={1} justifyContent="center">
-                    <Button
-                      variant="contained"
-                      size="small"
-                      sx={{
-                        bgcolor: '#f5f5f5',
-                        color: '#4e342e',
-                        boxShadow: 'none',
-                        textTransform: 'none',
-                        fontWeight: 700,
-                        borderRadius: '8px',
-                        '&:hover': { bgcolor: '#eeeeee' },
-                      }}
-                      onClick={() => onViewDetail(item)}
-                    >
-                      View Detail
-                    </Button>
-                    {onShare && (
+                  <Stack
+                    direction={isMobile ? 'column' : 'row'}
+                    spacing={isMobile ? 0.75 : 1}
+                    justifyContent="center"
+                    alignItems="stretch"
+                  >
+                    {isMobile ? (
+                      <IconButton
+                        onClick={() => onViewDetail(item)}
+                        aria-label="View detail"
+                        sx={{
+                          bgcolor: 'background.gray',
+                          color: 'primary.main',
+                          borderRadius: '10px',
+                          width: 44,
+                          height: 44,
+                          '&:hover': { bgcolor: 'background.gray' },
+                        }}
+                      >
+                        <VisibilityOutlinedIcon fontSize="small" />
+                      </IconButton>
+                    ) : (
                       <Button
                         variant="contained"
                         size="small"
+                        fullWidth={isMobile}
+                        startIcon={<VisibilityOutlinedIcon />}
                         sx={{
                           bgcolor: '#f5f5f5',
                           color: '#4e342e',
@@ -170,11 +184,51 @@ export default function HistoryTable({ data, skill, onViewDetail, onShare, onOpe
                           borderRadius: '8px',
                           '&:hover': { bgcolor: '#eeeeee' },
                         }}
-                        onClick={() => onShare(item)}
+                        onClick={() => onViewDetail(item)}
                       >
-                        {item.is_shared ? 'View Post' : 'Share to Forum'}
+                        View Detail
                       </Button>
                     )}
+                    {onShare &&
+                      (isMobile ? (
+                        <IconButton
+                          onClick={() => onShare(item)}
+                          aria-label={item.is_shared ? 'View post' : 'Share to forum'}
+                          sx={{
+                            bgcolor: 'background.gray',
+                            color: 'primary.main',
+                            borderRadius: '10px',
+                            width: 44,
+                            height: 44,
+                            '&:hover': { bgcolor: 'background.gray' },
+                          }}
+                        >
+                          {item.is_shared ? (
+                            <OpenInNewIcon fontSize="small" />
+                          ) : (
+                            <ShareIcon fontSize="small" />
+                          )}
+                        </IconButton>
+                      ) : (
+                        <Button
+                          variant="contained"
+                          size="small"
+                          fullWidth={isMobile}
+                          startIcon={item.is_shared ? <OpenInNewIcon /> : <ShareIcon />}
+                          sx={{
+                            bgcolor: '#f5f5f5',
+                            color: '#4e342e',
+                            boxShadow: 'none',
+                            textTransform: 'none',
+                            fontWeight: 700,
+                            borderRadius: '8px',
+                            '&:hover': { bgcolor: '#eeeeee' },
+                          }}
+                          onClick={() => onShare(item)}
+                        >
+                          {item.is_shared ? 'View Post' : 'Share to Forum'}
+                        </Button>
+                      ))}
                   </Stack>
                 </TableCell>
               </TableRow>
