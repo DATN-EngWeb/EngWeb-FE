@@ -1178,10 +1178,10 @@ export default function Page() {
                   border: '1px solid #f0f0f0',
                   borderRadius: 3,
                   bgcolor: '#fff',
-                  overflow: 'hidden',
+                  overflow: 'auto',
                   position: { lg: 'sticky' },
-                  top: { lg: 16 },
-                  height: { lg: 'calc(100vh - 140px)' },
+                  top: { lg: 70 },
+                  maxHeight: { lg: 'calc(100vh - 90px)' },
                   display: 'flex',
                   flexDirection: 'column',
                 }}

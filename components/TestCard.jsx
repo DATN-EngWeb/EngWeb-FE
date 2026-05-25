@@ -174,6 +174,11 @@ const TestCard = ({
     }
   };
 
+  const handleEdit = () => {
+    const skillName = skillMap[skill];
+    router.push(`/teacher/update-test/${skillName}/${id}`);
+  };
+
   const getStatusStyles = (status) => {
     switch (status) {
       case 'P': // Published
@@ -488,14 +493,24 @@ const TestCard = ({
         </Button>
 
         {role !== 'student' && (
-          <IconButtonAction
-            icon={<TrashIcon />}
-            color="error.main"
-            isDelete={true}
-            onClick={() => {
-              handleDelete();
-            }}
-          />
+          <>
+            {(status === 'I' || status === 'D') && (
+              <IconButtonAction
+                icon={<PencilIcon />}
+                color="primary.main"
+                isDelete={false}
+                onClick={handleEdit}
+              />
+            )}
+            <IconButtonAction
+              icon={<TrashIcon />}
+              color="error.main"
+              isDelete={true}
+              onClick={() => {
+                handleDelete();
+              }}
+            />
+          </>
         )}
       </Box>
 
