@@ -1024,14 +1024,14 @@ export default function WritingTest() {
         sx={{
           ...styles.mainContainer,
           flex: 1,
-          overflow: isSmDown ? 'visible' : 'hidden', // mobile không clip
+          overflow: 'hidden',
         }}
       >
         <Box
           sx={{
             ...styles.contentWrapper,
-            overflowY: isSmDown ? 'visible' : 'auto', // mobile tự scroll theo page
-            height: isSmDown ? 'auto' : '100%', // mobile không bị ép height
+            overflowY: 'auto',
+            height: '100%',
           }}
         >
           {isSmDown ? (
@@ -1040,6 +1040,7 @@ export default function WritingTest() {
               sx={{
                 display: 'flex',
                 flexDirection: 'column',
+                minHeight: '94%',
                 gap: 1.5,
                 pb: 2,
               }}
@@ -1050,6 +1051,7 @@ export default function WritingTest() {
                   ...styles.writingPaper,
                   display: 'flex',
                   flexDirection: 'column',
+                  minHeight: 0,
                   width: '100%',
                   alignSelf: 'stretch',
                 }}
@@ -1169,7 +1171,6 @@ export default function WritingTest() {
                   onChange={(e) => setText(e.target.value)}
                   sx={{
                     ...styles.textFieldStyle,
-                    Rows: 22,
                     width: '100%',
                     '& .MuiInputBase-root': {
                       alignItems: 'flex-start',
@@ -1179,13 +1180,15 @@ export default function WritingTest() {
                       lineHeight: 1.7,
                       backgroundColor: 'white',
                       borderRadius: '12px',
-                      minHeight: 'calc(22 * 1.7 * 0.95rem)',
+                      overflow: 'hidden',
                     },
-                    '& textarea': {
-                      overflow: 'auto !important',
+                    '& .MuiInputBase-inputMultiline': {
+                      overflowY: 'auto !important',
                       resize: 'none',
                     },
                   }}
+                  minRows={20}
+                  maxRows={20}
                   disabled={isFinished}
                 />
 
