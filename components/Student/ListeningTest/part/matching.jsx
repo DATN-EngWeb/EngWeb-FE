@@ -1,6 +1,7 @@
+/* global IntersectionObserver */
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Container, Box, Typography, FormControl, Select, MenuItem } from '@mui/material';
 import CustomAudioPlayer from '../../../Test/customAudioPlayer';
 import InstructionIcon from '../../../Test/instructionIcon';
@@ -25,7 +26,8 @@ export default function Matching({
   const isTeacherView =
     pathname?.includes('/teacher/view-test/') ||
     pathname?.includes('/teacher/upload-test/') ||
-    pathname?.includes('/teacher/update-test/');
+    pathname?.includes('/teacher/update-test/') ||
+    pathname?.includes('/teacher/review-test/');
 
   const showSummary = disabled && !isTeacherView;
 
@@ -35,6 +37,32 @@ export default function Matching({
     option_label: question.receptive_answers[0]?.option_label || '',
     answer_text: question.receptive_answers[0]?.answer_text || '',
   }));
+
+  const [openSelectId, setOpenSelectId] = useState(null);
+
+  useEffect(() => {
+    if (openSelectId === null) return;
+
+    const element = document.getElementById(`select-${openSelectId}`);
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            setOpenSelectId(null);
+          }
+        });
+      },
+      { root: null, threshold: 0 },
+    );
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [openSelectId]);
 
   useEffect(() => {
     if (!isActive) {
@@ -166,6 +194,7 @@ export default function Matching({
                       </Typography>
                     </Box>
                     <FormControl
+                      id={`select-${question.id}`}
                       sx={{
                         ...uploadReadingStyles.formControl,
                         width: { xs: '150px', md: '180px' },
@@ -176,8 +205,12 @@ export default function Matching({
                         onChange={(e) =>
                           !disabled && handleUpdateCorrectAnswer(question.id, e.target.value)
                         }
+                        open={openSelectId === question.id}
+                        onOpen={() => setOpenSelectId(question.id)}
+                        onClose={() => setOpenSelectId(null)}
                         displayEmpty
                         disabled={disabled}
+                        MenuProps={{ disableScrollLock: true }}
                         sx={{
                           ...matchingStyles.selectAnswer,
                           ...(questionResult && {

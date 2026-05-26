@@ -33,15 +33,15 @@ export default function TestEditorActions({
         alignItems: 'center',
         gridTemplateAreas: {
           xs: `
-          "item1 item4"
-          "item2 item3"
+          "item1 item1 item1"
+          "item2 item3 item4"
         `,
           sm: `
           "item1 item2 item3 item4"
         `,
         },
         gridTemplateColumns: {
-          xs: '1fr 1fr',
+          xs: '1fr 1fr 1fr',
           sm: '1fr auto auto auto',
         },
         ...(sticky && {
@@ -53,8 +53,10 @@ export default function TestEditorActions({
       }
     : {
         display: 'flex',
+        flexDirection: { xs: 'column', sm: 'row' },
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: { xs: 'stretch', sm: 'center' },
+        gap: { xs: 1.5, sm: 0 },
         mb: 2,
         ...(sticky && {
           position: 'sticky',
@@ -78,6 +80,7 @@ export default function TestEditorActions({
               variant="outlined"
               onClick={onPreview}
               disabled={isLoading}
+              sx={{ flex: { xs: 1, sm: 'none' } }}
             >
               {isPreviewActive ? 'Hide Preview' : 'Show Preview'}
             </Button>
@@ -89,18 +92,31 @@ export default function TestEditorActions({
               variant="outlined"
               onClick={onFeedback}
               disabled={isLoading}
+              sx={{ flex: { xs: 1, sm: 'none' } }}
             >
               {isFeedbackActive ? 'Hide Feedback' : 'Show Feedback'}
             </Button>
           )}
         </Box>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 1,
+            flexWrap: { xs: 'wrap', sm: 'nowrap' },
+            justifyContent: { xs: 'center', sm: 'flex-end' },
+          }}
+        >
           {onCancelClick && (
             <Button
               variant="outlined"
               startIcon={<CancelIcon />}
               onClick={onCancelClick}
               disabled={isLoading}
+              sx={{
+                flex: { xs: '1 1 auto', sm: 'none' },
+                px: { xs: 1, sm: 2 },
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              }}
             >
               Cancel
             </Button>
@@ -111,6 +127,12 @@ export default function TestEditorActions({
               startIcon={<SendIcon />}
               onClick={onSendReview}
               disabled={isLoading}
+              sx={{
+                flex: { xs: '1 1 auto', sm: 'none' },
+                px: { xs: 1, sm: 2 },
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                whiteSpace: 'nowrap',
+              }}
             >
               Send for Review
             </Button>
@@ -121,6 +143,12 @@ export default function TestEditorActions({
               startIcon={<SaveIcon />}
               onClick={onSaveDraft}
               disabled={isLoading}
+              sx={{
+                flex: { xs: '1 1 auto', sm: 'none' },
+                px: { xs: 1, sm: 2 },
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                whiteSpace: 'nowrap',
+              }}
             >
               Save Draft
             </Button>
@@ -132,6 +160,11 @@ export default function TestEditorActions({
               startIcon={<PublishIcon />}
               onClick={onPublish}
               disabled={isLoading}
+              sx={{
+                flex: { xs: '1 1 auto', sm: 'none' },
+                px: { xs: 1, sm: 2 },
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              }}
             >
               Public
             </Button>

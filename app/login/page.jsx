@@ -18,7 +18,6 @@ import {
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import loginImage from '../../assets/img/login.png';
 import googleImage from '../../assets/img/google.png';
-import facebookImage from '../../assets/img/facebook-2.png';
 import { loginStyles } from '../../styles/Login/LoginStyles';
 import { login as loginAPI } from '../../api/accounts';
 import { decodeJwt } from '../../utils/jwt';
@@ -69,38 +68,6 @@ function LoginContent() {
     const state = encodeURIComponent(JSON.stringify({ role: backendRole }));
 
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent&state=${state}`;
-
-    window.location.href = authUrl;
-  };
-
-  const handleFacebookLogin = () => {
-    // ... existing logic ...
-    const clientId = process.env.NEXT_PUBLIC_FACEBOOK_CLIENT_ID;
-    const redirectUri = process.env.NEXT_PUBLIC_FACEBOOK_REDIRECT_URI;
-    const scope = process.env.NEXT_PUBLIC_FACEBOOK_SCOPE;
-
-    if (!clientId) {
-      setServerError('Facebook OAuth is not configured. Please contact support.');
-      return;
-    }
-
-    if (!redirectUri) {
-      setServerError('Facebook redirect URI is not configured. Please contact support.');
-      return;
-    }
-
-    if (!scope) {
-      setServerError('Facebook scope is not configured. Please contact support.');
-      return;
-    }
-
-    // Pass selected role via state parameter
-    const backendRole = currentRole === 'teacher' ? 'T' : 'S';
-    const state = encodeURIComponent(JSON.stringify({ role: backendRole }));
-
-    const authUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(
-      redirectUri,
-    )}&state=${state}&response_type=code&scope=${encodeURIComponent(scope)}`;
 
     window.location.href = authUrl;
   };
@@ -452,16 +419,6 @@ function LoginContent() {
                 <Box sx={loginStyles.socialButtonContent}>
                   <Image src={googleImage} alt="Google" width={15} height={15} />
                   Google
-                </Box>
-              </Button>
-              <Button
-                variant="outlined"
-                sx={loginStyles.socialButton}
-                onClick={handleFacebookLogin}
-              >
-                <Box sx={loginStyles.socialButtonContent}>
-                  <Image src={facebookImage} alt="Facebook" width={20} height={20} />
-                  Facebook
                 </Box>
               </Button>
             </Box>

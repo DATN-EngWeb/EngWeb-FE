@@ -452,7 +452,6 @@ export default function ListeningTestEditor({ testId: propTestId }) {
             backgroundColor: '#FFF4E9',
             pt: 0.5,
             pb: 0.5,
-            px: 2,
           }}
         >
           <TestEditorActions
@@ -593,10 +592,9 @@ export default function ListeningTestEditor({ testId: propTestId }) {
                         minWidth: { md: '280px' },
                         alignSelf: 'flex-start',
                         position: { md: 'sticky' },
-                        top: { md: 16 },
-                        height: { md: 'calc(100vh - 140px)' },
-                        maxHeight: { md: 'calc(100vh - 140px)' },
-                        overflow: 'hidden',
+                        top: { md: 70 },
+                        maxHeight: { md: 'calc(100vh - 90px)' },
+                        overflow: 'auto',
                       }}
                     >
                       <FeedbackPanel testId={editingTestId} compact readOnly />

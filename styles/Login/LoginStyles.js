@@ -143,11 +143,11 @@ export const loginStyles = {
     width: { xs: '100%', lg: '50%' },
     flex: { xs: 'none', lg: '0 0 50%' },
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: { xs: 'center', lg: 'center' },
     overflow: { xs: 'visible', lg: 'auto' },
     minWidth: 0,
-    py: { xs: 3, lg: 0 },
+    py: { xs: 3, lg: 4 },
   },
   formCard: {
     width: '100%',
@@ -155,6 +155,7 @@ export const loginStyles = {
     borderRadius: { xs: 3, md: 4 },
     pr: '80px',
     ml: { lg: 0 },
+    my: 'auto',
   },
   cardEyebrow: {
     textAlign: 'center',
@@ -274,6 +275,7 @@ export const loginStyles = {
     display: 'flex',
     gap: 2,
     flexWrap: 'wrap',
+    pb: 4,
   },
   socialButton: {
     flex: { xs: '1 1 100%', sm: '1 1 45%' },

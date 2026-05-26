@@ -1,3 +1,4 @@
+/* global IntersectionObserver */
 'use client';
 
 import {
@@ -44,6 +45,32 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
   const [leftPaneWidth, setLeftPaneWidth] = useState(50);
   const [isDraggingSplitter, setIsDraggingSplitter] = useState(false);
   const layoutRef = useRef(null);
+
+  const [openSelectId, setOpenSelectId] = useState(null);
+
+  useEffect(() => {
+    if (openSelectId === null) return;
+
+    const element = document.getElementById(`select-${openSelectId}`);
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            setOpenSelectId(null);
+          }
+        });
+      },
+      { root: null, threshold: 0 },
+    );
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [openSelectId]);
 
   const toggleQuestionCollapse = (questionId) => {
     setCollapsedQuestions((prev) => ({
@@ -316,6 +343,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                             />
 
                             <FormControl
+                              id={`select-${question.id}`}
                               size="small"
                               sx={{
                                 width: 110,
@@ -327,7 +355,11 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                               <Select
                                 value={question.selectedAnswerId || ''}
                                 onChange={(e) => setQuestionAnswer(qIdx, e.target.value)}
+                                open={openSelectId === question.id}
+                                onOpen={() => setOpenSelectId(question.id)}
+                                onClose={() => setOpenSelectId(null)}
                                 displayEmpty
+                                MenuProps={{ disableScrollLock: true }}
                               >
                                 <MenuItem value="" disabled>
                                   <em>Select...</em>

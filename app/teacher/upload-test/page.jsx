@@ -8,8 +8,8 @@ export default function UploadTestPage() {
       sx={{
         backgroundColor: '#FFF5EB',
         minHeight: '100vh',
-        p: 4,
-        px: 20,
+        p: { xs: 2, md: 4 },
+        px: { xs: 2, sm: 4, md: 10, lg: 20 },
       }}
     >
       <CreateTestHeader />

@@ -25,7 +25,8 @@ export default function MultipleChoiceSingleAudio({
   const isTeacherView =
     pathname?.includes('/teacher/view-test/') ||
     pathname?.includes('/teacher/upload-test/') ||
-    pathname?.includes('/teacher/update-test/');
+    pathname?.includes('/teacher/update-test/') ||
+    pathname?.includes('/teacher/review-test/');
 
   const showSummary = disabled && !isTeacherView;
 
@@ -207,7 +208,7 @@ export default function MultipleChoiceSingleAudio({
                         >
                           {option.answer_text || option.text}
                         </Typography>
-                        {correctAnswer.option_label === option.option_label && showSummary && (
+                        {correctAnswer?.option_label === option.option_label && showSummary && (
                           <Chip
                             label="Correct"
                             size="small"

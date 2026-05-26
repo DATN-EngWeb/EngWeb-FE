@@ -39,7 +39,7 @@ export default function FeedbackTestLayout({ testId, forbidden = false, children
           width: { xs: '100%', md: '320px' },
           flexShrink: 0,
           height: '100%',
-          overflow: 'hidden',
+          overflow: 'auto',
           display: 'flex',
           flexDirection: 'column',
           bgcolor: '#f7f7f7',

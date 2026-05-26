@@ -1,3 +1,4 @@
+/* global IntersectionObserver */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -33,19 +34,45 @@ const MatchingContent = ({
   const isTeacherView =
     pathname?.includes('/teacher/view-test/') ||
     pathname?.includes('/teacher/upload-test/') ||
-    pathname?.includes('/teacher/update-test/');
+    pathname?.includes('/teacher/update-test/') ||
+    pathname?.includes('/teacher/review-test/');
+
   const showSummary = showResults && !isTeacherView;
 
   const [leftWidth, setLeftWidth] = useState(55);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = React.useRef(null);
   const [passageContent, setPassageContent] = useState(passage);
-  useEffect(() => {
-    console.log('passageContent: ', passageContent);
-  }, [passageContent]);
+
   const [processedSentences, setProcessedSentences] = useState(sentences);
 
   const [targetQuestionId, setTargetQuestionId] = useState(null);
+
+  const [openSelectId, setOpenSelectId] = useState(null);
+
+  useEffect(() => {
+    if (openSelectId === null) return;
+
+    const element = document.getElementById(`select-${openSelectId}`);
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            setOpenSelectId(null);
+          }
+        });
+      },
+      { root: null, threshold: 0 },
+    );
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [openSelectId]);
 
   // Lấy nội dung bài đọc từ URL nếu passage là một link lưu trữ (Google Cloud Storage)
   useEffect(() => {
@@ -163,10 +190,28 @@ const MatchingContent = ({
     const question = questions.find((q) => q.question_number === gapNumber);
     if (!question) return;
 
-    onAnswerChange({
-      ...answers,
-      [question.id]: value,
-    });
+    const newAnswers = { ...answers };
+
+    if (value !== '') {
+      Object.keys(newAnswers).forEach((key) => {
+        let existingValue = String(newAnswers[key]).trim();
+        if (/^\d+$/.test(existingValue)) {
+          const sentenceIndex = processedSentences.findIndex(
+            (s) => s.id === parseInt(existingValue, 10),
+          );
+          if (sentenceIndex !== -1) {
+            existingValue = String.fromCharCode(65 + sentenceIndex);
+          }
+        }
+        if (existingValue === value) {
+          delete newAnswers[key];
+        }
+      });
+    }
+
+    newAnswers[question.id] = value;
+
+    onAnswerChange(newAnswers);
   };
 
   // Tự động cuộn mượt và tạo hiệu ứng nhún (bounce) tới câu hỏi được click từ bảng tóm tắt
@@ -520,6 +565,7 @@ const MatchingContent = ({
 
                             {/* 3. Select: Cho phép chọn A, B, C, D */}
                             <FormControl
+                              id={`select-${gapNumber}`}
                               sx={{
                                 minWidth: '90px',
                                 flexShrink: 0,
@@ -528,8 +574,12 @@ const MatchingContent = ({
                               <Select
                                 value={userAns}
                                 onChange={(e) => handleAnswerChangeLocal(gapNumber, e.target.value)}
+                                open={openSelectId === gapNumber}
+                                onOpen={() => setOpenSelectId(gapNumber)}
+                                onClose={() => setOpenSelectId(null)}
                                 displayEmpty
                                 disabled={showResults}
+                                MenuProps={{ disableScrollLock: true }}
                                 sx={{
                                   height: 44,
                                   width: '100%',
