@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { getListTest } from '../../api/test';
 import { ReviewTestPageStyles as styles } from '../../styles/Teacher/ReviewTest/ReviewTestPageStyles';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import {
   Paper,
   Typography,
@@ -47,6 +49,8 @@ const SKILL_LABELS = {
 
 export default function ReviewTestPage() {
   const router = useRouter();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mounted, setMounted] = useState(false);
   const [tests, setTests] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -157,20 +161,26 @@ export default function ReviewTestPage() {
   if (!mounted) return null;
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const emptyColSpan = 7;
   return (
     <Box component="main" sx={styles.contentWrapper}>
       <Box
         sx={{
           backgroundColor: '#fff',
           borderRadius: 3,
-          p: 3,
-          mb: 4,
+          p: { xs: 2, sm: 3 },
+          mb: { xs: 2, md: 4 },
         }}
       >
-        <Typography variant="h3" fontWeight={600} color="primary.main">
+        <Typography
+          variant="h3"
+          fontWeight={600}
+          color="primary.main"
+          sx={{ fontSize: { xs: '1.4rem', sm: '1.75rem', md: '2.5rem' } }}
+        >
           {isMine ? 'My Test Collection' : 'Review Test Center'}
         </Typography>
-        <Typography color="text.secondary">
+        <Typography color="text.secondary" sx={{ fontSize: { xs: '0.88rem', sm: '1rem' } }}>
           {isMine
             ? 'Manage and track the status of your created exam questions.'
             : 'Review exam questions from colleagues to ensure quality.'}
@@ -178,12 +188,18 @@ export default function ReviewTestPage() {
       </Box>
 
       {/* Switcher */}
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: -1, mb: 3 }}>
-        <Box sx={styles.switcherWrapper}>
-          <Stack direction="row" sx={styles.switcher}>
+      <Box sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-end' }, mt: 1, mb: 3 }}>
+        <Box sx={{ ...styles.switcherWrapper, width: { xs: '100%', md: 'auto' } }}>
+          <Stack direction="row" sx={{ ...styles.switcher, width: '100%' }}>
             <Button
               startIcon={<RateReviewIcon />}
-              sx={{ ...styles.switchButton, ...(!isMine && styles.switchActive) }}
+              sx={{
+                ...styles.switchButton,
+                flex: 1,
+                minWidth: 0,
+                whiteSpace: 'nowrap',
+                ...(!isMine && styles.switchActive),
+              }}
               onClick={() => {
                 setIsMine(false);
                 setSortBy('Newest List');
@@ -193,7 +209,13 @@ export default function ReviewTestPage() {
             </Button>
             <Button
               startIcon={<AssignmentIndIcon />}
-              sx={{ ...styles.switchButton, ...(isMine && styles.switchActive) }}
+              sx={{
+                ...styles.switchButton,
+                flex: 1,
+                minWidth: 0,
+                whiteSpace: 'nowrap',
+                ...(isMine && styles.switchActive),
+              }}
               onClick={() => {
                 setIsMine(true);
                 setSortBy('Newest List');
@@ -206,11 +228,16 @@ export default function ReviewTestPage() {
       </Box>
 
       {/* Filter Section */}
-      <Box sx={styles.filterSection}>
+      <Box sx={{ ...styles.filterSection, flexDirection: { xs: 'column', lg: 'row' } }}>
         <TextField
           placeholder="Search by name or topic"
           size="small"
-          sx={styles.searchInput}
+          sx={{
+            ...styles.searchInput,
+            flex: { xs: 'none', lg: 1 },
+            width: { xs: '100%', lg: 'auto' },
+            maxWidth: { xs: '100%', lg: 'none' },
+          }}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           slotProps={{
@@ -224,12 +251,21 @@ export default function ReviewTestPage() {
           }}
         />
 
-        <Stack direction="row" spacing={1.5}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1.5}
+          sx={{
+            width: { xs: '100%', lg: 'auto' },
+            flexShrink: 0,
+            ml: { lg: 'auto' },
+            justifyContent: { lg: 'flex-end' },
+          }}
+        >
           <Select
             size="small"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            sx={styles.selectFilter}
+            sx={{ ...styles.selectFilter, width: { xs: '100%', sm: 'auto' }, minWidth: 150 }}
             displayEmpty
             renderValue={(value) => value}
           >
@@ -244,7 +280,7 @@ export default function ReviewTestPage() {
             size="small"
             value={skillFilter}
             onChange={(e) => setSkillFilter(e.target.value)}
-            sx={styles.selectFilter}
+            sx={{ ...styles.selectFilter, width: { xs: '100%', sm: 'auto' }, minWidth: 150 }}
             displayEmpty
             renderValue={(value) => (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -264,7 +300,7 @@ export default function ReviewTestPage() {
             size="small"
             value={levelFilter}
             onChange={(e) => setLevelFilter(e.target.value)}
-            sx={styles.selectFilter}
+            sx={{ ...styles.selectFilter, width: { xs: '100%', sm: 'auto' }, minWidth: 150 }}
             displayEmpty
             renderValue={(value) => (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -284,118 +320,141 @@ export default function ReviewTestPage() {
       </Box>
 
       {/* Table Section */}
-      <TableContainer component={Paper} elevation={0} sx={styles.tableContainer}>
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
+      <TableContainer
+        component={Paper}
+        elevation={0}
+        sx={{ ...styles.tableContainer, overflowX: 'auto', position: 'relative' }}
+      >
+        {loading && tests.length === 0 ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 5, minHeight: 260 }}>
             <CircularProgress />
           </Box>
         ) : (
-          <Table stickyHeader size="small">
-            <TableHead>
-              <TableRow>
-                {!isMine && <TableCell sx={styles.tableHeadCell}>Teacher</TableCell>}
-                <TableCell sx={styles.tableHeadCell}>Test Name</TableCell>
-                <TableCell sx={styles.tableHeadCell}>Skill</TableCell>
-                <TableCell sx={styles.tableHeadCell}>Level</TableCell>
-                <TableCell sx={styles.tableHeadCell}>Created Date</TableCell>
-                <TableCell sx={styles.tableHeadCell}>Status</TableCell>
-                <TableCell sx={styles.tableHeadCell}>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {tests.length > 0 ? (
-                tests.map((item) => (
-                  <TableRow key={item.id} hover sx={styles.tableRow}>
-                    {!isMine && (
+          <Box sx={{ position: 'relative' }}>
+            {loading && tests.length > 0 && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  inset: 0,
+                  zIndex: 1,
+                  bgcolor: 'rgba(255,255,255,0.45)',
+                  backdropFilter: 'blur(1px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  pointerEvents: 'none',
+                }}
+              >
+                <CircularProgress size={28} />
+              </Box>
+            )}
+            <Table stickyHeader size="small" sx={{ minWidth: 980 }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={styles.tableHeadCell}>Teacher</TableCell>
+                  <TableCell sx={styles.tableHeadCell}>Test Name</TableCell>
+                  <TableCell sx={styles.tableHeadCell}>Skill</TableCell>
+                  <TableCell sx={styles.tableHeadCell}>Level</TableCell>
+                  <TableCell sx={styles.tableHeadCell}>Created Date</TableCell>
+                  <TableCell sx={styles.tableHeadCell}>Status</TableCell>
+                  <TableCell sx={styles.tableHeadCell}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {tests.length > 0 ? (
+                  tests.map((item) => (
+                    <TableRow key={item.id} hover sx={styles.tableRow}>
                       <TableCell sx={styles.tableBodyCell}>
                         <Stack direction="row" alignItems="center" spacing={1.5}>
                           <Avatar src={item.created_by?.avatar} sx={{ width: 28, height: 28 }} />
                           <Typography variant="body2" fontWeight={500}>
-                            {item.created_by?.full_name}
+                            {item.created_by?.full_name || '—'}
                           </Typography>
                         </Stack>
                       </TableCell>
-                    )}
-                    <TableCell sx={styles.tableBodyCell}>
-                      <Typography fontWeight={500}>{item.title}</Typography>
-                    </TableCell>
-                    <TableCell sx={styles.tableBodyCell}>
-                      {SKILL_LABELS[item.skill] || item.skill}
-                    </TableCell>
-                    <TableCell sx={styles.tableBodyCell}>{item.level}</TableCell>
-                    <TableCell sx={styles.tableBodyCell}>
-                      {item.created_at
-                        ? new Date(item.created_at).toLocaleDateString('en-GB')
-                        : 'N/A'}
-                    </TableCell>
-                    <TableCell sx={styles.tableBodyCell}>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: STATUS_MAP[item.status]?.color,
-                          fontWeight: 700,
-                          backgroundColor: `${STATUS_MAP[item.status]?.color}15`,
-                          px: 1.5,
-                          py: 0.5,
-                          borderRadius: '6px',
-                          display: 'inline-block',
-                        }}
-                      >
-                        {STATUS_MAP[item.status]?.label || item.status}
-                      </Typography>
-                    </TableCell>
-                    <TableCell sx={styles.tableBodyCell}>
-                      {isMine ? (
-                        <Stack direction="row" spacing={1}>
+                      <TableCell sx={styles.tableBodyCell}>
+                        <Typography fontWeight={500}>{item.title}</Typography>
+                      </TableCell>
+                      <TableCell sx={styles.tableBodyCell}>
+                        {SKILL_LABELS[item.skill] || item.skill}
+                      </TableCell>
+                      <TableCell sx={styles.tableBodyCell}>{item.level}</TableCell>
+                      <TableCell sx={styles.tableBodyCell}>
+                        {item.created_at
+                          ? new Date(item.created_at).toLocaleDateString('en-GB')
+                          : 'N/A'}
+                      </TableCell>
+                      <TableCell sx={styles.tableBodyCell}>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: STATUS_MAP[item.status]?.color,
+                            fontWeight: 700,
+                            backgroundColor: `${STATUS_MAP[item.status]?.color}15`,
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: '6px',
+                            display: 'inline-block',
+                          }}
+                        >
+                          {STATUS_MAP[item.status]?.label || item.status}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={styles.tableBodyCell}>
+                        {isMine ? (
+                          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              color="warning"
+                              fullWidth={isMobile}
+                              sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600 }}
+                              onClick={() =>
+                                router.push(
+                                  `/teacher/view-test/${getSkillPath(item.skill)}/${item.id}/feedback`,
+                                )
+                              }
+                            >
+                              View Feedback
+                            </Button>
+                          </Stack>
+                        ) : (
                           <Button
                             size="small"
                             variant="contained"
-                            color="warning"
+                            color={item.status === 'I' ? 'primary' : 'inherit'}
+                            fullWidth={isMobile}
                             sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600 }}
-                            onClick={() =>
+                            onClick={() => {
                               router.push(
-                                `/teacher/view-test/${getSkillPath(item.skill)}/${item.id}/feedback`,
-                              )
-                            }
+                                `/teacher/review-test/${getSkillPath(item.skill)}/${item.id}`,
+                              );
+                            }}
                           >
-                            View Feedback
+                            {item.status === 'I' ? 'Review Now' : 'Detail'}
                           </Button>
-                        </Stack>
-                      ) : (
-                        <Button
-                          size="small"
-                          variant="contained"
-                          color={item.status === 'I' ? 'primary' : 'inherit'}
-                          sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600 }}
-                          onClick={() => {
-                            router.push(
-                              `/teacher/review-test/${getSkillPath(item.skill)}/${item.id}`,
-                            );
-                          }}
-                        >
-                          {item.status === 'I' ? 'Review Now' : 'Detail'}
-                        </Button>
-                      )}
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={emptyColSpan} align="center" sx={{ py: 5 }}>
+                      <Typography color="text.secondary">
+                        No data found matching your filters.
+                      </Typography>
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 5 }}>
-                    <Typography color="text.secondary">
-                      No data found matching your filters.
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                )}
+              </TableBody>
+            </Table>
+          </Box>
         )}
       </TableContainer>
 
       {/* Pagination Info */}
       {totalPages > 1 && (
-        <Box sx={styles.paginationContainer}>
+        <Box sx={{ ...styles.paginationContainer, flexWrap: 'wrap', px: { xs: 1, sm: 0 } }}>
           {/* Back button */}
           <IconButton disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>
             <ChevronLeft />
