@@ -452,7 +452,6 @@ export default function ListeningTestEditor({ testId: propTestId }) {
             backgroundColor: '#FFF4E9',
             pt: 0.5,
             pb: 0.5,
-            px: 2,
           }}
         >
           <TestEditorActions
@@ -495,7 +494,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
                 <Box
                   sx={{
                     display: 'flex',
-                    flexDirection: { xs: 'column', lg: 'row' },
+                    flexDirection: { xs: 'column', md: 'row' },
                     alignItems: 'flex-start',
                     gap: 2,
                     width: '100%',
@@ -588,15 +587,14 @@ export default function ListeningTestEditor({ testId: propTestId }) {
                   {canShowFeedback && isFeedbackActive && (
                     <Box
                       sx={{
-                        width: { xs: '100%', lg: '320px' },
+                        width: { xs: '100%', md: '320px' },
                         flexShrink: 0,
-                        minWidth: { lg: '280px' },
+                        minWidth: { md: '280px' },
                         alignSelf: 'flex-start',
-                        position: { lg: 'sticky' },
-                        top: { lg: 16 },
-                        height: { lg: 'calc(100vh - 140px)' },
-                        maxHeight: { lg: 'calc(100vh - 140px)' },
-                        overflow: 'hidden',
+                        position: { md: 'sticky' },
+                        top: { md: 70 },
+                        maxHeight: { md: 'calc(100vh - 90px)' },
+                        overflow: 'auto',
                       }}
                     >
                       <FeedbackPanel testId={editingTestId} compact readOnly />

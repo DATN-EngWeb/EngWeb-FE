@@ -32,6 +32,12 @@ export default function ProductivePreview({
 
         <Divider sx={{ my: 2 }} />
 
+        {audio && (
+          <Box sx={{ mb: 4 }}>
+            <CustomAudioPlayer src={audio} />
+          </Box>
+        )}
+
         <Box
           className="ck-content"
           dangerouslySetInnerHTML={{
@@ -42,12 +48,6 @@ export default function ProductivePreview({
           }}
           sx={{ minHeight: '100px', '& p': { margin: 0 } }}
         />
-
-        {audio && (
-          <Box sx={{ mt: 4 }}>
-            <CustomAudioPlayer src={audio} />
-          </Box>
-        )}
 
         {suggestion && (
           <Box sx={{ mt: 4 }}>

@@ -35,6 +35,7 @@ async function handleResponse(response) {
     localStorage.removeItem('userId');
     localStorage.removeItem('username');
     localStorage.removeItem('avatar');
+    localStorage.removeItem('userRole');
     localStorage.removeItem('userStatus');
     document.cookie = 'userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
     window.location.href = '/login';

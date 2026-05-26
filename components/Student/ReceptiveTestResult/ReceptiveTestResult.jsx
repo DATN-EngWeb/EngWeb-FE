@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Box, Container, Typography, CircularProgress, Button, Stack } from '@mui/material';
+import { Box, Container, Typography, Button } from '@mui/material';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { getReceptiveTestHistory } from '@/api/test';
-import { getFullReceptiveTest } from '@/api/tests';
+import { getFullReceptiveTestReview } from '@/api/tests';
 import {
   loadAudioSource,
   loadImageSource,
@@ -85,7 +85,7 @@ export default function ReceptiveTestResult({
 
         const [historyRes, testRes] = await Promise.all([
           getReceptiveTestHistory(historyId, token),
-          getFullReceptiveTest(testId, token),
+          getFullReceptiveTestReview(testId, token),
         ]);
 
         const partsData = testRes.receptive_test?.receptive_parts || [];
@@ -133,7 +133,12 @@ export default function ReceptiveTestResult({
           }
           const qHtmlPromises = [];
           part.receptive_questions?.forEach((q) => {
-            if (q.content && q.content.includes('http')) {
+            if (
+              q.content &&
+              q.content.includes('http') &&
+              part.format !== 'G' &&
+              part.format !== 'J'
+            ) {
               qHtmlPromises.push(async () => {
                 q.content = await fetchHtmlContent(q.content);
               });

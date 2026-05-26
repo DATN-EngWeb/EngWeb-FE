@@ -1,12 +1,11 @@
+/* global IntersectionObserver */
+'use client';
+
 import React from 'react';
 import { useEffect } from 'react';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
-import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
-import { Checkbox } from '@mui/material';
-import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-import CircleIcon from '@mui/icons-material/Circle';
 import { FormControl, FormLabel, OutlinedInput, Select, MenuItem } from '@mui/material';
 import {
   multipleChoiceStyles,
@@ -41,9 +40,34 @@ export default function MatchingForm({
     return Array.from({ length: Math.max(1, count) }, (_, i) => ({
       id: i,
       option_label: String.fromCharCode(65 + i),
-      answer_text: '',
     }));
   });
+
+  const [openSelectId, setOpenSelectId] = React.useState(null);
+
+  useEffect(() => {
+    if (openSelectId === null) return;
+
+    const element = document.getElementById(`select-${openSelectId}`);
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            setOpenSelectId(null);
+          }
+        });
+      },
+      { root: null, threshold: 0 },
+    );
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [openSelectId]);
 
   const activeCount = questions.filter((q) => q.action !== 'delete').length;
 
@@ -57,7 +81,6 @@ export default function MatchingForm({
       return {
         id: existingAnswer ? existingAnswer.id : i,
         option_label: label,
-        answer_text: existingAnswer ? existingAnswer.answer_text : '',
       };
     });
 
@@ -77,7 +100,7 @@ export default function MatchingForm({
         needsFix = true;
         return {
           ...q,
-          answers: [{ ...q.answers[0], option_label: '', answer_text: '' }],
+          answers: [{ ...q.answers[0], option_label: '' }],
           ...(flag === 'update' && !q.action && { action: 'update' }),
         };
       }
@@ -102,7 +125,6 @@ export default function MatchingForm({
           id: 0,
           option_label: '',
           is_correct: true,
-          answer_text: '',
           ...(flag === 'update' && { action: 'create' }),
         },
       ],
@@ -113,9 +135,6 @@ export default function MatchingForm({
   };
 
   const handleUpdateCorrectAnswer = (questionId, selectedLabel) => {
-    const sourceAnswer = answers.find((ans) => ans.option_label === selectedLabel);
-    const textToSave = sourceAnswer ? sourceAnswer.answer_text : '';
-
     const updatedQuestions = questions.map((q) => {
       if (q.id === questionId) {
         const targetAns = q.answers[0];
@@ -126,7 +145,19 @@ export default function MatchingForm({
             {
               ...targetAns,
               option_label: selectedLabel,
-              answer_text: textToSave,
+              ...(flag === 'update' && !targetAns.action && { action: 'update' }),
+            },
+          ],
+        };
+      } else if (q.answers?.[0]?.option_label === selectedLabel && selectedLabel !== '') {
+        const targetAns = q.answers[0];
+        return {
+          ...q,
+          ...(flag === 'update' && !q.action && { action: 'update' }),
+          answers: [
+            {
+              ...targetAns,
+              option_label: '',
               ...(flag === 'update' && !targetAns.action && { action: 'update' }),
             },
           ],
@@ -352,6 +383,7 @@ export default function MatchingForm({
                               />
                             </Box>
                             <FormControl
+                              id={`select-${question.id}`}
                               size="small"
                               sx={{
                                 ...uploadReadingStyles.formControl,
@@ -371,8 +403,12 @@ export default function MatchingForm({
                                 onChange={(e) =>
                                   handleUpdateCorrectAnswer(question.id, e.target.value)
                                 }
+                                open={openSelectId === question.id}
+                                onOpen={() => setOpenSelectId(question.id)}
+                                onClose={() => setOpenSelectId(null)}
                                 displayEmpty
                                 sx={matchingStyles.selectAnswer}
+                                MenuProps={{ disableScrollLock: true }}
                               >
                                 <MenuItem value="" disabled>
                                   <em>Select</em>

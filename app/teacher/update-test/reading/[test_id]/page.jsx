@@ -178,11 +178,11 @@ export default function Page() {
                     question_number: q.question_number,
                     explanation: q.explanation,
                     score: q.score,
-                    // I ko có content
-                    ...(!['I'].includes(format) && { content: q.content }),
+                    // I, H ko có content
+                    ...(!['I', 'H'].includes(format) && { content: q.content }),
                   };
 
-                  if (newQ.content?.startsWith?.('http')) {
+                  if (newQ.content?.startsWith?.('http') && format !== 'G' && format !== 'J') {
                     originalContentRef.current[newPart.id].questions[newQ.id] = newQ.content;
                     newQ.content = await fetchHtmlContent(newQ.content);
                   }
@@ -296,6 +296,7 @@ export default function Page() {
       }
 
       const transformedParts = transformFormatUpdateData(finalParts);
+
       const files = collectFilesUpdateReading(transformedParts);
       const filenameToUrl = {};
       for (const f of files) {
@@ -427,8 +428,7 @@ export default function Page() {
             };
 
             if (newFormat === 'H') {
-              // Loại H: Cần content và mảng answers có option_label
-              newQuestion.content = '';
+              // Loại H: Không cần content và mảng answers có option_label
               newQuestion.answers = [
                 {
                   id: Date.now() + i + 100,
@@ -877,7 +877,6 @@ export default function Page() {
             backgroundColor: '#FFF4E9',
             pt: 0.5,
             pb: 0.5,
-            px: 2,
           }}
         >
           <TestEditorActions
@@ -1178,10 +1177,10 @@ export default function Page() {
                   border: '1px solid #f0f0f0',
                   borderRadius: 3,
                   bgcolor: '#fff',
-                  overflow: 'hidden',
+                  overflow: 'auto',
                   position: { lg: 'sticky' },
-                  top: { lg: 16 },
-                  height: { lg: 'calc(100vh - 140px)' },
+                  top: { lg: 70 },
+                  maxHeight: { lg: 'calc(100vh - 90px)' },
                   display: 'flex',
                   flexDirection: 'column',
                 }}

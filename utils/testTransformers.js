@@ -26,6 +26,7 @@ export const transformApiResponseToParts = (apiData) => {
   };
 
   return apiData.receptive_test.receptive_parts
+    .sort((a, b) => (a.order || 0) - (b.order || 0))
     .map((part) => {
       const type = formatMap[part.format];
       if (!type) return null;
@@ -40,10 +41,13 @@ export const transformApiResponseToParts = (apiData) => {
       };
 
       if (type === 'multichoice_images') {
+        const validQuestions = (part.receptive_questions || [])
+          .filter((q) => q.id !== null && q.id !== undefined)
+          .sort((a, b) => (a.question_number || 0) - (b.question_number || 0));
         return {
           ...base,
           audio: getAudioObj(part.resources?.audio),
-          questions: (part.receptive_questions || []).map((q, i) => {
+          questions: validQuestions.map((q, i) => {
             const answers = transformAnswers(q.receptive_answers, 'image');
             return {
               id: q.id,
@@ -59,6 +63,9 @@ export const transformApiResponseToParts = (apiData) => {
       }
 
       if (type === 'multichoice_texts') {
+        const validQuestions = (part.receptive_questions || [])
+          .filter((q) => q.id !== null && q.id !== undefined)
+          .sort((a, b) => (a.question_number || 0) - (b.question_number || 0));
         return {
           ...base,
           audioFormat: part.format === 'C' ? 'onetomany' : 'onetoone',
@@ -66,7 +73,7 @@ export const transformApiResponseToParts = (apiData) => {
             audio: getAudioObj(part.resources?.audio),
             _contentUrl: part.content?.startsWith('http') ? part.content : null,
           }),
-          questions: (part.receptive_questions || []).map((q, i) => {
+          questions: validQuestions.map((q, i) => {
             const answers = transformAnswers(q.receptive_answers, 'text');
             return {
               id: q.id,
@@ -84,18 +91,29 @@ export const transformApiResponseToParts = (apiData) => {
       }
 
       if (type === 'fill_in_the_blanks') {
+        const validQuestions = (part.receptive_questions || [])
+          .filter((q) => q.id !== null && q.id !== undefined)
+          .sort((a, b) => (a.question_number || 0) - (b.question_number || 0));
+
         return {
           ...base,
           audio: getAudioObj(part.resources?.audio),
           _contentUrl: part.content?.startsWith('http') ? part.content : null,
-          answers: (part.receptive_questions || []).map((q, idx) => ({
-            id: `blank-${q.id}`,
-            text: q.receptive_answers?.[0]?.answer_text || '',
-            option_label: q.receptive_answers?.[0]?.option_label || String.fromCharCode(65 + idx),
-            explanation: q.explanation || '',
-            score: q.score || 0,
-          })),
-          questions: (part.receptive_questions || []).map((q, i) => ({
+          answers: validQuestions.map((q, idx) => {
+            const acceptedAnswers = q.receptive_answers?.map((ans) => ({
+              id: `variant-${ans.id}`,
+              text: ans.answer_text || '',
+            })) || [{ id: `variant-${Date.now()}-${idx}`, text: '' }];
+
+            return {
+              id: `blank-${q.id}`,
+              acceptedAnswers,
+              option_label: q.receptive_answers?.[0]?.option_label || String.fromCharCode(65 + idx),
+              explanation: q.explanation || '',
+              score: q.score || 0,
+            };
+          }),
+          questions: validQuestions.map((q, i) => ({
             id: q.id,
             question_number: q.question_number || i + 1,
             text: q.content || '',
@@ -106,8 +124,11 @@ export const transformApiResponseToParts = (apiData) => {
       }
 
       if (type === 'matching') {
+        const validQuestions = (part.receptive_questions || [])
+          .filter((q) => q.id !== null && q.id !== undefined)
+          .sort((a, b) => (a.question_number || 0) - (b.question_number || 0));
         const ansMap = new Map();
-        (part.receptive_questions || []).forEach((q) =>
+        validQuestions.forEach((q) =>
           q.receptive_answers?.forEach(
             (a) =>
               !ansMap.has(a.id) &&
@@ -118,7 +139,7 @@ export const transformApiResponseToParts = (apiData) => {
         return {
           ...base,
           audio: getAudioObj(part.resources?.audio),
-          questions: (part.receptive_questions || []).map((q, i) => ({
+          questions: validQuestions.map((q, i) => ({
             id: q.id,
             question_number: q.question_number || i + 1,
             text: q.content || '',
@@ -244,30 +265,154 @@ const generatePartPayload = (originalPart, currentPart, urlMap, _defaultAction) 
 
   const isUpdate = originalPart !== null;
 
-  const buildFillInTheBlanksQuestions = (answers, fallbackScore) =>
-    (answers || []).map((ans, idx) => {
-      let questionId = ans.id;
-      if (typeof ans.id === 'string' && ans.id.startsWith('blank-')) {
+  const buildFillInTheBlanksQuestions = (originalAnswers, currentAnswers, fallbackScore) => {
+    const originalList = Array.isArray(originalAnswers) ? originalAnswers : [];
+    const currentList = Array.isArray(currentAnswers) ? currentAnswers : [];
+
+    const questions = [];
+
+    // Process all current answers
+    currentList.forEach((ans, idx) => {
+      // Determine if this is an existing question or new one
+      let questionId = null;
+      let action = 'create'; // Default to create
+
+      if (typeof ans.id === 'number') {
+        questionId = ans.id;
+        action = 'update';
+      } else if (typeof ans.id === 'string' && ans.id.startsWith('blank-')) {
         const numericId = ans.id.replace('blank-', '');
-        questionId = isNaN(numericId) ? ans.id : parseInt(numericId, 10);
+        if (!isNaN(numericId) && numericId !== '') {
+          questionId = parseInt(numericId, 10);
+          action = 'update';
+        }
       }
 
-      return {
-        id: questionId,
-        question_number: idx + 1,
-        text: ans.text || '',
-        explanation: ans.explanation || '',
-        score: ans.score || fallbackScore || 0,
-        answers: [
+      // Build receptive_answers array with action field
+      let receptiveAnswerObjects = [];
+      let hasAnswerChanges = false;
+
+      if (ans.acceptedAnswers && Array.isArray(ans.acceptedAnswers)) {
+        // New structure: acceptedAnswers array
+        const originalAnswer = originalList[idx] || {};
+        const originalAcceptedAnswers = originalAnswer.acceptedAnswers || [];
+        const originalAnswerMap = new Map(originalAcceptedAnswers.map((v) => [v.id, v]));
+
+        // Process current acceptedAnswers - only include if changed
+        ans.acceptedAnswers.forEach((answer) => {
+          // Determine answer action
+          let answerAction = 'create';
+          let answerId = null;
+
+          if (typeof answer.id === 'string' && answer.id.startsWith('variant-')) {
+            const numericId = answer.id.replace('variant-', '');
+            if (!isNaN(numericId) && numericId !== '') {
+              answerId = parseInt(numericId, 10);
+              answerAction = 'update';
+            }
+          }
+
+          // For update action, only include if text changed
+          if (answerAction === 'update' && answerId !== null) {
+            const originalAnswer = originalAnswerMap.get(answer.id);
+            const originalText = originalAnswer?.text || '';
+            const currentText = answer.text || '';
+
+            // Only include if text changed
+            if (originalText !== currentText) {
+              receptiveAnswerObjects.push({
+                action: 'update',
+                id: answerId,
+                answer_text: currentText,
+                is_correct: true,
+              });
+              hasAnswerChanges = true;
+            }
+          } else {
+            // Create action - always include
+            receptiveAnswerObjects.push({
+              action: 'create',
+              answer_text: answer.text || '',
+              is_correct: true,
+            });
+            hasAnswerChanges = true;
+          }
+        });
+
+        // Check for deleted acceptedAnswers
+        originalAnswerMap.forEach((origAnswer) => {
+          const stillExists = ans.acceptedAnswers.some((v) => v.id === origAnswer.id);
+          if (!stillExists && origAnswer.id && origAnswer.id.startsWith('variant-')) {
+            const numericId = origAnswer.id.replace('variant-', '');
+            if (!isNaN(numericId) && numericId !== '') {
+              receptiveAnswerObjects.push({
+                action: 'delete',
+                id: parseInt(numericId, 10),
+              });
+              hasAnswerChanges = true;
+            }
+          }
+        });
+      } else {
+        // Legacy structure: single text field
+        receptiveAnswerObjects = [
           {
-            id: ans.id || `answer-${idx}`,
-            option_label: ans.option_label || String.fromCharCode(65 + idx),
+            action: 'create',
             answer_text: ans.text || '',
             is_correct: true,
           },
-        ],
-      };
+        ];
+        hasAnswerChanges = true;
+      }
+
+      // Check if this question has changes
+      let hasQuestionChanges = false;
+
+      if (action === 'create') {
+        // New questions are always included
+        hasQuestionChanges = true;
+      } else if (action === 'update') {
+        // For existing questions, check if anything changed
+        const originalAnswer = originalList[idx] || {};
+        const originalExplanation = originalAnswer.explanation || '';
+        const originalScore = parseFloat(originalAnswer.score ?? fallbackScore ?? 0) || 0;
+        const currentExplanation = ans.explanation || '';
+        const currentScore = parseFloat(ans.score ?? fallbackScore ?? 0) || 0;
+
+        if (
+          originalExplanation !== currentExplanation ||
+          originalScore !== currentScore ||
+          hasAnswerChanges
+        ) {
+          hasQuestionChanges = true;
+        }
+      }
+
+      // Only push to questions if there are changes
+      if (hasQuestionChanges) {
+        const payload = {
+          action,
+          question_number: idx + 1,
+          explanation: ans.explanation || '',
+          score: ans.score || fallbackScore || 0,
+        };
+
+        // Only include receptive_answers if there are changes
+        if (hasAnswerChanges) {
+          payload.receptive_answers = receptiveAnswerObjects;
+        }
+
+        // Only include ID if it's an update
+        if (action === 'update' && questionId !== null && typeof questionId === 'number') {
+          payload.id = questionId;
+        }
+
+        questions.push(payload);
+      }
     });
+
+    return questions;
+  };
 
   const hasFillInTheBlanksAnswerChanges = (originalAnswers, currentAnswers) => {
     const originalList = Array.isArray(originalAnswers) ? originalAnswers : [];
@@ -279,45 +424,68 @@ const generatePartPayload = (originalPart, currentPart, urlMap, _defaultAction) 
       const originalAnswer = originalList[i] || {};
       const currentAnswer = currentList[i] || {};
 
-      const originalText = originalAnswer.text ?? originalAnswer.answer_text ?? '';
-      const currentText = currentAnswer.text ?? currentAnswer.answer_text ?? '';
+      // Compare explanation and score
       const originalExplanation = originalAnswer.explanation || '';
       const currentExplanation = currentAnswer.explanation || '';
       const originalScore = parseFloat(originalAnswer.score ?? 0) || 0;
       const currentScore = parseFloat(currentAnswer.score ?? 0) || 0;
-      const originalLabel = originalAnswer.option_label || originalAnswer.label || '';
-      const currentLabel = currentAnswer.option_label || currentAnswer.label || '';
 
-      if (
-        originalText !== currentText ||
-        originalExplanation !== currentExplanation ||
-        originalScore !== currentScore ||
-        originalLabel !== currentLabel
-      ) {
+      if (originalExplanation !== currentExplanation || originalScore !== currentScore) {
         return true;
+      }
+
+      // Handle acceptedAnswers (new structure) or text (old structure)
+      const hasOriginalAcceptedAnswers =
+        originalAnswer.acceptedAnswers && Array.isArray(originalAnswer.acceptedAnswers);
+      const hasCurrentAcceptedAnswers =
+        currentAnswer.acceptedAnswers && Array.isArray(currentAnswer.acceptedAnswers);
+
+      if (hasOriginalAcceptedAnswers || hasCurrentAcceptedAnswers) {
+        const originalAcceptedAnswers = originalAnswer.acceptedAnswers || [];
+        const currentAcceptedAnswers = currentAnswer.acceptedAnswers || [];
+
+        if (originalAcceptedAnswers.length !== currentAcceptedAnswers.length) {
+          return true;
+        }
+
+        for (let v = 0; v < currentAcceptedAnswers.length; v++) {
+          const origAnswer = originalAcceptedAnswers[v] || {};
+          const currAnswer = currentAcceptedAnswers[v] || {};
+          if ((origAnswer.text || '') !== (currAnswer.text || '')) {
+            return true;
+          }
+        }
+      } else {
+        // Backward compatibility: compare single text field
+        const originalText = originalAnswer.text ?? originalAnswer.answer_text ?? '';
+        const currentText = currentAnswer.text ?? currentAnswer.answer_text ?? '';
+        if (originalText !== currentText) {
+          return true;
+        }
       }
     }
 
     return false;
   };
 
-  if (currentPart.type === 'fill_in_the_blanks') {
+  if (isUpdate && currentPart.type === 'fill_in_the_blanks') {
     const originalAnswers = originalPart?.answers || [];
     const currentAnswers = currentPart.answers || [];
     const answersChanged = hasFillInTheBlanksAnswerChanges(originalAnswers, currentAnswers);
 
-    const orderChanged = originalPart.order !== currentPart.order;
+    const orderChanged = originalPart?.order !== currentPart.order;
     const formatChanged =
-      getFormatCode(originalPart.type, originalPart.audioFormat) !==
+      getFormatCode(originalPart?.type, originalPart?.audioFormat) !==
       getFormatCode(currentPart.type, currentPart.audioFormat);
-    const audioFormatChanged = originalPart.audioFormat !== currentPart.audioFormat;
-    const descriptionChanged = (originalPart.description || '') !== (currentPart.description || '');
-    const contentChanged = (originalPart.content || '') !== (currentPart.content || '');
+    const audioFormatChanged = originalPart?.audioFormat !== currentPart.audioFormat;
+    const descriptionChanged =
+      (originalPart?.description || '') !== (currentPart.description || '');
+    const contentChanged = (originalPart?.content || '') !== (currentPart.content || '');
     const scoreChanged =
-      (originalPart.score ?? originalPart.totalScore ?? 0) !==
+      (originalPart?.score ?? originalPart?.totalScore ?? 0) !==
       (currentPart.score ?? currentPart.totalScore ?? 0);
 
-    const originalAudio = originalPart.audio?.url || originalPart.audio?.name || '';
+    const originalAudio = originalPart?.audio?.url || originalPart?.audio?.name || '';
     const currentAudio =
       currentPart.audio?.url || currentPart.audio?.name || currentPart.audio?.file?.name || '';
     const audioChanged = originalAudio !== currentAudio;
@@ -377,6 +545,49 @@ const generatePartPayload = (originalPart, currentPart, urlMap, _defaultAction) 
 
     if (answersChanged) {
       payload.receptive_questions = buildFillInTheBlanksQuestions(
+        originalAnswers,
+        currentAnswers,
+        currentPart.score ?? currentPart.totalScore ?? 0,
+      );
+    }
+
+    return payload;
+  }
+
+  // Handle fill_in_the_blanks create
+  if (!isUpdate && currentPart.type === 'fill_in_the_blanks') {
+    const partOrder = currentPart.order || 1;
+
+    const payload = {
+      action: 'create',
+      order: partOrder,
+      format: getFormatCode(currentPart.type, currentPart.audioFormat),
+      description: currentPart.description || '',
+    };
+
+    // Handle content
+    if (currentPart.content) {
+      const contentFilename = `part${partOrder}_content.html`;
+      const resolvedContent = resolve(contentFilename);
+      payload.content = resolvedContent || currentPart.content;
+    }
+
+    // Handle audio
+    if (currentPart.audio?.file || currentPart.audio?.name || currentPart.audio?.url) {
+      const audioName = resolve(currentPart.audio?.file?.name || currentPart.audio?.name);
+      payload.resources = { audio: audioName };
+    }
+
+    // Handle score
+    if (currentPart.score) {
+      payload.score = currentPart.score;
+    }
+
+    // Build questions from answers
+    const currentAnswers = currentPart.answers || [];
+    if (currentAnswers.length > 0) {
+      payload.receptive_questions = buildFillInTheBlanksQuestions(
+        [],
         currentAnswers,
         currentPart.score ?? currentPart.totalScore ?? 0,
       );
@@ -650,7 +861,7 @@ const generateQuestionPayload = (
       continue;
     }
 
-    const aPayload = generateAnswerPayload(originalA, currentA, urlMap, 'update');
+    const aPayload = generateAnswerPayload(originalA, currentA, urlMap, 'update', partType);
     if (aPayload) {
       receptiveAnswers.push(aPayload);
       hasAnswerChanges = true;
@@ -659,7 +870,7 @@ const generateQuestionPayload = (
 
   for (const [aId, currentA] of currentAnswerMap.entries()) {
     if (!originalAnswerMap.has(aId)) {
-      const aPayload = generateAnswerPayload(null, currentA, urlMap, 'create');
+      const aPayload = generateAnswerPayload(null, currentA, urlMap, 'create', partType);
       if (aPayload) {
         receptiveAnswers.push(aPayload);
       }
@@ -767,7 +978,7 @@ const generateQuestionPayload = (
   return payload;
 };
 
-const generateAnswerPayload = (originalA, currentA, urlMap, _defaultAction) => {
+const generateAnswerPayload = (originalA, currentA, urlMap, _defaultAction, partType) => {
   const resolve = (name) => {
     if (!name) return '';
     return urlMap[name] || name;
@@ -810,7 +1021,8 @@ const generateAnswerPayload = (originalA, currentA, urlMap, _defaultAction) => {
     };
 
     if (labelChanged) payload.option_label = currentA.option_label || currentA.label || '';
-    if (textChanged) payload.answer_text = currentA.answer_text || currentA.text || '';
+    if (textChanged && partType !== 'multichoice_images')
+      payload.answer_text = currentA.answer_text || currentA.text || '';
     if (correctChanged) payload.is_correct = currentA.is_correct || false;
 
     // Handle answer resources
@@ -845,7 +1057,7 @@ const generateAnswerPayload = (originalA, currentA, urlMap, _defaultAction) => {
   const payload = {
     action: 'create',
     option_label: optionLabel,
-    answer_text: answerText,
+    ...(partType !== 'multichoice_images' && { answer_text: answerText }),
     is_correct: currentA.is_correct || false,
   };
 
@@ -951,18 +1163,32 @@ export const transformPartsForSubmitWithUrls = (parts, urlMap) => {
           resources: {
             audio: commonAudioName,
           },
-          questions: (part.answers || []).map((ans, aIdx) => ({
-            question_number: ans.question_number || aIdx + 1,
-            explanation: ans.explanation || '',
-            score: getPartScoreValue(part),
-            answers: [
-              {
-                option_label: ans.option_label || String.fromCharCode(65 + aIdx),
-                answer_text: ans.text || ans.answer || '',
+          questions: (part.answers || []).map((ans, aIdx) => {
+            // Handle new acceptedAnswers structure or legacy text structure
+            let answerObjects = [];
+            if (ans.acceptedAnswers && Array.isArray(ans.acceptedAnswers)) {
+              // New structure: acceptedAnswers array -> create multiple answer objects
+              answerObjects = ans.acceptedAnswers.map((v) => ({
+                answer_text: v.text || '',
                 is_correct: true,
-              },
-            ],
-          })),
+              }));
+            } else {
+              // Legacy structure: single text field
+              answerObjects = [
+                {
+                  answer_text: ans.text || ans.answer || '',
+                  is_correct: true,
+                },
+              ];
+            }
+
+            return {
+              question_number: ans.question_number || aIdx + 1,
+              explanation: ans.explanation || '',
+              score: getPartScoreValue(part),
+              answers: answerObjects,
+            };
+          }),
         };
       }
 
@@ -1216,8 +1442,8 @@ export const buildReceptiveTestPayload = (test, preparedParts, status) => {
               action: q.action,
               id: q.id || 0,
               question_number: q.question_number || 0,
-              // I ko có content
-              ...(!['I'].includes(format) && { content: q.content || '' }),
+              // I, H không có content
+              ...(!['I', 'H'].includes(format) && { content: q.content || '' }),
               explanation: q.explanation || '',
               score: q.score || 0,
 

@@ -1,5 +1,7 @@
 import React from 'react';
 import { Box, Container, Typography, Link } from '@mui/material';
+import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
+import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import Image from 'next/image';
 import FacebookImage from '../../assets/img/facebook.png';
 import LinkedinImage from '../../assets/img/linkedin.png';
@@ -20,8 +22,24 @@ export default function Footer() {
               <Image src={LogoImage} alt="NENS" width={32} height={24} />
             </Link>
             <Box sx={footerStyles.contactInfo}>
-              <Typography variant="body2">nens.hcmsus@gmail.com</Typography>
-              <Typography variant="body2">+91 98183 23 2309</Typography>
+              <Link
+                href="mailto:nens.hcmsus@gmail.com"
+                underline="none"
+                color="inherit"
+                sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+              >
+                <EmailOutlinedIcon fontSize="small" />
+                <Typography variant="body2">nens.hcmsus@gmail.com</Typography>
+              </Link>
+              <Link
+                href="tel:+9198183232309"
+                underline="none"
+                color="inherit"
+                sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+              >
+                <PhoneOutlinedIcon fontSize="small" />
+                <Typography variant="body2">+91 98183 23 2309</Typography>
+              </Link>
               <Typography variant="body2">Somewhere in the World</Typography>
             </Box>
           </Box>
@@ -32,9 +50,9 @@ export default function Footer() {
             </Typography>
             <Box sx={footerStyles.linksContainer}>
               {homeLinks.map((link) => (
-                <Link key={link} href="#" sx={footerStyles.footerLink}>
+                <Typography key={link} variant="body2" sx={footerStyles.footerLink}>
                   {link}
-                </Link>
+                </Typography>
               ))}
             </Box>
           </Box>
@@ -45,9 +63,9 @@ export default function Footer() {
             </Typography>
             <Box sx={footerStyles.linksContainer}>
               {aboutLinks.map((link) => (
-                <Link key={link} href="#" sx={footerStyles.footerLink}>
+                <Typography key={link} variant="body2" sx={footerStyles.footerLink}>
                   {link}
-                </Link>
+                </Typography>
               ))}
             </Box>
           </Box>

@@ -3,7 +3,7 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import Header from '../../components/TeacherHome/Header';
-import Footer from '../../components/TeacherHome/Footer';
+import Footer from '../../components/Home/Footer';
 
 export default function TeacherLayout({ children }) {
   const pathname = usePathname();

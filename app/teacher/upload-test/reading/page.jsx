@@ -197,8 +197,6 @@ export default function Page() {
         return;
       }
 
-      console.log('Transformed Parts:', transformedParts);
-
       const newTestId = await handleUploadTest(status);
       if (!newTestId) {
         setIsLoading(false);
@@ -314,7 +312,6 @@ export default function Page() {
             };
 
             if (newFormat === 'H') {
-              newQuestion.content = '';
               newQuestion.answers = [
                 {
                   id: Date.now() + i + 100,
@@ -596,6 +593,7 @@ export default function Page() {
             handleUpdateContentPart={handleUpdateContentPart}
             handleEditorError={handleEditorError}
             errors={errors}
+            setSnackbar={setSnackbar}
           />
         );
       default:
@@ -635,7 +633,6 @@ export default function Page() {
             backgroundColor: '#FFF4E9',
             pt: 0.5,
             pb: 0.5,
-            px: 2,
           }}
         >
           <TestEditorActions
@@ -649,7 +646,7 @@ export default function Page() {
         </Box>
 
         {showInlinePreview && (
-          <Box sx={{ mt: 2, mb: 3 }}>
+          <Box sx={{ mb: 3 }}>
             <ReadingPreview
               inline
               open={false}

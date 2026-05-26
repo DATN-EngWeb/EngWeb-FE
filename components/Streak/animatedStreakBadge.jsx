@@ -231,12 +231,6 @@ export default function AnimatedStreakBadge({ size = 180 }) {
       },
     );
 
-    // Cháy âm ỉ (Interval tia lửa)
-    const interval = setInterval(() => {
-      if (Math.random() > 0.3) createSpark(false);
-      if (Math.random() > 0.8) createSpark(false);
-    }, 150);
-
     // Tự động đóng sau 4 giây
     setTimeout(() => {
       gsap.to(overlayRef.current, {
@@ -249,7 +243,6 @@ export default function AnimatedStreakBadge({ size = 180 }) {
 
     // Dọn dẹp RAM khi tắt
     return () => {
-      clearInterval(interval);
       gsap.killTweensOf([
         outerLayerRef.current,
         innerLayerRef.current,

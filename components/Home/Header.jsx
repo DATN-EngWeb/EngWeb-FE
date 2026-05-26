@@ -13,6 +13,8 @@ import {
   Typography,
   Badge,
   Tooltip,
+  Drawer,
+  IconButton,
 } from '@mui/material';
 import Logo from '../../assets/img/logo.png';
 import Image from 'next/image';
@@ -46,13 +48,13 @@ import {
 } from '../../styles/Home/HeaderStyles';
 import RoleSelectionModal from '../Auth/RoleSelectionModal';
 import { useAuth } from '../../hooks/useAuth';
-import { useStreakContext } from '../../context/streakContext';
 import { logout as logoutAPI, getStudentProfile } from '../../api/accounts';
-import AnimatedStreakBadge from '../Streak/animatedStreakBadge';
 import StreakBadge from '../Streak/streakBadge';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import NotificationBell from '../Notifications/NotificationBell';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
 
 // Icon components
 const ProfileIcon = () => (
@@ -112,12 +114,7 @@ function UserPopup({ user, studentProfile, userAvatar, onClose, onLogout, onNavi
 
   const isTeacher = user?.role === 'T';
 
-  const displayName =
-    (studentProfile && (studentProfile.full_name || studentProfile.fullName)) ||
-    user?.full_name ||
-    localStorage.getItem('full_name') ||
-    user?.username ||
-    'User';
+  const displayName = localStorage.getItem('username') || user?.username || 'User';
 
   // For students, show level and XP. For teachers, these are not applicable.
   const level = studentProfile?.level?.level_number || 1;
@@ -359,19 +356,14 @@ export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, user, logout: logoutHook } = useAuth(null);
-  const { isCelebrationDismissed } = useStreakContext();
   const [popupOpen, setPopupOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userAvatar, setUserAvatar] = useState(null);
   const [studentProfile, setStudentProfile] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [actionType, setActionType] = useState('register');
+  const [topDisplayName, setTopDisplayName] = useState('User');
   const avatarWrapperRef = useRef(null);
-  const topDisplayName =
-    (studentProfile && (studentProfile.full_name || studentProfile.fullName)) ||
-    user?.full_name ||
-    (typeof window !== 'undefined' ? localStorage.getItem('full_name') : null) ||
-    user?.username ||
-    'User';
 
   const fetchProfile = async () => {
     if (user && user.role !== 'T') {
@@ -385,16 +377,18 @@ export default function Header() {
   };
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const displayName = localStorage.getItem('username') || user?.username || 'User';
+    setTopDisplayName(displayName);
+  }, [user]);
+
+  useEffect(() => {
     fetchProfile();
   }, [user]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const latest =
-      localStorage.getItem('avatar_url') ||
-      localStorage.getItem('avatar') ||
-      studentProfile?.avatar_url ||
-      null;
+    const latest = localStorage.getItem('avatar') || studentProfile?.avatar_url || null;
     setUserAvatar(latest);
   }, [studentProfile]);
 
@@ -402,13 +396,7 @@ export default function Header() {
     if (typeof window === 'undefined') return;
     const syncAvatar = () => {
       const latestAvatar = localStorage.getItem('avatar_url') || localStorage.getItem('avatar');
-      const latestFull = localStorage.getItem('full_name');
       setUserAvatar(latestAvatar || null);
-      setStudentProfile((prev) =>
-        prev
-          ? { ...prev, avatar_url: latestAvatar || '', full_name: latestFull || prev.full_name }
-          : prev,
-      );
     };
     window.addEventListener('auth-user-updated', syncAvatar);
     window.addEventListener('storage', syncAvatar);
@@ -417,6 +405,17 @@ export default function Header() {
       window.removeEventListener('storage', syncAvatar);
     };
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleProfileUpdate = () => {
+      fetchProfile();
+    };
+    window.addEventListener('profile-updated', handleProfileUpdate);
+    return () => {
+      window.removeEventListener('profile-updated', handleProfileUpdate);
+    };
+  }, [user]);
 
   const handleOpenModal = (type) => {
     setActionType(type);
@@ -476,33 +475,45 @@ export default function Header() {
     <>
       <AppBar position="static" sx={appBarStyles}>
         <Container maxWidth="lg">
-          <Toolbar sx={toolbarStyles}>
-            <Box sx={navBoxStyles}>
+          <Toolbar sx={{ ...toolbarStyles, minHeight: 'auto', py: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0 }}>
               <Link href="/" style={logoLinkStyles}>
                 <Image src={Logo} alt="NENS" width={32} height={24} />
               </Link>
-              {[
-                { href: '/student/reading', label: 'Reading', seg: '/reading' },
-                { href: '/student/listening', label: 'Listening', seg: '/listening' },
-                { href: '/student/writing', label: 'Writing', seg: '/writing' },
-                { href: '/student/speaking', label: 'Speaking', seg: '/speaking' },
-              ].map(({ href, label, seg }) => (
-                <Link key={seg} href={href} style={navLinkStyles}>
-                  <Button color="inherit" sx={navItemStyle(seg)}>
-                    {label}
-                  </Button>
-                </Link>
-              ))}
+              <IconButton
+                sx={{
+                  display: { xs: 'flex', md: 'none' },
+                  color: 'primary.main',
+                  p: 0,
+                  ml: -2,
+                }}
+                onClick={() => setMobileMenuOpen(true)}
+              >
+                <MenuIcon />
+              </IconButton>
+              <Box sx={navBoxStyles}>
+                {[
+                  { href: '/student/reading', label: 'Reading', seg: '/reading' },
+                  { href: '/student/listening', label: 'Listening', seg: '/listening' },
+                  { href: '/student/writing', label: 'Writing', seg: '/writing' },
+                  { href: '/student/speaking', label: 'Speaking', seg: '/speaking' },
+                ].map(({ href, label, seg }) => (
+                  <Link key={seg} href={href} style={navLinkStyles}>
+                    <Button color="inherit" sx={navItemStyle(seg)}>
+                      {label}
+                    </Button>
+                  </Link>
+                ))}
+              </Box>
             </Box>
 
-            <Box sx={actionBoxStyles}>
+            <Box sx={{ ...actionBoxStyles, justifyContent: 'flex-end' }}>
               {isAuthenticated && user ? (
                 (() => {
                   const isValidAvatar =
                     userAvatar && userAvatar !== 'null' && userAvatar !== 'undefined';
                   return (
                     <>
-                      {!isCelebrationDismissed && <AnimatedStreakBadge />}
                       <StreakBadge />
                       <NotificationBell />
 
@@ -558,7 +569,7 @@ export default function Header() {
                                 backgroundColor: 'primary.main',
                                 width: 40,
                                 height: 40,
-                                border: '2px solid',
+                                border: '1px solid',
                                 borderColor: popupOpen ? 'warning.main' : 'secondary.main',
                                 transition: 'border-color 0.2s',
                               }}
@@ -618,6 +629,63 @@ export default function Header() {
           </Toolbar>
         </Container>
       </AppBar>
+
+      {/* Mobile Menu Drawer */}
+      <Drawer
+        anchor="left"
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        variant="temporary"
+        sx={{
+          '& .MuiBackdrop-root': {
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          },
+          '& .MuiDrawer-paper': {
+            width: '100%',
+            maxWidth: '280px',
+            backgroundColor: 'background.default',
+            zIndex: 1301,
+          },
+        }}
+      >
+        <Box sx={{ padding: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+          <IconButton onClick={() => setMobileMenuOpen(false)}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+        <Box sx={{ padding: '8px 16px' }}>
+          {[
+            { href: '/student/reading', label: 'Reading', seg: '/reading' },
+            { href: '/student/listening', label: 'Listening', seg: '/listening' },
+            { href: '/student/writing', label: 'Writing', seg: '/writing' },
+            { href: '/student/speaking', label: 'Speaking', seg: '/speaking' },
+          ].map(({ href, label, seg }) => {
+            const isActive = pathname?.includes(seg);
+            return (
+              <Link key={seg} href={href} style={{ textDecoration: 'none' }}>
+                <Button
+                  fullWidth
+                  onClick={() => setMobileMenuOpen(false)}
+                  sx={{
+                    justifyContent: 'flex-start',
+                    color: isActive ? 'secondary.main' : 'primary.main',
+                    fontWeight: isActive ? 600 : 500,
+                    fontSize: '1rem',
+                    padding: '12px 16px',
+                    marginBottom: '8px',
+                    '&:hover': {
+                      backgroundColor: 'rgba(25,118,210,0.06)',
+                      color: 'secondary.main',
+                    },
+                  }}
+                >
+                  {label}
+                </Button>
+              </Link>
+            );
+          })}
+        </Box>
+      </Drawer>
 
       <RoleSelectionModal
         open={modalOpen}

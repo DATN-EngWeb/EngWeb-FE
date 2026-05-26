@@ -108,7 +108,8 @@ export const addQuestionBox = {
 };
 
 export const scrollEditorBox = {
-  height: 300,
+  minHeight: 300,
+  height: 'auto',
   overflowY: 'auto',
   border: 'none',
   borderRadius: '1rem',

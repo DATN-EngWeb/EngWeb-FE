@@ -17,15 +17,17 @@ import {
   CircularProgress,
   Stack,
   Dialog,
+  DialogTitle,
   DialogContent,
   DialogActions,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import { getReceptiveTestDetails } from '../../../api/teacher/upload-reading';
+import { getFullReceptiveTestReview } from '@/api/tests';
 import { createReceptiveTest } from '../../../api/test';
 import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import {
@@ -185,7 +187,10 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
         if (response?.streak_reward_notice) {
           setGlobalRewardData(response.streak_reward_notice);
-        } else if (response?.streak_notice?.current_streak === 1) {
+        } else if (
+          response?.streak_notice?.current_streak === 1 &&
+          response?.streak_notice?.is_first_submission_today === true
+        ) {
           setGlobalRewardData(response.streak_notice);
         }
 
@@ -205,6 +210,13 @@ export default function ListeningTestContent({ test_id, initialData }) {
         window.sessionStorage.setItem('current_receptive_attempt', stringifiedData);
         setIsInitial(true);
         setIndexPart(0);
+
+        // Dispatch event to refetch profile in Header
+        if (typeof window !== 'undefined') {
+          // eslint-disable-next-line no-undef
+          window.dispatchEvent(new Event('profile-updated'));
+        }
+
         await refreshStreak();
       } else {
         setDraftStatus('saved');
@@ -242,8 +254,74 @@ export default function ListeningTestContent({ test_id, initialData }) {
     const fetchTestData = async () => {
       if (!test_id) return;
       try {
-        const svData = await getReceptiveTestDetails(test_id);
-        const parts = svData.receptive_test.receptive_parts || [];
+        let isReviewMode = false;
+        let savedData = null;
+
+        if (typeof window !== 'undefined') {
+          const saved = window.sessionStorage.getItem('current_receptive_attempt');
+          if (saved) {
+            savedData = JSON.parse(saved);
+            if (savedData.isReadOnly) {
+              isReviewMode = true;
+            }
+          }
+        }
+
+        let svData;
+        if (isReviewMode) {
+          svData = await getFullReceptiveTestReview(test_id);
+        } else {
+          svData = await getReceptiveTestDetails(test_id);
+        }
+
+        if (savedData) {
+          const restoredAnswers = {};
+
+          if (svData?.receptive_test?.receptive_parts) {
+            savedData.answer_histories.forEach((hist) => {
+              const parentPart = svData.receptive_test.receptive_parts.find((part) =>
+                part.receptive_questions.some((q) => q.id === hist.question_id),
+              );
+
+              if (parentPart) {
+                const pId = parentPart.id;
+                if (!restoredAnswers[pId]) restoredAnswers[pId] = {};
+
+                restoredAnswers[pId][hist.question_id] =
+                  hist.selected_answer_id || hist.user_answer_text;
+              }
+            });
+          }
+
+          setAllAnswers(restoredAnswers);
+
+          setTestHistory({
+            receptive_test: test_id,
+            start_time: savedData.startTime || new Date().toISOString(),
+            type: savedData.isReadOnly ? 'S' : 'D',
+            answer_histories: transformAnswers(restoredAnswers),
+          });
+
+          setIsReadOnly(savedData.isReadOnly);
+          setDetailAnswers(savedData.answer_histories);
+          setStartTime(savedData.totalTime || 0);
+          setStaticData({
+            bonus_point: savedData.bonus_point,
+            earned_bonus_point: savedData.earned_bonus_point,
+            total_score: savedData.total_score,
+            feedback_message: savedData.feedback_message,
+          });
+          if (savedData.isReadOnly) {
+            setIndexPart(-1);
+          }
+        } else {
+          setTestHistory({
+            receptive_test: test_id,
+            start_time: new Date().toISOString(),
+          });
+        }
+
+        const parts = svData?.receptive_test?.receptive_parts || [];
 
         const resourcesMap = {};
         const preloadPromises = parts.map(async (part) => {
@@ -308,56 +386,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
         setTestData(svData);
         setReceptiveParts(parts);
-
-        if (typeof window !== 'undefined') {
-          const saved = window.sessionStorage.getItem('current_receptive_attempt');
-
-          if (saved) {
-            const savedData = JSON.parse(saved);
-            const restoredAnswers = {};
-
-            savedData.answer_histories.forEach((hist) => {
-              const parentPart = svData.receptive_test.receptive_parts.find((part) =>
-                part.receptive_questions.some((q) => q.id === hist.question_id),
-              );
-
-              if (parentPart) {
-                const pId = parentPart.id;
-                if (!restoredAnswers[pId]) restoredAnswers[pId] = {};
-
-                restoredAnswers[pId][hist.question_id] =
-                  hist.selected_answer_id || hist.user_answer_text;
-              }
-            });
-
-            setAllAnswers(restoredAnswers);
-
-            setTestHistory({
-              receptive_test: svData.id,
-              start_time: savedData.startTime || new Date().toISOString(),
-              type: savedData.isReadOnly ? 'S' : 'D',
-              answer_histories: transformAnswers(restoredAnswers),
-            });
-
-            setIsReadOnly(savedData.isReadOnly);
-            setDetailAnswers(savedData.answer_histories);
-            setStartTime(savedData.totalTime || 0);
-            setStaticData({
-              bonus_point: savedData.bonus_point,
-              earned_bonus_point: savedData.earned_bonus_point,
-              total_score: savedData.total_score,
-              feedback_message: savedData.feedback_message,
-            });
-            if (savedData.isReadOnly) {
-              setIndexPart(-1);
-            }
-          } else {
-            setTestHistory({
-              receptive_test: svData.id,
-              start_time: new Date().toISOString(),
-            });
-          }
-        }
       } catch (error) {
         console.error('Lỗi tải dữ liệu bài thi:', error);
       } finally {
@@ -572,77 +600,96 @@ export default function ListeningTestContent({ test_id, initialData }) {
         PaperProps={{
           sx: {
             borderRadius: '20px',
-            padding: '12px',
+            p: 1.5,
             maxWidth: '480px',
             width: '100%',
             position: 'relative',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            border: '1px solid #d7ccc8',
+            borderColor: 'warning.main',
+            borderWidth: '1px',
+            borderStyle: 'solid',
           },
         }}
       >
-        <IconButton
-          onClick={() => setOpenConfirm(false)}
+        <DialogTitle
           sx={{
-            position: 'absolute',
-            right: 16,
-            top: 16,
-            color: 'primary.dark',
-            '&:hover': { backgroundColor: '#efebe9' },
+            fontWeight: 800,
+            color: 'primary.main',
+            justifyContent: 'center',
+            textAlign: 'center',
+            position: 'relative',
+            pt: 2,
+            pb: 1,
           }}
-          disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
         >
-          <CloseIcon fontSize="small" />
-        </IconButton>
+          {/* {submitType === 'D' ? 'Save Draft' : checkCompletionStatus(testData, allAnswers) === 'S' ? 'Submit Test' : ''} */}
+          {submitType === 'D' ? 'Save Draft' : ''}
+          <IconButton
+            aria-label="close"
+            onClick={() => setOpenConfirm(false)}
+            sx={{ position: 'absolute', right: 1, top: 1, color: 'text.secondary' }}
+            size="large"
+            disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
 
-        <DialogContent sx={{ textAlign: 'center', pt: 6, pb: 2 }}>
-          <Stack spacing={4} alignItems="center">
-            <Box
-              sx={{
-                width: '90px',
-                height: '90px',
-                borderRadius: '50%',
-                backgroundColor: '#efebe9', // Brown 50
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '2px solid #a1887f', // Brown 300
-              }}
-            >
-              <InfoOutlinedIcon
-                sx={{ fontSize: 48, color: 'primary.dark' }} // Brown 800
-              />
-            </Box>
+        <DialogContent sx={{ textAlign: 'center', pt: 2, pb: 1 }}>
+          <Stack spacing={3} alignItems="center">
+            {submitType === 'S' && checkCompletionStatus(testData, allAnswers) !== 'S' && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                size="large"
+              >
+                <WarningAmberIcon sx={{ fontSize: 48, color: '#ef6c00' }} />
+              </Box>
+            )}
+            {submitType === 'S' && checkCompletionStatus(testData, allAnswers) === 'S' && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                size="large"
+              >
+                <SendIcon sx={{ fontSize: 48, color: 'primary.main' }} />
+              </Box>
+            )}
 
             <Typography
               sx={{
-                fontSize: '1.25rem',
+                fontSize: '1.15rem',
                 fontWeight: 700,
-                color: 'primary.main', // Brown 900
+                color: 'primary.main',
                 lineHeight: 1.4,
                 px: 3,
                 fontFamily: '"Outfit", sans-serif',
               }}
             >
-              {/* Logic kiểm tra nộp bài chưa xong */}
               {submitType === 'S'
                 ? checkCompletionStatus(testData, allAnswers) === 'S'
-                  ? 'Are you sure you want to submit your test?'
-                  : 'You have not finished all questions. Are you sure you want to submit your test?'
+                  ? 'Great job! Are you sure to submit your test?'
+                  : 'You have unanswered questions. Do you still want to submit?'
                 : 'Do you want to save your progress as a draft?'}
             </Typography>
           </Stack>
         </DialogContent>
 
-        <DialogActions sx={{ gap: 2, pb: 6, pt: 2, px: 4, justifyContent: 'center' }}>
+        <DialogActions sx={{ gap: 2, pb: 3.5, pt: 1.5, px: 3, justifyContent: 'center' }}>
           <Button
             onClick={() => setOpenConfirm(false)}
             variant="outlined"
             disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
             sx={{
-              borderRadius: '50px',
+              borderRadius: '12px',
               px: 4,
-              py: 1.2,
+              py: 1,
               textTransform: 'none',
               fontWeight: 700,
               fontSize: '0.875rem',
@@ -665,9 +712,9 @@ export default function ListeningTestContent({ test_id, initialData }) {
             variant="contained"
             disabled={submitStatus === 'submitting' || draftStatus === 'saving'}
             sx={{
-              borderRadius: '50px',
+              borderRadius: '12px',
               px: 4,
-              py: 1.2,
+              py: 1,
               textTransform: 'none',
               fontWeight: 700,
               fontSize: '0.875rem',
@@ -676,7 +723,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
               fontFamily: '"Outfit", sans-serif',
               boxShadow: '0 4px 14px 0 rgba(93, 64, 55, 0.39)',
               '&:hover': {
-                backgroundColor: 'primary.dark',
+                backgroundColor: 'warning.main',
                 boxShadow: '0 6px 20px rgba(93, 64, 55, 0.23)',
               },
             }}

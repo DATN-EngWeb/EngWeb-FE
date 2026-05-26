@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { getListTest } from '../../api/test';
 import { getTeacherSummary } from '../../api/test';
 import Link from 'next/link';
@@ -37,6 +38,8 @@ const PAGE_SIZE = 9;
 export default function TeacherHome() {
   const { user } = useAuth(null);
   const theme = useTheme();
+  const isMdUp = useMediaQuery(theme.breakpoints.up('md'));
+  const isSmUp = useMediaQuery(theme.breakpoints.up('sm'));
   const [searchQuery, setSearchQuery] = useState('');
   const [skillFilter, setSkillFilter] = useState('All Skills');
   const [statusFilter, setStatusFilter] = useState('All Status');
@@ -84,6 +87,15 @@ export default function TeacherHome() {
     }),
     [],
   );
+
+  // Compute a stable minHeight for the test grid to avoid layout jumps
+  const columnsEarly = isMdUp ? 3 : isSmUp ? 2 : 1;
+  const maxRowsForFullPage = Math.ceil(PAGE_SIZE / columnsEarly);
+  // Cap reserved rows so minHeight doesn't become excessively large on very small screens
+  const reservedRows = Math.min(maxRowsForFullPage, 3);
+  const rowHeightEarly = isMdUp ? 320 : isSmUp ? 260 : 180; // estimated card heights per breakpoint
+  const gapEarly = isMdUp ? 24 : 16;
+  const gridMinHeightEarly = reservedRows * rowHeightEarly + (reservedRows - 1) * gapEarly;
 
   const getPaginationRange = (current, total) => {
     const delta = 1;
@@ -206,7 +218,7 @@ export default function TeacherHome() {
   };
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
-  const displayName = user?.full_name || user?.username || 'Teacher';
+  const displayName = user?.username || 'Teacher';
   const summaryCards = [
     {
       label: 'TOTAL TESTS',
@@ -246,6 +258,16 @@ export default function TeacherHome() {
     },
   ];
 
+  // Use the early computed gridMinHeight (from hooks above)
+  // Compute current page content height and prefer it when available to reduce gap
+  const currentRows = Math.ceil(Math.max(tests.length || 0, 1) / columnsEarly);
+  const currentContentHeight = currentRows * rowHeightEarly + (currentRows - 1) * gapEarly;
+  // Prefer actual content height (when tests loaded) but don't exceed reserved gridMinHeight
+  const gridMinHeight =
+    tests && tests.length > 0
+      ? Math.min(gridMinHeightEarly, currentContentHeight)
+      : gridMinHeightEarly;
+
   return (
     <Box component="main" sx={styles.contentWrapper}>
       <Box
@@ -259,7 +281,7 @@ export default function TeacherHome() {
           border: '1px solid rgba(194, 122, 54, 0.10)',
           boxShadow: '0 18px 40px rgba(83, 40, 34, 0.06)',
           p: { xs: 2.5, md: 3 },
-          width: '100%', // Đảm bảo Box cha chiếm 100% chiều rộng khung chứa
+          width: '100%',
         }}
       >
         <Box
@@ -280,24 +302,23 @@ export default function TeacherHome() {
                 fontWeight: 700,
                 lineHeight: 1.12,
                 letterSpacing: '-0.03em',
-                fontSize: { xs: '2rem', md: '2.6rem' },
               }}
             >
               <Box
                 component="span"
                 sx={{
-                  fontSize: { xs: '2.75rem', md: '2.5rem' },
+                  fontSize: { xs: '1.5rem', md: '2.5rem' }, // nhỏ lại trên mobile
                   display: 'block',
                   fontFamily: 'Plus Jakarta Sans',
                   fontStyle: 'italic',
                 }}
               >
-                Welcome back,
+                Welcome,
               </Box>
               <Box
                 component="span"
                 sx={{
-                  fontSize: { xs: '3.25rem', md: '3.5rem' },
+                  fontSize: { xs: '2rem', md: '3.5rem' }, // nhỏ lại trên mobile
                   ml: 2,
                   display: 'block',
                   fontFamily: 'Clash Display',
@@ -309,7 +330,11 @@ export default function TeacherHome() {
             </Typography>
             <Typography
               color="text.secondary"
-              sx={{ mt: 1, fontSize: { xs: '0.95rem', md: '1rem' }, fontStyle: 'italic' }}
+              sx={{
+                mt: 1,
+                fontSize: { xs: '0.8rem', md: '1rem' }, // nhỏ lại trên mobile
+                fontStyle: 'italic',
+              }}
             >
               Manage and track all your tests in one place
             </Typography>
@@ -325,7 +350,8 @@ export default function TeacherHome() {
         <Box
           sx={{
             mt: 1.5,
-            display: 'flex',
+            display: 'grid',
+            gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, // 2 cột trên mobile, 4 cột trên desktop
             gap: 2,
             width: '100%',
           }}
@@ -333,7 +359,7 @@ export default function TeacherHome() {
           {summaryCards.map((card) => {
             const IconComponent = card.icon;
             return (
-              <Box key={card.label} sx={{ flex: 1 }}>
+              <Box key={card.label}>
                 <Box
                   sx={{
                     width: '100%',
@@ -343,7 +369,7 @@ export default function TeacherHome() {
                     border: '1px solid',
                     borderColor: card.border,
                     boxShadow: '0 10px 24px rgba(83, 40, 34, 0.04)',
-                    p: 2.25,
+                    p: { xs: 1.5, md: 2.25 }, // padding nhỏ hơn trên mobile
                     display: 'flex',
                     flexDirection: 'column',
                     transition: 'all 0.3s ease',
@@ -370,6 +396,7 @@ export default function TeacherHome() {
                         letterSpacing: '0.08em',
                         lineHeight: 1.2,
                         flex: 1,
+                        fontSize: { xs: '0.6rem', md: '0.75rem' }, // nhỏ lại trên mobile
                       }}
                     >
                       {card.label}
@@ -378,13 +405,13 @@ export default function TeacherHome() {
                       sx={{
                         color: card.color,
                         opacity: 0.6,
-                        fontSize: '1.5rem',
+                        fontSize: { xs: '1.1rem', md: '1.5rem' }, // nhỏ lại trên mobile
                       }}
                     />
                   </Box>
                   <Typography
                     sx={{
-                      fontSize: { xs: '2rem', md: '2.25rem' },
+                      fontSize: { xs: '1.5rem', md: '2.25rem' }, // nhỏ lại trên mobile
                       lineHeight: 1,
                       fontWeight: 700,
                       color:
@@ -396,9 +423,15 @@ export default function TeacherHome() {
                       mb: 1,
                     }}
                   >
-                    {summaryLoading ? <CircularProgress size={32} sx={{ my: 0.5 }} /> : card.value}
+                    {summaryLoading ? <CircularProgress size={24} sx={{ my: 0.5 }} /> : card.value}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: 'text.secondary',
+                      fontSize: { xs: '0.7rem', md: '0.875rem' }, // nhỏ lại trên mobile
+                    }}
+                  >
                     {card.helper}
                   </Typography>
                 </Box>
@@ -515,7 +548,14 @@ export default function TeacherHome() {
         </Box>
       </Box>
 
-      <Box sx={styles.testGrid}>
+      <Box
+        sx={{
+          ...styles.testGrid,
+          gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
+          gap: { xs: '16px', md: '24px' },
+          mb: 3,
+        }}
+      >
         {loading ? (
           <Box sx={{ gridColumn: '1/-1', textAlign: 'center', py: 10 }}>
             <CircularProgress color="warning" />

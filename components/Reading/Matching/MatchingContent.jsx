@@ -1,18 +1,19 @@
+/* global IntersectionObserver */
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { Box, Container, Typography, Select, MenuItem, FormControl } from '@mui/material';
 import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded';
-import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import SumaryPartTab from '../../Student/ListeningTest/part/sumaryPartTab';
+import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
-
 import {
   containerStyles,
   passageTitleStyles,
   rightPaneStyles,
 } from '@/styles/Reading/MatchingStyles';
+import 'ckeditor5/ckeditor5.css';
 
 const textWrapStyles = {
   wordBreak: 'break-word',
@@ -33,16 +34,45 @@ const MatchingContent = ({
   const isTeacherView =
     pathname?.includes('/teacher/view-test/') ||
     pathname?.includes('/teacher/upload-test/') ||
-    pathname?.includes('/teacher/update-test/');
+    pathname?.includes('/teacher/update-test/') ||
+    pathname?.includes('/teacher/review-test/');
+
   const showSummary = showResults && !isTeacherView;
 
   const [leftWidth, setLeftWidth] = useState(55);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = React.useRef(null);
   const [passageContent, setPassageContent] = useState(passage);
+
   const [processedSentences, setProcessedSentences] = useState(sentences);
 
   const [targetQuestionId, setTargetQuestionId] = useState(null);
+
+  const [openSelectId, setOpenSelectId] = useState(null);
+
+  useEffect(() => {
+    if (openSelectId === null) return;
+
+    const element = document.getElementById(`select-${openSelectId}`);
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            setOpenSelectId(null);
+          }
+        });
+      },
+      { root: null, threshold: 0 },
+    );
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [openSelectId]);
 
   // Lấy nội dung bài đọc từ URL nếu passage là một link lưu trữ (Google Cloud Storage)
   useEffect(() => {
@@ -160,10 +190,28 @@ const MatchingContent = ({
     const question = questions.find((q) => q.question_number === gapNumber);
     if (!question) return;
 
-    onAnswerChange({
-      ...answers,
-      [question.id]: value,
-    });
+    const newAnswers = { ...answers };
+
+    if (value !== '') {
+      Object.keys(newAnswers).forEach((key) => {
+        let existingValue = String(newAnswers[key]).trim();
+        if (/^\d+$/.test(existingValue)) {
+          const sentenceIndex = processedSentences.findIndex(
+            (s) => s.id === parseInt(existingValue, 10),
+          );
+          if (sentenceIndex !== -1) {
+            existingValue = String.fromCharCode(65 + sentenceIndex);
+          }
+        }
+        if (existingValue === value) {
+          delete newAnswers[key];
+        }
+      });
+    }
+
+    newAnswers[question.id] = value;
+
+    onAnswerChange(newAnswers);
   };
 
   // Tự động cuộn mượt và tạo hiệu ứng nhún (bounce) tới câu hỏi được click từ bảng tóm tắt
@@ -253,17 +301,6 @@ const MatchingContent = ({
     setTargetQuestionId(questionId);
   };
 
-  // Xử lý văn bản bài đọc: thay thế các tag đánh dấu (ví dụ [1]) thành khối UI số thứ tự
-  const renderPassageWithGaps = () => {
-    if (!passageContent) return null;
-
-    const processedPassage = passageContent.replace(/\[(\d+)\]/g, (match, number) => {
-      return `<span style="display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; margin: 0 4px; vertical-align: middle; background-color: #FFF3E0; color: #E65100; border: 1px solid #FFB74D; border-radius: 6px; font-weight: 700; font-size: 0.9rem; cursor: default; user-select: none;">${number}</span>`;
-    });
-
-    return <div dangerouslySetInnerHTML={{ __html: processedPassage }} />;
-  };
-
   const mainContent = (
     <Box sx={{ ...containerStyles, flex: 1, width: '100%', overflow: 'hidden' }}>
       <Container maxWidth={false} disableGutters sx={{ height: '100%', px: 0 }}>
@@ -302,9 +339,28 @@ const MatchingContent = ({
                 {passageTitle}
               </Typography>
             )}
-            <Box sx={{ ...listeningPartStyles.passageContainer, ...textWrapStyles }}>
-              {renderPassageWithGaps()}
-            </Box>
+            <Box
+              className="ck-content"
+              sx={{
+                ...listeningPartStyles.passageContainer,
+                ...textWrapStyles,
+                '& p > img': {
+                  display: 'inline-block',
+                  verticalAlign: 'bottom',
+                  margin: '0 8px',
+                  maxWidth: '100%',
+                },
+                '& a': {
+                  color: '#0000EE',
+                  textDecoration: 'underline',
+                  ['&:hover']: {
+                    color: '#000099',
+                    cursor: 'pointer',
+                  },
+                },
+              }}
+              dangerouslySetInnerHTML={{ __html: passageContent }}
+            />
           </Box>
           {/* Thanh điều khiển (divider) cho phép người dùng kéo qua lại để đổi chiều rộng 2 cột */}
           <Box
@@ -509,6 +565,7 @@ const MatchingContent = ({
 
                             {/* 3. Select: Cho phép chọn A, B, C, D */}
                             <FormControl
+                              id={`select-${gapNumber}`}
                               sx={{
                                 minWidth: '90px',
                                 flexShrink: 0,
@@ -517,8 +574,12 @@ const MatchingContent = ({
                               <Select
                                 value={userAns}
                                 onChange={(e) => handleAnswerChangeLocal(gapNumber, e.target.value)}
+                                open={openSelectId === gapNumber}
+                                onOpen={() => setOpenSelectId(gapNumber)}
+                                onClose={() => setOpenSelectId(null)}
                                 displayEmpty
                                 disabled={showResults}
+                                MenuProps={{ disableScrollLock: true }}
                                 sx={{
                                   height: 44,
                                   width: '100%',

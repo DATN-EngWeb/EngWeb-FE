@@ -1,5 +1,5 @@
 export const mainWrapper = {
-  bgcolor: '#fffaf8',
+  background: '#fffaf8',
   minHeight: '100vh',
   p: { xs: 2, md: 4 },
   // width: '100%',
@@ -22,7 +22,7 @@ export const levelTag = (levelColor) => ({
   border: '1px solid',
   borderColor: levelColor?.border || '#eee',
   color: levelColor?.text || '#666',
-  bgcolor: levelColor?.bg || '#f5f5f5',
+  background: levelColor?.bg || '#f5f5f5',
   fontWeight: 700,
   fontSize: '0.8rem',
 });
@@ -30,7 +30,7 @@ export const levelTag = (levelColor) => ({
 export const instructionAlert = {
   mt: 3,
   borderRadius: '16px',
-  bgcolor: '#fff9c4',
+  background: '#fff9c4',
   color: '#4e342e',
   '& .MuiAlert-icon': { color: '#ffb300' },
 };
@@ -40,7 +40,7 @@ export const draftPaper = {
   textAlign: 'center',
   borderRadius: '24px',
   border: '2px dashed #ffe0b2',
-  bgcolor: '#fffdf9',
+  background: '#fffdf9',
   mb: 4,
 };
 
@@ -72,7 +72,7 @@ export const progressCircle = {
 export const forumBox = {
   p: 3,
   borderRadius: '24px',
-  bgcolor: '#ffffff',
+  background: '#ffffff',
   mb: 3,
   border: '1px solid #f0f0f0',
 };
@@ -80,7 +80,7 @@ export const forumBox = {
 export const studyTipBox = {
   p: 3,
   borderRadius: '24px',
-  bgcolor: '#fff3e0',
+  background: '#fff3e0',
   display: 'flex',
   flexDirection: 'column',
   gap: 1,
@@ -104,11 +104,11 @@ export const tableContainer = {
   overflowX: 'auto',
   borderRadius: '20px',
   border: '1px solid #f0f0f0',
-  bgcolor: 'white',
+  background: 'white',
 };
 
 export const tableHead = {
-  bgcolor: '#fcfcfc',
+  background: '#fcfcfc',
   '& th': {
     fontWeight: 800,
     color: '#4e342e',
@@ -121,7 +121,7 @@ export const tableHead = {
 export const tableRow = {
   transition: 'all 0.2s',
   '&:hover': {
-    bgcolor: '#fffdf9',
+    background: '#fffdf9',
   },
   '& td': {
     py: 2,

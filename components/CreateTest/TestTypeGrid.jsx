@@ -46,7 +46,7 @@ export default function TestTypeGrid() {
       sx={{
         backgroundColor: '#fff',
         borderRadius: 3,
-        p: 4,
+        p: { xs: 2, sm: 4 },
         maxWidth: 700,
         mx: 'auto',
       }}
@@ -58,7 +58,7 @@ export default function TestTypeGrid() {
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
           gap: 2,
         }}
       >

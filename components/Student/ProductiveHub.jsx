@@ -1,15 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Container,
-  Typography,
-  Grid,
-  Pagination,
-  Stack,
-  CircularProgress,
-} from '@mui/material';
+import { Box, Container, Typography, Grid, Pagination, CircularProgress } from '@mui/material';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getTestOverview } from '../../api/tests';
@@ -34,6 +26,8 @@ export default function ProductiveHub({ Skill }) {
   const { user } = useAuth();
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [error, setError] = useState(null);
 
   const [page, setPage] = useState(1);
@@ -70,7 +64,11 @@ export default function ProductiveHub({ Skill }) {
   // Fetch tests (Đã bỏ setTimeout ở đây vì filters đã được debounce ở trên)
   useEffect(() => {
     async function fetchTests() {
-      setLoading(true);
+      if (hasLoadedOnce) {
+        setIsFetching(true);
+      } else {
+        setLoading(true);
+      }
       try {
         const params = {
           skill: Skill,
@@ -111,11 +109,13 @@ export default function ProductiveHub({ Skill }) {
         setError(err.message || 'Failed to load tests. Please try again later.');
       } finally {
         setLoading(false);
+        setIsFetching(false);
+        setHasLoadedOnce(true);
       }
     }
 
     fetchTests();
-  }, [filters, page, user?.role]);
+  }, [filters, page, user?.role, Skill, hasLoadedOnce]);
 
   const handleFilterChange = (field, value) => {
     setFilters((prev) => ({
@@ -132,8 +132,26 @@ export default function ProductiveHub({ Skill }) {
 
   return (
     <Box sx={pageContainerStyles}>
-      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 8, lg: 15 }, mx: 'auto', pt: 4 }}>
-        <Grid container spacing={2} sx={{ flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
+      <Container
+        maxWidth="xl"
+        sx={{
+          px: { xs: 2, md: 8, lg: 15 },
+          mx: 'auto',
+          pt: 4,
+          minHeight: { md: 'calc(100vh - 120px)' },
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <Grid
+          container
+          spacing={2}
+          sx={{
+            flexWrap: { xs: 'wrap', md: 'nowrap' },
+            alignItems: 'stretch',
+            flexGrow: 1,
+          }}
+        >
           <Grid
             item
             sx={{
@@ -151,23 +169,27 @@ export default function ProductiveHub({ Skill }) {
               flexGrow: 1,
               minWidth: 0,
               width: { xs: '100%', md: 'auto' },
+              display: 'flex',
+              flexDirection: 'column',
             }}
           >
             <Box
               sx={{
                 display: 'grid',
+                position: 'relative',
                 gridTemplateColumns: {
                   xs: '1fr',
                   md: '1fr 1fr',
                   lg: '1fr 1fr ',
                 },
                 gap: '24px',
-                marginBottom: '48px',
-                minHeight: '400px',
+                mb: 3,
+                minHeight: { xs: '400px', md: '560px' },
                 alignContent: 'start',
+                flexGrow: 1,
               }}
             >
-              {loading ? (
+              {loading && !hasLoadedOnce ? (
                 <Box sx={{ gridColumn: '1/-1', textAlign: 'center', py: 10 }}>
                   <CircularProgress color="warning" />
                 </Box>
@@ -178,20 +200,47 @@ export default function ProductiveHub({ Skill }) {
                   No tests found.
                 </Typography>
               )}
-            </Box>
 
-            <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center' }}>
-              <Pagination
-                count={totalPages}
-                page={page}
-                onChange={handlePageChange}
-                color="primary"
-                shape="rounded"
-                size="large"
-              />
+              {isFetching && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: 'rgba(255, 255, 255, 0.65)',
+                    backdropFilter: 'blur(1px)',
+                    zIndex: 2,
+                  }}
+                >
+                  <CircularProgress color="warning" />
+                </Box>
+              )}
             </Box>
           </Grid>
         </Grid>
+
+        <Box sx={{ mt: 'auto', pt: 2, display: 'flex' }}>
+          <Box
+            sx={{
+              display: { xs: 'none', md: 'block' },
+              width: { md: 'calc(280px + 16px)' },
+              flexShrink: 0,
+            }}
+          />
+
+          <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
+            <Pagination
+              count={totalPages}
+              page={page}
+              onChange={handlePageChange}
+              color="primary"
+              shape="rounded"
+              size="large"
+            />
+          </Box>
+        </Box>
       </Container>
     </Box>
   );

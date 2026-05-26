@@ -10,10 +10,11 @@ import {
   OutlinedInput,
   Checkbox,
   Collapse,
+  Button,
+  IconButton,
 } from '@mui/material';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
-import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CircleIcon from '@mui/icons-material/Circle';
@@ -38,6 +39,7 @@ export default function FillBlankForm({
   handleUpdateContentPart,
   handleEditorError,
   errors,
+  setSnackbar,
 }) {
   const [isOpen, setIsOpen] = React.useState(true);
   const [collapsedQuestions, setCollapsedQuestions] = React.useState({});
@@ -75,7 +77,6 @@ export default function FillBlankForm({
         };
 
         if (part.format === 'H') {
-          newQuestion.content = '';
           newQuestion.answers = [
             {
               id: Date.now() + i + 100,
@@ -116,7 +117,7 @@ export default function FillBlankForm({
       for (let i = updatedQuestions.length - 1; i >= 0 && removeCount > 0; i--) {
         if (updatedQuestions[i].action !== 'delete') {
           if (flag === 'update' && updatedQuestions[i].action !== 'create') {
-            updatedQuestions[i] = { ...updatedQuestions[i], action: 'delete' };
+            updatedQuestions[i] = { id: updatedQuestions[i].id, action: 'delete' };
           } else {
             updatedQuestions.splice(i, 1);
           }
@@ -127,35 +128,95 @@ export default function FillBlankForm({
     setQuestions(updatedQuestions);
   };
 
-  const handleUpdateQuestion = (questionId, value) => {
-    const updatedQuestions = questions.map((q) => {
-      if (q.id === questionId) {
-        // Nếu là format H (Multiple Choice), update vào content câu hỏi
-        if (part.format === 'H') {
+  const handleUpdateTextOption = (questionId, optionId, value) => {
+    setQuestions(
+      questions.map((q) => {
+        if (q.id === questionId) {
           return {
             ...q,
-            content: value,
             ...(flag === 'update' && !q.action && { action: 'update' }),
+            answers: q.answers.map((opt) =>
+              opt.id === optionId
+                ? {
+                    ...opt,
+                    answer_text: value,
+                    ...(flag === 'update' && !opt.action && { action: 'update' }),
+                  }
+                : opt,
+            ),
           };
         }
-        // Nếu không phải H (tức là I - Text), update vào answers
-        else {
+        return q;
+      }),
+    );
+  };
+
+  const handleAddTextOption = (questionId) => {
+    setQuestions(
+      questions.map((q) => {
+        if (q.id === questionId) {
           return {
             ...q,
             ...(flag === 'update' && !q.action && { action: 'update' }),
             answers: [
+              ...q.answers,
               {
-                ...q.answers[0],
-                answer_text: value,
-                ...(flag === 'update' && !q.answers[0].action && { action: 'update' }),
+                id: Date.now(),
+                is_correct: true,
+                answer_text: '',
+                ...(flag === 'update' && { action: 'create' }),
               },
             ],
           };
         }
-      }
-      return q;
-    });
-    setQuestions(updatedQuestions);
+        return q;
+      }),
+    );
+  };
+
+  const handleRemoveTextOption = (questionId, optionId) => {
+    setQuestions(
+      questions.map((q) => {
+        if (q.id === questionId) {
+          const activeAnswersCount = (q.answers || []).filter(
+            (opt) => opt.action !== 'delete',
+          ).length;
+
+          if (activeAnswersCount <= 1) {
+            if (setSnackbar) {
+              setSnackbar({
+                open: true,
+                message: 'Each question must keep at least 1 answer option.',
+                severity: 'warning',
+              });
+            }
+            return q;
+          }
+
+          let updatedAnswers;
+          if (flag === 'update') {
+            updatedAnswers = q.answers
+              .map((opt) => {
+                if (opt.id === optionId) {
+                  if (opt.action === 'create') return null;
+                  return { id: opt.id, action: 'delete' };
+                }
+                return opt;
+              })
+              .filter(Boolean);
+          } else {
+            updatedAnswers = q.answers.filter((opt) => opt.id !== optionId);
+          }
+
+          return {
+            ...q,
+            ...(flag === 'update' && !q.action && { action: 'update' }),
+            answers: updatedAnswers,
+          };
+        }
+        return q;
+      }),
+    );
   };
 
   const handleUpdateExplanation = (questionId, value) => {
@@ -460,11 +521,25 @@ export default function FillBlankForm({
                       .map((question, qIndex) => (
                         <Box
                           key={`${part.format}-${question.id}`}
-                          sx={multipleChoiceStyles.questionsContainer}
+                          sx={{
+                            ...multipleChoiceStyles.questionsContainer,
+                            ...(collapsedQuestions[question.id] && { gap: 0 }),
+                          }}
                         >
                           <Box sx={multipleChoiceStyles.labelQuestionsContainer}>
                             <Box sx={multipleChoiceStyles.questionLabel}>{qIndex + 1}</Box>
-                            <Box sx={{ flexGrow: 1 }} />
+                            <Box
+                              sx={{
+                                flexGrow: 1,
+                                alignSelf: 'stretch',
+                                ...(collapsedQuestions[question.id] && { cursor: 'pointer' }),
+                                backgroundColor: 'transparent',
+                              }}
+                              onClick={() =>
+                                collapsedQuestions[question.id] &&
+                                toggleQuestionCollapse(question.id)
+                              }
+                            />
                             {/* ---------------- Question Controls ---------------- */}
                             <Box
                               sx={{
@@ -472,7 +547,7 @@ export default function FillBlankForm({
                                 flexDirection: 'row',
                                 gap: 1,
                                 alignItems: 'center',
-                                mt: 0.2,
+                                alignSelf: 'center',
                               }}
                             >
                               <ExpandLessRoundedIcon
@@ -501,21 +576,81 @@ export default function FillBlankForm({
                                   gap: 1,
                                 }}
                               >
-                                <OutlinedInput
-                                  size="small"
-                                  key={`${part.format}-${question.id}`}
-                                  multiline
-                                  placeholder={
-                                    part.format === 'H' ? 'Enter question' : 'Enter correct answer'
-                                  }
-                                  defaultValue={
-                                    part.format === 'H'
-                                      ? question.content
-                                      : question.answers[0].answer_text
-                                  }
-                                  sx={uploadReadingStyles.inputMultiline}
-                                  onBlur={(e) => handleUpdateQuestion(question.id, e.target.value)}
-                                />
+                                {part.format !== 'H' && (
+                                  <Box
+                                    sx={{
+                                      width: '100%',
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      gap: 1,
+                                    }}
+                                  >
+                                    <Typography
+                                      sx={{
+                                        fontSize: '0.875rem',
+                                        fontWeight: 500,
+                                        mb: 0.5,
+                                        color: 'text.secondary',
+                                      }}
+                                    >
+                                      Correct Answer(s)
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                      {question.answers
+                                        .filter((opt) => opt.action !== 'delete')
+                                        .map((opt, vIdx, arr) => (
+                                          <Box
+                                            key={`${question.id}-${opt.id}`}
+                                            sx={{
+                                              display: 'flex',
+                                              gap: 1,
+                                              alignItems: 'flex-start',
+                                            }}
+                                          >
+                                            <OutlinedInput
+                                              size="small"
+                                              fullWidth
+                                              multiline
+                                              placeholder={`Option ${vIdx + 1}`}
+                                              defaultValue={opt.answer_text}
+                                              sx={uploadReadingStyles.inputMultiline}
+                                              onBlur={(e) =>
+                                                handleUpdateTextOption(
+                                                  question.id,
+                                                  opt.id,
+                                                  e.target.value,
+                                                )
+                                              }
+                                            />
+                                            {arr.length > 1 && (
+                                              <IconButton
+                                                size="small"
+                                                onClick={() =>
+                                                  handleRemoveTextOption(question.id, opt.id)
+                                                }
+                                                sx={{ mt: 0.5 }}
+                                              >
+                                                <DeleteRoundedIcon sx={{ fontSize: '1.2rem' }} />
+                                              </IconButton>
+                                            )}
+                                          </Box>
+                                        ))}
+                                    </Box>
+                                    <Button
+                                      size="small"
+                                      startIcon={<AddRoundedIcon sx={{ fontSize: '1.4rem' }} />}
+                                      onClick={() => handleAddTextOption(question.id)}
+                                      sx={{
+                                        mt: 1,
+                                        textTransform: 'none',
+                                        color: 'primary.main',
+                                        alignSelf: 'flex-start',
+                                      }}
+                                    >
+                                      Add option
+                                    </Button>
+                                  </Box>
+                                )}
                                 <OutlinedInput
                                   size="small"
                                   multiline

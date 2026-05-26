@@ -113,7 +113,6 @@ export const validateReadingPartPayload = (parts) => {
         }
       }
 
-      // Đã xóa 'H' khỏi mảng kiểm tra này để bỏ qua validate q.content cho Format H
       if (['F', 'G', 'J'].includes(format)) {
         if (isEmptyText(q.content)) {
           return formatQuestionMessage(partName, qNum, 'add the question content.');
@@ -131,9 +130,11 @@ export const validateReadingPartPayload = (parts) => {
       }
 
       if (format === 'I') {
-        const correctAns = q.answers.find((a) => a.is_correct);
-        if (correctAns && isEmptyText(correctAns.answer_text)) {
-          return formatQuestionMessage(partName, qNum, 'fill in the correct answer.');
+        for (let k = 0; k < q.answers.length; k++) {
+          const ans = q.answers[k];
+          if (ans.is_correct && isEmptyText(ans.answer_text)) {
+            return formatQuestionMessage(partName, qNum, 'fill in all correct answers.');
+          }
         }
       }
 
@@ -204,8 +205,11 @@ export const validateReadingPartUpdatePayload = (originalParts) => {
       const question = activeQuestions[qIndex];
       const displayQuestionNum = question.question_number || qIndex + 1;
 
-      // Bắt buộc nhập content ở cấp độ Question (TRỪ format 'I')
-      if (partFormat !== 'I' && (!question.content || String(question.content).trim() === '')) {
+      // Bắt buộc nhập content ở cấp độ Question (TRỪ format 'I', 'H')
+      if (
+        !['I', 'H'].includes(partFormat) &&
+        (!question.content || String(question.content).trim() === '')
+      ) {
         return `Part ${displayPartNum}, Question ${displayQuestionNum}: add the question content.`;
       }
 
@@ -214,16 +218,30 @@ export const validateReadingPartUpdatePayload = (originalParts) => {
       const activeAnswers = answers.filter((a) => a.action !== 'delete');
       const isMultipleChoice = ['F', 'G', 'H'].includes(partFormat);
 
-      // Rule riêng cho Trắc nghiệm (F, G, H): Tối thiểu 3 đáp án & có 1 đáp án đúng
+      if (activeAnswers.length === 0) {
+        return `Part ${displayPartNum}, Question ${displayQuestionNum}: add at least one answer.`;
+      }
+
+      // Rule riêng cho Trắc nghiệm (F, G, H): Tối thiểu 3 đáp án
       if (isMultipleChoice) {
         if (activeAnswers.length < 3) {
           return `Question ${displayQuestionNum} in Part ${displayPartNum} must have at least 3 answer options.`;
         }
+      }
 
-        const hasCorrectAnswer = activeAnswers.some((a) => a.is_correct === true);
-        if (!hasCorrectAnswer) {
-          return `Part ${displayPartNum}, Question ${displayQuestionNum}: choose the correct answer.`;
+      // Format I riêng
+      if (partFormat === 'I') {
+        for (let aIndex = 0; aIndex < activeAnswers.length; aIndex++) {
+          const ans = activeAnswers[aIndex];
+          if (ans.is_correct && (!ans.answer_text || String(ans.answer_text).trim() === '')) {
+            return `Part ${displayPartNum}, Question ${displayQuestionNum}: fill in all correct answers.`;
+          }
         }
+      }
+
+      const hasCorrectAnswer = activeAnswers.some((a) => a.is_correct === true);
+      if (!hasCorrectAnswer) {
+        return `Part ${displayPartNum}, Question ${displayQuestionNum}: choose the correct answer.`;
       }
 
       // Kiểm tra chi tiết từng đáp án active
@@ -238,7 +256,11 @@ export const validateReadingPartUpdatePayload = (originalParts) => {
         }
 
         // Format 'J' (Matching): Không bắt buộc nhập answer_text ở các option
-        if (partFormat !== 'J' && (!answerText || String(answerText).trim() === '')) {
+        if (
+          partFormat !== 'J' &&
+          partFormat !== 'I' &&
+          (!answerText || String(answerText).trim() === '')
+        ) {
           const optionLabelDisplay = optionLabel ? ` (${optionLabel})` : '';
 
           // Lời cảnh báo trả ra khác nhau dựa trên định dạng
@@ -325,10 +347,20 @@ export const validateListeningPartUpdatePayload = (parts) => {
 
       for (let k = 0; k < activeAnswers.length; k++) {
         const answer = activeAnswers[k];
-        const answerText = answer.text ?? answer.answer_text;
 
-        if (isEmptyText(answerText)) {
-          return formatAnswerMessage(partName, k + 1, 'fill in the answer text');
+        // Check acceptedAnswers (new structure) or text (old structure for backward compatibility)
+        if (answer.acceptedAnswers && Array.isArray(answer.acceptedAnswers)) {
+          for (let v = 0; v < answer.acceptedAnswers.length; v++) {
+            if (isEmptyText(answer.acceptedAnswers[v].text)) {
+              return formatAnswerMessage(partName, k + 1, 'fill in the answer text');
+            }
+          }
+        } else {
+          // Backward compatibility for old format
+          const answerText = answer.text ?? answer.answer_text;
+          if (isEmptyText(answerText)) {
+            return formatAnswerMessage(partName, k + 1, 'fill in the answer text');
+          }
         }
       }
 

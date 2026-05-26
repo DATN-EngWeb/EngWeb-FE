@@ -93,13 +93,18 @@ export default function BasicInformation({ testName, level, time, description, o
             displayEmpty
             sx={{
               '& .MuiSelect-icon': {
-                color: 'primary.main',
-                fontSize: '1.8rem',
+                color: 'text.gray',
+                fontSize: '1.6rem',
                 right: '12px',
                 transition: 'transform 0.2s',
               },
               '& .MuiSelect-iconOpen': {
+                color: 'text.primary',
                 transform: 'rotate(180deg)',
+              },
+              '& .MuiSelect-select': {
+                display: 'flex',
+                alignItems: 'center',
               },
             }}
             IconComponent={KeyboardArrowDownIcon}

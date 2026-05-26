@@ -729,19 +729,6 @@ export default function AIFeedback() {
                     REMAINING TURNS
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box sx={{ display: 'flex', gap: '6px' }}>
-                      {Array.from({ length: Math.max(3, totalTurns) }).map((_, idx) => (
-                        <Box
-                          key={idx}
-                          sx={{
-                            width: 12,
-                            height: 12,
-                            bgcolor: idx < totalTurns ? '#8B5A2B' : '#e0e0e0',
-                            borderRadius: '50%',
-                          }}
-                        />
-                      ))}
-                    </Box>
                     <Typography variant="body2" fontWeight="800" color="text.primary">
                       {totalTurns} left
                     </Typography>

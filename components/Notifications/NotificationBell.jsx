@@ -134,8 +134,8 @@ export default function NotificationBell() {
         onClick={handleOpen}
         size="small"
         sx={{
-          width: 42,
-          height: 42,
+          width: 40,
+          height: 40,
           color: 'primary.main',
           border: '1px solid',
           borderColor: 'rgba(83, 40, 34, 0.12)',

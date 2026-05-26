@@ -19,11 +19,12 @@ export const testHeaderContainer = {
   justifyContent: 'space-between',
   px: 2,
   py: 2,
-  bgcolor: 'white',
+  backgroundColor: 'white',
   borderBottom: '1px solid #eee',
   position: 'sticky',
   top: 0,
   zIndex: 10,
+  overflow: 'visible',
 };
 
 export const levelTag = {
@@ -32,7 +33,7 @@ export const levelTag = {
   borderRadius: '8px',
   border: '1px solid #2ecc71',
   color: '#2ecc71',
-  bgcolor: '#f0fff4',
+  backgroundColor: '#f0fff4',
   fontSize: '0.875rem',
   fontWeight: 600,
   ml: 2,
@@ -45,6 +46,7 @@ export const timerBox = {
   color: '#5d4037',
   fontWeight: 700,
   fontSize: '1.25rem',
+  minWidth: 0,
 };
 
 export const groupIcon = {
@@ -63,6 +65,7 @@ export const contentWrapper = {
   flexGrow: 1,
   overflow: 'hidden',
   p: 2,
+  minHeight: 0,
 };
 
 export const panelScrollBox = (isLeft = true) => ({
@@ -84,20 +87,20 @@ export const resizeHandle = {
 };
 
 export const outlineButton = {
-  bgcolor: '#e0d5d0',
+  backgroundColor: '#e0d5d0',
   color: 'primary.main',
   mb: 2,
   textTransform: 'none',
   borderRadius: '10px',
   '&:hover': {
-    bgcolor: '#d4c5bf',
+    backgroundColor: '#d4c5bf',
   },
 };
 
 export const outlinePaper = {
   p: 2,
   mb: 2,
-  bgcolor: '#fff3e0',
+  backgroundColor: '#fff3e0',
   borderRadius: '12px',
 };
 
@@ -110,6 +113,7 @@ export const writingPaper = {
   display: 'flex',
   flexDirection: 'column',
   bgcolor: 'white',
+  minHeight: 0,
 };
 
 export const progressBarWrapper = {
@@ -120,16 +124,16 @@ export const progressBarStyle = {
   flexGrow: 1,
   height: 10,
   borderRadius: 5,
-  bgcolor: '#eee',
+  backgroundColor: '#eee',
   '& .MuiLinearProgress-bar': {
-    bgcolor: '#ffc107',
+    backgroundColor: '#ffc107',
   },
 };
 
 export const textFieldStyle = {
   '& .MuiOutlinedInput-root': {
     borderRadius: '12px',
-    bgcolor: 'white',
+    backgroundColor: 'white',
     transition: 'border-color 0.2s',
     '& fieldset': {
       borderColor: '#eee',
@@ -145,7 +149,7 @@ export const forumBox = {
   p: 3,
   border: '1px solid #ffe0b2',
   borderRadius: '12px',
-  bgcolor: '#fffdf9',
+  backgroundColor: '#fffdf9',
   color: 'primary.main',
 };
 

@@ -10,7 +10,9 @@ import {
   Stack,
   Typography,
   Paper,
+  IconButton,
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
@@ -20,7 +22,7 @@ import { getQuotesForTestType, fadeUp, ConfettiCanvas, LoadingOrb } from './Shar
 
 function SavingState() {
   return (
-    <Stack spacing={2.25} alignItems="center" textAlign="center" py={1}>
+    <Stack spacing={1} alignItems="center" textAlign="center" py={1}>
       <LoadingOrb icon={SaveOutlinedIcon} />
 
       <Box>
@@ -66,96 +68,119 @@ function SavingState() {
 function SavedState({ quote, savedAt, onClose }) {
   return (
     <Stack
-      spacing={3}
+      spacing={2}
       alignItems="center"
       width="100%"
       sx={{
+        position: 'relative',
+        overflow: 'hidden',
         animation: 'popIn 0.5s ease-out forwards',
+
         '@keyframes popIn': {
           '0%': { opacity: 0, transform: 'scale(0.95)' },
           '100%': { opacity: 1, transform: 'scale(1)' },
         },
       }}
     >
-      <ConfettiCanvas />
+      <Box
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          zIndex: 3,
+        }}
+      >
+        <ConfettiCanvas />
+      </Box>
 
-      {/* Success Hero */}
-      <Box textAlign="center" zIndex={1} sx={fadeUp(200)}>
-        <Box
-          sx={{
-            width: 80,
-            height: 80,
-            borderRadius: '50%',
-            bgcolor: 'success.light',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            mx: 'auto',
-            mb: 2,
-            boxShadow: '0 8px 24px rgba(76, 175, 80, 0.25)',
-          }}
-        >
-          <CheckCircleOutlineIcon sx={{ fontSize: 48, color: 'success.dark' }} />
+      <Stack
+        spacing={1}
+        alignItems="center"
+        width="100%"
+        sx={{
+          position: 'relative',
+          zIndex: 2,
+        }}
+      >
+        {/* Success Hero */}
+        <Box textAlign="center" sx={fadeUp(200)}>
+          <Box
+            sx={{
+              width: 80,
+              height: 80,
+              borderRadius: '50%',
+              bgcolor: 'success.light',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mx: 'auto',
+              mb: 2,
+              boxShadow: '0 8px 24px rgba(76, 175, 80, 0.25)',
+            }}
+          >
+            <CheckCircleOutlineIcon sx={{ fontSize: 48, color: 'success.dark' }} />
+          </Box>
+          <Typography variant="h5" fontWeight={800} color="text.primary" gutterBottom>
+            Draft Saved!
+          </Typography>
+          <Typography variant="body2" color="text.secondary" maxWidth={280} mx="auto">
+            Your progress has been securely saved. You can return anytime to finish this test.
+          </Typography>
         </Box>
-        <Typography variant="h5" fontWeight={800} color="text.primary" gutterBottom>
-          Draft Saved!
-        </Typography>
-        <Typography variant="body2" color="text.secondary" maxWidth={280} mx="auto">
-          Your progress has been securely saved. You can return anytime to finish this test.
-        </Typography>
-      </Box>
 
-      {/* Inspirational Quote */}
-      <Box zIndex={1} sx={{ ...fadeUp(400, '0.5s', '12px'), width: '100%' }}>
-        <Paper
-          elevation={0}
-          sx={{
-            p: 2,
-            borderRadius: 3,
-            bgcolor: 'background.default',
-            border: '1px dashed',
-            borderColor: 'divider',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: 1.5,
-          }}
-        >
-          <Box sx={{ p: 1, borderRadius: 2, bgcolor: 'primary.50', color: 'primary.main' }}>
-            <AutoAwesomeIcon fontSize="small" />
-          </Box>
-          <Box flex={1}>
-            <Typography variant="subtitle2" fontWeight={700} color="text.primary" gutterBottom>
-              Keep it up!
-            </Typography>
-            <Typography variant="body2" color="text.secondary" fontStyle="italic">
-              "{quote}"
-            </Typography>
-            {savedAt && (
-              <Typography variant="caption" color="text.disabled" display="block" mt={1}>
-                Last saved at: {savedAt}
+        {/* Inspirational Quote */}
+        <Box sx={{ ...fadeUp(400, '0.5s', '12px'), width: '100%' }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              borderRadius: 3,
+              bgcolor: 'background.default',
+              border: '1px dashed',
+              borderColor: 'divider',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 1.5,
+            }}
+          >
+            <Box sx={{ p: 1, borderRadius: 2, bgcolor: 'primary.50', color: 'primary.main' }}>
+              <AutoAwesomeIcon fontSize="small" />
+            </Box>
+            <Box flex={1}>
+              <Typography variant="subtitle2" fontWeight={700} color="text.primary" gutterBottom>
+                Keep it up!
               </Typography>
-            )}
-          </Box>
-        </Paper>
-      </Box>
+              <Typography variant="body2" color="text.secondary" fontStyle="italic">
+                "{quote}"
+              </Typography>
+              {savedAt && (
+                <Typography variant="caption" color="text.disabled" display="block" mt={1}>
+                  Last saved at: {savedAt}
+                </Typography>
+              )}
+            </Box>
+          </Paper>
+        </Box>
 
-      {/* Actions */}
-      <Stack direction="row" spacing={1.5} width="100%" sx={fadeUp(600)}>
-        <Button
-          variant="contained"
-          fullWidth
-          onClick={onClose}
-          sx={{
-            borderRadius: 2,
-            textTransform: 'none',
-            fontWeight: 600,
-            bgcolor: 'primary.main',
-            '&:hover': { bgcolor: 'primary.dark' },
-            boxShadow: 'none',
-          }}
-        >
-          Close
-        </Button>
+        {/* Actions */}
+        <Stack direction="row" spacing={1.5} width="100%" sx={fadeUp(600)}>
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={onClose}
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              zIndex: 10,
+              bgcolor: 'primary.main',
+              '&:hover': { bgcolor: 'primary.dark' },
+              boxShadow: 'none',
+            }}
+          >
+            Close
+          </Button>
+        </Stack>
       </Stack>
     </Stack>
   );
@@ -166,7 +191,7 @@ function SavedState({ quote, savedAt, onClose }) {
 function ErrorState({ onClose, onRetry }) {
   return (
     <Stack
-      spacing={3}
+      spacing={1.5}
       alignItems="center"
       width="100%"
       sx={{ animation: 'popIn 0.5s ease-out forwards' }}
@@ -282,6 +307,20 @@ export default function SaveDraftToast({ status, onClose, onRetry, testType }) {
       }}
       slotProps={{ backdrop: { sx: { backdropFilter: 'blur(4px)', bgcolor: 'rgba(0,0,0,0.4)' } } }}
     >
+      <IconButton
+        aria-label="Close"
+        onClick={() => onClose()}
+        sx={{
+          position: 'absolute',
+          top: 8,
+          right: 8,
+          color: 'text.secondary',
+          zIndex: 30,
+          pointerEvents: 'auto',
+        }}
+      >
+        <CloseIcon />
+      </IconButton>
       <DialogContent sx={{ p: 4, overflow: 'hidden', position: 'relative' }}>
         {status === 'saving' && <SavingState />}
         {status === 'saved' && <SavedState quote={quote} savedAt={savedAt} onClose={onClose} />}

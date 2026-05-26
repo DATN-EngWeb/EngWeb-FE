@@ -90,7 +90,7 @@ export default function ShareSpeakingPage() {
         severity: 'success',
       });
       setTimeout(() => {
-        router.push(`/student/speaking/${test_id}`);
+        router.replace(`/student/speaking/${test_id}`);
       }, 2000);
     } catch (error) {
       setSnackbar({

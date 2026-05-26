@@ -11,6 +11,8 @@ import {
   DialogContent,
   IconButton,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import {
   LightbulbOutlined,
   CheckCircleOutline,
@@ -21,6 +23,8 @@ import {
 import * as styles from '@/styles/Student/Writing/AIFeedbackStyles';
 
 export default function HistoryAIFeedbackModal({ open, onClose, data }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [categories, setCategories] = useState([]);
   const [overall, setOverall] = useState({ summary: '', next_actions: '' });
 
@@ -56,26 +60,56 @@ export default function HistoryAIFeedbackModal({ open, onClose, data }) {
   const overallScore = categories.reduce((acc, cat) => acc + cat.score, 0) / categories.length || 0;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      fullScreen={isMobile}
+      scroll="paper"
+      PaperProps={{
+        sx: {
+          borderRadius: isMobile ? 0 : 3,
+          m: isMobile ? 0 : 2,
+          width: '100%',
+          maxHeight: isMobile ? '100%' : 'calc(100% - 32px)',
+        },
+      }}
+    >
       <DialogTitle
         sx={{
           m: 0,
-          p: 2.5,
+          p: { xs: 1.5, sm: 2.5 },
           display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
           justifyContent: 'space-between',
-          alignItems: 'center',
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          gap: { xs: 1.25, sm: 2 },
           bgcolor: '#F9F6F0',
           borderBottom: '1px solid #eee',
         }}
       >
-        <Box>
-          <Typography variant="h5" fontWeight="800" color="primary.main">
+        <Box sx={{ width: '100%' }}>
+          <Typography
+            variant="h5"
+            fontWeight="800"
+            color="primary.main"
+            sx={{ fontSize: { xs: '1.5rem', sm: '1.5rem' } }}
+          >
             AI Feedback Result
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <Stack direction="row" alignItems="center">
-            <Box textAlign="right">
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: { xs: 'space-between', sm: 'flex-end' },
+            gap: { xs: 1, sm: 3 },
+            width: '100%',
+          }}
+        >
+          <Stack direction="row" alignItems="center" sx={{ flex: 1 }}>
+            <Box textAlign={{ xs: 'left', sm: 'right' }}>
               <Typography
                 variant="body2"
                 color="text.secondary"
@@ -88,7 +122,7 @@ export default function HistoryAIFeedbackModal({ open, onClose, data }) {
                 variant="h4"
                 fontWeight="900"
                 color="warning.main"
-                sx={{ lineHeight: 1, mt: 0.5 }}
+                sx={{ lineHeight: 1, mt: 0.5, fontSize: { xs: '1.6rem', sm: '2.125rem' } }}
               >
                 Band {overallScore.toFixed(1)}
                 <Typography component="span" variant="h6" color="text.disabled" fontWeight="700">
@@ -104,6 +138,9 @@ export default function HistoryAIFeedbackModal({ open, onClose, data }) {
             sx={{
               color: 'text.secondary',
               bgcolor: '#fff',
+              position: 'absolute',
+              top: 12,
+              right: 12,
               boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
               '&:hover': { bgcolor: '#eceff1' },
             }}
@@ -113,28 +150,35 @@ export default function HistoryAIFeedbackModal({ open, onClose, data }) {
         </Box>
       </DialogTitle>
 
-      <DialogContent dividers>
+      <DialogContent dividers sx={{ px: { xs: 1.5, sm: 3 }, py: { xs: 1.5, sm: 2.5 } }}>
         {/* HEADER SECTION */}
         <Box
           sx={{
             ...styles.summaryCard,
             display: 'flex',
-            flexDirection: 'row',
+            flexDirection: { xs: 'column', sm: 'row' },
             width: '100%',
-            mb: 5,
+            mb: { xs: 2.5, sm: 5 },
+            gap: { xs: 2, sm: 0 },
           }}
         >
           {/* Overall Summary */}
-          <Box sx={{ display: 'flex', width: '50%' }}>
-            <Box sx={{ p: 2 }}>
+          <Box sx={{ display: 'flex', width: { xs: '100%', sm: '50%' } }}>
+            <Box sx={{ p: { xs: 0, sm: 2 }, width: '100%' }}>
               <CardContent>
                 <Stack direction="row" spacing={1} alignItems="center" mb={2}>
                   <BarChart color="warning" />
-                  <Typography variant="h6" fontWeight="700">
+                  <Typography
+                    variant="h6"
+                    fontWeight="700"
+                    sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}
+                  >
                     Overall Summary
                   </Typography>
                 </Stack>
-                <Typography variant="caption">{overall.summary}</Typography>
+                <Typography variant="caption" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                  {overall.summary}
+                </Typography>
               </CardContent>
             </Box>
           </Box>
@@ -145,15 +189,19 @@ export default function HistoryAIFeedbackModal({ open, onClose, data }) {
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
-              width: '50%',
+              width: { xs: '100%', sm: '50%' },
             }}
           >
-            <Box sx={{ p: 2 }}>
+            <Box sx={{ p: { xs: 0, sm: 2 }, width: '100%' }}>
               <Card sx={styles.NextActionCard}>
                 <CardContent>
                   <Stack direction="row" spacing={1} alignItems="center" mb={2}>
                     <FlashOn sx={{ color: '#fbc02d' }} />
-                    <Typography variant="h6" fontWeight="700">
+                    <Typography
+                      variant="h6"
+                      fontWeight="700"
+                      sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}
+                    >
                       Next Actions
                     </Typography>
                   </Stack>
@@ -164,7 +212,12 @@ export default function HistoryAIFeedbackModal({ open, onClose, data }) {
                       .map((text, i) => (
                         <Stack key={i} direction="row" spacing={1.5} alignItems="flex-start" mb={1}>
                           <CheckCircleOutline sx={{ color: '#ed6c02', fontSize: 18, mt: 0.3 }} />
-                          <Typography variant="caption" color="text.primary" fontWeight="500">
+                          <Typography
+                            variant="caption"
+                            color="text.primary"
+                            fontWeight="500"
+                            sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+                          >
                             {text.replace(/^\d+\.\s*/, '').trim()}
                           </Typography>
                         </Stack>
@@ -177,7 +230,7 @@ export default function HistoryAIFeedbackModal({ open, onClose, data }) {
         </Box>
 
         {/* CATEGORIES GRID */}
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: { xs: 2, sm: 3 } }}>
           {categories.map((cat, index) => (
             <Box
               key={index}
@@ -186,7 +239,12 @@ export default function HistoryAIFeedbackModal({ open, onClose, data }) {
               <Card sx={{ ...styles.categoryCard, width: '100%' }}>
                 <CardContent>
                   <Box sx={styles.categoryHeader}>
-                    <Typography variant="subtitle1" fontWeight="800" textTransform="capitalize">
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="800"
+                      textTransform="capitalize"
+                      sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}
+                    >
                       {cat.title}
                     </Typography>
                     <Chip
@@ -205,10 +263,15 @@ export default function HistoryAIFeedbackModal({ open, onClose, data }) {
                         display="flex"
                         alignItems="center"
                         gap={0.5}
+                        sx={{ fontSize: { xs: '0.72rem', sm: '0.75rem' } }}
                       >
                         <CheckCircleOutline sx={{ fontSize: 14 }} /> STRENGTHS
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                      >
                         {' '}
                         {cat.strengths}
                       </Typography>
@@ -221,10 +284,15 @@ export default function HistoryAIFeedbackModal({ open, onClose, data }) {
                         display="flex"
                         alignItems="center"
                         gap={0.5}
+                        sx={{ fontSize: { xs: '0.72rem', sm: '0.75rem' } }}
                       >
                         <LightbulbOutlined sx={{ fontSize: 14 }} /> IMPROVEMENTS
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                      >
                         {' '}
                         {cat.improvements}
                       </Typography>
