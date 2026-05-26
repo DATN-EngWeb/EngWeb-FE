@@ -16,8 +16,6 @@ import {
   Drawer,
   IconButton,
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import useMediaQuery from '@mui/material/useMediaQuery';
 import Logo from '../../assets/img/logo.png';
 import Image from 'next/image';
 import {
@@ -50,9 +48,7 @@ import {
 } from '../../styles/Home/HeaderStyles';
 import RoleSelectionModal from '../Auth/RoleSelectionModal';
 import { useAuth } from '../../hooks/useAuth';
-import { useStreakContext } from '../../context/streakContext';
 import { logout as logoutAPI, getStudentProfile } from '../../api/accounts';
-import AnimatedStreakBadge from '../Streak/animatedStreakBadge';
 import StreakBadge from '../Streak/streakBadge';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import NotificationBell from '../Notifications/NotificationBell';
@@ -113,15 +109,7 @@ const LogoutIcon = () => (
 );
 
 // User Popup Component
-function UserPopup({
-  user,
-  studentProfile,
-  userAvatar,
-  onClose,
-  onLogout,
-  onNavigate,
-  mobile = false,
-}) {
+function UserPopup({ user, studentProfile, userAvatar, onClose, onLogout, onNavigate }) {
   const popupRef = useRef(null);
 
   const isTeacher = user?.role === 'T';
@@ -157,226 +145,208 @@ function UserPopup({
       document.removeEventListener('keydown', handleEsc);
     };
   }, [onClose]);
-  // Render inner content so we can reuse in both desktop popup and mobile Drawer
-  const renderContent = (
+
+  return (
     <>
-      <style>{`
+      {/* Backdrop */}
+      <div style={userPopupBackdropStyles} />
+
+      {/* Popup */}
+      <div ref={popupRef} style={userPopupContainerStyles}>
+        <style>{`
           @keyframes popupFadeIn {
             from { opacity: 0; transform: translateY(-8px) scale(0.97); }
             to   { opacity: 1; transform: translateY(0) scale(1); }
           }
         `}</style>
 
-      {/* Header section */}
-      <div style={userPopupHeaderStyles}>
-        {/* Avatar + Name */}
-        <div style={userPopupAvatarNameBoxStyles}>
-          <div style={userPopupAvatarWrapperStyles}>
-            <Avatar
-              src={isValidAvatar ? userAvatar : undefined}
-              alt={displayName}
-              sx={{
-                width: '100%',
-                height: '100%',
-                bgcolor: 'primary.dark',
-                fontSize: 24,
-                fontWeight: 700,
-              }}
-            >
-              {displayName?.[0]?.toUpperCase() || 'U'}
-            </Avatar>
+        {/* Header section */}
+        <div style={userPopupHeaderStyles}>
+          {/* Avatar + Name */}
+          <div style={userPopupAvatarNameBoxStyles}>
+            <div style={userPopupAvatarWrapperStyles}>
+              <Avatar
+                src={isValidAvatar ? userAvatar : undefined}
+                alt={displayName}
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  bgcolor: 'primary.dark',
+                  fontSize: 24,
+                  fontWeight: 700,
+                }}
+              >
+                {displayName?.[0]?.toUpperCase() || 'U'}
+              </Avatar>
+            </div>
+            <div>
+              <div style={userPopupUsernameStyles}>{displayName || 'User'}</div>
+              {!isTeacher && (
+                <div style={userPopupLevelStyles}>
+                  LEVEL {level} • {levelTitle.toUpperCase()}
+                </div>
+              )}
+            </div>
           </div>
-          <div>
-            <div style={userPopupUsernameStyles}>{displayName || 'User'}</div>
-            {!isTeacher && (
-              <div style={userPopupLevelStyles}>
-                LEVEL {level} • {levelTitle.toUpperCase()}
+
+          {/* XP Bar */}
+          {!isTeacher && (
+            <div>
+              <div style={userPopupXpRowStyles}>
+                <span style={userPopupXpLabelStyles}>EXPERIENCE</span>
+                <span style={userPopupXpValueStyles}>
+                  {currentXP} / {maxXP} XP
+                </span>
               </div>
-            )}
-          </div>
+              <div style={userPopupXpBarContainerStyles}>
+                <div style={getUserPopupXpBarFillStyles(xpPercent)} />
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* XP Bar */}
+        {/* AI Credits Terminal */}
         {!isTeacher && (
-          <div>
-            <div style={userPopupXpRowStyles}>
-              <span style={userPopupXpLabelStyles}>EXPERIENCE</span>
-              <span style={userPopupXpValueStyles}>
-                {currentXP} / {maxXP} XP
-              </span>
-            </div>
-            <div style={userPopupXpBarContainerStyles}>
-              <div style={getUserPopupXpBarFillStyles(xpPercent)} />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* AI Credits Terminal */}
-      {!isTeacher && (
-        <Box sx={{ px: 2.5, pt: 1.5, pb: 0.5 }}>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              bgcolor: '#f8f9fa',
-              borderRadius: '10px',
-              p: '8px 12px',
-              border: '1px solid #e2e8f0',
-            }}
-          >
-            <Typography
+          <Box sx={{ px: 2.5, pt: 1.5, pb: 0.5 }}>
+            <Box
               sx={{
-                fontSize: '0.7rem',
-                fontWeight: 800,
-                color: '#64748b',
-                letterSpacing: '0.5px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                bgcolor: '#f8f9fa',
+                borderRadius: '10px',
+                p: '8px 12px',
+                border: '1px solid #e2e8f0',
               }}
             >
-              AI CREDITS
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-              {/* Weekly Turns */}
-              <Tooltip
-                slotProps={{
-                  box: {
-                    backgroundColor: 'info.pastel',
-                    color: 'text.primary',
-                  },
-                  popper: {
-                    sx: {
-                      '& .MuiTooltip-tooltip': {
-                        backgroundColor: 'info.pastel',
-                        color: 'text.primary',
+              <Typography
+                sx={{
+                  fontSize: '0.7rem',
+                  fontWeight: 800,
+                  color: '#64748b',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                AI CREDITS
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                {/* Weekly Turns */}
+                <Tooltip
+                  slotProps={{
+                    box: {
+                      backgroundColor: 'info.pastel',
+                      color: 'text.primary',
+                    },
+                    popper: {
+                      sx: {
+                        '& .MuiTooltip-tooltip': {
+                          backgroundColor: 'info.pastel',
+                          color: 'text.primary',
+                        },
                       },
                     },
-                  },
-                }}
-                title="Weekly AI turns. These reset to a fixed amount every week."
-                placement="top"
-                arrow
-              >
-                <Box
-                  sx={{ display: 'flex', alignItems: 'center', gap: 0.4, px: 1, cursor: 'help' }}
-                >
-                  <Box sx={{ color: 'info.dark', display: 'flex' }}>
-                    <AutoAwesomeIcon sx={{ fontSize: 16 }} />
-                  </Box>
-                  <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'info.dark' }}>
-                    {weeklyTurns}
-                  </Typography>
-                </Box>
-              </Tooltip>
-              {/* Bonus Turns with popout color */}
-              <Tooltip
-                slotProps={{
-                  box: {
-                    backgroundColor: 'warning.pastel',
-                  },
-                  popper: {
-                    sx: {
-                      '& .MuiTooltip-tooltip': {
-                        backgroundColor: 'warning.pastel',
-                        color: 'text.primary',
-                      },
-                    },
-                  },
-                }}
-                title="Bonus AI turns. Earned by leveling up with XP or reaching streak milestones."
-                placement="top"
-                arrow
-              >
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.4,
-                    background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
-                    px: 1,
-                    py: 0.3,
-                    borderRadius: '15px',
-                    border: '1px solid #fde68a',
-                    boxShadow: '0 2px 8px rgba(245, 158, 11, 0.2)',
-                    cursor: 'help',
                   }}
+                  title="Weekly AI turns. These reset to a fixed amount every week."
+                  placement="top"
+                  arrow
                 >
-                  <Typography
-                    sx={{ fontSize: '0.85rem', fontWeight: 800, color: 'secondary.main' }}
+                  <Box
+                    sx={{ display: 'flex', alignItems: 'center', gap: 0.4, px: 1, cursor: 'help' }}
                   >
-                    +{bonusTurns}
-                  </Typography>
-                </Box>
-              </Tooltip>
+                    <Box sx={{ color: 'info.dark', display: 'flex' }}>
+                      <AutoAwesomeIcon sx={{ fontSize: 16 }} />
+                    </Box>
+                    <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'info.dark' }}>
+                      {weeklyTurns}
+                    </Typography>
+                  </Box>
+                </Tooltip>
+                {/* Bonus Turns with popout color */}
+                <Tooltip
+                  slotProps={{
+                    box: {
+                      backgroundColor: 'warning.pastel',
+                    },
+                    popper: {
+                      sx: {
+                        '& .MuiTooltip-tooltip': {
+                          backgroundColor: 'warning.pastel',
+                          color: 'text.primary',
+                        },
+                      },
+                    },
+                  }}
+                  title="Bonus AI turns. Earned by leveling up with XP or reaching streak milestones."
+                  placement="top"
+                  arrow
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.4,
+                      background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)',
+                      px: 1,
+                      py: 0.3,
+                      borderRadius: '15px',
+                      border: '1px solid #fde68a',
+                      boxShadow: '0 2px 8px rgba(245, 158, 11, 0.2)',
+                      cursor: 'help',
+                    }}
+                  >
+                    <Typography
+                      sx={{ fontSize: '0.85rem', fontWeight: 800, color: 'secondary.main' }}
+                    >
+                      +{bonusTurns}
+                    </Typography>
+                  </Box>
+                </Tooltip>
+              </Box>
             </Box>
           </Box>
-        </Box>
-      )}
+        )}
 
-      {/* Divider */}
-      <div style={userPopupDividerStyles} />
+        {/* Divider */}
+        <div style={userPopupDividerStyles} />
 
-      {/* Menu Items */}
-      <div style={userPopupMenuContainerStyles}>
-        <button
-          onClick={() => onNavigate(user?.role === 'T' ? '/teacher/profile' : '/student/profile')}
-          style={userPopupMenuItemStyles}
-          onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f5')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
-        >
-          <span style={userPopupMenuItemIconStyles}>
-            <ProfileIcon />
-          </span>
-          My Profile
-        </button>
-
-        {user?.role !== 'T' && (
+        {/* Menu Items */}
+        <div style={userPopupMenuContainerStyles}>
           <button
-            onClick={() => onNavigate('/student/dashboard')}
+            onClick={() => onNavigate(user?.role === 'T' ? '/teacher/profile' : '/student/profile')}
             style={userPopupMenuItemStyles}
             onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f5')}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
           >
             <span style={userPopupMenuItemIconStyles}>
-              <DashboardIcon />
+              <ProfileIcon />
             </span>
-            Learning Dashboard
+            My Profile
           </button>
-        )}
 
-        <button
-          onClick={onLogout}
-          style={userPopupMenuItemLogoutStyles}
-          onMouseEnter={(e) => (e.currentTarget.style.background = '#fff5f5')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
-        >
-          <LogoutIcon />
-          Logout
-        </button>
-      </div>
-    </>
-  );
+          {user?.role !== 'T' && (
+            <button
+              onClick={() => onNavigate('/student/dashboard')}
+              style={userPopupMenuItemStyles}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f5')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+            >
+              <span style={userPopupMenuItemIconStyles}>
+                <DashboardIcon />
+              </span>
+              Learning Dashboard
+            </button>
+          )}
 
-  // Mobile: render inside a bottom Drawer for better responsiveness
-  if (mobile) {
-    return (
-      <Drawer
-        anchor="bottom"
-        open
-        onClose={onClose}
-        sx={{ '& .MuiDrawer-paper': { borderTopLeftRadius: 12, borderTopRightRadius: 12 } }}
-      >
-        <Box sx={{ px: 2, pt: 2, pb: 3 }}>{renderContent}</Box>
-      </Drawer>
-    );
-  }
-
-  // Desktop: original popup with backdrop
-  return (
-    <>
-      <div style={userPopupBackdropStyles} />
-      <div ref={popupRef} style={userPopupContainerStyles}>
-        {renderContent}
+          <button
+            onClick={onLogout}
+            style={userPopupMenuItemLogoutStyles}
+            onMouseEnter={(e) => (e.currentTarget.style.background = '#fff5f5')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
+          >
+            <LogoutIcon />
+            Logout
+          </button>
+        </div>
       </div>
     </>
   );
@@ -386,7 +356,6 @@ export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, user, logout: logoutHook } = useAuth(null);
-  const { isCelebrationDismissed } = useStreakContext();
   const [popupOpen, setPopupOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userAvatar, setUserAvatar] = useState(null);
@@ -395,8 +364,6 @@ export default function Header() {
   const [actionType, setActionType] = useState('register');
   const [topDisplayName, setTopDisplayName] = useState('User');
   const avatarWrapperRef = useRef(null);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const fetchProfile = async () => {
     if (user && user.role !== 'T') {
@@ -547,7 +514,6 @@ export default function Header() {
                     userAvatar && userAvatar !== 'null' && userAvatar !== 'undefined';
                   return (
                     <>
-                      {!isCelebrationDismissed && <AnimatedStreakBadge />}
                       <StreakBadge />
                       <NotificationBell />
 
@@ -633,7 +599,6 @@ export default function Header() {
                             studentProfile={studentProfile}
                             userAvatar={userAvatar}
                             onClose={() => setPopupOpen(false)}
-                            mobile={isMobile}
                             onLogout={handleLogout}
                             onNavigate={handleNavigate}
                           />
