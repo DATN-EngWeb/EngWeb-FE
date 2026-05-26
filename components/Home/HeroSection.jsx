@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 import { Box, Container, Typography, Button } from '@mui/material';
 import Image from 'next/image';
@@ -5,6 +6,11 @@ import HomeImage from '../../assets/img/home.png';
 import { heroSectionStyles } from '../../styles/Home/HeroSectionStyles';
 
 export default function HeroSection() {
+  const handleStartNow = () => {
+    const accessToken = localStorage.getItem('accessToken');
+    window.location.href = accessToken ? '/student/reading' : '/login';
+  };
+
   return (
     <Box sx={heroSectionStyles.mainContainer}>
       <Container maxWidth="lg">
@@ -18,7 +24,12 @@ export default function HeroSection() {
                 Whether you're just starting or aiming for certifications, our step-by-step lessons
                 and exams will help you speak English naturally and confidently at every level.
               </Typography>
-              <Button variant="contained" size="large" sx={heroSectionStyles.startNowButton}>
+              <Button
+                variant="contained"
+                size="large"
+                sx={heroSectionStyles.startNowButton}
+                onClick={handleStartNow}
+              >
                 Start Now
                 <Box component="span" sx={heroSectionStyles.playCircle}>
                   <Box component="span" sx={heroSectionStyles.playTriangle} />
