@@ -34,6 +34,7 @@ import {
   transformFillBlanksTest,
   transformMatchingTest,
 } from '@/utils/testDataTransform';
+import { fetchHtmlContent } from '@/api/teacher/upload-reading';
 import ReceptiveTestResult from '@/components/Student/ReceptiveTestResult/ReceptiveTestResult';
 import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import Skeleton from '../ListeningTest/skeleton';
@@ -123,6 +124,28 @@ export default function ReadingTestContent({ testId }) {
           setLoading(false);
           return;
         }
+
+        const preloadPromises = backendTest.receptive_test.receptive_parts.map(async (part) => {
+          if (part.content && part.content.includes('http')) {
+            part.content = await fetchHtmlContent(part.content);
+          }
+          const qHtmlPromises = [];
+          part.receptive_questions?.forEach((q) => {
+            if (
+              q.content &&
+              q.content.includes('http') &&
+              part.format !== 'G' &&
+              part.format !== 'J'
+            ) {
+              qHtmlPromises.push(async () => {
+                q.content = await fetchHtmlContent(q.content);
+              });
+            }
+          });
+          await Promise.all(qHtmlPromises.map((p) => p()));
+        });
+
+        await Promise.all(preloadPromises);
 
         const parts = backendTest.receptive_test.receptive_parts.map((part) => {
           const format = part.format;
@@ -339,7 +362,12 @@ export default function ReadingTestContent({ testId }) {
                   a.id === parseInt(userAnswer),
               );
 
-              if (!selectedAnswer && typeof userAnswer === 'string' && userAnswer.length === 1) {
+              if (
+                !selectedAnswer &&
+                typeof userAnswer === 'string' &&
+                userAnswer.length === 1 &&
+                !['J', 'E'].includes(part.format)
+              ) {
                 const allAnswers = [...(q.receptive_answers || [])].sort((a, b) => {
                   if (a.option_label && b.option_label)
                     return a.option_label.localeCompare(b.option_label);

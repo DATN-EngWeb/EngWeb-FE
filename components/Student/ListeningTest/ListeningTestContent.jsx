@@ -27,6 +27,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import { getReceptiveTestDetails } from '../../../api/teacher/upload-reading';
+import { getFullReceptiveTestReview } from '@/api/tests';
 import { createReceptiveTest } from '../../../api/test';
 import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import {
@@ -253,8 +254,74 @@ export default function ListeningTestContent({ test_id, initialData }) {
     const fetchTestData = async () => {
       if (!test_id) return;
       try {
-        const svData = await getReceptiveTestDetails(test_id);
-        const parts = svData.receptive_test.receptive_parts || [];
+        let isReviewMode = false;
+        let savedData = null;
+
+        if (typeof window !== 'undefined') {
+          const saved = window.sessionStorage.getItem('current_receptive_attempt');
+          if (saved) {
+            savedData = JSON.parse(saved);
+            if (savedData.isReadOnly) {
+              isReviewMode = true;
+            }
+          }
+        }
+
+        let svData;
+        if (isReviewMode) {
+          svData = await getFullReceptiveTestReview(test_id);
+        } else {
+          svData = await getReceptiveTestDetails(test_id);
+        }
+
+        if (savedData) {
+          const restoredAnswers = {};
+
+          if (svData?.receptive_test?.receptive_parts) {
+            savedData.answer_histories.forEach((hist) => {
+              const parentPart = svData.receptive_test.receptive_parts.find((part) =>
+                part.receptive_questions.some((q) => q.id === hist.question_id),
+              );
+
+              if (parentPart) {
+                const pId = parentPart.id;
+                if (!restoredAnswers[pId]) restoredAnswers[pId] = {};
+
+                restoredAnswers[pId][hist.question_id] =
+                  hist.selected_answer_id || hist.user_answer_text;
+              }
+            });
+          }
+
+          setAllAnswers(restoredAnswers);
+
+          setTestHistory({
+            receptive_test: test_id,
+            start_time: savedData.startTime || new Date().toISOString(),
+            type: savedData.isReadOnly ? 'S' : 'D',
+            answer_histories: transformAnswers(restoredAnswers),
+          });
+
+          setIsReadOnly(savedData.isReadOnly);
+          setDetailAnswers(savedData.answer_histories);
+          setStartTime(savedData.totalTime || 0);
+          setStaticData({
+            bonus_point: savedData.bonus_point,
+            earned_bonus_point: savedData.earned_bonus_point,
+            total_score: savedData.total_score,
+            feedback_message: savedData.feedback_message,
+          });
+          if (savedData.isReadOnly) {
+            setIndexPart(-1);
+          }
+        } else {
+          setTestHistory({
+            receptive_test: test_id,
+            start_time: new Date().toISOString(),
+          });
+        }
+
+        const parts = svData?.receptive_test?.receptive_parts || [];
 
         const resourcesMap = {};
         const preloadPromises = parts.map(async (part) => {
@@ -319,56 +386,6 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
         setTestData(svData);
         setReceptiveParts(parts);
-
-        if (typeof window !== 'undefined') {
-          const saved = window.sessionStorage.getItem('current_receptive_attempt');
-
-          if (saved) {
-            const savedData = JSON.parse(saved);
-            const restoredAnswers = {};
-
-            savedData.answer_histories.forEach((hist) => {
-              const parentPart = svData.receptive_test.receptive_parts.find((part) =>
-                part.receptive_questions.some((q) => q.id === hist.question_id),
-              );
-
-              if (parentPart) {
-                const pId = parentPart.id;
-                if (!restoredAnswers[pId]) restoredAnswers[pId] = {};
-
-                restoredAnswers[pId][hist.question_id] =
-                  hist.selected_answer_id || hist.user_answer_text;
-              }
-            });
-
-            setAllAnswers(restoredAnswers);
-
-            setTestHistory({
-              receptive_test: svData.id,
-              start_time: savedData.startTime || new Date().toISOString(),
-              type: savedData.isReadOnly ? 'S' : 'D',
-              answer_histories: transformAnswers(restoredAnswers),
-            });
-
-            setIsReadOnly(savedData.isReadOnly);
-            setDetailAnswers(savedData.answer_histories);
-            setStartTime(savedData.totalTime || 0);
-            setStaticData({
-              bonus_point: savedData.bonus_point,
-              earned_bonus_point: savedData.earned_bonus_point,
-              total_score: savedData.total_score,
-              feedback_message: savedData.feedback_message,
-            });
-            if (savedData.isReadOnly) {
-              setIndexPart(-1);
-            }
-          } else {
-            setTestHistory({
-              receptive_test: svData.id,
-              start_time: new Date().toISOString(),
-            });
-          }
-        }
       } catch (error) {
         console.error('Lỗi tải dữ liệu bài thi:', error);
       } finally {

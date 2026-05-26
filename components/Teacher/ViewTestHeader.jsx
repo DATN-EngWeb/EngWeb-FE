@@ -88,7 +88,14 @@ export default function ViewTestHeader({
           />
         </Stack>
 
-        <Stack direction="row" spacing={1}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1}
+          useFlexGap
+          flexWrap="wrap"
+          justifyContent={{ xs: 'stretch', sm: 'flex-end' }}
+          sx={{ width: { xs: '100%', sm: 'auto' }, mt: { xs: 2, sm: 0 } }}
+        >
           {status === 'D' && onInReview && (
             <Button
               variant="outlined"
@@ -144,43 +151,54 @@ export default function ViewTestHeader({
             </Button>
           )}
 
-          {showEdit && (
-            <Button
-              variant="outlined"
-              startIcon={<DescriptionOutlined sx={{ fontSize: 20 }} />}
-              onClick={onEdit}
+          {(showEdit || showDelete) && (
+            <Stack
+              direction="row"
+              spacing={1}
               sx={{
-                ...whiteButtonSx,
-                borderColor: 'primary.main',
-                color: 'primary.main',
-                '&:hover': {
-                  borderColor: 'primary.dark',
-                  backgroundColor: '#fafafa',
-                },
+                width: { xs: '100%', sm: 'auto' },
+                '& > button': { flex: { xs: 1, sm: 'none' } },
               }}
             >
-              Edit Test
-            </Button>
-          )}
+              {showEdit && (
+                <Button
+                  variant="outlined"
+                  startIcon={<DescriptionOutlined sx={{ fontSize: 20 }} />}
+                  onClick={onEdit}
+                  sx={{
+                    ...whiteButtonSx,
+                    borderColor: 'primary.main',
+                    color: 'primary.main',
+                    '&:hover': {
+                      borderColor: 'primary.dark',
+                      backgroundColor: '#fafafa',
+                    },
+                  }}
+                >
+                  Edit Test
+                </Button>
+              )}
 
-          {showDelete && (
-            <Button
-              variant="outlined"
-              startIcon={<DeleteRoundedIcon sx={{ fontSize: 20 }} />}
-              onClick={onDelete}
-              disabled={deleting}
-              sx={{
-                ...whiteButtonSx,
-                borderColor: 'error.main',
-                color: 'error.main',
-                '&:hover': {
-                  borderColor: 'error.dark',
-                  backgroundColor: '#fafafa',
-                },
-              }}
-            >
-              {deleting ? 'Deleting...' : 'Delete Test'}
-            </Button>
+              {showDelete && (
+                <Button
+                  variant="outlined"
+                  startIcon={<DeleteRoundedIcon sx={{ fontSize: 20 }} />}
+                  onClick={onDelete}
+                  disabled={deleting}
+                  sx={{
+                    ...whiteButtonSx,
+                    borderColor: 'error.main',
+                    color: 'error.main',
+                    '&:hover': {
+                      borderColor: 'error.dark',
+                      backgroundColor: '#fafafa',
+                    },
+                  }}
+                >
+                  {deleting ? 'Deleting...' : 'Delete Test'}
+                </Button>
+              )}
+            </Stack>
           )}
         </Stack>
       </Stack>

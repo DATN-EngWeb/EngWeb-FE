@@ -78,15 +78,13 @@ const MultiChoiceContent = ({
   hidePassage = false,
   stimulusPageUrls = null,
 }) => {
-  useEffect(() => {
-    console.log('passage', passage);
-    console.log('questions', questions);
-  }, [passage, questions]);
   const pathname = usePathname();
   const isTeacherView =
     pathname?.includes('/teacher/view-test/') ||
     pathname?.includes('/teacher/upload-test/') ||
-    pathname?.includes('/teacher/update-test/');
+    pathname?.includes('/teacher/update-test/') ||
+    pathname?.includes('/teacher/review-test/');
+
   const showSummary = showResults && !isTeacherView;
 
   const sortedQuestions = React.useMemo(() => {
