@@ -236,7 +236,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
         popover: {
           title: 'Insert Blank (1)_',
           description:
-            'CRITICAL: Click this button to insert a numbered blank placeholder into the text. Each blank creates a corresponding answer card below automatically.',
+            'CRITICAL: Click this button to insert a numbered blank placeholder. Note: There must be text either before or after the blank for it to register properly and create an answer card below.',
           side: 'bottom',
           align: 'start',
         },

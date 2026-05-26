@@ -5,8 +5,9 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import CircleIcon from '@mui/icons-material/Circle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import { Checkbox } from '@mui/material';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 import { FormControl, FormLabel, OutlinedInput, Collapse } from '@mui/material';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { multipleChoiceStyles } from '../../../styles/Teacher/Reading/QuesitonTypeStyles';
 import { uploadReadingStyles } from '../../../styles/Teacher/Reading/UploadReadingStyles';
 import ClientSideCustomEditor from '../../../components/Editor/ClientSideCustomEditor';
@@ -74,7 +75,7 @@ export default function MultipleChoiceForm({
           popover: {
             title: 'Insert Blank (1)_',
             description:
-              'Click this button to insert a numbered blank placeholder into the passage. Each blank creates a corresponding answer card below automatically.',
+              'Click this button to insert a numbered blank placeholder. Note: There must be text either before or after the blank for it to register properly and create an answer card below.',
             side: 'bottom',
             align: 'start',
           },
@@ -105,6 +106,20 @@ export default function MultipleChoiceForm({
             align: 'start',
           },
         });
+
+        const insertBlankQuestionSel = `#tour-questions-${partId} .tour-question-input .ck-toolbar [data-cke-tooltip-text="Insert Blank"]`;
+        if (part.format === 'F' && document.querySelector(insertBlankQuestionSel)) {
+          steps.push({
+            element: insertBlankQuestionSel,
+            popover: {
+              title: 'Insert Blank (1)_',
+              description:
+                'Click this button to insert a blank placeholder into the question. Note: There must be text either before or after the blank for it to register properly. This allows you to create fill-in-the-blank style questions within the multiple choice format.',
+              side: 'bottom',
+              align: 'start',
+            },
+          });
+        }
       }
 
       if (document.querySelector(`#tour-questions-${partId} .tour-explanation-input`)) {
