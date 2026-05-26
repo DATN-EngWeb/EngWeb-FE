@@ -237,7 +237,7 @@ export default function ProductiveTestEditor({
           </Box>
 
           {isFeedbackMode && feedbackContent && (
-            <Box sx={{ width: '320px', minWidth: '280px', height: '100%', overflow: 'hidden' }}>
+            <Box sx={{ width: '320px', minWidth: '280px', height: '100%', overflow: 'auto' }}>
               {feedbackContent}
             </Box>
           )}
