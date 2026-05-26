@@ -7,12 +7,6 @@ import EditNoteIcon from '@mui/icons-material/EditNote';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import Edit from '@mui/icons-material/Edit';
 import InfoIcon from '@mui/icons-material/Info';
-import * as styles from '@/styles/Student/HistoryTestStyles';
-import HistoryItem from './HistoryItem';
-import HistoryTable from '../HistoryTable';
-import { levelTheme } from '../../TestCard';
-import ProgressTrackingCard from '../../Writing-Speaking/ProgressTrackingCard';
-import { getReceptiveTestHistoryByTestId, getReceptiveTestDetails } from '@/api/test';
 import {
   Box,
   Alert,
@@ -23,6 +17,14 @@ import {
   Stack,
   Paper,
 } from '@mui/material';
+import * as styles from '@/styles/Student/HistoryTestStyles';
+import HistoryItem from './HistoryItem';
+import HistoryTable from '../HistoryTable';
+import { levelTheme } from '../../TestCard';
+import ProgressTrackingCard from '../../Writing-Speaking/ProgressTrackingCard';
+import { getReceptiveTestHistoryByTestId, getReceptiveTestDetails } from '@/api/test';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 export default function ReceptiveTestHistory({ onPracticeNow }) {
   const params = useParams();
@@ -31,6 +33,8 @@ export default function ReceptiveTestHistory({ onPracticeNow }) {
   const [testData, setTestData] = useState(null);
   const [historyData, setHistoryData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const theme = useTheme();
+  const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -136,21 +140,46 @@ export default function ReceptiveTestHistory({ onPracticeNow }) {
 
   return (
     <Box sx={styles.mainWrapper}>
-      <Grid container spacing={4}>
+      <Grid container spacing={{ xs: 2, lg: 4 }} justifyContent="space-between">
         {/* column left */}
-        <Grid item sx={{ width: '65%' }}>
+        <Grid item sx={{ width: { xs: '100%', md: '65%' } }}>
           <Paper sx={styles.paperCard}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="h4" fontWeight={800} color="#4e342e">
-                {testData.title || 'Productive Test'}
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="flex-start"
+              spacing={2}
+            >
+              <Typography
+                variant="h4"
+                fontWeight={800}
+                color="#4e342e"
+                sx={{
+                  fontSize: { xs: '1.25rem', sm: '1.5rem' },
+                  wordBreak: 'break-word',
+                }}
+              >
+                {testData.title || 'Receptive Test'}
               </Typography>
-              <Box sx={styles.levelTag(levelTheme[testData.level])} mt={1} width="fit-content">
+              <Box
+                sx={styles.levelTag(levelTheme[testData.level])}
+                mt={1}
+                flexShrink={0}
+                width="fit-content"
+              >
                 Level {testData.level}
               </Box>
             </Stack>
 
-            <Alert icon={<InfoIcon />} sx={styles.instructionAlert}>
-              <Typography variant="subtitle2" fontWeight={700}>
+            <Alert
+              icon={<InfoIcon fontSize={isSmall ? 'small' : 'medium'} />}
+              sx={{ ...styles.instructionAlert, mt: { xs: 1.5, md: 2 } }}
+            >
+              <Typography
+                variant="subtitle2"
+                fontWeight={700}
+                sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+              >
                 Instruction
               </Typography>
               {testData.instruction || 'Please complete the draft before final submission.'}
@@ -181,34 +210,31 @@ export default function ReceptiveTestHistory({ onPracticeNow }) {
               </Paper>
             </Box>
           ) : (
-            <Box sx={{ mb: 4, textAlign: 'center', justifyContent: 'center' }}>
+            <Box sx={{ mb: { xs: 2, md: 3 } }}>
               <Button
                 fullWidth
                 variant="contained"
+                size={isSmall ? 'medium' : 'large'}
                 sx={{
                   borderRadius: '12px',
                   backgroundColor: 'warning.main',
                   color: 'primary.main',
+                  boxShadow: 'none',
+                  py: { xs: 1, sm: 1.5 },
+                  '&:hover': { boxShadow: 'none', backgroundColor: 'warning.dark' },
                 }}
                 onClick={() => handlePracticeNow()}
               >
-                <>
-                  <Edit sx={{ mr: 1 }} /> Practice Now
-                </>
+                <Edit sx={{ mr: 1, fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />
+                Practice Now
               </Button>
             </Box>
           )}
 
           {/* Section: History */}
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-            mb={2}
-            color="primary.main"
-          >
+          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
             <SectionTitle title="Submission History" color="#cfd8dc" />
-            <Typography variant="caption" fontWeight={700}>
+            <Typography variant="caption" fontWeight={700} sx={{ flexShrink: 0, ml: 1 }}>
               {submissions.length} attempts
             </Typography>
           </Stack>
@@ -224,7 +250,7 @@ export default function ReceptiveTestHistory({ onPracticeNow }) {
 
         {/* column right (Sidebar) */}
 
-        <Grid item sx={{ width: '30%' }}>
+        <Grid item sx={{ width: { xs: '100%', md: '30%' } }}>
           <Stack spacing={3}>
             <ProgressTrackingCard historyData={historyData} type={testData.type} />
           </Stack>
@@ -238,9 +264,15 @@ const SectionTitle = ({ title, color }) => (
   <Typography
     variant="h6"
     fontWeight={800}
-    sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}
+    sx={{
+      mb: 1.5,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 1,
+      fontSize: { xs: '1rem', sm: '1.25rem' },
+    }}
   >
-    <Box sx={{ width: 4, height: 24, bgcolor: color, borderRadius: 2 }} />
+    <Box sx={{ width: 4, height: 22, bgcolor: color, borderRadius: 2, flexShrink: 0 }} />
     {title}
   </Typography>
 );
