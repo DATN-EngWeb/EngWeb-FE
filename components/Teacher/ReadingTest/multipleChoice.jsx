@@ -67,112 +67,17 @@ export default function MultipleChoiceForm({
         },
       });
 
-      if (document.querySelector(`#tour-passage-${partId} .ck-toolbar`)) {
-        const toolbarSelectors = [
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Undo"]`,
-            title: 'Undo',
-            desc: 'Reverse your last text change or editor action.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Redo"]`,
-            title: 'Redo',
-            desc: 'Re-apply the change you just reversed with Undo.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Heading"]`,
-            title: 'Paragraph Format & Headings',
-            desc: 'Switch between Paragraph text, major Heading titles, and subtitles to structure sections.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Text alignment"]`,
-            title: 'Text Alignment',
-            desc: 'Align text lines to the Left, Center, Right, or Justify the text block.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Bold"]`,
-            title: 'Bold Text Style',
-            desc: 'Style text in bold to emphasize critical names, vocabulary, or keywords.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Italic"]`,
-            title: 'Italic Text Style',
-            desc: 'Apply italics to titles, foreign phrases, or book/article citations.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Underline"]`,
-            title: 'Underline Text Style',
-            desc: 'Add an underline style to highlight core statements or sections.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Strikethrough"]`,
-            title: 'Strikethrough Style',
-            desc: 'Cross out text lines using strikethrough styling.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Link"]`,
-            title: 'Insert Link',
-            desc: 'Hyperlink words to external web URLs, reference materials, or online definitions.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Block quote"]`,
-            title: 'Block Quote',
-            desc: 'Indicate longer, indented direct quotations or citation segments from external reading sources.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar .ck-splitbutton__action[data-cke-tooltip-text="Bulleted List"], #tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Bulleted List"]`,
-            title: 'Bulleted List',
-            desc: 'Format text points into a bulleted list for clean reading outlines.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar .ck-splitbutton__action[data-cke-tooltip-text="Numbered List"], #tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Numbered List"]`,
-            title: 'Numbered List',
-            desc: 'Format text points into an ordered, numbered list.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Decrease indent"]`,
-            title: 'Decrease Indent',
-            desc: 'Shift paragraph margins leftwards back to the primary boundary.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Increase indent"]`,
-            title: 'Increase Indent',
-            desc: 'Shift paragraph margins rightwards to format nested blocks or lists.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Insert Blank"]`,
+      const insertBlankSel = `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Insert Blank"]`;
+      if (document.querySelector(insertBlankSel)) {
+        steps.push({
+          element: insertBlankSel,
+          popover: {
             title: 'Insert Blank (1)_',
-            desc: 'Insert a numbered blank placeholder into the passage. Each blank generates a corresponding answer card below.',
+            description:
+              'Click this button to insert a numbered blank placeholder into the passage. Each blank creates a corresponding answer card below automatically.',
+            side: 'bottom',
+            align: 'start',
           },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Upload image from computer"]`,
-            title: 'Upload Image from Computer',
-            desc: 'Enrich your passage by uploading custom charts, pictures, map guides, or diagrams.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Insert table"]`,
-            title: 'Insert Table',
-            desc: 'Insert standard tables to organize information or comparison data grids.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Horizontal line"]`,
-            title: 'Horizontal Line Divider',
-            desc: 'Insert a straight divider line to visually separate different sections or paragraphs.',
-          },
-        ];
-
-        toolbarSelectors.forEach((item) => {
-          if (document.querySelector(item.sel)) {
-            steps.push({
-              element: item.sel,
-              popover: {
-                title: item.title,
-                description: item.desc,
-                side: 'bottom',
-                align: 'start',
-              },
-            });
-          }
         });
       }
     }
@@ -200,118 +105,8 @@ export default function MultipleChoiceForm({
             align: 'start',
           },
         });
-
-        // Format F question editor toolbar steps (left to right)
-        if (document.querySelector(`#tour-questions-${partId} .tour-question-input .ck-toolbar`)) {
-          const qBase = `#tour-questions-${partId} .tour-question-input .ck-toolbar`;
-          const questionToolbarSelectors = [
-            {
-              sel: `${qBase} [data-cke-tooltip-text^="Undo"]`,
-              title: 'Undo',
-              desc: 'Reverse your last text change or editor action.',
-            },
-            {
-              sel: `${qBase} [data-cke-tooltip-text^="Redo"]`,
-              title: 'Redo',
-              desc: 'Re-apply the change you just reversed with Undo.',
-            },
-            {
-              sel: `${qBase} [data-cke-tooltip-text="Heading"]`,
-              title: 'Paragraph Format & Headings',
-              desc: 'Switch between Paragraph text, major Heading titles, and subtitles to structure question content.',
-            },
-            {
-              sel: `${qBase} [data-cke-tooltip-text="Text alignment"]`,
-              title: 'Text Alignment',
-              desc: 'Align text to the Left, Center, Right, or Justify inside the question.',
-            },
-            {
-              sel: `${qBase} [data-cke-tooltip-text^="Bold"]`,
-              title: 'Bold',
-              desc: 'Style text in bold to emphasize critical names, vocabulary, or key terms.',
-            },
-            {
-              sel: `${qBase} [data-cke-tooltip-text^="Italic"]`,
-              title: 'Italic',
-              desc: 'Apply italics to titles, foreign phrases, or cited excerpts.',
-            },
-            {
-              sel: `${qBase} [data-cke-tooltip-text^="Underline"]`,
-              title: 'Underline',
-              desc: 'Add an underline to highlight important phrases.',
-            },
-            {
-              sel: `${qBase} [data-cke-tooltip-text^="Strikethrough"]`,
-              title: 'Strikethrough',
-              desc: 'Cross out text using strikethrough styling.',
-            },
-            {
-              sel: `${qBase} [data-cke-tooltip-text^="Link"]`,
-              title: 'Insert Link',
-              desc: 'Hyperlink a word to an external URL or reference material.',
-            },
-            {
-              sel: `${qBase} [data-cke-tooltip-text="Block quote"]`,
-              title: 'Block Quote',
-              desc: 'Display a longer indented quotation or citation segment.',
-            },
-            {
-              sel: `${qBase} .ck-splitbutton__action[data-cke-tooltip-text="Bulleted List"], ${qBase} [data-cke-tooltip-text="Bulleted List"]`,
-              title: 'Bulleted List',
-              desc: 'Format text into a bulleted list for clear reading outlines.',
-            },
-            {
-              sel: `${qBase} .ck-splitbutton__action[data-cke-tooltip-text="Numbered List"], ${qBase} [data-cke-tooltip-text="Numbered List"]`,
-              title: 'Numbered List',
-              desc: 'Format text into an ordered, numbered list.',
-            },
-            {
-              sel: `${qBase} [data-cke-tooltip-text="Decrease indent"]`,
-              title: 'Decrease Indent',
-              desc: 'Shift paragraph margins leftwards back to the primary boundary.',
-            },
-            {
-              sel: `${qBase} [data-cke-tooltip-text="Increase indent"]`,
-              title: 'Increase Indent',
-              desc: 'Shift paragraph margins rightwards to format nested blocks or lists.',
-            },
-            {
-              sel: `${qBase} [data-cke-tooltip-text="Insert Blank"]`,
-              title: 'Insert Blank (1)_',
-              desc: 'Insert a numbered blank placeholder inside the question text. Each blank added here will create a corresponding answer entry below.',
-            },
-            {
-              sel: `${qBase} [data-cke-tooltip-text="Upload image from computer"]`,
-              title: 'Upload Image from Computer',
-              desc: 'Attach an image, diagram, or chart directly to this question.',
-            },
-            {
-              sel: `${qBase} [data-cke-tooltip-text="Insert table"]`,
-              title: 'Insert Table',
-              desc: 'Insert a table to present structured data within the question text.',
-            },
-            {
-              sel: `${qBase} [data-cke-tooltip-text="Horizontal line"]`,
-              title: 'Horizontal Line Divider',
-              desc: 'Insert a divider line to visually separate sections of the question.',
-            },
-          ];
-
-          questionToolbarSelectors.forEach((item) => {
-            if (document.querySelector(item.sel)) {
-              steps.push({
-                element: item.sel,
-                popover: {
-                  title: item.title,
-                  description: item.desc,
-                  side: 'bottom',
-                  align: 'start',
-                },
-              });
-            }
-          });
-        }
       }
+
       if (document.querySelector(`#tour-questions-${partId} .tour-explanation-input`)) {
         steps.push({
           element: `#tour-questions-${partId} .tour-explanation-input`,

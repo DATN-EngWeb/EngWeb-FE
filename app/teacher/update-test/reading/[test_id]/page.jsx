@@ -146,6 +146,15 @@ export default function Page() {
         },
       },
       {
+        element: '#tour-test-description',
+        popover: {
+          title: 'Test Description',
+          description: 'Provide a brief overview or special instructions for the test.',
+          side: 'bottom',
+          align: 'start',
+        },
+      },
+      {
         element: '#tour-test-level',
         popover: {
           title: 'Difficulty Level',
@@ -156,6 +165,18 @@ export default function Page() {
         },
       },
     ];
+
+    if (document.querySelector('#tour-select-part-panel')) {
+      steps.push({
+        element: '#tour-select-part-panel',
+        popover: {
+          title: 'Select Part Type',
+          description: 'Choose the format for the reading part you want to create.',
+          side: 'top',
+          align: 'start',
+        },
+      });
+    }
 
     if (document.querySelector('#tour-score-each-question')) {
       steps.push({
@@ -1137,7 +1158,11 @@ export default function Page() {
                     />
                   </FormControl>
                 </Box>
-                <FormControl fullWidth sx={uploadReadingStyles.formControl}>
+                <FormControl
+                  id="tour-test-description"
+                  fullWidth
+                  sx={uploadReadingStyles.formControl}
+                >
                   <FormLabel sx={uploadReadingStyles.labelInput}>
                     Description
                     <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
@@ -1215,6 +1240,7 @@ export default function Page() {
                 .map((part, index) => (
                   <Box
                     key={part.id}
+                    id={!part.format ? 'tour-select-part-panel' : undefined}
                     ref={index === parts.length - 1 ? lastPartRef : null}
                     sx={uploadReadingStyles.basicInfoContainer}
                   >

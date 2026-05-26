@@ -203,17 +203,6 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
           align: 'start',
         },
       });
-      if (document.querySelector(`#tour-answers-${partId} .tour-answer-text`)) {
-        steps.push({
-          element: `#tour-answers-${partId} .tour-answer-text`,
-          popover: {
-            title: 'Answer Text',
-            description: 'Enter the text for this answer option. Example: "Paris".',
-            side: 'top',
-            align: 'start',
-          },
-        });
-      }
     }
 
     const driverObj = driver({

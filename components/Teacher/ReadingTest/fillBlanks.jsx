@@ -93,112 +93,17 @@ export default function FillBlankForm({
         },
       });
 
-      if (document.querySelector(`#tour-passage-${partId} .ck-toolbar`)) {
-        const toolbarSelectors = [
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Undo"]`,
-            title: 'Undo',
-            desc: 'Reverse your last text change or editor action.',
+      const insertBlankSel = `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Insert Blank"]`;
+      if (document.querySelector(insertBlankSel)) {
+        steps.push({
+          element: insertBlankSel,
+          popover: {
+            title: 'Insert Blank (1)_',
+            description:
+              'CRITICAL: Click this button to insert a numbered blank placeholder into the text. Each blank creates a corresponding answer card below automatically.',
+            side: 'bottom',
+            align: 'start',
           },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Redo"]`,
-            title: 'Redo',
-            desc: 'Re-apply the change you just reversed with Undo.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Heading"]`,
-            title: 'Paragraph Format & Headings',
-            desc: 'Switch between Paragraph text, major Heading titles, and subtitles to structure sections.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Text alignment"]`,
-            title: 'Text Alignment',
-            desc: 'Align text lines to the Left, Center, Right, or Justify the text block.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Bold"]`,
-            title: 'Bold Text Style',
-            desc: 'Style text in bold to emphasize critical names, vocabulary, or keywords.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Italic"]`,
-            title: 'Italic Text Style',
-            desc: 'Apply italics to titles, foreign phrases, or book/article citations.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Underline"]`,
-            title: 'Underline Text Style',
-            desc: 'Add an underline style to highlight core statements or sections.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Strikethrough"]`,
-            title: 'Strikethrough Style',
-            desc: 'Cross out text lines using strikethrough styling.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Link"]`,
-            title: 'Insert Link',
-            desc: 'Hyperlink words to external web URLs, reference materials, or online definitions.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Block quote"]`,
-            title: 'Block Quote',
-            desc: 'Indicate longer, indented direct quotations or citation segments from external reading sources.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar .ck-splitbutton__action[data-cke-tooltip-text="Bulleted List"], #tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Bulleted List"]`,
-            title: 'Bulleted List',
-            desc: 'Format text points into a bulleted list for clean reading outlines.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar .ck-splitbutton__action[data-cke-tooltip-text="Numbered List"], #tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Numbered List"]`,
-            title: 'Numbered List',
-            desc: 'Format text points into an ordered, numbered list.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Decrease indent"]`,
-            title: 'Decrease Indent',
-            desc: 'Shift paragraph margins leftwards back to the primary boundary.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Increase indent"]`,
-            title: 'Increase Indent',
-            desc: 'Shift paragraph margins rightwards to format nested blocks or lists.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Insert Blank"]`,
-            title: 'Insert Blank Element (1)_',
-            desc: 'CRITICAL: Inserts a numbered fill-in-the-blanks blank element. Each blank dynamically generates a corresponding card below.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Upload image from computer"]`,
-            title: 'Upload Image from Computer',
-            desc: 'Enrich your passage by uploading custom charts, pictures, map guides, or diagrams.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Insert table"]`,
-            title: 'Insert Table',
-            desc: 'Insert standard tables to organize information or comparison data grids.',
-          },
-          {
-            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Horizontal line"]`,
-            title: 'Horizontal Line Divider',
-            desc: 'Insert a straight divider line to visually separate different sections or paragraphs.',
-          },
-        ];
-
-        toolbarSelectors.forEach((item) => {
-          if (document.querySelector(item.sel)) {
-            steps.push({
-              element: item.sel,
-              popover: {
-                title: item.title,
-                description: item.desc,
-                side: 'bottom',
-                align: 'start',
-              },
-            });
-          }
         });
       }
     }
