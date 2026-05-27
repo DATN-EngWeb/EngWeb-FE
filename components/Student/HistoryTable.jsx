@@ -47,7 +47,7 @@ export default function HistoryTable({ data, skill, onViewDetail, onShare, onOpe
         <TableHead sx={styles.tableHead}>
           <TableRow>
             <TableCell>DATE</TableCell>
-            {skill === 'L' ? (
+            {skill === 'L' || skill === 'R' ? (
               <>
                 <TableCell>SCORE</TableCell>
                 <TableCell>XP</TableCell>
@@ -72,7 +72,7 @@ export default function HistoryTable({ data, skill, onViewDetail, onShare, onOpe
                   </Typography>
                 </TableCell>
                 {/* Conditional Column for Status or Total Score */}
-                {skill === 'L' ? (
+                {skill === 'L' || skill === 'R' ? (
                   <TableCell>
                     <Typography variant="subtitle2" fontWeight={800} color="primary">
                       {item.total_score ?? 0}
