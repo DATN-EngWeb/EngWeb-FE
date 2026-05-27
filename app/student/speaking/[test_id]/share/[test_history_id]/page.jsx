@@ -102,11 +102,11 @@ export default function ShareSpeakingPage() {
   };
 
   return (
-    <Container maxWidth={false} sx={{ py: 6, px: { xs: 2, md: 6 } }}>
+    <Container maxWidth={false} sx={{ py: { xs: 3, md: 6 }, px: { xs: 2, sm: 3, md: 6 } }}>
       <Box textAlign="center" mb={2}>
         <Typography
           sx={{
-            fontSize: 40,
+            fontSize: { xs: 28, sm: 34, md: 40 },
             fontWeight: 700,
             color: 'primary.main',
           }}
@@ -117,7 +117,7 @@ export default function ShareSpeakingPage() {
         <Typography
           sx={{
             color: 'primary.light',
-            fontSize: 16,
+            fontSize: { xs: 14, sm: 15, md: 16 },
           }}
         >
           Share your post to get feedback from our community
@@ -128,7 +128,7 @@ export default function ShareSpeakingPage() {
           sx={{
             display: 'flex',
             flexDirection: { xs: 'column', md: 'row' },
-            gap: 4,
+            gap: { xs: 3, md: 4 },
             alignItems: 'flex-start',
           }}
         >

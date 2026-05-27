@@ -11,9 +11,9 @@ export default function ShareForumForm({
   loading,
 }) {
   return (
-    <Box component="form" onSubmit={onSubmit}>
+    <Box component="form" onSubmit={onSubmit} sx={{ width: '100%' }}>
       <Box sx={{ mb: 3 }}>
-        <Typography sx={{ fontWeight: 600, mb: 1 }}>Title</Typography>
+        <Typography sx={{ fontWeight: 600, mb: 1, fontSize: { xs: 14, sm: 16 } }}>Title</Typography>
         <TextField
           placeholder="Give your post a title..."
           value={title}
@@ -30,7 +30,9 @@ export default function ShareForumForm({
       </Box>
 
       <Box sx={{ mb: 4 }}>
-        <Typography sx={{ fontWeight: 600, mb: 1 }}>Description</Typography>
+        <Typography sx={{ fontWeight: 600, mb: 1, fontSize: { xs: 14, sm: 16 } }}>
+          Description
+        </Typography>
         <TextField
           placeholder="Share your thoughts, difficulties, or what you learned..."
           value={description}
@@ -56,12 +58,13 @@ export default function ShareForumForm({
           disabled={loading}
           sx={{
             bgcolor: '#6b3f1d',
-            px: 4,
+            px: { xs: 3, sm: 4 },
             py: 1.4,
             borderRadius: 2,
             textTransform: 'none',
             fontWeight: 600,
-            fontSize: 16,
+            fontSize: { xs: 14, sm: 16 },
+            width: { xs: '100%', sm: 'auto' },
             '&:hover': {
               bgcolor: '#5a3318',
             },

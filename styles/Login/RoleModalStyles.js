@@ -61,8 +61,8 @@ export const roleModalStyles = {
     justifyContent: 'center',
     alignItems: 'center',
     mb: { xs: 0.5, sm: 1 },
-    width: { xs: 60, sm: 80, md: 100 },
-    height: { xs: 60, sm: 80, md: 100 },
+    width: { xs: 60, sm: 80, md: 100, lg: 150 },
+    height: { xs: 60, sm: 80, md: 100, lg: 150 },
   },
   icon: {
     objectFit: 'contain',

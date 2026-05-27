@@ -10,14 +10,14 @@ const scrollableContent = {
   flex: 1,
   overflowY: 'auto',
   minHeight: 0,
-  px: 3,
-  py: 2,
+  px: { xs: 1.5, sm: 3 },
+  py: { xs: 1.5, sm: 2 },
 };
 
 const headerBox = {
   display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'flex-end',
+  flexDirection: 'row',
+  alignItems: 'center',
   gap: 0.5,
 };
 
@@ -65,6 +65,10 @@ const likeCommentBox = {
   pt: 2,
   mt: 2,
   mb: 2,
+  display: 'flex',
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
 };
 
 const likeButton = {
@@ -77,7 +81,7 @@ const likeButton = {
 };
 
 const selectSort = {
-  minWidth: 130,
+  minWidth: 100,
   height: 40,
   borderRadius: 2,
   fontSize: '14px',
@@ -109,14 +113,14 @@ const selectMenuItem = {
 };
 
 const commentAvatar = {
-  width: 36,
-  height: 36,
+  width: { xs: 32, sm: 36 },
+  height: { xs: 32, sm: 36 },
 };
 
 const commentBubble = {
   bgcolor: '#f0f0f0',
   borderRadius: 2,
-  px: 2,
+  px: { xs: 1.5, sm: 2 },
   py: 1.5,
   position: 'relative',
 };
@@ -179,7 +183,7 @@ const loadMoreSpinner = {
 
 const commentInputBox = {
   borderTop: '1px solid #eee',
-  px: 2,
+  px: { xs: 1.5, sm: 2 },
   py: 1.5,
   display: 'flex',
   alignItems: 'center',
@@ -198,8 +202,8 @@ const sendButton = {
 // Post action menu and dialog styles
 const postMenuBox = {
   display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'flex-end',
+  flexDirection: 'row',
+  alignItems: 'center',
   gap: 0.5,
 };
 

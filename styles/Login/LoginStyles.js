@@ -38,8 +38,8 @@ export const loginStyles = {
     borderRadius: '32px',
   },
   innerImageBox: {
-    width: { xs: '80%', sm: '50%', md: '55%', lg: '70%' },
-    maxWidth: 520,
+    width: { xs: '80%', sm: '50%', md: '55%', lg: '90%' },
+    maxWidth: 600,
     height: 'auto',
     borderRadius: '24px',
     overflow: 'hidden',

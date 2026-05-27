@@ -157,69 +157,82 @@ export default function ForumPostCard({ post, initialOpen = false }) {
 
   return (
     <Card sx={styles.card}>
-      <CardContent>
-        <Box display="flex" alignItems="center" gap={1}>
+      <CardContent sx={{ p: { xs: 2, sm: 2.5, md: 3 } }}>
+        <Box display="flex" gap={1.5} alignItems="flex-start">
           <Avatar src={post.author_avatar} />
-          <Box flex={1}>
-            <Typography sx={styles.authorName}>{post.author_name}</Typography>
-            <Box display="flex" gap={1} alignItems="center">
-              <Typography variant="caption" color="text.secondary">
-                {formatDateTime(post.created_at)}
-              </Typography>
-              <Chip
-                label={post.skill}
-                size="small"
-                sx={{ bgcolor: 'primary.main', color: 'white' }}
-              />
+
+          <Box flex={1} minWidth={0}>
+            <Box
+              display="flex"
+              alignItems="flex-start"
+              justifyContent="space-between"
+              gap={1}
+              flexWrap="wrap"
+            >
+              <Box sx={{ minWidth: 0, flex: 1 }}>
+                <Typography sx={styles.authorName}>{post.author_name}</Typography>
+                <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
+                  <Typography variant="caption" color="text.secondary">
+                    {formatDateTime(post.created_at)}
+                  </Typography>
+                  <Chip
+                    label={post.skill}
+                    size="small"
+                    sx={{ bgcolor: 'primary.main', color: 'white' }}
+                  />
+                </Box>
+              </Box>
+
+              {user?.id && String(user.id) === String(post.author_id) && (
+                <>
+                  <IconButton
+                    size="small"
+                    onClick={handleMoreClick}
+                    aria-label="Open post actions"
+                    sx={styles.moreButton}
+                  >
+                    <MoreVertIcon fontSize="small" />
+                  </IconButton>
+                  <Menu
+                    anchorEl={anchorEl}
+                    open={Boolean(anchorEl)}
+                    onClose={handleMoreClose}
+                    anchorOrigin={{
+                      vertical: 'bottom',
+                      horizontal: 'right',
+                    }}
+                    transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'right',
+                    }}
+                    slotProps={{
+                      paper: {
+                        elevation: 0,
+                        sx: styles.menuPaper,
+                      },
+                    }}
+                  >
+                    <MenuItem onClick={handleEditClick} sx={styles.menuItem}>
+                      <ListItemText
+                        primary="Edit"
+                        primaryTypographyProps={{ fontSize: '15px', lineHeight: 1.2 }}
+                      />
+                    </MenuItem>
+
+                    <Divider sx={{ my: 0.25 }} />
+
+                    <MenuItem onClick={handleDeleteClick} sx={styles.deleteMenuItem}>
+                      <ListItemText
+                        primary="Delete"
+                        primaryTypographyProps={{ fontSize: '15px', lineHeight: 1.2 }}
+                      />
+                    </MenuItem>
+                  </Menu>
+                </>
+              )}
             </Box>
           </Box>
-          {user?.id && String(user.id) === String(post.author_id) && (
-            <>
-              <IconButton
-                size="small"
-                onClick={handleMoreClick}
-                aria-label="Open post actions"
-                sx={styles.moreButton}
-              >
-                <MoreVertIcon fontSize="small" />
-              </IconButton>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMoreClose}
-                anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'right',
-                }}
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                slotProps={{
-                  paper: {
-                    elevation: 0,
-                    sx: styles.menuPaper,
-                  },
-                }}
-              >
-                <MenuItem onClick={handleEditClick} sx={styles.menuItem}>
-                  <ListItemText
-                    primary="Edit"
-                    primaryTypographyProps={{ fontSize: '15px', lineHeight: 1.2 }}
-                  />
-                </MenuItem>
 
-                <Divider sx={{ my: 0.25 }} />
-
-                <MenuItem onClick={handleDeleteClick} sx={styles.deleteMenuItem}>
-                  <ListItemText
-                    primary="Delete"
-                    primaryTypographyProps={{ fontSize: '15px', lineHeight: 1.2 }}
-                  />
-                </MenuItem>
-              </Menu>
-            </>
-          )}
           <Snackbar
             open={snackbar.open}
             autoHideDuration={3500}
@@ -235,9 +248,8 @@ export default function ForumPostCard({ post, initialOpen = false }) {
           </Snackbar>
         </Box>
 
-        <Typography mt={2} fontWeight={700}>
-          {post.title}
-        </Typography>
+        <Typography sx={styles.title}>{post.title}</Typography>
+
         <Typography color="text.secondary" mt={1} sx={styles.description}>
           {post.description}
         </Typography>
@@ -267,11 +279,13 @@ export default function ForumPostCard({ post, initialOpen = false }) {
         <Box
           mt={3}
           display="flex"
+          flexDirection="row"
           justifyContent="space-between"
           alignItems="center"
+          gap={1.5}
           sx={{ borderTop: '1px solid #f0f0f0', pt: 2 }}
         >
-          <Box display="flex" gap={1}>
+          <Box display="flex" gap={1} flexWrap="wrap" minWidth={0}>
             <Button
               size="medium"
               startIcon={liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
@@ -291,7 +305,7 @@ export default function ForumPostCard({ post, initialOpen = false }) {
             </Button>
           </Box>
 
-          <Box display="flex" gap={2} color="text.secondary">
+          <Box display="flex" gap={2} color="text.secondary" flexWrap="wrap" flexShrink={0}>
             <Box display="flex" alignItems="center" gap={0.5}>
               <FavoriteBorderIcon fontSize="small" />
               <Typography variant="body2" fontWeight={600} sx={styles.countText}>
