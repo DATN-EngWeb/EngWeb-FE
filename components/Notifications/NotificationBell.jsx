@@ -16,11 +16,14 @@ import {
   MenuItem,
   Stack,
   Typography,
+  useMediaQuery,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
 import NotificationsActiveOutlinedIcon from '@mui/icons-material/NotificationsActiveOutlined';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { useNotifications } from './NotificationProvider';
 
 function getFeedbackRoute(notification) {
@@ -81,6 +84,8 @@ function formatRelativeTime(value) {
 
 export default function NotificationBell() {
   const router = useRouter();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const {
     notifications,
     unreadCount,
@@ -159,13 +164,26 @@ export default function NotificationBell() {
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        marginThreshold={0}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+        MenuListProps={{
+          disablePadding: true,
+          sx: {
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            minHeight: 0,
+            p: 0,
+          },
+        }}
         PaperProps={{
           sx: {
-            mt: 1.25,
-            width: 380,
-            maxWidth: 'calc(100vw - 24px)',
+            mt: 0.75,
+            width: isMobile ? 'min(300px, calc(100vw - 20px))' : 380,
+            maxWidth: isMobile ? 'min(300px, calc(100vw - 20px))' : 380,
+            display: 'flex',
+            flexDirection: 'column',
             borderRadius: 4,
             overflow: 'hidden',
             border: '1px solid rgba(83, 40, 34, 0.10)',
@@ -174,13 +192,20 @@ export default function NotificationBell() {
           },
         }}
       >
-        <Box sx={{ px: 2, py: 1.5, background: 'rgba(83, 40, 34, 0.04)' }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" gap={2}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+        <Box
+          sx={{
+            px: { xs: 1.5, sm: 2 },
+            py: { xs: 1.25, sm: 1.5 },
+            background: 'rgba(83, 40, 34, 0.04)',
+            flexShrink: 0,
+          }}
+        >
+          <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1.5}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0, flex: 1 }}>
               <Box
                 sx={{
-                  width: 36,
-                  height: 36,
+                  width: { xs: 32, sm: 36 },
+                  height: { xs: 32, sm: 36 },
                   borderRadius: '50%',
                   display: 'grid',
                   placeItems: 'center',
@@ -191,8 +216,11 @@ export default function NotificationBell() {
               >
                 <NotificationsActiveOutlinedIcon fontSize="small" />
               </Box>
-              <Box>
-                <Typography variant="subtitle1" sx={{ fontWeight: 800, lineHeight: 1.2 }}>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{ fontWeight: 800, lineHeight: 1.2, fontSize: { xs: '0.98rem', sm: '1rem' } }}
+                >
                   Notifications
                 </Typography>
               </Box>
@@ -204,9 +232,14 @@ export default function NotificationBell() {
               color={unreadCount ? 'error' : 'default'}
               variant={unreadCount ? 'filled' : 'outlined'}
               sx={{
+                flexShrink: 0,
                 fontWeight: 700,
                 bgcolor: unreadCount ? 'primary.main' : 'background.paper',
                 borderColor: 'primary.main',
+                '& .MuiChip-label': {
+                  px: { xs: 1, sm: 1.25 },
+                  fontSize: { xs: 11, sm: 12 },
+                },
               }}
             />
           </Stack>
@@ -214,16 +247,41 @@ export default function NotificationBell() {
 
         <Divider />
 
-        <Box sx={{ display: 'flex', gap: 1, px: 2, py: 1.25, bgcolor: 'background.paper' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'row',
+            gap: 1,
+            px: { xs: 1.5, sm: 2 },
+            py: 1.25,
+            bgcolor: 'background.paper',
+            flexShrink: 0,
+          }}
+        >
           <Button
             size="small"
             variant="outlined"
             onClick={() => refreshNotifications(filter === 'unread' ? { isRead: false } : {})}
             disabled={isLoading}
             startIcon={<RefreshOutlinedIcon fontSize="small" />}
-            sx={{ flex: 1 }}
+            sx={{
+              flex: 1,
+              minWidth: 0,
+              px: { xs: 0.75, sm: 1.5 },
+              fontSize: { xs: 12, sm: 14 },
+              overflow: 'hidden',
+              whiteSpace: 'nowrap',
+              textOverflow: 'ellipsis',
+              '& .MuiButton-startIcon': {
+                mr: 0.75,
+                flexShrink: 0,
+              },
+              '& .MuiButton-startIcon > *:nth-of-type(1)': {
+                fontSize: 16,
+              },
+            }}
           >
-            Refresh
+            Refresh...
           </Button>
           <Button
             size="small"
@@ -231,9 +289,29 @@ export default function NotificationBell() {
             onClick={markAllAsRead}
             disabled={!unreadCount}
             startIcon={<DoneAllIcon fontSize="small" />}
-            sx={{ flex: 1 }}
+            sx={{
+              flex: 1,
+              minWidth: 0,
+              px: { xs: 0.75, sm: 1.5 },
+              fontSize: { xs: 12, sm: 14 },
+              overflow: 'hidden',
+              whiteSpace: 'nowrap',
+              textOverflow: 'ellipsis',
+              '& .MuiButton-startIcon': {
+                mr: 0.75,
+                flexShrink: 0,
+              },
+              '& .MuiButton-startIcon > *:nth-of-type(1)': {
+                fontSize: 16,
+              },
+            }}
           >
-            Mark all as read
+            <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+              Mark all...
+            </Box>
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+              Mark all as read
+            </Box>
           </Button>
         </Box>
 
@@ -241,7 +319,7 @@ export default function NotificationBell() {
 
         <Box
           sx={{
-            px: 2,
+            px: { xs: 1.5, sm: 2 },
             pt: 1.5,
             pb: 0.5,
             display: 'flex',
@@ -255,14 +333,23 @@ export default function NotificationBell() {
           </Typography>
         </Box>
 
-        <Box sx={{ px: 2, pb: 1.25, display: 'flex', gap: 1 }}>
+        <Box
+          sx={{
+            px: { xs: 1.5, sm: 2 },
+            pb: 1.25,
+            display: 'flex',
+            gap: 1,
+            flexWrap: 'wrap',
+            flexShrink: 0,
+          }}
+        >
           <Chip
             label="All"
             clickable
             onClick={() => handleFilterChange('all')}
             variant={filter === 'all' ? 'filled' : 'outlined'}
             color={filter === 'all' ? 'primary' : 'default'}
-            sx={{ fontWeight: 700 }}
+            sx={{ fontWeight: 700, flex: { xs: '1 1 calc(50% - 4px)', sm: '0 0 auto' } }}
           />
           <Chip
             label="Unread"
@@ -270,12 +357,12 @@ export default function NotificationBell() {
             onClick={() => handleFilterChange('unread')}
             variant={filter === 'unread' ? 'filled' : 'outlined'}
             color={filter === 'unread' ? 'primary' : 'default'}
-            sx={{ fontWeight: 700 }}
+            sx={{ fontWeight: 700, flex: { xs: '1 1 calc(50% - 4px)', sm: '0 0 auto' } }}
           />
         </Box>
 
         {notifications.length === 0 ? (
-          <Box sx={{ px: 2, py: 3 }}>
+          <Box sx={{ px: { xs: 1.5, sm: 2 }, py: 3, flexShrink: 0 }}>
             <Box
               sx={{
                 borderRadius: 3,
@@ -302,13 +389,25 @@ export default function NotificationBell() {
               >
                 <NotificationsNoneOutlinedIcon />
               </Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
+              <Typography
+                variant="subtitle2"
+                sx={{ fontWeight: 700, mb: 0.5, fontSize: { xs: 13, sm: 14 } }}
+              >
                 No notifications yet
               </Typography>
             </Box>
           </Box>
         ) : (
-          <Stack sx={{ maxHeight: 360, overflowY: 'auto', pb: 1 }}>
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              overscrollBehavior: 'contain',
+              pb: 1,
+            }}
+          >
             {notifications.map((notification) =>
               (() => {
                 const author = notification.author || notification.createdBy || {};
@@ -324,11 +423,13 @@ export default function NotificationBell() {
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
                     sx={{
-                      alignItems: 'center',
+                      flexShrink: 0,
+                      minHeight: 'auto',
+                      alignItems: 'flex-start',
                       whiteSpace: 'normal',
-                      px: 2,
-                      py: 1.4,
-                      gap: 1.25,
+                      px: { xs: 1.25, sm: 2 },
+                      py: { xs: 0.75, sm: 1.35 },
+                      gap: { xs: 0.75, sm: 1.25 },
                       borderBottom: '1px solid rgba(83, 40, 34, 0.08)',
                       transition: 'background-color 0.2s ease, transform 0.2s ease',
                       bgcolor: notification.isRead
@@ -341,13 +442,13 @@ export default function NotificationBell() {
                       },
                     }}
                   >
-                    <ListItemAvatar sx={{ minWidth: 52 }}>
+                    <ListItemAvatar sx={{ minWidth: { xs: 38, sm: 52 } }}>
                       <Avatar
                         src={author.avatar}
                         alt={author.name}
                         sx={{
-                          width: 44,
-                          height: 44,
+                          width: { xs: 30, sm: 44 },
+                          height: { xs: 30, sm: 44 },
                         }}
                       >
                         {author.name?.charAt(0) || '?'}
@@ -358,10 +459,10 @@ export default function NotificationBell() {
                       sx={{ my: 0 }}
                       primary={
                         <Stack
-                          direction="row"
-                          alignItems="flex-start"
+                          direction={{ xs: 'column', sm: 'row' }}
+                          alignItems={{ xs: 'flex-start', sm: 'flex-start' }}
                           justifyContent="space-between"
-                          gap={1.5}
+                          gap={0.5}
                         >
                           <Box sx={{ minWidth: 0, flex: 1 }}>
                             <Typography
@@ -369,9 +470,11 @@ export default function NotificationBell() {
                               sx={{
                                 fontWeight: notification.isRead ? 700 : 800,
                                 color: 'text.primary',
-                                lineHeight: 1.35,
-                                WebkitLineClamp: 2,
-                                display: 'block',
+                                lineHeight: 1.2,
+                                fontSize: { xs: 12, sm: 14 },
+                                display: '-webkit-box',
+                                WebkitBoxOrient: 'vertical',
+                                WebkitLineClamp: 1,
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                               }}
@@ -387,9 +490,10 @@ export default function NotificationBell() {
                               sx={{
                                 mt: 0.25,
                                 color: notification.isRead ? 'text.secondary' : 'text.primary',
-                                lineHeight: 1.45,
+                                lineHeight: 1.25,
+                                fontSize: { xs: 11.5, sm: 14 },
                                 display: '-webkit-box',
-                                WebkitLineClamp: 2,
+                                WebkitLineClamp: 1,
                                 WebkitBoxOrient: 'vertical',
                                 overflow: 'hidden',
                               }}
@@ -399,10 +503,11 @@ export default function NotificationBell() {
                             <Typography
                               variant="caption"
                               sx={{
-                                mt: 0.45,
+                                mt: 0.25,
                                 display: 'block',
                                 color: 'text.secondary',
                                 fontWeight: 600,
+                                fontSize: { xs: 10, sm: 12 },
                               }}
                             >
                               {formatRelativeTime(notification.createdAt)}
@@ -411,17 +516,18 @@ export default function NotificationBell() {
 
                           <Box
                             sx={{
-                              pt: 0.65,
+                              pt: { xs: 0, sm: 0.65 },
                               minWidth: 18,
                               display: 'flex',
                               justifyContent: 'center',
+                              alignSelf: { xs: 'flex-end', sm: 'auto' },
                             }}
                           >
                             {!notification.isRead ? (
                               <Box
                                 sx={{
-                                  width: 12,
-                                  height: 12,
+                                  width: { xs: 10, sm: 12 },
+                                  height: { xs: 10, sm: 12 },
                                   borderRadius: '50%',
                                   bgcolor: '#3b82f6',
                                   boxShadow: '0 0 0 5px rgba(59, 130, 246, 0.2)',
@@ -440,19 +546,20 @@ export default function NotificationBell() {
             )}
 
             {hasMore ? (
-              <Box sx={{ px: 2, pt: 1, pb: 1.5 }}>
+              <Box sx={{ px: { xs: 1.5, sm: 2 }, pt: 1, pb: 1.5, flexShrink: 0 }}>
                 <Button
                   fullWidth
                   size="small"
                   variant="outlined"
                   onClick={() => loadMoreNotifications()}
                   disabled={isLoadingMore || isLoading}
+                  sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                 >
                   {isLoadingMore ? 'Loading...' : 'Load more'}
                 </Button>
               </Box>
             ) : null}
-          </Stack>
+          </Box>
         )}
       </Menu>
     </>

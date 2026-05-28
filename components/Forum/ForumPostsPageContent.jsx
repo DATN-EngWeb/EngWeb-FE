@@ -289,6 +289,9 @@ export default function ForumPostsPageContent({
             <MenuItem value="-created_at" sx={{ fontSize: '14px' }}>
               Newest
             </MenuItem>
+            <MenuItem value="created_at" sx={{ fontSize: '14px' }}>
+              Oldest
+            </MenuItem>
             <MenuItem value="-like_count" sx={{ fontSize: '14px' }}>
               Most liked
             </MenuItem>
