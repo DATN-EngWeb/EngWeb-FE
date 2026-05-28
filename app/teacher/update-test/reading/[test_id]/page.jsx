@@ -36,6 +36,7 @@ import FillBlankForm from '../../../../../components/Teacher/ReadingTest/fillBla
 import ReadingPreview from '../../../../../components/Teacher/ReadingTest/ReadingPreview';
 import FeedbackPanel from '../../../../../components/Teacher/Feedback/FeedbackPanel';
 import TestEditorActions from '../../../../../components/UploadTest/TestEditorActions';
+import DeleteConfirmSnackbar from '../../../../../components/Teacher/DeleteConfirmSnackbar';
 import {
   updateReadingTestContent,
   getReceptiveTestDetails,
@@ -49,7 +50,10 @@ import {
   processCkeditorState,
 } from '../../../../../utils/testTransformers';
 import { getPresignedUrl, uploadToObjectStorage, confirmUpload } from '../../../../../api/test';
-import { validateReadingPartUpdatePayload } from '../../../../../utils/testValidation';
+import {
+  validateReadingPartUpdatePayload,
+  validateReadingBasicInfo,
+} from '../../../../../utils/testValidation';
 import ScrollToTopButton from '../../../../../components/CreateTest/ScrollToTopButton';
 import TestEditorHeader from '../../../../../components/UploadTest/TestEditorHeader';
 import { accentBar, addPartBox } from '@/styles/Teacher/Listening/ListeningStyles';
@@ -78,7 +82,35 @@ export default function Page() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
+  const [deleteTargetPartId, setDeleteTargetPartId] = useState(null);
   const canShowFeedback = test?.flag === 'update' && !!test?.id;
+
+  const validateBasicInformation = () => {
+    const basicInfoErrors = validateReadingBasicInfo({
+      testName: test.title,
+      level: test.level,
+      time: test.time,
+      description: test.description,
+    });
+
+    if (!basicInfoErrors) return null;
+
+    setErrors({
+      title: !!basicInfoErrors.testName,
+      level: !!basicInfoErrors.level,
+      time: !!basicInfoErrors.time || !!basicInfoErrors.timeNegative,
+      timeNegative: !!basicInfoErrors.timeNegative,
+      description: !!basicInfoErrors.description,
+    });
+
+    if (basicInfoErrors.testName) return 'Please fill title of test!';
+    if (basicInfoErrors.level) return 'Please select a valid level (A1-B2)!';
+    if (basicInfoErrors.time) return 'Please enter a valid time greater than 0!';
+    if (basicInfoErrors.timeNegative) return 'Time cannot be negative!';
+    if (basicInfoErrors.description) return 'Please fill description of test!';
+
+    return 'Please check basic information.';
+  };
 
   const extractLocalAnswersFromQuestions = (questions) => {
     if (!questions || !Array.isArray(questions)) return [];
@@ -248,32 +280,11 @@ export default function Page() {
     setIsLoading(true);
     setErrors({}); // Reset errors before validation
     try {
-      // Validate Basic Info
-      if (!test.title) {
-        setErrors((prev) => ({ ...prev, title: true }));
+      const basicInfoErrorMessage = validateBasicInformation();
+      if (basicInfoErrorMessage) {
         setSnackbar({
           open: true,
-          message: 'Please fill title of test!',
-          severity: 'error',
-        });
-        setIsLoading(false);
-        return;
-      }
-      if (!['A1', 'A2', 'B1', 'B2'].includes(test.level)) {
-        setErrors((prev) => ({ ...prev, level: true }));
-        setSnackbar({
-          open: true,
-          message: 'Please select a valid level (A1-B2)!',
-          severity: 'error',
-        });
-        setIsLoading(false);
-        return;
-      }
-      if (!test.time || isNaN(test.time) || Number(test.time) <= 0) {
-        setErrors((prev) => ({ ...prev, time: true }));
-        setSnackbar({
-          open: true,
-          message: 'Please enter a valid time greater than 0!',
+          message: basicInfoErrorMessage,
           severity: 'error',
         });
         setIsLoading(false);
@@ -479,14 +490,20 @@ export default function Page() {
     );
   };
 
-  const handleDeletePart = (idToDelete) => {
+  const handleRequestDeletePart = (idToDelete) => {
+    setDeleteTargetPartId(idToDelete);
+  };
+
+  const handleConfirmDeletePart = () => {
+    if (!deleteTargetPartId) return;
+
     setParts((prevParts) => {
       let updatedParts;
 
       if (test?.flag === 'update') {
         updatedParts = prevParts
           .map((part) => {
-            if (part.id === idToDelete) {
+            if (part.id === deleteTargetPartId) {
               if (part.action === 'create') return null;
               return { id: part.id, action: 'delete' };
             }
@@ -494,7 +511,7 @@ export default function Page() {
           })
           .filter(Boolean);
       } else {
-        updatedParts = prevParts.filter((part) => part.id !== idToDelete);
+        updatedParts = prevParts.filter((part) => part.id !== deleteTargetPartId);
       }
 
       let visibleIndex = 1;
@@ -506,6 +523,7 @@ export default function Page() {
         };
       });
     });
+    setDeleteTargetPartId(null);
   };
 
   const handleDeleteQuestion = (partId, questionId) => {
@@ -738,10 +756,11 @@ export default function Page() {
   };
 
   const handleShowPreview = () => {
-    if (!test.title.trim()) {
+    const basicInfoErrorMessage = validateBasicInformation();
+    if (basicInfoErrorMessage) {
       setSnackbar({
         open: true,
-        message: 'Test title is required!',
+        message: basicInfoErrorMessage,
         severity: 'error',
       });
       return;
@@ -787,7 +806,7 @@ export default function Page() {
             part={part}
             partId={part.id}
             index={index}
-            handleDeletePart={handleDeletePart}
+            handleDeletePart={handleRequestDeletePart}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
             handleDeleteQuestion={handleDeleteQuestion}
@@ -806,7 +825,7 @@ export default function Page() {
             part={part}
             partId={part.id}
             index={index}
-            handleDeletePart={handleDeletePart}
+            handleDeletePart={handleRequestDeletePart}
             handleDeleteQuestion={handleDeleteQuestion}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
@@ -829,7 +848,7 @@ export default function Page() {
             part={part}
             partId={part.id}
             index={index}
-            handleDeletePart={handleDeletePart}
+            handleDeletePart={handleRequestDeletePart}
             handleDeleteOption={handleDeleteOption}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
@@ -964,6 +983,7 @@ export default function Page() {
                       size="small"
                       placeholder="Enter test title here"
                       defaultValue={test.title}
+                      error={!!errors.title}
                       onBlur={(e) => setTest({ ...test, title: e.target.value })}
                       sx={uploadReadingStyles.input}
                     />
@@ -979,6 +999,7 @@ export default function Page() {
                       size="small"
                       placeholder="60"
                       defaultValue={test.time}
+                      error={!!errors.time || !!errors.timeNegative}
                       sx={uploadReadingStyles.input}
                       onBlur={(e) => setTest({ ...test, time: Number(e.target.value) || '' })}
                     />
@@ -995,6 +1016,7 @@ export default function Page() {
                     size="small"
                     placeholder="Enter description here"
                     defaultValue={test.description}
+                    error={!!errors.description}
                     onBlur={(e) => setTest({ ...test, description: e.target.value })}
                     sx={uploadReadingStyles.input}
                   />
@@ -1010,6 +1032,7 @@ export default function Page() {
                     size="small"
                     displayEmpty
                     value={test.level || ''}
+                    error={!!errors.level}
                     sx={{
                       ...uploadReadingStyles.input,
                       '& .MuiSelect-icon': {
@@ -1040,6 +1063,7 @@ export default function Page() {
                     }}
                     onChange={(e) => {
                       setTest({ ...test, level: e.target.value });
+                      if (errors.level) setErrors((prev) => ({ ...prev, level: false }));
                     }}
                   >
                     <MenuItem value="" disabled>
@@ -1152,7 +1176,7 @@ export default function Page() {
                             textTransform: 'none',
                             px: 2,
                           }}
-                          onClick={() => handleDeletePart(part.id)}
+                          onClick={() => handleRequestDeletePart(part.id)}
                         >
                           Cancel
                         </Button>
@@ -1214,6 +1238,17 @@ export default function Page() {
           </Box>
         )}
       </Container>
+
+      <DeleteConfirmSnackbar
+        open={Boolean(deleteTargetPartId)}
+        onClose={() => setDeleteTargetPartId(null)}
+        onConfirm={handleConfirmDeletePart}
+        loading={false}
+        title="Confirm Delete Part"
+        description="Delete this part? This action will remove it from the test."
+        confirmLabel="Delete part"
+        loadingLabel="Deleting part..."
+      />
     </Box>
   );
 }

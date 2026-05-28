@@ -56,6 +56,8 @@ const formatMapper = {
   J: 'Reading Aloud',
 };
 
+const speakingFormats = ['Narrative', 'Description', 'Social Argument', 'Reading Aloud'];
+
 const formatTime = (totalSeconds) => {
   const mins = Math.floor(totalSeconds / 60);
   const secs = totalSeconds % 60;
@@ -388,7 +390,7 @@ export default function ProductiveTestEditor({
               {/* Right Panel: Placeholder Interaction Area */}
               <Panel defaultSize={50} minSize={30}>
                 <Box sx={{ height: '100%', overflowY: 'auto', pl: 2 }}>
-                  {testData.format >= 'G' ? (
+                  {speakingFormats.includes(testData.format) ? (
                     /* Speaking Placeholder */
                     <Box
                       sx={{

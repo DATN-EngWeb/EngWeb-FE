@@ -50,7 +50,7 @@ const options = [
   },
   {
     id: 'onetomany',
-    title: '1 audio - many question',
+    title: '1 audio - many questions',
     description: 'One audio for all questions',
     icon: <MusicNoteRoundedIcon sx={{ fontSize: 40, color: '#000' }} />,
   },
