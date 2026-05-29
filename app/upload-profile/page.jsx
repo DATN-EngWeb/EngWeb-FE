@@ -271,7 +271,11 @@ function UploadProfileContent({ userId }) {
         >
           <Image src={Logo} alt="NENS" width={32} height={24} />
         </Button>
-        <Image src={registerImage} alt="Complete Profile" style={loginStyles.storyImage} />
+        <Box sx={loginStyles.storyImageWrap}>
+          <Box sx={loginStyles.innerImageBox}>
+            <Image src={registerImage} alt="Complete Profile" style={loginStyles.storyImage} />
+          </Box>
+        </Box>
       </Box>
 
       <Box

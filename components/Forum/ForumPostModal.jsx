@@ -292,28 +292,52 @@ export default function ForumPostModal({
       onClose={onClose}
       maxWidth="md"
       fullWidth
-      PaperProps={{ sx: { borderRadius: 3, maxHeight: '90vh' } }}
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          maxHeight: { xs: '96vh', sm: '92vh' },
+          width: { xs: 'calc(100vw - 16px)', sm: '100%' },
+          m: { xs: 1, sm: 2 },
+        },
+      }}
     >
-      <DialogContent sx={modalStyles.dialogContent}>
+      <DialogContent
+        sx={{ ...modalStyles.dialogContent, px: { xs: 1.5, sm: 3 }, py: { xs: 1.5, sm: 2 } }}
+      >
         <Box sx={modalStyles.stickyHeader}>
           <IconButton size="small" onClick={onClose} sx={modalStyles.stickyCloseButton}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
 
-        <Box sx={modalStyles.scrollableContent}>
-          <Box display="flex" alignItems="center" gap={1.5} mb={1.5}>
+        <Box
+          sx={{ ...modalStyles.scrollableContent, px: { xs: 0, sm: 3 }, py: { xs: 1.5, sm: 2 } }}
+        >
+          <Box display="flex" flexDirection="row" alignItems="center" gap={1.5} mb={1.5}>
             <Avatar src={post.author_avatar} />
-            <Box flex={1}>
-              <Typography fontWeight={700}>{post.author_name}</Typography>
-              <Box display="flex" gap={1} alignItems="center">
+            <Box flex={1} minWidth={0}>
+              <Typography
+                fontWeight={700}
+                noWrap
+                sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}
+              >
+                {post.author_name}
+              </Typography>
+              <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
                 <Typography variant="caption" color="text.secondary">
                   {formatDateTime(post.created_at)}
                 </Typography>
                 <Chip label={post.skill} size="small" sx={modalStyles.skillChip} />
               </Box>
             </Box>
-            <Box sx={modalStyles.postMenuBox}>
+            <Box
+              sx={{
+                ...modalStyles.postMenuBox,
+                flexDirection: 'row',
+                alignItems: 'center',
+                ml: 'auto',
+              }}
+            >
               {user?.id && String(user.id) === String(post.author_id) && (
                 <>
                   <IconButton size="small" onClick={handlePostMenuOpen} sx={modalStyles.moreButton}>
@@ -368,23 +392,36 @@ export default function ForumPostModal({
 
           <Box
             display="flex"
+            flexDirection="row"
             justifyContent="space-between"
             alignItems="center"
+            gap={2}
             sx={modalStyles.likeCommentBox}
           >
-            <Button
-              size="small"
-              startIcon={liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-              onClick={onLikeToggle}
-              sx={{
-                ...modalStyles.likeButton,
-                color: liked ? 'error.main' : 'text.secondary',
-              }}
-            >
-              {liked ? 'Liked' : 'Like'}
-            </Button>
+            <Box display="flex" gap={1} alignItems="center" minWidth={0}>
+              <Button
+                size="small"
+                startIcon={liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+                onClick={onLikeToggle}
+                sx={{
+                  ...modalStyles.likeButton,
+                  color: liked ? 'error.main' : 'text.secondary',
+                }}
+              >
+                {liked ? 'Liked' : 'Like'}
+              </Button>
 
-            <Box display="flex" gap={2} color="text.secondary">
+              <Button
+                size="small"
+                startIcon={<ChatBubbleOutlineIcon />}
+                onClick={() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                sx={modalStyles.likeButton}
+              >
+                Comment
+              </Button>
+            </Box>
+
+            <Box display="flex" gap={2} color="text.secondary" flexShrink={0}>
               <Box display="flex" alignItems="center" gap={0.5}>
                 <FavoriteBorderIcon fontSize="small" />
                 <Typography fontSize="small" variant="body2" fontWeight={600}>
@@ -401,19 +438,19 @@ export default function ForumPostModal({
           </Box>
 
           <Divider sx={{ mb: 1 }} />
-          <Box display="flex" justifyContent="flex-end" mb={1}>
+          <Box display="flex" justifyContent="flex-end" mb={1} width="100%">
             <Select
               value={ordering}
               onChange={handleOrderingChange}
               size="small"
-              sx={modalStyles.selectSort}
+              sx={{ ...modalStyles.selectSort, maxWidth: { xs: 140, sm: 180 } }}
               MenuProps={modalStyles.selectMenuProps}
             >
               <MenuItem value="-created_at" sx={modalStyles.selectMenuItem}>
-                Newest first
+                Newest
               </MenuItem>
               <MenuItem value="created_at" sx={modalStyles.selectMenuItem}>
-                Oldest first
+                Oldest
               </MenuItem>
             </Select>
           </Box>
@@ -432,10 +469,10 @@ export default function ForumPostModal({
                 const isAuthor = user?.id && String(user.id) === String(c.author_id);
                 const isEditing = editingCommentId === c.id;
                 return (
-                  <Box key={c.id ?? i} display="flex" gap={1.5} mb={1.5}>
+                  <Box key={c.id ?? i} display="flex" gap={1.5} mb={1.5} alignItems="flex-start">
                     <Avatar src={c.author_avatar} sx={modalStyles.commentAvatar} />
                     <Box flex={1} sx={modalStyles.commentBubble}>
-                      <Box display="flex" alignItems="center">
+                      <Box display="flex" alignItems="center" flexWrap="wrap" gap={0.5}>
                         <Typography fontWeight={700} variant="body2" flex={1}>
                           {c.author_name}
                         </Typography>
@@ -504,7 +541,13 @@ export default function ForumPostModal({
                         )}
                       </Box>
                       {isEditing ? (
-                        <Box display="flex" alignItems="center" gap={1} mt={1}>
+                        <Box
+                          display="flex"
+                          flexDirection={{ xs: 'column', sm: 'row' }}
+                          alignItems="stretch"
+                          gap={1}
+                          mt={1}
+                        >
                           <TextField
                             value={editCommentText}
                             onChange={(e) => setEditCommentText(e.target.value)}
@@ -520,7 +563,10 @@ export default function ForumPostModal({
                             variant="contained"
                             disabled={editLoading || !editCommentText.trim()}
                             onClick={() => handleEditComment(c)}
-                            sx={modalStyles.editCommentButton}
+                            sx={{
+                              ...modalStyles.editCommentButton,
+                              width: { xs: '100%', sm: 'auto' },
+                            }}
                           >
                             Save
                           </Button>
@@ -528,7 +574,10 @@ export default function ForumPostModal({
                             size="small"
                             variant="text"
                             onClick={() => setEditingCommentId(null)}
-                            sx={modalStyles.editCommentButton}
+                            sx={{
+                              ...modalStyles.editCommentButton,
+                              width: { xs: '100%', sm: 'auto' },
+                            }}
                           >
                             Cancel
                           </Button>

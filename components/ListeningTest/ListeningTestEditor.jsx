@@ -24,6 +24,7 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import ScrollToTopButton from '../CreateTest/ScrollToTopButton';
 import ListeningPreview from '../Teacher/ListeningPreview';
 import FeedbackPanel from '../Teacher/Feedback/FeedbackPanel';
+import DeleteConfirmSnackbar from '../Teacher/DeleteConfirmSnackbar';
 
 import {
   getValidationErrorMessage,
@@ -114,6 +115,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
   const [isPreviewActive, setIsPreviewActive] = useState(false);
   const [isFeedbackActive, setIsFeedbackActive] = useState(false);
   const [editingTestId, setEditingTestId] = useState(testId || null);
+  const [deleteTargetPartId, setDeleteTargetPartId] = useState(null);
 
   useEffect(() => {
     if (!isEditMode) {
@@ -217,6 +219,19 @@ export default function ListeningTestEditor({ testId: propTestId }) {
 
   const handleCancelPart = (partId) => {
     setParts((prev) => prev.filter((p) => p.id !== partId));
+  };
+
+  const handleRequestDeletePart = (partId) => {
+    setDeleteTargetPartId(partId);
+  };
+
+  const handleConfirmDeletePart = () => {
+    if (!deleteTargetPartId) {
+      return;
+    }
+
+    handleCancelPart(deleteTargetPartId);
+    setDeleteTargetPartId(null);
   };
 
   const handleSelectPartType = (partId, type) => {
@@ -532,7 +547,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
                                       prev.map((p) => (p.id === part.id ? updatedPart : p)),
                                     )
                                   }
-                                  onDelete={() => handleCancelPart(part.id)}
+                                  onDelete={() => handleRequestDeletePart(part.id)}
                                 />
                               )}
 
@@ -545,7 +560,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
                                       prev.map((p) => (p.id === part.id ? updatedPart : p)),
                                     )
                                   }
-                                  onDelete={() => handleCancelPart(part.id)}
+                                  onDelete={() => handleRequestDeletePart(part.id)}
                                 />
                               )}
 
@@ -558,7 +573,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
                                       prev.map((p) => (p.id === part.id ? updatedPart : p)),
                                     )
                                   }
-                                  onDelete={() => handleCancelPart(part.id)}
+                                  onDelete={() => handleRequestDeletePart(part.id)}
                                 />
                               )}
 
@@ -571,7 +586,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
                                       prev.map((p) => (p.id === part.id ? updatedPart : p)),
                                     )
                                   }
-                                  onDelete={() => handleCancelPart(part.id)}
+                                  onDelete={() => handleRequestDeletePart(part.id)}
                                 />
                               )}
                             </>
@@ -626,6 +641,17 @@ export default function ListeningTestEditor({ testId: propTestId }) {
       >
         <CircularProgress color="inherit" />
       </Backdrop>
+
+      <DeleteConfirmSnackbar
+        open={Boolean(deleteTargetPartId)}
+        onClose={() => setDeleteTargetPartId(null)}
+        onConfirm={handleConfirmDeletePart}
+        loading={false}
+        title="Confirm Delete Part"
+        description="Delete this part? This action will remove it from the test."
+        confirmLabel="Delete part"
+        loadingLabel="Deleting part..."
+      />
 
       <ScrollToTopButton />
     </Box>

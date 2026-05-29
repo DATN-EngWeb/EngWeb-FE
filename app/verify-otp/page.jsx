@@ -187,19 +187,35 @@ function VerifyOTPContent() {
         <Button onClick={handleBack} sx={loginStyles.backButton} aria-label="Back to register">
           <Image src={Logo} alt="NENS" width={32} height={24} />
         </Button>
-        <Image src={registerImage} alt="Verify OTP" style={loginStyles.storyImage} />
+        <Box sx={loginStyles.storyImageWrap}>
+          <Box sx={loginStyles.innerImageBox}>
+            <Image src={registerImage} alt="Verify OTP" style={loginStyles.storyImage} />
+          </Box>
+        </Box>
       </Box>
 
       <Box component="section" sx={loginStyles.formPanel}>
         <Box sx={loginStyles.formCard}>
-          <Typography sx={loginStyles.cardEyebrow}>
+          <Typography
+            sx={{
+              ...loginStyles.cardEyrow,
+              fontSize: { xs: '1.05rem', sm: '1.2rem', md: '1.4rem' },
+              mb: 0.75,
+              fontWeight: 600,
+              textAlign: 'center',
+            }}
+          >
             {verifyType === 'forgot_password' ? 'Verify Password Reset' : 'Verify your account'}
           </Typography>
 
-          <Box sx={{ ...loginStyles.switcherWrapper, mb: 2 }}>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Verified color="success" />
-              <Typography color="text.primary" fontWeight={600}>
+          <Box sx={{ ...loginStyles.switcherWrapper, mb: 1.5 }}>
+            <Stack direction="row" spacing={0.5} alignItems="center">
+              <Verified color="success" fontSize="small" />
+              <Typography
+                color="text.primary"
+                fontWeight={600}
+                sx={{ fontSize: { xs: '0.85rem', sm: '0.95rem' } }}
+              >
                 Enter the 6-digit code sent to your email
               </Typography>
             </Stack>
@@ -268,11 +284,16 @@ function VerifyOTPContent() {
               </Typography>
             )}
 
-            <Stack direction="row" spacing={2}>
+            <Stack direction="row" spacing={1}>
               <Button
                 type="submit"
                 variant="contained"
-                sx={{ ...loginStyles.primaryButton, flex: 1 }}
+                sx={{
+                  ...loginStyles.primaryButton,
+                  flex: 1,
+                  fontSize: { xs: 13, sm: 14 },
+                  py: { xs: 0.75, sm: 1 },
+                }}
                 disabled={isVerifying}
               >
                 {isVerifying ? 'Verifying...' : 'Verify'}
@@ -280,7 +301,12 @@ function VerifyOTPContent() {
               <Button
                 type="button"
                 variant="outlined"
-                sx={{ borderRadius: 999, flex: 1 }}
+                sx={{
+                  borderRadius: 999,
+                  flex: 1,
+                  fontSize: { xs: 13, sm: 14 },
+                  py: { xs: 0.75, sm: 1 },
+                }}
                 disabled={isResending}
                 onClick={handleResend}
               >

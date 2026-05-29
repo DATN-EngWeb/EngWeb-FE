@@ -70,7 +70,7 @@ export function SectionCard({
       elevation={1}
       sx={{
         borderRadius: 4,
-        p: 2,
+        p: { xs: 1.5, sm: 2 },
         bgcolor: 'background.paper',
         border: '1px solid rgba(15, 23, 42, 0.07)',
         boxShadow: '0 10px 26px rgba(15, 23, 42, 0.045)',

@@ -20,6 +20,11 @@ export const validateListeningBasicInfo = (basicInfo) => {
   return Object.keys(errors).length > 0 ? errors : null;
 };
 
+export const validateReadingBasicInfo = (basicInfo) => {
+  const errors = validateBasicInfo(basicInfo);
+  return Object.keys(errors).length > 0 ? errors : null;
+};
+
 // Get user-friendly error message
 export const getValidationErrorMessage = (errors) => {
   if (!errors) return null;
