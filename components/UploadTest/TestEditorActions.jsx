@@ -9,6 +9,7 @@ import SendIcon from '@mui/icons-material/Send';
 import SaveIcon from '@mui/icons-material/Save';
 import PublishIcon from '@mui/icons-material/Publish';
 import CancelIcon from '@mui/icons-material/Cancel';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 export default function TestEditorActions({
   onPreview,
@@ -19,6 +20,7 @@ export default function TestEditorActions({
   onSaveDraft,
   onPublish,
   onCancelClick,
+  onTour,
   isLoading = false,
   readingStyle = false,
   sticky = false,
@@ -95,6 +97,17 @@ export default function TestEditorActions({
               sx={{ flex: { xs: 1, sm: 'none' } }}
             >
               {isFeedbackActive ? 'Hide Feedback' : 'Show Feedback'}
+            </Button>
+          )}
+
+          {onTour && (
+            <Button
+              startIcon={<HelpOutlineIcon />}
+              variant="outlined"
+              onClick={onTour}
+              disabled={isLoading}
+            >
+              Guide
             </Button>
           )}
         </Box>
@@ -176,25 +189,50 @@ export default function TestEditorActions({
 
   return (
     <Box sx={{ ...wrapperSx, ...sx }}>
-      {onPreview && (
-        <Button
-          startIcon={isPreviewActive ? <VisibilityOffIcon /> : <VisibilityIcon />}
-          variant="text"
-          sx={{
-            gridArea: 'item1',
-            color: 'primary.main',
-            fontWeight: 500,
-            fontSize: { xs: '0.7rem', md: '1rem' },
-            justifySelf: { xs: 'stretch', sm: 'start' },
-            px: 4,
-            textTransform: 'none',
-          }}
-          onClick={onPreview}
-          disabled={isLoading}
-        >
-          {isPreviewActive ? 'Hide Preview' : 'Show Preview'}
-        </Button>
-      )}
+      <Box
+        sx={{
+          gridArea: 'item1',
+          display: 'flex',
+          gap: 1,
+          alignItems: 'center',
+          justifySelf: { xs: 'stretch', sm: 'start' },
+        }}
+      >
+        {onPreview && (
+          <Button
+            startIcon={isPreviewActive ? <VisibilityOffIcon /> : <VisibilityIcon />}
+            variant="text"
+            sx={{
+              color: 'primary.main',
+              fontWeight: 500,
+              fontSize: { xs: '0.7rem', md: '1rem' },
+              px: 2,
+              textTransform: 'none',
+            }}
+            onClick={onPreview}
+            disabled={isLoading}
+          >
+            {isPreviewActive ? 'Hide Preview' : 'Show Preview'}
+          </Button>
+        )}
+        {onTour && (
+          <Button
+            startIcon={<HelpOutlineIcon />}
+            variant="text"
+            sx={{
+              color: 'primary.main',
+              fontWeight: 500,
+              fontSize: { xs: '0.7rem', md: '1rem' },
+              px: 2,
+              textTransform: 'none',
+            }}
+            onClick={onTour}
+            disabled={isLoading}
+          >
+            Guide
+          </Button>
+        )}
+      </Box>
       {onSendReview && (
         <Button
           variant="outlined"

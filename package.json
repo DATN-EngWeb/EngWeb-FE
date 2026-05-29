@@ -21,6 +21,7 @@
     "@mui/styled-engine-sc": "^7.3.3",
     "animate.css": "^4.1.1",
     "diff": "^8.0.4",
+    "driver.js": "^1.4.0",
     "gsap": "^3.14.2",
     "html2pdf.js": "^0.10.3",
     "next": "15.5.7",

@@ -112,6 +112,136 @@ export default function Page() {
     return 'Please check basic information.';
   };
 
+  const handleStartTour = () => {
+    const { driver } = require('driver.js');
+
+    const steps = [
+      {
+        element: '#tour-basic-info',
+        popover: {
+          title: 'Basic Information',
+          description:
+            'Fill in the test title, duration, level, and description of the reading test.',
+          side: 'bottom',
+          align: 'start',
+        },
+      },
+      {
+        element: '#tour-test-title',
+        popover: {
+          title: 'Test Title',
+          description: 'Enter a descriptive title for this reading test.',
+          side: 'bottom',
+          align: 'start',
+        },
+      },
+      {
+        element: '#tour-test-time',
+        popover: {
+          title: 'Test Duration',
+          description:
+            'Set the allowed time limit (in minutes) for students to complete this test.',
+          side: 'bottom',
+          align: 'start',
+        },
+      },
+      {
+        element: '#tour-test-level',
+        popover: {
+          title: 'Difficulty Level',
+          description:
+            'Select the English proficiency level (A1, A2, B1, B2) targeted by this test.',
+          side: 'bottom',
+          align: 'start',
+        },
+      },
+    ];
+
+    if (document.querySelector('#tour-score-each-question')) {
+      steps.push({
+        element: '#tour-score-each-question',
+        popover: {
+          title: 'Score per Question',
+          description: 'Set the default score for each question in this part (e.g., 10 points).',
+          side: 'right',
+          align: 'start',
+        },
+      });
+    }
+
+    if (document.querySelector('#tour-passage')) {
+      steps.push({
+        element: '#tour-passage',
+        popover: {
+          title: 'Reading Passage Editor',
+          description:
+            'Write or paste your reading passage here using this advanced editor. Use the rich toolbar to format text (bold, italic, list, table, or upload images). IMPORTANT: For Fill-in-the-Blanks questions (Format H & I), click the "(1)_" icon in the toolbar to insert blank placeholders into the text.',
+          side: 'top',
+          align: 'start',
+        },
+      });
+    }
+
+    if (document.querySelector('#tour-questions-section')) {
+      steps.push({
+        element: '#tour-questions-section',
+        popover: {
+          title: 'Questions List',
+          description:
+            'Manage questions for this part. You can write question stems, explanation text, and answer choices. Check the checkbox next to the correct option to set the answer key.',
+          side: 'top',
+          align: 'start',
+        },
+      });
+    }
+
+    if (document.querySelector('#tour-add-question-btn')) {
+      steps.push({
+        element: '#tour-add-question-btn',
+        popover: {
+          title: 'Add Question',
+          description: 'Click here to append a new multiple choice question to this reading part.',
+          side: 'top',
+          align: 'center',
+        },
+      });
+    }
+
+    steps.push({
+      element: '#tour-add-part-btn',
+      popover: {
+        title: 'Create Reading Parts',
+        description:
+          'Click here to add a new reading part. You can choose different formats like Multiple Choice, Fill in the Blanks, or Matching.',
+        side: 'top',
+        align: 'center',
+      },
+    });
+
+    steps.push({
+      element: '#tour-actions-bar',
+      popover: {
+        title: 'Action Panel',
+        description:
+          'Once finished, use this panel to Preview the test, Save it as a Draft, Send it for Review, or Publish it immediately.',
+        side: 'bottom',
+        align: 'center',
+      },
+    });
+
+    const driverObj = driver({
+      showProgress: true,
+      animate: true,
+      doneBtnText: 'Finish',
+      closeBtnText: 'Close',
+      nextBtnText: 'Next',
+      prevBtnText: 'Back',
+      steps: steps,
+    });
+
+    driverObj.drive();
+  };
+
   const extractLocalAnswersFromQuestions = (questions) => {
     if (!questions || !Array.isArray(questions)) return [];
 
@@ -889,6 +1019,7 @@ export default function Page() {
         />
         {/* -------- Function Buttons Section --------- */}
         <Box
+          id="tour-actions-bar"
           sx={{
             position: 'sticky',
             top: 0,
@@ -918,6 +1049,7 @@ export default function Page() {
             onSendReview={() => handleUploadParts('I')}
             onSaveDraft={() => handleUploadParts('D')}
             onPublish={() => handleUploadParts('P')}
+            onTour={handleStartTour}
             isLoading={isLoading}
           />
         </Box>
@@ -950,7 +1082,7 @@ export default function Page() {
           >
             <Box sx={{ ...uploadReadingStyles.uploadReadingFormSection, flex: 1, minWidth: 0 }}>
               {/* -------------------- Basic Information -------------------- */}
-              <Box sx={uploadReadingStyles.basicInfoContainer}>
+              <Box id="tour-basic-info" sx={uploadReadingStyles.basicInfoContainer}>
                 <Box
                   sx={{
                     display: 'flex',
@@ -972,7 +1104,7 @@ export default function Page() {
                   </Typography>
                 </Box>
                 <Box sx={uploadReadingStyles.nameTestAndTime}>
-                  <FormControl fullWidth sx={uploadReadingStyles.formControl}>
+                  <FormControl id="tour-test-title" fullWidth sx={uploadReadingStyles.formControl}>
                     <FormLabel sx={uploadReadingStyles.labelInput}>
                       Test title
                       <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
@@ -988,7 +1120,7 @@ export default function Page() {
                       sx={uploadReadingStyles.input}
                     />
                   </FormControl>
-                  <FormControl fullWidth sx={uploadReadingStyles.formControl}>
+                  <FormControl id="tour-test-time" fullWidth sx={uploadReadingStyles.formControl}>
                     <FormLabel sx={uploadReadingStyles.labelInput}>
                       Time
                       <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
@@ -1021,7 +1153,7 @@ export default function Page() {
                     sx={uploadReadingStyles.input}
                   />
                 </FormControl>
-                <FormControl fullWidth sx={uploadReadingStyles.formControl}>
+                <FormControl id="tour-test-level" fullWidth sx={uploadReadingStyles.formControl}>
                   <FormLabel sx={uploadReadingStyles.labelInput}>
                     Level
                     <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
@@ -1187,7 +1319,7 @@ export default function Page() {
                   </Box>
                 ))}
               {/* -------- Add New Part Button --------- */}
-              <Box sx={addPartBox} onClick={() => handleAddPart()}>
+              <Box id="tour-add-part-btn" sx={addPartBox} onClick={() => handleAddPart()}>
                 <AddRoundedIcon sx={{ fontSize: '1.4rem' }} /> Add New Part
               </Box>
             </Box>

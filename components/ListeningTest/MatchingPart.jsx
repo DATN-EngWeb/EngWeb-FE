@@ -18,6 +18,7 @@ import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import AudioUploader from '../Upload/AudioUploader';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -72,11 +73,159 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
     };
   }, [openSelectId]);
 
+  const partId = part.id || `part-${index}`;
+
   const toggleQuestionCollapse = (questionId) => {
     setCollapsedQuestions((prev) => ({
       ...prev,
       [questionId]: !prev[questionId],
     }));
+  };
+
+  const handlePartTour = (e) => {
+    e.stopPropagation();
+    const { driver } = require('driver.js');
+    const steps = [];
+
+    if (document.querySelector(`#tour-part-header-${partId}`)) {
+      steps.push({
+        element: `#tour-part-header-${partId}`,
+        popover: {
+          title: 'Matching Part',
+          description: `Part ${index + 1} (Matching). Students listen to audio and match each question item to the correct answer label.`,
+          side: 'bottom',
+          align: 'start',
+        },
+      });
+    }
+    if (document.querySelector(`#tour-score-${partId}`)) {
+      steps.push({
+        element: `#tour-score-${partId}`,
+        popover: {
+          title: 'Score per Question',
+          description: 'Set the points awarded for each correctly matched pair.',
+          side: 'right',
+          align: 'start',
+        },
+      });
+    }
+    if (document.querySelector(`#tour-audio-${partId}`)) {
+      steps.push({
+        element: `#tour-audio-${partId}`,
+        popover: {
+          title: 'Audio File',
+          description:
+            'Upload the audio clip students will listen to before matching. Supports MP3 and M4A.',
+          side: 'top',
+          align: 'start',
+        },
+      });
+    }
+    if (document.querySelector(`#tour-instruction-${partId}`)) {
+      steps.push({
+        element: `#tour-instruction-${partId}`,
+        popover: {
+          title: 'Instruction Text',
+          description:
+            'Write the task instruction. Example: "Listen and match each item on the left with the correct answer on the right."',
+          side: 'top',
+          align: 'start',
+        },
+      });
+    }
+    if (document.querySelector(`#tour-questions-${partId}`)) {
+      steps.push({
+        element: `#tour-questions-${partId}`,
+        popover: {
+          title: 'Questions (Left Column)',
+          description:
+            'Each card is a question item students must match. Enter the question/statement text and select the correct answer label from the dropdown.',
+          side: 'top',
+          align: 'start',
+        },
+      });
+      if (document.querySelector(`#tour-questions-${partId} .tour-question-input`)) {
+        steps.push({
+          element: `#tour-questions-${partId} .tour-question-input`,
+          popover: {
+            title: 'Question / Statement',
+            description:
+              'Enter the prompt text that students must match to an answer. Example: "The capital city of France".',
+            side: 'top',
+            align: 'start',
+          },
+        });
+      }
+      if (document.querySelector(`#tour-questions-${partId} .tour-answer-select`)) {
+        steps.push({
+          element: `#tour-questions-${partId} .tour-answer-select`,
+          popover: {
+            title: 'Correct Answer Dropdown',
+            description:
+              'Select the correct letter label (A, B, C...) that this question maps to. The labels correspond to answer items in the Answers panel below.',
+            side: 'left',
+            align: 'start',
+          },
+        });
+      }
+      if (document.querySelector(`#tour-questions-${partId} .tour-explanation-input`)) {
+        steps.push({
+          element: `#tour-questions-${partId} .tour-explanation-input`,
+          popover: {
+            title: 'Explanation',
+            description:
+              'Provide an optional explanation for why this question maps to that answer. Shown to students during result review.',
+            side: 'top',
+            align: 'start',
+          },
+        });
+      }
+      if (document.querySelector(`#tour-questions-${partId} .tour-add-question-btn`)) {
+        steps.push({
+          element: `#tour-questions-${partId} .tour-add-question-btn`,
+          popover: {
+            title: 'Add New Question',
+            description: 'Click "+ Add question" to add another matching question item.',
+            side: 'top',
+            align: 'center',
+          },
+        });
+      }
+    }
+    if (document.querySelector(`#tour-answers-${partId}`)) {
+      steps.push({
+        element: `#tour-answers-${partId}`,
+        popover: {
+          title: 'Answers (Right Column)',
+          description:
+            'These are the answer options (A, B, C...) students will match to the questions. A new answer label is added automatically when you add a question.',
+          side: 'top',
+          align: 'start',
+        },
+      });
+      if (document.querySelector(`#tour-answers-${partId} .tour-answer-text`)) {
+        steps.push({
+          element: `#tour-answers-${partId} .tour-answer-text`,
+          popover: {
+            title: 'Answer Text',
+            description: 'Enter the text for this answer option. Example: "Paris".',
+            side: 'top',
+            align: 'start',
+          },
+        });
+      }
+    }
+
+    const driverObj = driver({
+      showProgress: true,
+      animate: true,
+      doneBtnText: 'Finish',
+      closeBtnText: 'Close',
+      nextBtnText: 'Next',
+      prevBtnText: 'Back',
+      steps,
+    });
+    driverObj.drive();
   };
 
   const updatePart = (newPart) => {
@@ -177,7 +326,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
 
   return (
     <>
-      <Box sx={partHeader}>
+      <Box id={`tour-part-header-${partId}`} sx={partHeader}>
         <Box sx={sectionHeader}>
           <Box sx={accentBar} />
           <Box>
@@ -190,7 +339,27 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
           </Box>
         </Box>
 
-        <Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={handlePartTour}
+            startIcon={<HelpOutlineIcon sx={{ fontSize: '0.9rem !important' }} />}
+            sx={{
+              color: '#FF9E45',
+              borderColor: '#FF9E45',
+              fontWeight: 600,
+              fontSize: '0.75rem',
+              textTransform: 'none',
+              borderRadius: '16px',
+              py: 0.25,
+              px: 1.5,
+              mr: 1,
+              '&:hover': { backgroundColor: '#FFEAD4', borderColor: '#FF9E45' },
+            }}
+          >
+            Guide
+          </Button>
           <IconButton onClick={onDelete} sx={trashIconButton}>
             <DeleteRoundedIcon sx={{ fontSize: '1.4rem' }} />
           </IconButton>
@@ -221,7 +390,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
               minWidth: 0,
             }}
           >
-            <Box sx={{ mb: 3 }}>
+            <Box id={`tour-score-${partId}`} sx={{ mb: 3 }}>
               <Box sx={rowContent}>
                 <Typography sx={labelText}>
                   The score for each question <span style={{ color: 'red' }}>*</span>
@@ -244,7 +413,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
               />
             </Box>
 
-            <Box sx={{ mb: 3 }}>
+            <Box id={`tour-audio-${partId}`} sx={{ mb: 3 }}>
               <Typography sx={labelText}>
                 Audio File <span style={{ color: 'red' }}>*</span>
               </Typography>
@@ -255,7 +424,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
               />
             </Box>
 
-            <Box sx={{ mb: 3 }}>
+            <Box id={`tour-instruction-${partId}`} sx={{ mb: 3 }}>
               <Box sx={rowContent}>
                 <Typography sx={labelText}>
                   Instruction <span style={{ color: 'red' }}>*</span>
@@ -273,7 +442,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
             </Box>
 
             {/* -------------- Questions Section -------------- */}
-            <Box>
+            <Box id={`tour-questions-${partId}`}>
               <Box sx={rowContent}>
                 <Typography sx={labelText}>
                   Questions <span style={{ color: 'red' }}>*</span>
@@ -335,6 +504,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <TextField
                               size="small"
+                              className="tour-question-input"
                               placeholder="Question text..."
                               value={question.text}
                               onChange={(e) => setQuestionText(qIdx, e.target.value)}
@@ -345,6 +515,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                             <FormControl
                               id={`select-${question.id}`}
                               size="small"
+                              className="tour-answer-select"
                               sx={{
                                 width: 110,
                                 '& .MuiOutlinedInput-root': {
@@ -376,6 +547,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                           <TextField
                             size="small"
                             fullWidth
+                            className="tour-explanation-input"
                             placeholder="Enter explanation"
                             value={question.explanation || ''}
                             onChange={(e) => {
@@ -393,7 +565,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                       </Collapse>
                     </Paper>
                   ))}
-                  <Box onClick={addQuestion} sx={addQuestionBox}>
+                  <Box onClick={addQuestion} className="tour-add-question-btn" sx={addQuestionBox}>
                     <AddRoundedIcon sx={{ fontSize: '1.2rem' }} />
                     Add question
                   </Box>
@@ -402,7 +574,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
             </Box>
 
             {/* -------------- Answers Section -------------- */}
-            <Box>
+            <Box id={`tour-answers-${partId}`}>
               <Box sx={rowContent}>
                 <Typography sx={labelText}>
                   Answers <span style={{ color: 'red' }}>*</span>
@@ -434,6 +606,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
 
                         <TextField
                           size="small"
+                          className="tour-answer-text"
                           placeholder="Answer text"
                           value={answer.text}
                           onChange={(e) => setAnswerText(aIdx, e.target.value)}

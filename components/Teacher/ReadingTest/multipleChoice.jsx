@@ -29,6 +29,353 @@ export default function MultipleChoiceForm({
   const [isOpen, setIsOpen] = React.useState(true);
   const [collapsedQuestions, setCollapsedQuestions] = React.useState({});
 
+  const handlePartTour = (e) => {
+    e.stopPropagation();
+    const { driver } = require('driver.js');
+
+    const steps = [
+      {
+        element: `#tour-part-header-${partId}`,
+        popover: {
+          title: 'Multiple Choice Part',
+          description: `This is Part ${index + 1} (${part.format === 'G' ? 'Long Passage' : 'Short Texts'}). Students will read the passage and select the correct option among multiple choices.`,
+          side: 'bottom',
+          align: 'start',
+        },
+      },
+      {
+        element: `#tour-score-${partId}`,
+        popover: {
+          title: 'Points per Question',
+          description:
+            'Define the default point score awarded for each correct multiple choice question in this part.',
+          side: 'right',
+          align: 'start',
+        },
+      },
+    ];
+
+    if (part.format === 'G' && document.querySelector(`#tour-passage-${partId}`)) {
+      steps.push({
+        element: `#tour-passage-${partId}`,
+        popover: {
+          title: 'Reading Passage Editor',
+          description:
+            'Use the CKEditor below to write or paste the main reading text. Format typography, embed tables/lists, or upload images directly.',
+          side: 'top',
+          align: 'start',
+        },
+      });
+
+      if (document.querySelector(`#tour-passage-${partId} .ck-toolbar`)) {
+        const toolbarSelectors = [
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Undo"]`,
+            title: 'Undo',
+            desc: 'Reverse your last text change or editor action.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Redo"]`,
+            title: 'Redo',
+            desc: 'Re-apply the change you just reversed with Undo.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Heading"]`,
+            title: 'Paragraph Format & Headings',
+            desc: 'Switch between Paragraph text, major Heading titles, and subtitles to structure sections.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Text alignment"]`,
+            title: 'Text Alignment',
+            desc: 'Align text lines to the Left, Center, Right, or Justify the text block.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Bold"]`,
+            title: 'Bold Text Style',
+            desc: 'Style text in bold to emphasize critical names, vocabulary, or keywords.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Italic"]`,
+            title: 'Italic Text Style',
+            desc: 'Apply italics to titles, foreign phrases, or book/article citations.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Underline"]`,
+            title: 'Underline Text Style',
+            desc: 'Add an underline style to highlight core statements or sections.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Strikethrough"]`,
+            title: 'Strikethrough Style',
+            desc: 'Cross out text lines using strikethrough styling.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Link"]`,
+            title: 'Insert Link',
+            desc: 'Hyperlink words to external web URLs, reference materials, or online definitions.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Block quote"]`,
+            title: 'Block Quote',
+            desc: 'Indicate longer, indented direct quotations or citation segments from external reading sources.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar .ck-splitbutton__action[data-cke-tooltip-text="Bulleted List"], #tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Bulleted List"]`,
+            title: 'Bulleted List',
+            desc: 'Format text points into a bulleted list for clean reading outlines.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar .ck-splitbutton__action[data-cke-tooltip-text="Numbered List"], #tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Numbered List"]`,
+            title: 'Numbered List',
+            desc: 'Format text points into an ordered, numbered list.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Decrease indent"]`,
+            title: 'Decrease Indent',
+            desc: 'Shift paragraph margins leftwards back to the primary boundary.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Increase indent"]`,
+            title: 'Increase Indent',
+            desc: 'Shift paragraph margins rightwards to format nested blocks or lists.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Insert Blank"]`,
+            title: 'Insert Blank (1)_',
+            desc: 'Insert a numbered blank placeholder into the passage. Each blank generates a corresponding answer card below.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Upload image from computer"]`,
+            title: 'Upload Image from Computer',
+            desc: 'Enrich your passage by uploading custom charts, pictures, map guides, or diagrams.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Insert table"]`,
+            title: 'Insert Table',
+            desc: 'Insert standard tables to organize information or comparison data grids.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Horizontal line"]`,
+            title: 'Horizontal Line Divider',
+            desc: 'Insert a straight divider line to visually separate different sections or paragraphs.',
+          },
+        ];
+
+        toolbarSelectors.forEach((item) => {
+          if (document.querySelector(item.sel)) {
+            steps.push({
+              element: item.sel,
+              popover: {
+                title: item.title,
+                description: item.desc,
+                side: 'bottom',
+                align: 'start',
+              },
+            });
+          }
+        });
+      }
+    }
+
+    if (document.querySelector(`#tour-questions-${partId}`)) {
+      steps.push({
+        element: `#tour-questions-${partId}`,
+        popover: {
+          title: 'Questions Section',
+          description:
+            'This is the Questions panel. Each card here represents one multiple choice question. You can add, delete, and configure each question including content, explanation, and answer options.',
+          side: 'top',
+          align: 'start',
+        },
+      });
+
+      if (document.querySelector(`#tour-questions-${partId} .tour-question-input`)) {
+        steps.push({
+          element: `#tour-questions-${partId} .tour-question-input`,
+          popover: {
+            title: 'Question Content',
+            description:
+              'Enter the text of the reading comprehension question here. For format F, you can write rich-text questions and insert blank placeholders using the editor toolbar.',
+            side: 'top',
+            align: 'start',
+          },
+        });
+
+        // Format F question editor toolbar steps (left to right)
+        if (document.querySelector(`#tour-questions-${partId} .tour-question-input .ck-toolbar`)) {
+          const qBase = `#tour-questions-${partId} .tour-question-input .ck-toolbar`;
+          const questionToolbarSelectors = [
+            {
+              sel: `${qBase} [data-cke-tooltip-text^="Undo"]`,
+              title: 'Undo',
+              desc: 'Reverse your last text change or editor action.',
+            },
+            {
+              sel: `${qBase} [data-cke-tooltip-text^="Redo"]`,
+              title: 'Redo',
+              desc: 'Re-apply the change you just reversed with Undo.',
+            },
+            {
+              sel: `${qBase} [data-cke-tooltip-text="Heading"]`,
+              title: 'Paragraph Format & Headings',
+              desc: 'Switch between Paragraph text, major Heading titles, and subtitles to structure question content.',
+            },
+            {
+              sel: `${qBase} [data-cke-tooltip-text="Text alignment"]`,
+              title: 'Text Alignment',
+              desc: 'Align text to the Left, Center, Right, or Justify inside the question.',
+            },
+            {
+              sel: `${qBase} [data-cke-tooltip-text^="Bold"]`,
+              title: 'Bold',
+              desc: 'Style text in bold to emphasize critical names, vocabulary, or key terms.',
+            },
+            {
+              sel: `${qBase} [data-cke-tooltip-text^="Italic"]`,
+              title: 'Italic',
+              desc: 'Apply italics to titles, foreign phrases, or cited excerpts.',
+            },
+            {
+              sel: `${qBase} [data-cke-tooltip-text^="Underline"]`,
+              title: 'Underline',
+              desc: 'Add an underline to highlight important phrases.',
+            },
+            {
+              sel: `${qBase} [data-cke-tooltip-text^="Strikethrough"]`,
+              title: 'Strikethrough',
+              desc: 'Cross out text using strikethrough styling.',
+            },
+            {
+              sel: `${qBase} [data-cke-tooltip-text^="Link"]`,
+              title: 'Insert Link',
+              desc: 'Hyperlink a word to an external URL or reference material.',
+            },
+            {
+              sel: `${qBase} [data-cke-tooltip-text="Block quote"]`,
+              title: 'Block Quote',
+              desc: 'Display a longer indented quotation or citation segment.',
+            },
+            {
+              sel: `${qBase} .ck-splitbutton__action[data-cke-tooltip-text="Bulleted List"], ${qBase} [data-cke-tooltip-text="Bulleted List"]`,
+              title: 'Bulleted List',
+              desc: 'Format text into a bulleted list for clear reading outlines.',
+            },
+            {
+              sel: `${qBase} .ck-splitbutton__action[data-cke-tooltip-text="Numbered List"], ${qBase} [data-cke-tooltip-text="Numbered List"]`,
+              title: 'Numbered List',
+              desc: 'Format text into an ordered, numbered list.',
+            },
+            {
+              sel: `${qBase} [data-cke-tooltip-text="Decrease indent"]`,
+              title: 'Decrease Indent',
+              desc: 'Shift paragraph margins leftwards back to the primary boundary.',
+            },
+            {
+              sel: `${qBase} [data-cke-tooltip-text="Increase indent"]`,
+              title: 'Increase Indent',
+              desc: 'Shift paragraph margins rightwards to format nested blocks or lists.',
+            },
+            {
+              sel: `${qBase} [data-cke-tooltip-text="Insert Blank"]`,
+              title: 'Insert Blank (1)_',
+              desc: 'Insert a numbered blank placeholder inside the question text. Each blank added here will create a corresponding answer entry below.',
+            },
+            {
+              sel: `${qBase} [data-cke-tooltip-text="Upload image from computer"]`,
+              title: 'Upload Image from Computer',
+              desc: 'Attach an image, diagram, or chart directly to this question.',
+            },
+            {
+              sel: `${qBase} [data-cke-tooltip-text="Insert table"]`,
+              title: 'Insert Table',
+              desc: 'Insert a table to present structured data within the question text.',
+            },
+            {
+              sel: `${qBase} [data-cke-tooltip-text="Horizontal line"]`,
+              title: 'Horizontal Line Divider',
+              desc: 'Insert a divider line to visually separate sections of the question.',
+            },
+          ];
+
+          questionToolbarSelectors.forEach((item) => {
+            if (document.querySelector(item.sel)) {
+              steps.push({
+                element: item.sel,
+                popover: {
+                  title: item.title,
+                  description: item.desc,
+                  side: 'bottom',
+                  align: 'start',
+                },
+              });
+            }
+          });
+        }
+      }
+      if (document.querySelector(`#tour-questions-${partId} .tour-explanation-input`)) {
+        steps.push({
+          element: `#tour-questions-${partId} .tour-explanation-input`,
+          popover: {
+            title: 'Question Explanation',
+            description:
+              'Provide an explanation or translation for the correct answer to help students review their test results.',
+            side: 'top',
+            align: 'start',
+          },
+        });
+      }
+      if (document.querySelector(`#tour-questions-${partId} .tour-option-item`)) {
+        steps.push({
+          element: `#tour-questions-${partId} .tour-option-item`,
+          popover: {
+            title: 'Answer Options',
+            description:
+              'Fill in the choice options here. Click the circular radio button to the left of the option to mark it as the correct answer.',
+            side: 'top',
+            align: 'start',
+          },
+        });
+      }
+      if (document.querySelector(`#tour-questions-${partId} .tour-add-option-btn`)) {
+        steps.push({
+          element: `#tour-questions-${partId} .tour-add-option-btn`,
+          popover: {
+            title: 'Add New Option',
+            description:
+              'Click this "+ Add option" button to insert an additional answer choice input card for this question.',
+            side: 'top',
+            align: 'center',
+          },
+        });
+      }
+    }
+
+    if (document.querySelector(`#tour-add-btn-${partId}`)) {
+      steps.push({
+        element: `#tour-add-btn-${partId}`,
+        popover: {
+          title: 'Add New Question',
+          description:
+            'Click this button to append a new multiple choice question card to this part.',
+          side: 'top',
+          align: 'center',
+        },
+      });
+    }
+
+    const driverObj = driver({
+      showProgress: true,
+      animate: true,
+      doneBtnText: 'Finish',
+      closeBtnText: 'Close',
+      nextBtnText: 'Next',
+      prevBtnText: 'Back',
+      steps: steps,
+    });
+
+    driverObj.drive();
+  };
+
   const toggleQuestionCollapse = (questionId) => {
     setCollapsedQuestions((prev) => ({
       ...prev,
@@ -170,7 +517,7 @@ export default function MultipleChoiceForm({
   return (
     <>
       {/* ------------- Heading ------------- */}
-      <Box sx={uploadReadingStyles.partEditorHeader}>
+      <Box id={`tour-part-header-${partId}`} sx={uploadReadingStyles.partEditorHeader}>
         <Box
           sx={{
             display: 'flex',
@@ -212,8 +559,32 @@ export default function MultipleChoiceForm({
               gap: 0.5,
               flexShrink: 0,
               ml: 'auto',
+              alignItems: 'center',
             }}
           >
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={handlePartTour}
+              startIcon={<HelpOutlineIcon sx={{ fontSize: '0.9rem !important' }} />}
+              sx={{
+                color: '#FF9E45',
+                borderColor: '#FF9E45',
+                fontWeight: 600,
+                fontSize: '0.75rem',
+                textTransform: 'none',
+                borderRadius: '16px',
+                py: 0.25,
+                px: 1.5,
+                mr: 2,
+                '&:hover': {
+                  backgroundColor: '#FFEAD4',
+                  borderColor: '#FF9E45',
+                },
+              }}
+            >
+              Guide
+            </Button>
             <DeleteRoundedIcon
               onClick={() => handleDeletePart(partId)}
               sx={{
@@ -252,6 +623,7 @@ export default function MultipleChoiceForm({
           <Box sx={{ ...uploadReadingStyles.partEditorColumn, width: '100%', minWidth: 0, mb: 0 }}>
             {/* -------------- Total Each Score -------------- */}
             <FormControl
+              id={`tour-score-${partId}`}
               fullWidth
               sx={{ ...uploadReadingStyles.formControl, mb: part.format === 'F' ? 1 : 3 }}
             >
@@ -277,7 +649,11 @@ export default function MultipleChoiceForm({
             </FormControl>
             {/* -------------- Description Section -------------- */}
             {part.format === 'G' && (
-              <FormControl fullWidth sx={uploadReadingStyles.formControl}>
+              <FormControl
+                id={`tour-passage-${partId}`}
+                fullWidth
+                sx={uploadReadingStyles.formControl}
+              >
                 <Box
                   sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}
                 >
@@ -300,7 +676,10 @@ export default function MultipleChoiceForm({
 
           {/* -------------- Right Column: Questions -------------- */}
           <Box sx={{ ...uploadReadingStyles.partEditorColumn, width: '100%', minWidth: 0, mb: 0 }}>
-            <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
+            <Box
+              id={`tour-questions-${partId}`}
+              sx={{ ...uploadReadingStyles.formControl, width: '100%' }}
+            >
               <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                 <FormLabel sx={uploadReadingStyles.labelInput}>
                   Questions
@@ -395,6 +774,7 @@ export default function MultipleChoiceForm({
                                 >
                                   <FormControl
                                     fullWidth
+                                    className="tour-question-input"
                                     sx={{
                                       ...uploadReadingStyles.formControl,
                                       position: 'relative',
@@ -413,6 +793,7 @@ export default function MultipleChoiceForm({
                                   <OutlinedInput
                                     size="small"
                                     multiline
+                                    className="tour-explanation-input"
                                     placeholder="Enter explanation here"
                                     defaultValue={question.explanation}
                                     sx={uploadReadingStyles.inputMultiline}
@@ -432,6 +813,7 @@ export default function MultipleChoiceForm({
                                   <OutlinedInput
                                     size="small"
                                     multiline
+                                    className="tour-question-input"
                                     placeholder="Enter question here"
                                     defaultValue={question.content}
                                     sx={uploadReadingStyles.inputMultiline}
@@ -442,6 +824,7 @@ export default function MultipleChoiceForm({
                                   <OutlinedInput
                                     size="small"
                                     multiline
+                                    className="tour-explanation-input"
                                     placeholder="Enter explanation here"
                                     defaultValue={question.explanation}
                                     sx={uploadReadingStyles.inputMultiline}
@@ -480,6 +863,7 @@ export default function MultipleChoiceForm({
                                     .map((option, oIndex) => (
                                       <Box
                                         key={`${question.id}-${option.id}`}
+                                        className="tour-option-item"
                                         sx={multipleChoiceStyles.optionContainer}
                                       >
                                         <Checkbox
@@ -535,6 +919,7 @@ export default function MultipleChoiceForm({
                                 {/* --------------- Add Option --------------- */}
                                 <Typography
                                   onClick={() => handleAddOption(question.id)}
+                                  className="tour-add-option-btn"
                                   sx={multipleChoiceStyles.buttonAndIconContainer}
                                 >
                                   <AddRoundedIcon sx={{ fontSize: '1.4rem' }} />
@@ -546,7 +931,11 @@ export default function MultipleChoiceForm({
                         </Box>
                       ))}
                   </Box>
-                  <Box onClick={handleAddQuestion} sx={multipleChoiceStyles.addQuestionBox}>
+                  <Box
+                    id={`tour-add-btn-${partId}`}
+                    onClick={handleAddQuestion}
+                    sx={multipleChoiceStyles.addQuestionBox}
+                  >
                     <AddRoundedIcon sx={{ fontSize: '1.2rem' }} />
                     Add question
                   </Box>

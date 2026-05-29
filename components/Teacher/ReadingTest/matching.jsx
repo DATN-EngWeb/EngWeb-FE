@@ -6,7 +6,8 @@ import { useEffect } from 'react';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
-import { FormControl, FormLabel, OutlinedInput, Select, MenuItem } from '@mui/material';
+import { FormControl, FormLabel, OutlinedInput, Select, MenuItem, Button } from '@mui/material';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import {
   multipleChoiceStyles,
   matchingStyles,
@@ -68,6 +69,224 @@ export default function MatchingForm({
       observer.disconnect();
     };
   }, [openSelectId]);
+
+  const handlePartTour = (e) => {
+    e.stopPropagation();
+    const { driver } = require('driver.js');
+
+    const steps = [
+      {
+        element: `#tour-part-header-${partId}`,
+        popover: {
+          title: 'Matching Part',
+          description: `This is Part ${index + 1} (Matching). Students will read passages and match them to correct categories, headings, or statements.`,
+          side: 'bottom',
+          align: 'start',
+        },
+      },
+      {
+        element: `#tour-score-${partId}`,
+        popover: {
+          title: 'Points per Match',
+          description:
+            'Define the default point score awarded for each correct match in this part.',
+          side: 'right',
+          align: 'start',
+        },
+      },
+    ];
+
+    if (document.querySelector(`#tour-passage-${partId}`)) {
+      steps.push({
+        element: `#tour-passage-${partId}`,
+        popover: {
+          title: 'Passage Texts',
+          description:
+            'Enter the base passage text in this editor. Students will read this to perform matching.',
+          side: 'top',
+          align: 'start',
+        },
+      });
+
+      if (document.querySelector(`#tour-passage-${partId} .ck-toolbar`)) {
+        const toolbarSelectors = [
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Undo"]`,
+            title: 'Undo',
+            desc: 'Reverse your last text change or editor action.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Redo"]`,
+            title: 'Redo',
+            desc: 'Re-apply the change you just reversed with Undo.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Heading"]`,
+            title: 'Paragraph Format & Headings',
+            desc: 'Switch between Paragraph text, major Heading titles, and subtitles to structure sections.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Text alignment"]`,
+            title: 'Text Alignment',
+            desc: 'Align text lines to the Left, Center, Right, or Justify the text block.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Bold"]`,
+            title: 'Bold Text Style',
+            desc: 'Style text in bold to emphasize critical names, vocabulary, or keywords.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Italic"]`,
+            title: 'Italic Text Style',
+            desc: 'Apply italics to titles, foreign phrases, or book/article citations.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Underline"]`,
+            title: 'Underline Text Style',
+            desc: 'Add an underline style to highlight core statements or sections.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Strikethrough"]`,
+            title: 'Strikethrough Style',
+            desc: 'Cross out text lines using strikethrough styling.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text^="Link"]`,
+            title: 'Insert Link',
+            desc: 'Hyperlink words to external web URLs, reference materials, or online definitions.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Block quote"]`,
+            title: 'Block Quote',
+            desc: 'Indicate longer, indented direct quotations or citation segments from external reading sources.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar .ck-splitbutton__action[data-cke-tooltip-text="Bulleted List"], #tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Bulleted List"]`,
+            title: 'Bulleted List',
+            desc: 'Format text points into a bulleted list for clean reading outlines.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar .ck-splitbutton__action[data-cke-tooltip-text="Numbered List"], #tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Numbered List"]`,
+            title: 'Numbered List',
+            desc: 'Format text points into an ordered, numbered list.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Decrease indent"]`,
+            title: 'Decrease Indent',
+            desc: 'Shift paragraph margins leftwards back to the primary boundary.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Increase indent"]`,
+            title: 'Increase Indent',
+            desc: 'Shift paragraph margins rightwards to format nested blocks or lists.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Upload image from computer"]`,
+            title: 'Upload Image from Computer',
+            desc: 'Enrich your passage by uploading custom charts, pictures, map guides, or diagrams.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Insert table"]`,
+            title: 'Insert Table',
+            desc: 'Insert standard tables to organize information or comparison data grids.',
+          },
+          {
+            sel: `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Horizontal line"]`,
+            title: 'Horizontal Line Divider',
+            desc: 'Insert a straight divider line to visually separate different sections or paragraphs.',
+          },
+        ];
+
+        toolbarSelectors.forEach((item) => {
+          if (document.querySelector(item.sel)) {
+            steps.push({
+              element: item.sel,
+              popover: {
+                title: item.title,
+                description: item.desc,
+                side: 'bottom',
+                align: 'start',
+              },
+            });
+          }
+        });
+      }
+    }
+
+    if (document.querySelector(`#tour-questions-${partId}`)) {
+      steps.push({
+        element: `#tour-questions-${partId}`,
+        popover: {
+          title: 'Matching Questions Section',
+          description:
+            'This panel lists all matching question items. Each question is paired with a dropdown to select its correct matching answer from the answer pool on the right.',
+          side: 'top',
+          align: 'start',
+        },
+      });
+
+      if (document.querySelector(`#tour-questions-${partId} .tour-question-input`)) {
+        steps.push({
+          element: `#tour-questions-${partId} .tour-question-input`,
+          popover: {
+            title: 'Question / Statement',
+            description:
+              'Enter the question prompt or statement that students must match to the correct answer option. Example: "The capital city of France".',
+            side: 'top',
+            align: 'start',
+          },
+        });
+      }
+      if (document.querySelector(`#tour-questions-${partId} .tour-explanation-input`)) {
+        steps.push({
+          element: `#tour-questions-${partId} .tour-explanation-input`,
+          popover: {
+            title: 'Explanation',
+            description:
+              'Provide an optional explanation for why this question maps to its correct answer. Students will see this during result review.',
+            side: 'top',
+            align: 'start',
+          },
+        });
+      }
+      if (document.querySelector(`#tour-questions-${partId} .tour-answer-select`)) {
+        steps.push({
+          element: `#tour-questions-${partId} .tour-answer-select`,
+          popover: {
+            title: 'Correct Answer Dropdown',
+            description:
+              'Select the correct matching label (A, B, C...) from this dropdown. The labels correspond to the answer choices defined in the Answer Options panel.',
+            side: 'left',
+            align: 'start',
+          },
+        });
+      }
+      if (document.querySelector(`#tour-questions-${partId} .tour-add-question-btn`)) {
+        steps.push({
+          element: `#tour-questions-${partId} .tour-add-question-btn`,
+          popover: {
+            title: 'Add New Question',
+            description:
+              'Click "+ Add question" to append a new matching question item to this part.',
+            side: 'top',
+            align: 'center',
+          },
+        });
+      }
+    }
+
+    const driverObj = driver({
+      showProgress: true,
+      animate: true,
+      doneBtnText: 'Finish',
+      closeBtnText: 'Close',
+      nextBtnText: 'Next',
+      prevBtnText: 'Back',
+      steps: steps,
+    });
+
+    driverObj.drive();
+  };
 
   const activeCount = questions.filter((q) => q.action !== 'delete').length;
 
@@ -190,7 +409,7 @@ export default function MatchingForm({
   return (
     <>
       {/* ------------- Heading ------------- */}
-      <Box sx={uploadReadingStyles.partEditorHeader}>
+      <Box id={`tour-part-header-${partId}`} sx={uploadReadingStyles.partEditorHeader}>
         <Box
           sx={{
             display: 'flex',
@@ -232,8 +451,32 @@ export default function MatchingForm({
               gap: 0.5,
               flexShrink: 0,
               ml: 'auto',
+              alignItems: 'center',
             }}
           >
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={handlePartTour}
+              startIcon={<HelpOutlineIcon sx={{ fontSize: '0.9rem !important' }} />}
+              sx={{
+                color: '#FF9E45',
+                borderColor: '#FF9E45',
+                fontWeight: 600,
+                fontSize: '0.75rem',
+                textTransform: 'none',
+                borderRadius: '16px',
+                py: 0.25,
+                px: 1.5,
+                mr: 2,
+                '&:hover': {
+                  backgroundColor: '#FFEAD4',
+                  borderColor: '#FF9E45',
+                },
+              }}
+            >
+              Guide
+            </Button>
             <DeleteRoundedIcon
               onClick={() => handleDeletePart(partId)}
               sx={{
@@ -271,7 +514,11 @@ export default function MatchingForm({
           {/* -------------- Left Column: Score & Passage -------------- */}
           <Box sx={{ ...uploadReadingStyles.partEditorColumn, width: '100%', minWidth: 0, mb: 0 }}>
             {/* -------------- Total Each Score -------------- */}
-            <FormControl fullWidth sx={{ ...uploadReadingStyles.formControl, mb: 3 }}>
+            <FormControl
+              id={`tour-score-${partId}`}
+              fullWidth
+              sx={{ ...uploadReadingStyles.formControl, mb: 3 }}
+            >
               <FormLabel sx={uploadReadingStyles.labelInput}>
                 The score for each question
                 <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
@@ -293,7 +540,11 @@ export default function MatchingForm({
               />
             </FormControl>
             {/* -------------- Description Section -------------- */}
-            <FormControl fullWidth sx={uploadReadingStyles.formControl}>
+            <FormControl
+              id={`tour-passage-${partId}`}
+              fullWidth
+              sx={uploadReadingStyles.formControl}
+            >
               <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                 <FormLabel sx={uploadReadingStyles.labelInput}>
                   Passage
@@ -324,7 +575,10 @@ export default function MatchingForm({
             }}
           >
             {/* -------------- Questions Section -------------- */}
-            <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
+            <Box
+              id={`tour-questions-${partId}`}
+              sx={{ ...uploadReadingStyles.formControl, width: '100%' }}
+            >
               <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                 <FormLabel sx={uploadReadingStyles.labelInput}>
                   Questions
@@ -366,6 +620,7 @@ export default function MatchingForm({
                               <OutlinedInput
                                 size="small"
                                 multiline
+                                className="tour-question-input"
                                 placeholder="Enter question here"
                                 defaultValue={question.content || question.text || ''}
                                 onBlur={(e) =>
@@ -376,6 +631,7 @@ export default function MatchingForm({
                               <OutlinedInput
                                 size="small"
                                 multiline
+                                className="tour-explanation-input"
                                 placeholder="Enter explanation here"
                                 defaultValue={question.explanation}
                                 onBlur={(e) => handleUpdateExplanation(question.id, e.target.value)}
@@ -385,6 +641,7 @@ export default function MatchingForm({
                             <FormControl
                               id={`select-${question.id}`}
                               size="small"
+                              className="tour-answer-select"
                               sx={{
                                 ...uploadReadingStyles.formControl,
                                 width: { xs: '150px', md: '180px' },
@@ -429,7 +686,11 @@ export default function MatchingForm({
                         </Box>
                       ))}
                   </Box>
-                  <Box onClick={handleAddQuestion} sx={multipleChoiceStyles.addQuestionBox}>
+                  <Box
+                    onClick={handleAddQuestion}
+                    className="tour-add-question-btn"
+                    sx={multipleChoiceStyles.addQuestionBox}
+                  >
                     <AddRoundedIcon sx={{ fontSize: '1.2rem' }} />
                     Add question
                   </Box>
