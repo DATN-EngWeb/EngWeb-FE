@@ -15,7 +15,7 @@ export default function TestSetting({ skill, timeLimit, minWords, score, onChang
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <Paper sx={panelPaper}>
+    <Paper id="tour-test-settings" sx={panelPaper}>
       <Box
         sx={{ ...sectionHeader, cursor: 'pointer' }}
         onClick={() => setCollapsed((prev) => !prev)}

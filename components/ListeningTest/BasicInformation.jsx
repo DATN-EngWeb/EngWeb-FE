@@ -13,7 +13,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 export default function BasicInformation({ testName, level, time, description, onChange }) {
   return (
-    <Paper sx={{ ...panelPaper, mb: 0, p: { xs: 2, md: 3 } }}>
+    <Paper id="tour-basic-info" sx={{ ...panelPaper, mb: 0, p: { xs: 2, md: 3 } }}>
       <Box sx={{ ...sectionHeader, gap: 2 }}>
         <Box sx={accentBar} />
         <Typography
@@ -25,7 +25,7 @@ export default function BasicInformation({ testName, level, time, description, o
       </Box>
 
       <Box sx={twoColRow}>
-        <Box>
+        <Box id="tour-test-title">
           <Typography sx={{ ...labelText, mb: 0.5 }}>
             Test title <span style={{ color: 'red' }}>*</span>
           </Typography>
@@ -39,7 +39,7 @@ export default function BasicInformation({ testName, level, time, description, o
             sx={textInput}
           />
         </Box>
-        <Box>
+        <Box id="tour-test-time">
           <Typography sx={{ ...labelText, mb: 0.5 }}>
             Time <span style={{ color: 'red' }}>*</span>
           </Typography>
@@ -55,7 +55,7 @@ export default function BasicInformation({ testName, level, time, description, o
         </Box>
       </Box>
 
-      <Box sx={{ mb: 2 }}>
+      <Box id="tour-test-description" sx={{ mb: 2 }}>
         <Typography sx={{ ...labelText, mb: 0.5 }}>
           Description <span style={{ color: 'red' }}>*</span>
         </Typography>
@@ -69,7 +69,7 @@ export default function BasicInformation({ testName, level, time, description, o
         />
       </Box>
 
-      <Box>
+      <Box id="tour-test-level">
         <Typography sx={{ ...labelText, mb: 0.5 }}>
           Level <span style={{ color: 'red' }}>*</span>
         </Typography>

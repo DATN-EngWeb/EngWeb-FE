@@ -4,6 +4,7 @@ import EmotionCacheProvider from '../lib/registry';
 import { NotificationProvider } from '../components/Notifications/NotificationProvider';
 import './globals.css';
 import './globals-editor.css';
+import 'driver.js/dist/driver.css';
 
 export const metadata = {
   title: 'NENS',
