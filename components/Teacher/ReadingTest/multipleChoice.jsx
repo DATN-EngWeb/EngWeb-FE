@@ -67,20 +67,6 @@ export default function MultipleChoiceForm({
           align: 'start',
         },
       });
-
-      const insertBlankSel = `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Insert Blank"]`;
-      if (document.querySelector(insertBlankSel)) {
-        steps.push({
-          element: insertBlankSel,
-          popover: {
-            title: 'Insert Blank (1)_',
-            description:
-              'Click this button to insert a numbered blank placeholder. Note: There must be text either before or after the blank for it to register properly and create an answer card below.',
-            side: 'bottom',
-            align: 'start',
-          },
-        });
-      }
     }
 
     if (document.querySelector(`#tour-questions-${partId}`)) {
@@ -106,20 +92,6 @@ export default function MultipleChoiceForm({
             align: 'start',
           },
         });
-
-        const insertBlankQuestionSel = `#tour-questions-${partId} .tour-question-input .ck-toolbar [data-cke-tooltip-text="Insert Blank"]`;
-        if (part.format === 'F' && document.querySelector(insertBlankQuestionSel)) {
-          steps.push({
-            element: insertBlankQuestionSel,
-            popover: {
-              title: 'Insert Blank (1)_',
-              description:
-                'Click this button to insert a blank placeholder into the question. Note: There must be text either before or after the blank for it to register properly. This allows you to create fill-in-the-blank style questions within the multiple choice format.',
-              side: 'bottom',
-              align: 'start',
-            },
-          });
-        }
       }
 
       if (document.querySelector(`#tour-questions-${partId} .tour-explanation-input`)) {
