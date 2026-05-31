@@ -92,11 +92,7 @@ function ForgotPasswordContent() {
       <Header />
       <Box component="main" sx={{ ...loginStyles.page, height: 'auto', flex: 1 }}>
         <Box component="section" sx={loginStyles.storyPanel}>
-          <Box sx={loginStyles.storyImageWrap}>
-            <Box sx={loginStyles.innerImageBox}>
-              <Image src={registerImage} alt="Forgot Password" style={loginStyles.storyImage} />
-            </Box>
-          </Box>
+          <Image src={registerImage} alt="Forgot Password" style={loginStyles.storyImage} />
         </Box>
 
         <Box component="section" sx={loginStyles.formPanel}>
@@ -104,8 +100,8 @@ function ForgotPasswordContent() {
             <Typography
               sx={{
                 ...loginStyles.panelTitle,
-                fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' },
-                mb: 0.5,
+                fontSize: '1.75rem',
+                mb: 1,
                 textAlign: 'center',
               }}
             >
@@ -114,9 +110,8 @@ function ForgotPasswordContent() {
             <Typography
               sx={{
                 ...loginStyles.panelSubcopy,
-                fontSize: { xs: '0.85rem', sm: '0.95rem' },
                 textAlign: 'center',
-                mb: 2,
+                mb: 3,
                 mx: 'auto',
               }}
             >
@@ -196,15 +191,11 @@ function ForgotPasswordContent() {
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    gap: 0.5,
-                    mt: 1.25,
+                    gap: 1,
+                    mt: 2,
                   }}
                 >
-                  <Typography
-                    sx={{ color: 'text.secondary', fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
-                  >
-                    Remember your password?
-                  </Typography>
+                  <Typography sx={{ color: 'text.secondary' }}>Remember your password?</Typography>
                   <Link
                     href="/login"
                     style={{
@@ -217,7 +208,6 @@ function ForgotPasswordContent() {
                       component="span"
                       sx={{
                         color: 'primary.main',
-                        fontSize: { xs: '0.85rem', sm: '0.95rem' },
                         '&:hover': {
                           textDecoration: 'underline',
                         },

@@ -35,8 +35,6 @@ import TestEditorActions from '../UploadTest/TestEditorActions';
 import BasicInformation from './BasicInformation';
 import TestSettingComponent from './TestSetting';
 import * as styles from '../../styles/Teacher/productive/ProductiveStyles';
-import { driver } from 'driver.js';
-import 'driver.js/dist/driver.css';
 
 const levelTheme = {
   A1: { border: '#2ecc71', text: '#2ecc71', bg: '#f0fff4' },
@@ -57,8 +55,6 @@ const formatMapper = {
   I: 'Social Argument',
   J: 'Reading Aloud',
 };
-
-const speakingFormats = ['Narrative', 'Description', 'Social Argument', 'Reading Aloud'];
 
 const formatTime = (totalSeconds) => {
   const mins = Math.floor(totalSeconds / 60);
@@ -93,172 +89,8 @@ export default function ProductiveTestEditor({
   isFeedbackActive,
   feedbackContent,
   showTestSettings = true,
-  onTour,
 }) {
   const isFeedbackMode = Boolean(feedbackContent && isFeedbackActive);
-
-  const handleLocalTour = () => {
-    const steps = [];
-
-    if (document.querySelector('#tour-basic-info')) {
-      steps.push({
-        element: '#tour-basic-info',
-        popover: {
-          title: 'Basic Information',
-          description:
-            'Fill in the general details for the test. You can expand or collapse this section.',
-          side: 'right',
-          align: 'start',
-        },
-      });
-    }
-
-    if (document.querySelector('#tour-test-title')) {
-      steps.push({
-        element: '#tour-test-title',
-        popover: {
-          title: 'Test Title',
-          description: 'Enter a descriptive title for this test.',
-          side: 'right',
-          align: 'start',
-        },
-      });
-    }
-
-    if (document.querySelector('#tour-test-time')) {
-      steps.push({
-        element: '#tour-test-time',
-        popover: {
-          title: 'Time Limit',
-          description:
-            'Set the allowed time limit (in minutes) for students to complete this test.',
-          side: 'right',
-          align: 'start',
-        },
-      });
-    }
-
-    if (document.querySelector('#tour-test-format')) {
-      steps.push({
-        element: '#tour-test-format',
-        popover: {
-          title: 'Test Format',
-          description: 'Select the specific format (e.g., Essay, Email, Narrative).',
-          side: 'right',
-          align: 'start',
-        },
-      });
-    }
-
-    if (document.querySelector('#tour-test-level')) {
-      steps.push({
-        element: '#tour-test-level',
-        popover: {
-          title: 'Difficulty Level',
-          description: 'Select the target proficiency level (e.g., A1, B2).',
-          side: 'right',
-          align: 'start',
-        },
-      });
-    }
-
-    if (document.querySelector('#tour-test-topics')) {
-      steps.push({
-        element: '#tour-test-topics',
-        popover: {
-          title: 'Topics',
-          description: 'Define the main topics or themes this test will cover.',
-          side: 'right',
-          align: 'start',
-        },
-      });
-    }
-
-    if (document.querySelector('#tour-test-settings')) {
-      steps.push({
-        element: '#tour-test-settings',
-        popover: {
-          title: 'Test Settings',
-          description: 'Set specific rules for this test, like the minimum required words.',
-          side: 'right',
-          align: 'start',
-        },
-      });
-    }
-
-    if (document.querySelector('#tour-question-content-panel')) {
-      steps.push({
-        element: '#tour-question-content-panel',
-        popover: {
-          title: 'Question Content',
-          description: 'This panel contains the main prompt and resources for the student.',
-          side: 'left',
-          align: 'start',
-        },
-      });
-    }
-
-    if (document.querySelector('#tour-question-editor')) {
-      steps.push({
-        element: '#tour-question-editor',
-        popover: {
-          title: 'Description',
-          description: 'Enter the main prompt or context for the question here.',
-          side: 'left',
-          align: 'start',
-        },
-      });
-    }
-
-    if (document.querySelector('#tour-question-audio')) {
-      steps.push({
-        element: '#tour-question-audio',
-        popover: {
-          title: 'Audio File',
-          description: 'Upload an audio file if the question requires listening.',
-          side: 'left',
-          align: 'start',
-        },
-      });
-    }
-
-    if (document.querySelector('#tour-question-suggestion')) {
-      steps.push({
-        element: '#tour-question-suggestion',
-        popover: {
-          title: 'Suggestion',
-          description: 'Provide any hints or suggested outlines to guide the student.',
-          side: 'left',
-          align: 'start',
-        },
-      });
-    }
-
-    steps.push({
-      element: '#tour-actions-bar',
-      popover: {
-        title: 'Action Panel',
-        description:
-          'Once finished, use this panel to Preview the test, Save as Draft, Send for Review, or Publish it immediately.',
-        side: 'bottom',
-        align: 'center',
-      },
-    });
-
-    const driverObj = driver({
-      showProgress: true,
-      animate: true,
-      doneBtnText: 'Finish',
-      closeBtnText: 'Close',
-      nextBtnText: 'Next',
-      prevBtnText: 'Back',
-      steps: steps,
-    });
-
-    driverObj.drive();
-  };
-
-  const activeTour = onTour || handleLocalTour;
 
   return (
     <Container
@@ -295,7 +127,6 @@ export default function ProductiveTestEditor({
         </Box>
       ) : (
         <Box
-          id="tour-actions-bar"
           sx={{
             position: 'sticky',
             top: 0,
@@ -315,7 +146,6 @@ export default function ProductiveTestEditor({
             onSaveDraft={() => handleSubmit('Draft')}
             onSendReview={() => handleSubmit('In review')}
             onPublish={() => handleSubmit('Published')}
-            onTour={activeTour}
           />
         </Box>
       )}
@@ -558,7 +388,7 @@ export default function ProductiveTestEditor({
               {/* Right Panel: Placeholder Interaction Area */}
               <Panel defaultSize={50} minSize={30}>
                 <Box sx={{ height: '100%', overflowY: 'auto', pl: 2 }}>
-                  {speakingFormats.includes(testData.format) ? (
+                  {testData.format >= 'G' ? (
                     /* Speaking Placeholder */
                     <Box
                       sx={{

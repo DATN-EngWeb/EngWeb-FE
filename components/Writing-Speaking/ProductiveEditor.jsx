@@ -11,7 +11,7 @@ export default function ProductiveEditor({
   isReadOnly = false,
 }) {
   return (
-    <Paper id="tour-question-content-panel" sx={{ ...styles.panelPaper, mb: 3 }}>
+    <Paper sx={{ ...styles.panelPaper, mb: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, marginBottom: '16px' }}>
         <Box sx={styles.accentBar} />
         <Typography fontWeight={600} sx={{ color: 'primary.main' }}>
@@ -20,7 +20,7 @@ export default function ProductiveEditor({
       </Box>
 
       {showAudio && (
-        <Box id="tour-question-audio" sx={{ mb: 2 }}>
+        <Box sx={{ mb: 2 }}>
           <Box
             sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}
           >

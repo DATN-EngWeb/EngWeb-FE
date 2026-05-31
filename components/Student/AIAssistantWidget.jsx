@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Drawer, Fab, Tooltip, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Drawer, Fab, Tooltip } from '@mui/material';
 import ConversationSidebar from '../AIAssistant/ConversationSidebar';
 import ChatArea from '../AIAssistant/ChatArea';
 import chatBotIcon from '../../assets/img/chat-bot.png';
@@ -16,10 +16,7 @@ import {
 } from '../../api/aiAssistant';
 
 export default function AIAssistantWidget() {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [open, setOpen] = useState(false);
-  const [recentOpen, setRecentOpen] = useState(false);
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [draft, setDraft] = useState('');
@@ -635,11 +632,6 @@ export default function AIAssistantWidget() {
     }
   };
 
-  const handleCloseAssistant = () => {
-    setOpen(false);
-    setRecentOpen(false);
-  };
-
   return (
     <Box
       className="ai-assistant-root"
@@ -680,7 +672,7 @@ export default function AIAssistantWidget() {
       <Drawer
         anchor="right"
         open={open}
-        onClose={handleCloseAssistant}
+        onClose={() => setOpen(false)}
         ModalProps={{ keepMounted: true }}
         PaperProps={{
           className: 'ai-assistant-root',
@@ -701,145 +693,66 @@ export default function AIAssistantWidget() {
           },
         }}
       >
-        {isMobile ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
-            <ChatArea
-              activeConversation={activeConversation}
-              activeMode={selectedMode || activeConversation?.mode || 'general'}
-              activeModeConfig={activeModeConfig}
-              selectedLevel={selectedLevel}
-              draft={draft}
-              isThinking={isThinking}
-              canLoadMoreMessages={
-                !!activeConversation?.id &&
-                (activeConversation?.messages_meta?.has_more ??
-                  (activeConversation?.messages || []).length >=
-                    (activeConversation?.messages_meta?.limit || 30))
-              }
-              isLoadingMoreMessages={isLoadingMoreMessages}
-              quota={workspaceQuota}
-              quotaRemaining={workspaceQuota?.remaining ?? null}
-              error={error}
-              inputRef={inputRef}
-              onDraftChange={(value) => {
-                if (error) setError(null);
-                setDraft(value);
-              }}
-              onKeyDown={handleKeyDown}
-              onSend={handleSend}
-              onModeChange={handleModeChange}
-              onLevelChange={setSelectedLevel}
-              onLoadMoreMessages={handleLoadMoreMessages}
-              onClearError={() => setError(null)}
-              onClose={handleCloseAssistant}
-              onOpenRecentConversations={() => setRecentOpen(true)}
-              showSidebarToggle
-            />
-          </Box>
-        ) : (
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: '25% 75%',
-              height: '100%',
-              minHeight: 0,
-            }}
-          >
-            <ConversationSidebar
-              conversations={conversations}
-              isLoading={isLoading}
-              activeConversationId={activeConversationId}
-              isCreatingConversation={isCreatingConversation}
-              editingId={editingId}
-              editingTitle={editingTitle}
-              editingLoading={editingLoading}
-              menuAnchorEl={menuAnchorEl}
-              menuConversationId={menuConversationId}
-              onClose={handleCloseAssistant}
-              onCreateConversation={handleCreateConversation}
-              onOpenConversation={handleOpenConversation}
-              onEditTitleChange={handleEditTitleChange}
-              onSaveEditConversation={handleSaveEditConversation}
-              onCancelEditConversation={handleCancelEditConversation}
-              onMenuOpen={handleMenuOpen}
-              onMenuClose={handleMenuClose}
-              onMenuEdit={handleMenuEdit}
-              onMenuArchive={handleMenuArchive}
-            />
-
-            <ChatArea
-              activeConversation={activeConversation}
-              activeMode={selectedMode || activeConversation?.mode || 'general'}
-              activeModeConfig={activeModeConfig}
-              selectedLevel={selectedLevel}
-              draft={draft}
-              isThinking={isThinking}
-              canLoadMoreMessages={
-                !!activeConversation?.id &&
-                (activeConversation?.messages_meta?.has_more ??
-                  (activeConversation?.messages || []).length >=
-                    (activeConversation?.messages_meta?.limit || 30))
-              }
-              isLoadingMoreMessages={isLoadingMoreMessages}
-              quota={workspaceQuota}
-              quotaRemaining={workspaceQuota?.remaining ?? null}
-              error={error}
-              inputRef={inputRef}
-              onDraftChange={(value) => {
-                if (error) setError(null);
-                setDraft(value);
-              }}
-              onKeyDown={handleKeyDown}
-              onSend={handleSend}
-              onModeChange={handleModeChange}
-              onLevelChange={setSelectedLevel}
-              onLoadMoreMessages={handleLoadMoreMessages}
-              onClearError={() => setError(null)}
-              onClose={handleCloseAssistant}
-            />
-          </Box>
-        )}
-      </Drawer>
-
-      <Drawer
-        anchor="left"
-        open={isMobile && recentOpen}
-        onClose={() => setRecentOpen(false)}
-        ModalProps={{ keepMounted: true }}
-        PaperProps={{
-          sx: {
-            width: 'min(88vw, 360px)',
-            maxWidth: '88vw',
-            bgcolor: 'background.paper',
-            borderTopRightRadius: 20,
-            borderBottomRightRadius: 20,
-          },
-        }}
-      >
-        <ConversationSidebar
-          conversations={conversations}
-          isLoading={isLoading}
-          activeConversationId={activeConversationId}
-          isCreatingConversation={isCreatingConversation}
-          editingId={editingId}
-          editingTitle={editingTitle}
-          editingLoading={editingLoading}
-          menuAnchorEl={menuAnchorEl}
-          menuConversationId={menuConversationId}
-          onClose={() => setRecentOpen(false)}
-          onCreateConversation={handleCreateConversation}
-          onOpenConversation={(conversation) => {
-            handleOpenConversation(conversation);
-            setRecentOpen(false);
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', md: '25% 75%' },
+            height: '100%',
+            minHeight: 0,
           }}
-          onEditTitleChange={handleEditTitleChange}
-          onSaveEditConversation={handleSaveEditConversation}
-          onCancelEditConversation={handleCancelEditConversation}
-          onMenuOpen={handleMenuOpen}
-          onMenuClose={handleMenuClose}
-          onMenuEdit={handleMenuEdit}
-          onMenuArchive={handleMenuArchive}
-        />
+        >
+          <ConversationSidebar
+            conversations={conversations}
+            isLoading={isLoading}
+            activeConversationId={activeConversationId}
+            isCreatingConversation={isCreatingConversation}
+            editingId={editingId}
+            editingTitle={editingTitle}
+            editingLoading={editingLoading}
+            menuAnchorEl={menuAnchorEl}
+            menuConversationId={menuConversationId}
+            onClose={() => setOpen(false)}
+            onCreateConversation={handleCreateConversation}
+            onOpenConversation={handleOpenConversation}
+            onEditTitleChange={handleEditTitleChange}
+            onSaveEditConversation={handleSaveEditConversation}
+            onCancelEditConversation={handleCancelEditConversation}
+            onMenuOpen={handleMenuOpen}
+            onMenuClose={handleMenuClose}
+            onMenuEdit={handleMenuEdit}
+            onMenuArchive={handleMenuArchive}
+          />
+
+          <ChatArea
+            activeConversation={activeConversation}
+            activeMode={selectedMode || activeConversation?.mode || 'general'}
+            activeModeConfig={activeModeConfig}
+            selectedLevel={selectedLevel}
+            draft={draft}
+            isThinking={isThinking}
+            canLoadMoreMessages={
+              !!activeConversation?.id &&
+              (activeConversation?.messages_meta?.has_more ??
+                (activeConversation?.messages || []).length >=
+                  (activeConversation?.messages_meta?.limit || 30))
+            }
+            isLoadingMoreMessages={isLoadingMoreMessages}
+            quota={workspaceQuota}
+            quotaRemaining={workspaceQuota?.remaining ?? null}
+            error={error}
+            inputRef={inputRef}
+            onDraftChange={(value) => {
+              if (error) setError(null);
+              setDraft(value);
+            }}
+            onKeyDown={handleKeyDown}
+            onSend={handleSend}
+            onModeChange={handleModeChange}
+            onLevelChange={setSelectedLevel}
+            onLoadMoreMessages={handleLoadMoreMessages}
+            onClearError={() => setError(null)}
+          />
+        </Box>
       </Drawer>
     </Box>
   );

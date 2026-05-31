@@ -36,7 +36,6 @@ import FillBlankForm from '../../../../../components/Teacher/ReadingTest/fillBla
 import ReadingPreview from '../../../../../components/Teacher/ReadingTest/ReadingPreview';
 import FeedbackPanel from '../../../../../components/Teacher/Feedback/FeedbackPanel';
 import TestEditorActions from '../../../../../components/UploadTest/TestEditorActions';
-import DeleteConfirmSnackbar from '../../../../../components/Teacher/DeleteConfirmSnackbar';
 import {
   updateReadingTestContent,
   getReceptiveTestDetails,
@@ -50,10 +49,7 @@ import {
   processCkeditorState,
 } from '../../../../../utils/testTransformers';
 import { getPresignedUrl, uploadToObjectStorage, confirmUpload } from '../../../../../api/test';
-import {
-  validateReadingPartUpdatePayload,
-  validateReadingBasicInfo,
-} from '../../../../../utils/testValidation';
+import { validateReadingPartUpdatePayload } from '../../../../../utils/testValidation';
 import ScrollToTopButton from '../../../../../components/CreateTest/ScrollToTopButton';
 import TestEditorHeader from '../../../../../components/UploadTest/TestEditorHeader';
 import { accentBar, addPartBox } from '@/styles/Teacher/Listening/ListeningStyles';
@@ -82,186 +78,7 @@ export default function Page() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'error' });
-  const [deleteTargetPartId, setDeleteTargetPartId] = useState(null);
   const canShowFeedback = test?.flag === 'update' && !!test?.id;
-
-  const validateBasicInformation = () => {
-    const basicInfoErrors = validateReadingBasicInfo({
-      testName: test.title,
-      level: test.level,
-      time: test.time,
-      description: test.description,
-    });
-
-    if (!basicInfoErrors) return null;
-
-    setErrors({
-      title: !!basicInfoErrors.testName,
-      level: !!basicInfoErrors.level,
-      time: !!basicInfoErrors.time || !!basicInfoErrors.timeNegative,
-      timeNegative: !!basicInfoErrors.timeNegative,
-      description: !!basicInfoErrors.description,
-    });
-
-    if (basicInfoErrors.testName) return 'Please fill title of test!';
-    if (basicInfoErrors.level) return 'Please select a valid level (A1-B2)!';
-    if (basicInfoErrors.time) return 'Please enter a valid time greater than 0!';
-    if (basicInfoErrors.timeNegative) return 'Time cannot be negative!';
-    if (basicInfoErrors.description) return 'Please fill description of test!';
-
-    return 'Please check basic information.';
-  };
-
-  const handleStartTour = () => {
-    const { driver } = require('driver.js');
-
-    const steps = [
-      {
-        element: '#tour-basic-info',
-        popover: {
-          title: 'Basic Information',
-          description:
-            'Fill in the test title, duration, level, and description of the reading test.',
-          side: 'bottom',
-          align: 'start',
-        },
-      },
-      {
-        element: '#tour-test-title',
-        popover: {
-          title: 'Test Title',
-          description: 'Enter a descriptive title for this reading test.',
-          side: 'bottom',
-          align: 'start',
-        },
-      },
-      {
-        element: '#tour-test-time',
-        popover: {
-          title: 'Test Duration',
-          description:
-            'Set the allowed time limit (in minutes) for students to complete this test.',
-          side: 'bottom',
-          align: 'start',
-        },
-      },
-      {
-        element: '#tour-test-description',
-        popover: {
-          title: 'Test Description',
-          description: 'Provide a brief overview or special instructions for the test.',
-          side: 'bottom',
-          align: 'start',
-        },
-      },
-      {
-        element: '#tour-test-level',
-        popover: {
-          title: 'Difficulty Level',
-          description:
-            'Select the English proficiency level (A1, A2, B1, B2) targeted by this test.',
-          side: 'bottom',
-          align: 'start',
-        },
-      },
-    ];
-
-    if (document.querySelector('#tour-select-part-panel')) {
-      steps.push({
-        element: '#tour-select-part-panel',
-        popover: {
-          title: 'Select Part Type',
-          description: 'Choose the format for the reading part you want to create.',
-          side: 'top',
-          align: 'start',
-        },
-      });
-    }
-
-    if (document.querySelector('#tour-score-each-question')) {
-      steps.push({
-        element: '#tour-score-each-question',
-        popover: {
-          title: 'Score per Question',
-          description: 'Set the default score for each question in this part (e.g., 10 points).',
-          side: 'right',
-          align: 'start',
-        },
-      });
-    }
-
-    if (document.querySelector('#tour-passage')) {
-      steps.push({
-        element: '#tour-passage',
-        popover: {
-          title: 'Reading Passage Editor',
-          description:
-            'Write or paste your reading passage here using this advanced editor. Use the rich toolbar to format text (bold, italic, list, table, or upload images). IMPORTANT: For Fill-in-the-Blanks questions (Format H & I), click the "(1)_" icon in the toolbar to insert blank placeholders into the text.',
-          side: 'top',
-          align: 'start',
-        },
-      });
-    }
-
-    if (document.querySelector('#tour-questions-section')) {
-      steps.push({
-        element: '#tour-questions-section',
-        popover: {
-          title: 'Questions List',
-          description:
-            'Manage questions for this part. You can write question stems, explanation text, and answer choices. Check the checkbox next to the correct option to set the answer key.',
-          side: 'top',
-          align: 'start',
-        },
-      });
-    }
-
-    if (document.querySelector('#tour-add-question-btn')) {
-      steps.push({
-        element: '#tour-add-question-btn',
-        popover: {
-          title: 'Add Question',
-          description: 'Click here to append a new multiple choice question to this reading part.',
-          side: 'top',
-          align: 'center',
-        },
-      });
-    }
-
-    steps.push({
-      element: '#tour-add-part-btn',
-      popover: {
-        title: 'Create Reading Parts',
-        description:
-          'Click here to add a new reading part. You can choose different formats like Multiple Choice, Fill in the Blanks, or Matching.',
-        side: 'top',
-        align: 'center',
-      },
-    });
-
-    steps.push({
-      element: '#tour-actions-bar',
-      popover: {
-        title: 'Action Panel',
-        description:
-          'Once finished, use this panel to Preview the test, Save it as a Draft, Send it for Review, or Publish it immediately.',
-        side: 'bottom',
-        align: 'center',
-      },
-    });
-
-    const driverObj = driver({
-      showProgress: true,
-      animate: true,
-      doneBtnText: 'Finish',
-      closeBtnText: 'Close',
-      nextBtnText: 'Next',
-      prevBtnText: 'Back',
-      steps: steps,
-    });
-
-    driverObj.drive();
-  };
 
   const extractLocalAnswersFromQuestions = (questions) => {
     if (!questions || !Array.isArray(questions)) return [];
@@ -431,11 +248,32 @@ export default function Page() {
     setIsLoading(true);
     setErrors({}); // Reset errors before validation
     try {
-      const basicInfoErrorMessage = validateBasicInformation();
-      if (basicInfoErrorMessage) {
+      // Validate Basic Info
+      if (!test.title) {
+        setErrors((prev) => ({ ...prev, title: true }));
         setSnackbar({
           open: true,
-          message: basicInfoErrorMessage,
+          message: 'Please fill title of test!',
+          severity: 'error',
+        });
+        setIsLoading(false);
+        return;
+      }
+      if (!['A1', 'A2', 'B1', 'B2'].includes(test.level)) {
+        setErrors((prev) => ({ ...prev, level: true }));
+        setSnackbar({
+          open: true,
+          message: 'Please select a valid level (A1-B2)!',
+          severity: 'error',
+        });
+        setIsLoading(false);
+        return;
+      }
+      if (!test.time || isNaN(test.time) || Number(test.time) <= 0) {
+        setErrors((prev) => ({ ...prev, time: true }));
+        setSnackbar({
+          open: true,
+          message: 'Please enter a valid time greater than 0!',
           severity: 'error',
         });
         setIsLoading(false);
@@ -641,20 +479,14 @@ export default function Page() {
     );
   };
 
-  const handleRequestDeletePart = (idToDelete) => {
-    setDeleteTargetPartId(idToDelete);
-  };
-
-  const handleConfirmDeletePart = () => {
-    if (!deleteTargetPartId) return;
-
+  const handleDeletePart = (idToDelete) => {
     setParts((prevParts) => {
       let updatedParts;
 
       if (test?.flag === 'update') {
         updatedParts = prevParts
           .map((part) => {
-            if (part.id === deleteTargetPartId) {
+            if (part.id === idToDelete) {
               if (part.action === 'create') return null;
               return { id: part.id, action: 'delete' };
             }
@@ -662,7 +494,7 @@ export default function Page() {
           })
           .filter(Boolean);
       } else {
-        updatedParts = prevParts.filter((part) => part.id !== deleteTargetPartId);
+        updatedParts = prevParts.filter((part) => part.id !== idToDelete);
       }
 
       let visibleIndex = 1;
@@ -674,7 +506,6 @@ export default function Page() {
         };
       });
     });
-    setDeleteTargetPartId(null);
   };
 
   const handleDeleteQuestion = (partId, questionId) => {
@@ -907,11 +738,10 @@ export default function Page() {
   };
 
   const handleShowPreview = () => {
-    const basicInfoErrorMessage = validateBasicInformation();
-    if (basicInfoErrorMessage) {
+    if (!test.title.trim()) {
       setSnackbar({
         open: true,
-        message: basicInfoErrorMessage,
+        message: 'Test title is required!',
         severity: 'error',
       });
       return;
@@ -957,7 +787,7 @@ export default function Page() {
             part={part}
             partId={part.id}
             index={index}
-            handleDeletePart={handleRequestDeletePart}
+            handleDeletePart={handleDeletePart}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
             handleDeleteQuestion={handleDeleteQuestion}
@@ -976,7 +806,7 @@ export default function Page() {
             part={part}
             partId={part.id}
             index={index}
-            handleDeletePart={handleRequestDeletePart}
+            handleDeletePart={handleDeletePart}
             handleDeleteQuestion={handleDeleteQuestion}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
@@ -999,7 +829,7 @@ export default function Page() {
             part={part}
             partId={part.id}
             index={index}
-            handleDeletePart={handleRequestDeletePart}
+            handleDeletePart={handleDeletePart}
             handleDeleteOption={handleDeleteOption}
             questions={partQuestions}
             setQuestions={(newQs) => updatePartQuestions(part.id, newQs)}
@@ -1040,7 +870,6 @@ export default function Page() {
         />
         {/* -------- Function Buttons Section --------- */}
         <Box
-          id="tour-actions-bar"
           sx={{
             position: 'sticky',
             top: 0,
@@ -1070,7 +899,6 @@ export default function Page() {
             onSendReview={() => handleUploadParts('I')}
             onSaveDraft={() => handleUploadParts('D')}
             onPublish={() => handleUploadParts('P')}
-            onTour={handleStartTour}
             isLoading={isLoading}
           />
         </Box>
@@ -1103,7 +931,7 @@ export default function Page() {
           >
             <Box sx={{ ...uploadReadingStyles.uploadReadingFormSection, flex: 1, minWidth: 0 }}>
               {/* -------------------- Basic Information -------------------- */}
-              <Box id="tour-basic-info" sx={uploadReadingStyles.basicInfoContainer}>
+              <Box sx={uploadReadingStyles.basicInfoContainer}>
                 <Box
                   sx={{
                     display: 'flex',
@@ -1125,7 +953,7 @@ export default function Page() {
                   </Typography>
                 </Box>
                 <Box sx={uploadReadingStyles.nameTestAndTime}>
-                  <FormControl id="tour-test-title" fullWidth sx={uploadReadingStyles.formControl}>
+                  <FormControl fullWidth sx={uploadReadingStyles.formControl}>
                     <FormLabel sx={uploadReadingStyles.labelInput}>
                       Test title
                       <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
@@ -1136,12 +964,11 @@ export default function Page() {
                       size="small"
                       placeholder="Enter test title here"
                       defaultValue={test.title}
-                      error={!!errors.title}
                       onBlur={(e) => setTest({ ...test, title: e.target.value })}
                       sx={uploadReadingStyles.input}
                     />
                   </FormControl>
-                  <FormControl id="tour-test-time" fullWidth sx={uploadReadingStyles.formControl}>
+                  <FormControl fullWidth sx={uploadReadingStyles.formControl}>
                     <FormLabel sx={uploadReadingStyles.labelInput}>
                       Time
                       <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
@@ -1152,17 +979,12 @@ export default function Page() {
                       size="small"
                       placeholder="60"
                       defaultValue={test.time}
-                      error={!!errors.time || !!errors.timeNegative}
                       sx={uploadReadingStyles.input}
                       onBlur={(e) => setTest({ ...test, time: Number(e.target.value) || '' })}
                     />
                   </FormControl>
                 </Box>
-                <FormControl
-                  id="tour-test-description"
-                  fullWidth
-                  sx={uploadReadingStyles.formControl}
-                >
+                <FormControl fullWidth sx={uploadReadingStyles.formControl}>
                   <FormLabel sx={uploadReadingStyles.labelInput}>
                     Description
                     <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
@@ -1173,12 +995,11 @@ export default function Page() {
                     size="small"
                     placeholder="Enter description here"
                     defaultValue={test.description}
-                    error={!!errors.description}
                     onBlur={(e) => setTest({ ...test, description: e.target.value })}
                     sx={uploadReadingStyles.input}
                   />
                 </FormControl>
-                <FormControl id="tour-test-level" fullWidth sx={uploadReadingStyles.formControl}>
+                <FormControl fullWidth sx={uploadReadingStyles.formControl}>
                   <FormLabel sx={uploadReadingStyles.labelInput}>
                     Level
                     <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
@@ -1189,7 +1010,6 @@ export default function Page() {
                     size="small"
                     displayEmpty
                     value={test.level || ''}
-                    error={!!errors.level}
                     sx={{
                       ...uploadReadingStyles.input,
                       '& .MuiSelect-icon': {
@@ -1220,7 +1040,6 @@ export default function Page() {
                     }}
                     onChange={(e) => {
                       setTest({ ...test, level: e.target.value });
-                      if (errors.level) setErrors((prev) => ({ ...prev, level: false }));
                     }}
                   >
                     <MenuItem value="" disabled>
@@ -1240,7 +1059,6 @@ export default function Page() {
                 .map((part, index) => (
                   <Box
                     key={part.id}
-                    id={!part.format ? 'tour-select-part-panel' : undefined}
                     ref={index === parts.length - 1 ? lastPartRef : null}
                     sx={uploadReadingStyles.basicInfoContainer}
                   >
@@ -1334,7 +1152,7 @@ export default function Page() {
                             textTransform: 'none',
                             px: 2,
                           }}
-                          onClick={() => handleRequestDeletePart(part.id)}
+                          onClick={() => handleDeletePart(part.id)}
                         >
                           Cancel
                         </Button>
@@ -1345,7 +1163,7 @@ export default function Page() {
                   </Box>
                 ))}
               {/* -------- Add New Part Button --------- */}
-              <Box id="tour-add-part-btn" sx={addPartBox} onClick={() => handleAddPart()}>
+              <Box sx={addPartBox} onClick={() => handleAddPart()}>
                 <AddRoundedIcon sx={{ fontSize: '1.4rem' }} /> Add New Part
               </Box>
             </Box>
@@ -1396,17 +1214,6 @@ export default function Page() {
           </Box>
         )}
       </Container>
-
-      <DeleteConfirmSnackbar
-        open={Boolean(deleteTargetPartId)}
-        onClose={() => setDeleteTargetPartId(null)}
-        onConfirm={handleConfirmDeletePart}
-        loading={false}
-        title="Confirm Delete Part"
-        description="Delete this part? This action will remove it from the test."
-        confirmLabel="Delete part"
-        loadingLabel="Deleting part..."
-      />
     </Box>
   );
 }

@@ -14,51 +14,23 @@ export const chatAreaStyles = {
     display: 'flex',
     flexDirection: 'column',
     minHeight: 0,
-    height: '100%',
     bgcolor: 'background.default',
   },
   header: {
-    p: { xs: 1.5, md: 3 },
+    p: { xs: 2, md: 3 },
     pb: 0,
     display: 'flex',
-    flexDirection: { xs: 'column', sm: 'row' },
-    alignItems: { xs: 'flex-start', sm: 'center' },
+    alignItems: 'center',
     justifyContent: 'space-between',
     gap: 2,
-  },
-  headerActionsRow: {
-    width: '100%',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    gap: 0.75,
-    display: { xs: 'flex', sm: 'none' },
-  },
-  sidebarToggleButton: {
-    display: { xs: 'inline-flex', sm: 'none' },
-    color: 'text.secondary',
-    bgcolor: 'background.paper',
-    border: '1px solid rgba(0, 0, 0, 0.10)',
-    boxShadow: '0 6px 16px rgba(15, 23, 42, 0.05)',
-  },
-  closeAssistantButton: {
-    color: 'text.secondary',
-    bgcolor: 'background.paper',
-    border: '1px solid rgba(0, 0, 0, 0.10)',
-    boxShadow: '0 6px 16px rgba(15, 23, 42, 0.05)',
-  },
-  headerContent: {
-    minWidth: 0,
   },
   title: {
     fontWeight: 900,
     lineHeight: 1.1,
-    fontSize: { xs: '1.15rem', sm: '1.35rem', md: '1.5rem' },
   },
   quotaCaption: {
     mt: 0.5,
     color: 'text.secondary',
-    display: 'block',
-    lineHeight: 1.4,
   },
   quotaValue: {
     fontWeight: 700,
@@ -68,7 +40,7 @@ export const chatAreaStyles = {
     ml: 1,
   },
   messagesContainer: {
-    px: { xs: 1.5, md: 3 },
+    px: { xs: 2, md: 3 },
     pt: 2,
     pb: 1,
     flex: 1,
@@ -82,7 +54,7 @@ export const chatAreaStyles = {
     borderRadius: 999,
     textTransform: 'none',
     fontWeight: 800,
-    px: { xs: 1.5, md: 2 },
+    px: 2,
   },
   emptyStatePaper: {
     p: 2.25,
@@ -123,13 +95,13 @@ export const chatAreaStyles = {
     bgcolor: 'background.paper',
   },
   composerWrap: {
-    p: { xs: 1.5, md: 3 },
+    p: { xs: 2, md: 3 },
     pt: 0,
     borderTop: '1px solid rgba(0, 0, 0, 0.08)',
     bgcolor: 'background.default',
   },
   composerPaper: {
-    p: { xs: 1.25, sm: 1.5 },
+    p: 1.5,
     borderRadius: 3,
     bgcolor: 'background.paper',
     border: '1px solid rgba(0, 0, 0, 0.10)',
@@ -144,7 +116,7 @@ export const chatAreaStyles = {
     '& .MuiOutlinedInput-root': {
       borderRadius: 3,
       bgcolor: 'rgba(255,255,255,0.92)',
-      py: { xs: 0.5, sm: 1 },
+      py: 1,
     },
   },
   quotaErrorPaper: {
@@ -201,13 +173,10 @@ export const chatAreaStyles = {
   filtersRow: {
     color: 'text.secondary',
     lineHeight: 1.5,
-    ml: { xs: 0, sm: 'auto' },
-    width: { xs: '100%', sm: 'auto' },
+    ml: 'auto',
   },
   modeSelect: {
-    flex: { xs: '1 1 0', sm: '0 0 auto' },
-    minWidth: { xs: 0, sm: 118 },
-    width: { xs: 'auto', sm: 'auto' },
+    minWidth: 118,
     height: 30,
     borderRadius: 999,
     bgcolor: 'rgba(255,255,255,0.96)',
@@ -236,9 +205,7 @@ export const chatAreaStyles = {
     },
   },
   levelSelect: {
-    flex: { xs: '1 1 0', sm: '0 0 auto' },
-    minWidth: { xs: 0, sm: 92 },
-    width: { xs: 'auto', sm: 'auto' },
+    minWidth: 92,
     height: 30,
     borderRadius: 999,
     bgcolor: 'rgba(255,255,255,0.96)',

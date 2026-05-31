@@ -90,11 +90,11 @@ export default function WritingSharePage() {
   };
 
   return (
-    <Container maxWidth={false} sx={{ py: { xs: 3, md: 6 }, px: { xs: 2, sm: 3, md: 6 } }}>
+    <Container maxWidth={false} sx={{ py: 6, px: { xs: 2, md: 6 } }}>
       <Box textAlign="center" mb={2}>
         <Typography
           sx={{
-            fontSize: { xs: 28, sm: 34, md: 40 },
+            fontSize: 40,
             fontWeight: 700,
             color: 'primary.main',
           }}
@@ -105,7 +105,7 @@ export default function WritingSharePage() {
         <Typography
           sx={{
             color: 'primary.light',
-            fontSize: { xs: 14, sm: 15, md: 16 },
+            fontSize: 16,
           }}
         >
           Share your post to get feedback from our community
@@ -116,7 +116,7 @@ export default function WritingSharePage() {
           sx={{
             display: 'flex',
             flexDirection: { xs: 'column', md: 'row' },
-            gap: { xs: 3, md: 4 },
+            gap: 4,
             alignItems: 'flex-start',
           }}
         >

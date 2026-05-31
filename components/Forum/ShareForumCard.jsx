@@ -11,8 +11,8 @@ export default function ShareForumCard({ type, promptHtml, answer, answerType })
         bgcolor: '#fff',
         mb: 2,
         boxShadow: '0 2px 12px 0 rgba(123, 106, 94, 0.08)',
-        px: { xs: 2, sm: 3 },
-        py: { xs: 2, sm: 2.5 },
+        px: 3,
+        py: 2.5,
         position: 'relative',
       }}
     >
@@ -25,7 +25,7 @@ export default function ShareForumCard({ type, promptHtml, answer, answerType })
           px: 1.5,
           py: 0.5,
           borderRadius: 2,
-          fontSize: { xs: 12, sm: 14 },
+          fontSize: 14,
           fontWeight: 700,
           letterSpacing: 0.5,
           boxShadow: '0 1px 4px 0 rgba(107,63,29,0.08)',
@@ -43,14 +43,14 @@ export default function ShareForumCard({ type, promptHtml, answer, answerType })
           sx={{
             bgcolor: 'natural.main',
             borderRadius: 2,
-            p: { xs: 1.5, sm: 2 },
+            p: 2,
             mt: 2,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'flex-start',
           }}
         >
-          <Typography fontWeight={700} sx={{ color: '#222', mb: 1, fontSize: { xs: 15, sm: 17 } }}>
+          <Typography fontWeight={700} sx={{ color: '#222', mb: 1, fontSize: 17 }}>
             Your answer
           </Typography>
           <CustomAudioPlayer src={answer} isActive />
@@ -61,19 +61,17 @@ export default function ShareForumCard({ type, promptHtml, answer, answerType })
           sx={{
             bgcolor: 'natural.main',
             borderRadius: 2,
-            p: { xs: 1.5, sm: 2 },
+            p: 2,
             mt: 2,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'flex-start',
           }}
         >
-          <Typography fontWeight={700} sx={{ mb: 1, fontSize: { xs: 15, sm: 17 } }}>
+          <Typography fontWeight={700} sx={{ mb: 1, fontSize: 17 }}>
             Your answer
           </Typography>
-          <Typography sx={{ fontSize: { xs: 14, sm: 16 }, whiteSpace: 'pre-line' }}>
-            {answer}
-          </Typography>
+          <Typography sx={{ fontSize: 16, whiteSpace: 'pre-line' }}>{answer}</Typography>
         </Box>
       )}
     </Box>

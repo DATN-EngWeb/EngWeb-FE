@@ -212,11 +212,7 @@ function LoginContent() {
       <Header />
       <Box component="main" sx={{ ...loginStyles.page, height: 'auto', flex: 1 }}>
         <Box component="section" sx={loginStyles.storyPanel}>
-          <Box sx={loginStyles.storyImageWrap}>
-            <Box sx={loginStyles.innerImageBox}>
-              <Image src={loginImage} alt="Login" style={loginStyles.storyImage} />
-            </Box>
-          </Box>
+          <Image src={loginImage} alt="Login" style={loginStyles.storyImage} />
         </Box>
 
         <Box component="section" sx={loginStyles.formPanel}>
@@ -225,7 +221,7 @@ function LoginContent() {
 
             {/* Role Toggle - Student/Teacher */}
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-              <Stack direction="row" spacing={{ xs: 2, sm: 5, md: 15 }} justifyContent="center">
+              <Stack direction="row" spacing={15} justifyContent="center">
                 <Box
                   onClick={() => {
                     setCurrentRole('student');
@@ -234,7 +230,7 @@ function LoginContent() {
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: { xs: 0.5, sm: 1.5 },
+                    gap: 1.5,
                     cursor: 'pointer',
                     pb: 1.5,
                     borderBottom: '3px solid',
@@ -243,31 +239,19 @@ function LoginContent() {
                     transition: 'all 0.3s',
                   }}
                 >
-                  <Box
-                    sx={{
-                      width: { xs: 12, sm: 18, md: 20, lg: 24 },
-                      height: { xs: 12, sm: 18, md: 20, lg: 24 },
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
                   >
-                    <svg
-                      width="100%"
-                      height="100%"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M12 3L1 9L12 15L21 10.09V17H23V9L12 3ZM12 5.18L18.99 9L12 12.82L5.01 9L12 5.18ZM12 15.82L5 12.06V15.06L12 18.82L19 15.06V12.06L12 15.82Z"
-                        fill="currentColor"
-                      />
-                    </svg>
-                  </Box>
-                  <Typography sx={{ fontWeight: 600, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-                    Student
-                  </Typography>
+                    <path
+                      d="M12 3L1 9L12 15L21 10.09V17H23V9L12 3ZM12 5.18L18.99 9L12 12.82L5.01 9L12 5.18ZM12 15.82L5 12.06V15.06L12 18.82L19 15.06V12.06L12 15.82Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  <Typography sx={{ fontWeight: 600, fontSize: '1rem' }}>Student</Typography>
                 </Box>
                 <Box
                   onClick={() => {
@@ -277,7 +261,7 @@ function LoginContent() {
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: { xs: 0.5, sm: 1.5 },
+                    gap: 1.5,
                     cursor: 'pointer',
                     pb: 1.5,
                     borderBottom: '3px solid',
@@ -286,31 +270,19 @@ function LoginContent() {
                     transition: 'all 0.3s',
                   }}
                 >
-                  <Box
-                    sx={{
-                      width: { xs: 12, sm: 18, md: 20, lg: 24 },
-                      height: { xs: 12, sm: 18, md: 20, lg: 24 },
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
                   >
-                    <svg
-                      width="100%"
-                      height="100%"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.33 4 18V20H20V18C20 15.33 14.67 14 12 14Z"
-                        fill="currentColor"
-                      />
-                    </svg>
-                  </Box>
-                  <Typography sx={{ fontWeight: 600, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-                    Teacher
-                  </Typography>
+                    <path
+                      d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.33 4 18V20H20V18C20 15.33 14.67 14 12 14Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  <Typography sx={{ fontWeight: 600, fontSize: '1rem' }}>Teacher</Typography>
                 </Box>
               </Stack>
             </Box>

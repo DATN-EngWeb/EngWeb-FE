@@ -107,7 +107,7 @@ export default function BasicInformation({
   }, [skill]);
 
   return (
-    <Paper id="tour-basic-info" sx={panelPaper}>
+    <Paper sx={panelPaper}>
       {/* ===== HEADER ===== */}
       <Box
         sx={{ ...sectionHeader, cursor: 'pointer' }}
@@ -132,7 +132,7 @@ export default function BasicInformation({
       <Collapse in={!collapsed}>
         <Box sx={{ pt: 1 }}>
           <Box sx={twoColRow}>
-            <Box id="tour-test-title" sx={{ flex: 1 }}>
+            <Box sx={{ flex: 1 }}>
               <Typography
                 variant="body2"
                 color="text.primary"
@@ -158,7 +158,7 @@ export default function BasicInformation({
                 error={errors?.testName}
               />
             </Box>
-            <Box id="tour-test-time" sx={{ flex: 0.4 }}>
+            <Box sx={{ flex: 0.4 }}>
               <Typography
                 variant="body2"
                 color="text.primary"
@@ -188,7 +188,7 @@ export default function BasicInformation({
           </Box>
 
           <Box sx={twoColRow}>
-            <Box id="tour-test-format" sx={{ flex: 1 }}>
+            <Box sx={{ flex: 1 }}>
               <Typography
                 variant="body2"
                 color="text.primary"
@@ -246,7 +246,7 @@ export default function BasicInformation({
               </FormControl>
             </Box>
 
-            <Box id="tour-test-level" sx={{ flex: 1 }}>
+            <Box sx={{ flex: 1 }}>
               <Typography
                 variant="body2"
                 color="text.primary"
@@ -302,7 +302,7 @@ export default function BasicInformation({
             </Box>
           </Box>
 
-          <Box id="tour-test-topics">
+          <Box>
             <Typography
               variant="body2"
               color="text.primary"

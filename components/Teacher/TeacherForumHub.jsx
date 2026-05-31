@@ -174,7 +174,7 @@ export default function TeacherForumHub() {
         pb: 8,
       }}
     >
-      <Container maxWidth="xl" sx={{ px: { xs: 2, sm: 3, md: 4, lg: 6 }, mx: 'auto', pt: 4 }}>
+      <Container maxWidth="xl" sx={{ px: { xs: 2, md: 8, lg: 15 }, mx: 'auto', pt: 4 }}>
         <Grid container spacing={2} sx={{ flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
           <Grid
             item
@@ -187,20 +187,16 @@ export default function TeacherForumHub() {
             <Box
               sx={{
                 backgroundColor: 'background.paper',
-                p: { xs: 1.5, sm: 2 },
+                p: 2,
                 borderRadius: 4,
                 height: 'fit-content',
-                position: { xs: 'relative', md: 'sticky' },
-                top: { md: 24 },
-                mb: { xs: 2, md: 0 },
+                position: 'sticky',
+                top: 24,
               }}
             >
               <Stack direction="row" alignItems="center" spacing={1} mb={2.5}>
                 <Box sx={{ width: 4, height: 24, bgcolor: 'warning.main', borderRadius: 1 }} />
-                <Typography
-                  variant="h6"
-                  sx={{ fontWeight: 700, fontSize: { xs: '1rem', sm: '1.25rem' } }}
-                >
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>
                   Search and Filter
                 </Typography>
               </Stack>
@@ -347,12 +343,7 @@ export default function TeacherForumHub() {
             }}
           >
             <Box sx={{ mb: 2.5 }}>
-              <Typography
-                variant="h4"
-                fontWeight={700}
-                color="primary.main"
-                sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.25rem' } }}
-              >
+              <Typography variant="h4" fontWeight={700} color="primary.main">
                 Forum by Test
               </Typography>
               <Typography color="text.secondary">
@@ -368,9 +359,9 @@ export default function TeacherForumHub() {
                   md: '1fr 1fr',
                   lg: '1fr 1fr',
                 },
-                gap: { xs: 2, sm: 2.5, md: 3 },
-                marginBottom: { xs: '32px', md: '48px' },
-                minHeight: { xs: 'auto', md: '400px' },
+                gap: '24px',
+                marginBottom: '48px',
+                minHeight: '400px',
                 alignContent: 'start',
               }}
             >
@@ -397,7 +388,7 @@ export default function TeacherForumHub() {
                         borderRadius: '16px',
                         border: '1px solid',
                         borderColor: currentLevelTheme.border,
-                        p: { xs: 2, sm: 2.5, md: 3 },
+                        p: 3,
                         display: 'flex',
                         flexDirection: 'column',
                         transition: 'transform 0.2s, box-shadow 0.2s',
@@ -408,15 +399,7 @@ export default function TeacherForumHub() {
                       }}
                     >
                       <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            mb: 2,
-                            alignItems: 'center',
-                            gap: 1,
-                            flexWrap: 'wrap',
-                          }}
-                        >
+                        <Box sx={{ display: 'flex', mb: 2, alignItems: 'center' }}>
                           {formatText && (
                             <Typography
                               sx={{
@@ -499,10 +482,8 @@ export default function TeacherForumHub() {
                         <Box
                           sx={{
                             display: 'flex',
-                            flexDirection: { xs: 'column', sm: 'row' },
-                            alignItems: { xs: 'flex-start', sm: 'center' },
+                            alignItems: 'center',
                             justifyContent: 'space-between',
-                            gap: { xs: 1, sm: 0 },
                             mb: 1.5,
                           }}
                         >
@@ -512,14 +493,7 @@ export default function TeacherForumHub() {
                             {formatDate(test.created_at)}
                           </Typography>
 
-                          <Box
-                            sx={{
-                              display: 'flex',
-                              gap: 1.5,
-                              alignItems: 'center',
-                              flexWrap: 'wrap',
-                            }}
-                          >
+                          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
                             <Box
                               sx={{
                                 display: 'flex',
@@ -577,7 +551,6 @@ export default function TeacherForumHub() {
                               textTransform: 'none',
                               borderRadius: '8px',
                               fontWeight: 600,
-                              width: { xs: '100%', sm: 'auto' },
                               '&:hover': {
                                 borderColor: currentLevelTheme.badge,
                                 bgcolor: currentLevelTheme.badge,

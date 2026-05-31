@@ -17,7 +17,7 @@ export const messageBubbleStyles = {
     justifyContent: 'flex-end',
   },
   userMessageBox: {
-    maxWidth: { xs: '92%', md: '78%' },
+    maxWidth: { xs: '90%', md: '78%' },
   },
   userMessagePaper: {
     borderRadius: 4,
@@ -29,7 +29,7 @@ export const messageBubbleStyles = {
   userMessageText: {
     whiteSpace: 'pre-wrap',
     lineHeight: 1.8,
-    fontSize: { xs: 15, md: 16 },
+    fontSize: 16,
   },
   userTimestampBox: {
     display: 'block',
@@ -38,8 +38,8 @@ export const messageBubbleStyles = {
     textAlign: 'right',
   },
   userAvatar: {
-    width: { xs: 30, sm: 34 },
-    height: { xs: 30, sm: 34 },
+    width: 34,
+    height: 34,
     bgcolor: 'primary.main',
     boxShadow: '0 10px 24px rgba(255, 133, 75, 0.18)',
   },
@@ -49,8 +49,8 @@ export const messageBubbleStyles = {
     justifyContent: 'flex-start',
   },
   aiAvatar: {
-    width: { xs: 30, sm: 34 },
-    height: { xs: 30, sm: 34 },
+    width: 34,
+    height: 34,
     bgcolor: 'primary.main',
     boxShadow: '0 10px 24px rgba(83, 40, 34, 0.18)',
   },
@@ -58,7 +58,7 @@ export const messageBubbleStyles = {
     fontSize: 18,
   },
   aiMessageBox: {
-    maxWidth: { xs: '92%', md: '78%' },
+    maxWidth: { xs: '90%', md: '78%' },
   },
   aiMessagePaper: {
     borderRadius: 4,
@@ -71,7 +71,7 @@ export const messageBubbleStyles = {
   aiMessageText: {
     whiteSpace: 'pre-wrap',
     lineHeight: 1.8,
-    fontSize: { xs: 15, md: 16 },
+    fontSize: 16,
   },
   metaDataStack: {
     display: 'flex',
@@ -79,7 +79,6 @@ export const messageBubbleStyles = {
     gap: 1,
     alignItems: 'center',
     mt: 0.75,
-    flexWrap: 'wrap',
   },
   timestampText: {
     variant: 'caption',

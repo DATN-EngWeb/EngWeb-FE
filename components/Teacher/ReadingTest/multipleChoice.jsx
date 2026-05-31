@@ -5,9 +5,8 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import CircleIcon from '@mui/icons-material/Circle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import { Checkbox } from '@mui/material';
-import { Box, Typography, Button } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { FormControl, FormLabel, OutlinedInput, Collapse } from '@mui/material';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { multipleChoiceStyles } from '../../../styles/Teacher/Reading/QuesitonTypeStyles';
 import { uploadReadingStyles } from '../../../styles/Teacher/Reading/UploadReadingStyles';
 import ClientSideCustomEditor from '../../../components/Editor/ClientSideCustomEditor';
@@ -29,134 +28,6 @@ export default function MultipleChoiceForm({
 }) {
   const [isOpen, setIsOpen] = React.useState(true);
   const [collapsedQuestions, setCollapsedQuestions] = React.useState({});
-
-  const handlePartTour = (e) => {
-    e.stopPropagation();
-    const { driver } = require('driver.js');
-
-    const steps = [
-      {
-        element: `#tour-part-header-${partId}`,
-        popover: {
-          title: 'Multiple Choice Part',
-          description: `This is Part ${index + 1} (${part.format === 'G' ? 'Long Passage' : 'Short Texts'}). Students will read the passage and select the correct option among multiple choices.`,
-          side: 'bottom',
-          align: 'start',
-        },
-      },
-      {
-        element: `#tour-score-${partId}`,
-        popover: {
-          title: 'Points per Question',
-          description:
-            'Define the default point score awarded for each correct multiple choice question in this part.',
-          side: 'right',
-          align: 'start',
-        },
-      },
-    ];
-
-    if (part.format === 'G' && document.querySelector(`#tour-passage-${partId}`)) {
-      steps.push({
-        element: `#tour-passage-${partId}`,
-        popover: {
-          title: 'Reading Passage Editor',
-          description:
-            'Use the CKEditor below to write or paste the main reading text. Format typography, embed tables/lists, or upload images directly.',
-          side: 'top',
-          align: 'start',
-        },
-      });
-    }
-
-    if (document.querySelector(`#tour-questions-${partId}`)) {
-      steps.push({
-        element: `#tour-questions-${partId}`,
-        popover: {
-          title: 'Questions Section',
-          description:
-            'This is the Questions panel. Each card here represents one multiple choice question. You can add, delete, and configure each question including content, explanation, and answer options.',
-          side: 'top',
-          align: 'start',
-        },
-      });
-
-      if (document.querySelector(`#tour-questions-${partId} .tour-question-input`)) {
-        steps.push({
-          element: `#tour-questions-${partId} .tour-question-input`,
-          popover: {
-            title: 'Question Content',
-            description:
-              'Enter the text of the reading comprehension question here. For format F, you can write rich-text questions and insert blank placeholders using the editor toolbar.',
-            side: 'top',
-            align: 'start',
-          },
-        });
-      }
-
-      if (document.querySelector(`#tour-questions-${partId} .tour-explanation-input`)) {
-        steps.push({
-          element: `#tour-questions-${partId} .tour-explanation-input`,
-          popover: {
-            title: 'Question Explanation',
-            description:
-              'Provide an explanation or translation for the correct answer to help students review their test results.',
-            side: 'top',
-            align: 'start',
-          },
-        });
-      }
-      if (document.querySelector(`#tour-questions-${partId} .tour-option-item`)) {
-        steps.push({
-          element: `#tour-questions-${partId} .tour-option-item`,
-          popover: {
-            title: 'Answer Options',
-            description:
-              'Fill in the choice options here. Click the circular radio button to the left of the option to mark it as the correct answer.',
-            side: 'top',
-            align: 'start',
-          },
-        });
-      }
-      if (document.querySelector(`#tour-questions-${partId} .tour-add-option-btn`)) {
-        steps.push({
-          element: `#tour-questions-${partId} .tour-add-option-btn`,
-          popover: {
-            title: 'Add New Option',
-            description:
-              'Click this "+ Add option" button to insert an additional answer choice input card for this question.',
-            side: 'top',
-            align: 'center',
-          },
-        });
-      }
-    }
-
-    if (document.querySelector(`#tour-add-btn-${partId}`)) {
-      steps.push({
-        element: `#tour-add-btn-${partId}`,
-        popover: {
-          title: 'Add New Question',
-          description:
-            'Click this button to append a new multiple choice question card to this part.',
-          side: 'top',
-          align: 'center',
-        },
-      });
-    }
-
-    const driverObj = driver({
-      showProgress: true,
-      animate: true,
-      doneBtnText: 'Finish',
-      closeBtnText: 'Close',
-      nextBtnText: 'Next',
-      prevBtnText: 'Back',
-      steps: steps,
-    });
-
-    driverObj.drive();
-  };
 
   const toggleQuestionCollapse = (questionId) => {
     setCollapsedQuestions((prev) => ({
@@ -299,7 +170,7 @@ export default function MultipleChoiceForm({
   return (
     <>
       {/* ------------- Heading ------------- */}
-      <Box id={`tour-part-header-${partId}`} sx={uploadReadingStyles.partEditorHeader}>
+      <Box sx={uploadReadingStyles.partEditorHeader}>
         <Box
           sx={{
             display: 'flex',
@@ -341,32 +212,8 @@ export default function MultipleChoiceForm({
               gap: 0.5,
               flexShrink: 0,
               ml: 'auto',
-              alignItems: 'center',
             }}
           >
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={handlePartTour}
-              startIcon={<HelpOutlineIcon sx={{ fontSize: '0.9rem !important' }} />}
-              sx={{
-                color: '#FF9E45',
-                borderColor: '#FF9E45',
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                textTransform: 'none',
-                borderRadius: '16px',
-                py: 0.25,
-                px: 1.5,
-                mr: 2,
-                '&:hover': {
-                  backgroundColor: '#FFEAD4',
-                  borderColor: '#FF9E45',
-                },
-              }}
-            >
-              Guide
-            </Button>
             <DeleteRoundedIcon
               onClick={() => handleDeletePart(partId)}
               sx={{
@@ -405,7 +252,6 @@ export default function MultipleChoiceForm({
           <Box sx={{ ...uploadReadingStyles.partEditorColumn, width: '100%', minWidth: 0, mb: 0 }}>
             {/* -------------- Total Each Score -------------- */}
             <FormControl
-              id={`tour-score-${partId}`}
               fullWidth
               sx={{ ...uploadReadingStyles.formControl, mb: part.format === 'F' ? 1 : 3 }}
             >
@@ -431,11 +277,7 @@ export default function MultipleChoiceForm({
             </FormControl>
             {/* -------------- Description Section -------------- */}
             {part.format === 'G' && (
-              <FormControl
-                id={`tour-passage-${partId}`}
-                fullWidth
-                sx={uploadReadingStyles.formControl}
-              >
+              <FormControl fullWidth sx={uploadReadingStyles.formControl}>
                 <Box
                   sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}
                 >
@@ -458,10 +300,7 @@ export default function MultipleChoiceForm({
 
           {/* -------------- Right Column: Questions -------------- */}
           <Box sx={{ ...uploadReadingStyles.partEditorColumn, width: '100%', minWidth: 0, mb: 0 }}>
-            <Box
-              id={`tour-questions-${partId}`}
-              sx={{ ...uploadReadingStyles.formControl, width: '100%' }}
-            >
+            <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
               <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                 <FormLabel sx={uploadReadingStyles.labelInput}>
                   Questions
@@ -556,7 +395,6 @@ export default function MultipleChoiceForm({
                                 >
                                   <FormControl
                                     fullWidth
-                                    className="tour-question-input"
                                     sx={{
                                       ...uploadReadingStyles.formControl,
                                       position: 'relative',
@@ -575,7 +413,6 @@ export default function MultipleChoiceForm({
                                   <OutlinedInput
                                     size="small"
                                     multiline
-                                    className="tour-explanation-input"
                                     placeholder="Enter explanation here"
                                     defaultValue={question.explanation}
                                     sx={uploadReadingStyles.inputMultiline}
@@ -595,7 +432,6 @@ export default function MultipleChoiceForm({
                                   <OutlinedInput
                                     size="small"
                                     multiline
-                                    className="tour-question-input"
                                     placeholder="Enter question here"
                                     defaultValue={question.content}
                                     sx={uploadReadingStyles.inputMultiline}
@@ -606,7 +442,6 @@ export default function MultipleChoiceForm({
                                   <OutlinedInput
                                     size="small"
                                     multiline
-                                    className="tour-explanation-input"
                                     placeholder="Enter explanation here"
                                     defaultValue={question.explanation}
                                     sx={uploadReadingStyles.inputMultiline}
@@ -645,7 +480,6 @@ export default function MultipleChoiceForm({
                                     .map((option, oIndex) => (
                                       <Box
                                         key={`${question.id}-${option.id}`}
-                                        className="tour-option-item"
                                         sx={multipleChoiceStyles.optionContainer}
                                       >
                                         <Checkbox
@@ -701,7 +535,6 @@ export default function MultipleChoiceForm({
                                 {/* --------------- Add Option --------------- */}
                                 <Typography
                                   onClick={() => handleAddOption(question.id)}
-                                  className="tour-add-option-btn"
                                   sx={multipleChoiceStyles.buttonAndIconContainer}
                                 >
                                   <AddRoundedIcon sx={{ fontSize: '1.4rem' }} />
@@ -713,11 +546,7 @@ export default function MultipleChoiceForm({
                         </Box>
                       ))}
                   </Box>
-                  <Box
-                    id={`tour-add-btn-${partId}`}
-                    onClick={handleAddQuestion}
-                    sx={multipleChoiceStyles.addQuestionBox}
-                  >
+                  <Box onClick={handleAddQuestion} sx={multipleChoiceStyles.addQuestionBox}>
                     <AddRoundedIcon sx={{ fontSize: '1.2rem' }} />
                     Add question
                   </Box>

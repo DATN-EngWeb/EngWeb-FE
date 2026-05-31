@@ -19,7 +19,6 @@ import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded';
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
-import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
 import WavyDots from './WavyDots';
 import MessageBubble from './MessageBubble';
 import { chatAreaStyles, selectMenuProps } from '../../styles/AIAssistant/ChatAreaStyles';
@@ -88,9 +87,6 @@ export default function ChatArea({
   isLoadingMoreMessages,
   onLoadMoreMessages,
   onClearError,
-  onClose,
-  onOpenRecentConversations,
-  showSidebarToggle = false,
 }) {
   const messagesEndRef = useRef(null);
   const activeQuota =
@@ -128,31 +124,7 @@ export default function ChatArea({
   return (
     <Box sx={chatAreaStyles.root}>
       <Box sx={chatAreaStyles.header}>
-        <Box sx={chatAreaStyles.headerActionsRow}>
-          {showSidebarToggle && (
-            <IconButton
-              size="small"
-              onClick={onOpenRecentConversations}
-              sx={chatAreaStyles.sidebarToggleButton}
-              aria-label="Open recent conversations"
-            >
-              <MenuRoundedIcon />
-            </IconButton>
-          )}
-
-          {onClose && (
-            <IconButton
-              size="small"
-              onClick={onClose}
-              sx={chatAreaStyles.closeAssistantButton}
-              aria-label="Close AI Assistant"
-            >
-              <CloseRoundedIcon />
-            </IconButton>
-          )}
-        </Box>
-
-        <Box sx={chatAreaStyles.headerContent}>
+        <Box>
           <Typography variant="h5" sx={chatAreaStyles.title}>
             {activeConversation?.title || 'New conversation'}
           </Typography>
@@ -351,7 +323,7 @@ export default function ChatArea({
             <Stack
               direction="row"
               justifyContent="flex-start"
-              alignItems={{ xs: 'stretch', sm: 'center' }}
+              alignItems="center"
               spacing={1}
               flexWrap="wrap"
             >

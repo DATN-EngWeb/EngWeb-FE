@@ -7,8 +7,6 @@ export const appBarStyles = {
 
 export const toolbarStyles = {
   justifyContent: 'space-between',
-  py: { xs: 0.5, sm: 1 },
-  minHeight: { xs: 48, sm: 'auto' },
 };
 
 export const navBoxStyles = {
@@ -26,7 +24,7 @@ export const navButtonStyles = {
 
 export const actionBoxStyles = {
   display: 'flex',
-  gap: { xs: 0.75, sm: 1.5 },
+  gap: 1.5,
 };
 
 export const registerButtonStyles = {
@@ -38,10 +36,8 @@ export const registerButtonStyles = {
     borderWidth: 1,
     borderStyle: 'solid',
     borderRadius: 9999,
-    px: { xs: 1.1, sm: 3 },
-    py: { xs: 0.25, sm: 0.75 },
-    fontSize: { xs: '0.72rem', sm: '0.875rem' },
-    minWidth: { xs: 80, sm: 'auto' },
+    px: 3,
+    py: 0.75,
     '&:hover': {
       backgroundColor: 'background.default',
       borderColor: 'primary.main',
@@ -53,13 +49,11 @@ export const loginButtonStyles = {
   variant: 'contained',
   sx: {
     backgroundColor: 'primary.main',
-    width: { xs: 'auto', sm: '115px' },
+    width: '115px',
     color: 'background.paper',
     borderRadius: 9999,
-    px: { xs: 1.1, sm: 3 },
-    py: { xs: 0.25, sm: 0.75 },
-    fontSize: { xs: '0.72rem', sm: '0.875rem' },
-    minWidth: { xs: 72, sm: '115px' },
+    px: 3,
+    py: 0.75,
     boxShadow: 'none',
     '&:hover': {
       backgroundColor: 'primary.dark',
@@ -74,7 +68,7 @@ export const logoLinkStyles = {
   paddingRight: '40px',
   display: 'flex',
   alignItems: 'center',
-  paddingTop: { xs: '4px', sm: '6px' }, // smaller on mobile
+  paddingTop: '6px', // Align with text baseline
 };
 
 export const navLinkStyles = {

@@ -475,7 +475,7 @@ export default function Header() {
     <>
       <AppBar position="static" sx={appBarStyles}>
         <Container maxWidth="lg">
-          <Toolbar sx={toolbarStyles}>
+          <Toolbar sx={{ ...toolbarStyles, minHeight: 'auto', py: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0 }}>
               <Link href="/" style={logoLinkStyles}>
                 <Image src={Logo} alt="NENS" width={32} height={24} />

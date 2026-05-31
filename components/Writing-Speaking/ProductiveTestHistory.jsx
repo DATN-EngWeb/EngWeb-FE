@@ -211,23 +211,27 @@ export default function ProductiveTestHistory() {
 
   return (
     <Box sx={styles.mainWrapper}>
-      <Grid container spacing={{ xs: 2, lg: 4 }} justifyContent="space-between">
+      <Grid container spacing={isMobile ? 2 : 4}>
         {/* Cột trái */}
-        <Grid item sx={{ width: { xs: '100%', md: '65%' } }}>
+        <Grid item xs={12} md={8}>
           {/* Card tiêu đề */}
-          <Paper sx={styles.paperCard}>
+          <Paper
+            elevation={0}
+            sx={{ ...styles.paperCard, p: { xs: 2, sm: 3, md: 4 }, mb: { xs: 2, md: 3 } }}
+          >
             <Stack
-              direction="row"
+              direction={{ xs: 'column', sm: 'row' }}
               justifyContent="space-between"
-              alignItems="flex-start"
-              spacing={2}
+              alignItems={{ xs: 'flex-start', sm: 'center' }}
+              spacing={{ xs: 1, sm: 2 }}
+              mb={1.5}
             >
               <Typography
                 variant="h4"
                 fontWeight={800}
-                color="#4e342e"
+                color="primary.main"
                 sx={{
-                  fontSize: { xs: '1.25rem', sm: '1.5rem' },
+                  fontSize: { xs: '1.25rem', sm: '1.5rem', md: '2.125rem' },
                   wordBreak: 'break-word',
                 }}
               >
@@ -237,6 +241,7 @@ export default function ProductiveTestHistory() {
                 sx={{
                   ...styles.levelTag(levelTheme[testData.level]),
                   flexShrink: 0,
+                  alignSelf: { xs: 'flex-start', sm: 'auto' },
                 }}
               >
                 Level {testData.level}
@@ -355,7 +360,7 @@ export default function ProductiveTestHistory() {
         </Grid>
 
         {/* column for sidebar */}
-        <Grid item sx={{ width: { xs: '100%', md: '30%' } }}>
+        <Grid item xs={12} md={4}>
           <Stack spacing={isMobile ? 2 : 3}>
             <SidebarForum />
           </Stack>

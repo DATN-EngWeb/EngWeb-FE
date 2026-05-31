@@ -13,7 +13,6 @@ import {
   Button,
   IconButton,
 } from '@mui/material';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
@@ -44,156 +43,6 @@ export default function FillBlankForm({
 }) {
   const [isOpen, setIsOpen] = React.useState(true);
   const [collapsedQuestions, setCollapsedQuestions] = React.useState({});
-
-  const handlePartTour = (e) => {
-    e.stopPropagation();
-    const { driver } = require('driver.js');
-
-    const steps = [
-      {
-        element: `#tour-part-header-${partId}`,
-        popover: {
-          title: 'Fill in the Blanks Part',
-          description: `This is Part ${index + 1} (Fill in the Blanks). Students will fill in missing words in a reading passage.`,
-          side: 'bottom',
-          align: 'start',
-        },
-      },
-      {
-        element: `#tour-score-${partId}`,
-        popover: {
-          title: 'Points per Question',
-          description:
-            'Define the default point score awarded for each correct blank filled in this part.',
-          side: 'right',
-          align: 'start',
-        },
-      },
-      {
-        element: `#tour-answer-type-${partId}`,
-        popover: {
-          title: 'Answer Format',
-          description:
-            'Choose between "Multiple Choice" (students select from options) or "Text" (students type exact text) formats.',
-          side: 'right',
-          align: 'start',
-        },
-      },
-    ];
-
-    if (document.querySelector(`#tour-passage-${partId}`)) {
-      steps.push({
-        element: `#tour-passage-${partId}`,
-        popover: {
-          title: 'Insert Blank Placeholders',
-          description:
-            'Write your text in the CKEditor. To insert a blank placeholder for students to fill, click the "(1)_" icon in the CKEditor toolbar. Each inserted blank will automatically generate a matching question card below!',
-          side: 'top',
-          align: 'start',
-        },
-      });
-
-      const insertBlankSel = `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Insert Blank"]`;
-      if (document.querySelector(insertBlankSel)) {
-        steps.push({
-          element: insertBlankSel,
-          popover: {
-            title: 'Insert Blank (1)_',
-            description:
-              'CRITICAL: Click this button to insert a numbered blank placeholder. Note: There must be text either before or after the blank for it to register properly and create an answer card below.',
-            side: 'bottom',
-            align: 'start',
-          },
-        });
-      }
-    }
-
-    if (document.querySelector(`#tour-questions-${partId}`)) {
-      steps.push({
-        element: `#tour-questions-${partId}`,
-        popover: {
-          title: 'Blank Answer Cards',
-          description:
-            'This is the Answers panel. Each card corresponds to a blank placeholder you inserted into the passage above. Configure the correct answer and distractor options for each blank here.',
-          side: 'top',
-          align: 'start',
-        },
-      });
-
-      if (document.querySelector(`#tour-questions-${partId} .tour-question-input`)) {
-        steps.push({
-          element: `#tour-questions-${partId} .tour-question-input`,
-          popover: {
-            title: 'Question Content',
-            description:
-              'Enter the prompt text or expected correct word/phrase answers for the blanks in the passage.',
-            side: 'top',
-            align: 'start',
-          },
-        });
-      }
-
-      if (document.querySelector(`#tour-questions-${partId} .tour-add-text-option-btn`)) {
-        steps.push({
-          element: `#tour-questions-${partId} .tour-add-text-option-btn`,
-          popover: {
-            title: 'Add Alternative Answer',
-            description:
-              'Add another valid word/phrase that will be accepted as correct for this blank.',
-            side: 'top',
-            align: 'center',
-          },
-        });
-      }
-
-      if (document.querySelector(`#tour-questions-${partId} .tour-explanation-input`)) {
-        steps.push({
-          element: `#tour-questions-${partId} .tour-explanation-input`,
-          popover: {
-            title: 'Question Explanation',
-            description: 'Provide a helpful explanation or context for this blank answer card.',
-            side: 'top',
-            align: 'start',
-          },
-        });
-      }
-      if (document.querySelector(`#tour-questions-${partId} .tour-option-item`)) {
-        steps.push({
-          element: `#tour-questions-${partId} .tour-option-item`,
-          popover: {
-            title: 'Answer Options',
-            description:
-              'For Multiple Choice blank formats, input the options here. Mark the correct key by checking the radio button to the left.',
-            side: 'top',
-            align: 'start',
-          },
-        });
-      }
-      if (document.querySelector(`#tour-questions-${partId} .tour-add-option-btn`)) {
-        steps.push({
-          element: `#tour-questions-${partId} .tour-add-option-btn`,
-          popover: {
-            title: 'Add New Option',
-            description: 'Add extra distractor choices for students to select from.',
-            side: 'top',
-            align: 'center',
-          },
-        });
-      }
-    }
-
-    const driverObj = driver({
-      showProgress: true,
-      animate: true,
-      doneBtnText: 'Finish',
-      closeBtnText: 'Close',
-      nextBtnText: 'Next',
-      prevBtnText: 'Back',
-      steps: steps,
-    });
-
-    driverObj.drive();
-  };
 
   const toggleQuestionCollapse = (questionId) => {
     setCollapsedQuestions((prev) => ({
@@ -447,7 +296,7 @@ export default function FillBlankForm({
 
   return (
     <>
-      <Box id={`tour-part-header-${partId}`} sx={uploadReadingStyles.partEditorHeader}>
+      <Box sx={uploadReadingStyles.partEditorHeader}>
         <Box
           sx={{
             display: 'flex',
@@ -492,32 +341,8 @@ export default function FillBlankForm({
               gap: 0.5,
               flexShrink: 0,
               ml: 'auto',
-              alignItems: 'center',
             }}
           >
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={handlePartTour}
-              startIcon={<HelpOutlineIcon sx={{ fontSize: '0.9rem !important' }} />}
-              sx={{
-                color: '#FF9E45',
-                borderColor: '#FF9E45',
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                textTransform: 'none',
-                borderRadius: '16px',
-                py: 0.25,
-                px: 1.5,
-                mr: 2,
-                '&:hover': {
-                  backgroundColor: '#FFEAD4',
-                  borderColor: '#FF9E45',
-                },
-              }}
-            >
-              Guide
-            </Button>
             <DeleteRoundedIcon
               onClick={() => handleDeletePart(partId)}
               sx={{
@@ -557,11 +382,7 @@ export default function FillBlankForm({
             {/* -------------- Total Each Score and Answer Type -------------- */}
             <Box sx={{ ...fillBlankStyles.scoreAndCheckbox, gridTemplateColumns: '1fr', gap: 2 }}>
               {/* -------------- CỘT TRÁI: Nhập điểm -------------- */}
-              <FormControl
-                id={`tour-score-${partId}`}
-                fullWidth
-                sx={uploadReadingStyles.formControl}
-              >
+              <FormControl fullWidth sx={uploadReadingStyles.formControl}>
                 <FormLabel sx={uploadReadingStyles.labelInput}>
                   The score for each question
                   <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
@@ -583,11 +404,7 @@ export default function FillBlankForm({
                 />
               </FormControl>
               {/* -------------- Chọn loại format (H hoặc I) -------------- */}
-              <FormControl
-                id={`tour-answer-type-${partId}`}
-                fullWidth
-                sx={uploadReadingStyles.formControl}
-              >
+              <FormControl fullWidth sx={uploadReadingStyles.formControl}>
                 <FormLabel sx={uploadReadingStyles.labelInput}>
                   Answer Type
                   <Box component="span" sx={uploadReadingStyles.requiredAsterisk}>
@@ -648,11 +465,7 @@ export default function FillBlankForm({
               </FormControl>
             </Box>
             {/* -------------- Passage Section -------------- */}
-            <FormControl
-              id={`tour-passage-${partId}`}
-              fullWidth
-              sx={{ ...uploadReadingStyles.formControl, mt: 3 }}
-            >
+            <FormControl fullWidth sx={{ ...uploadReadingStyles.formControl, mt: 3 }}>
               <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                 <FormLabel sx={uploadReadingStyles.labelInput}>
                   Passage
@@ -675,10 +488,7 @@ export default function FillBlankForm({
 
           {/* -------------- Right Column: Questions -------------- */}
           <Box sx={{ ...uploadReadingStyles.partEditorColumn, width: '100%', minWidth: 0, mb: 0 }}>
-            <Box
-              id={`tour-questions-${partId}`}
-              sx={{ ...uploadReadingStyles.formControl, width: '100%' }}
-            >
+            <Box sx={{ ...uploadReadingStyles.formControl, width: '100%' }}>
               {/* --------- Heading of Question Section --------- */}
               <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                 <FormLabel sx={uploadReadingStyles.labelInput}>
@@ -800,7 +610,6 @@ export default function FillBlankForm({
                                             <OutlinedInput
                                               size="small"
                                               fullWidth
-                                              className="tour-question-input"
                                               multiline
                                               placeholder={`Option ${vIdx + 1}`}
                                               defaultValue={opt.answer_text}
@@ -828,7 +637,6 @@ export default function FillBlankForm({
                                         ))}
                                     </Box>
                                     <Button
-                                      className="tour-add-text-option-btn"
                                       size="small"
                                       startIcon={<AddRoundedIcon sx={{ fontSize: '1.4rem' }} />}
                                       onClick={() => handleAddTextOption(question.id)}
@@ -846,7 +654,6 @@ export default function FillBlankForm({
                                 <OutlinedInput
                                   size="small"
                                   multiline
-                                  className="tour-explanation-input"
                                   placeholder="Enter explanation here"
                                   defaultValue={question.explanation}
                                   sx={uploadReadingStyles.inputMultiline}
@@ -886,7 +693,6 @@ export default function FillBlankForm({
                                         .map((option, oIndex) => (
                                           <Box
                                             key={`${question.id}-${option.id}`}
-                                            className="tour-option-item"
                                             sx={multipleChoiceStyles.optionContainer}
                                           >
                                             <Checkbox
@@ -947,7 +753,6 @@ export default function FillBlankForm({
                                   {/* --------------- Add Option --------------- */}
                                   <Typography
                                     onClick={() => handleAddOption(question.id)}
-                                    className="tour-add-option-btn"
                                     sx={multipleChoiceStyles.buttonAndIconContainer}
                                   >
                                     <AddRoundedIcon sx={{ fontSize: '1.4rem' }} />

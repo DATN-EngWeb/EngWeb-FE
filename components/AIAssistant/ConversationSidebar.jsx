@@ -111,11 +111,7 @@ export default function ConversationSidebar({
         </IconButton>
       </Stack>
 
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={1.5}
-        sx={conversationSidebarStyles.createButtonRow}
-      >
+      <Stack direction="row" spacing={1.5} sx={conversationSidebarStyles.createButtonRow}>
         <Button
           fullWidth
           variant="contained"
@@ -185,12 +181,7 @@ export default function ConversationSidebar({
                 >
                   <Stack direction="row" spacing={1.25} alignItems="center">
                     <Box sx={conversationSidebarStyles.contentGrow}>
-                      <Stack
-                        direction="row"
-                        alignItems="center"
-                        justifyContent="space-between"
-                        spacing={1}
-                      >
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
                         <Box sx={conversationSidebarStyles.contentGrow}>
                           {editingId === conversationKey ? (
                             <Stack spacing={0.75} sx={conversationSidebarStyles.editStack}>

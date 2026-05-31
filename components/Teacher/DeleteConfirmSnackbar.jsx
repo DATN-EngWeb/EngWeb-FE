@@ -4,18 +4,7 @@ import { forwardRef } from 'react';
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import { Box, Button, Paper, Snackbar, Stack, Typography, Backdrop } from '@mui/material';
 
-const ConfirmCard = forwardRef(function ConfirmCard(
-  {
-    onClose,
-    onConfirm,
-    loading,
-    title = 'Confirm Delete',
-    description = 'Delete this test? This action will mark it as removed.',
-    confirmLabel = 'Delete',
-    loadingLabel = 'Deleting...',
-  },
-  ref,
-) {
+const ConfirmCard = forwardRef(function ConfirmCard({ onClose, onConfirm, loading }, ref) {
   return (
     <Paper
       ref={ref}
@@ -35,10 +24,10 @@ const ConfirmCard = forwardRef(function ConfirmCard(
         <WarningAmberRoundedIcon sx={{ color: 'primary.main', mt: 0.2 }} />
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Typography sx={{ fontWeight: 800, color: 'primary.main', lineHeight: 1.2 }}>
-            {title}
+            Confirm Delete
           </Typography>
           <Typography sx={{ mt: 0.5, color: 'secondary.main', fontSize: 14 }}>
-            {description}
+            Delete this test? This action will mark it as removed.
           </Typography>
           <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 1.5 }}>
             <Button
@@ -58,7 +47,7 @@ const ConfirmCard = forwardRef(function ConfirmCard(
               disabled={loading}
               sx={{ textTransform: 'none', fontWeight: 700 }}
             >
-              {loading ? loadingLabel : confirmLabel}
+              {loading ? 'Deleting...' : 'Delete'}
             </Button>
           </Stack>
         </Box>
@@ -73,10 +62,6 @@ export default function DeleteConfirmSnackbar({
   onConfirm,
   loading,
   withinParent = false,
-  title,
-  description,
-  confirmLabel,
-  loadingLabel,
 }) {
   if (withinParent) {
     if (!open) return null;
@@ -99,15 +84,7 @@ export default function DeleteConfirmSnackbar({
           backdropFilter: 'blur(1px)',
         }}
       >
-        <ConfirmCard
-          onClose={onClose}
-          onConfirm={onConfirm}
-          loading={loading}
-          title={title}
-          description={description}
-          confirmLabel={confirmLabel}
-          loadingLabel={loadingLabel}
-        />
+        <ConfirmCard onClose={onClose} onConfirm={onConfirm} loading={loading} />
       </Box>
     );
   }
@@ -140,15 +117,7 @@ export default function DeleteConfirmSnackbar({
           transform: 'translate(-50%, -50%)',
         }}
       >
-        <ConfirmCard
-          onClose={onClose}
-          onConfirm={onConfirm}
-          loading={loading}
-          title={title}
-          description={description}
-          confirmLabel={confirmLabel}
-          loadingLabel={loadingLabel}
-        />
+        <ConfirmCard onClose={onClose} onConfirm={onConfirm} loading={loading} />
       </Snackbar>
     </>
   );

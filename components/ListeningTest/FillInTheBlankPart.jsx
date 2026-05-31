@@ -17,7 +17,6 @@ import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import AudioUploader from '../Upload/AudioUploader';
 import ClientSideCustomEditor from '../Editor/ClientSideCustomEditor';
 import { useRef, useState } from 'react';
@@ -162,151 +161,6 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
     updatePart({ ...part, answers: newAnswers });
   };
 
-  const handlePartTour = (e) => {
-    e.stopPropagation();
-    const { driver } = require('driver.js');
-    const steps = [];
-    const partId = part.id;
-
-    if (document.querySelector(`#tour-part-header-${partId}`)) {
-      steps.push({
-        element: `#tour-part-header-${partId}`,
-        popover: {
-          title: 'Fill in the Blanks Part',
-          description: `This is Part ${index + 1}. Students will listen to audio and fill in the missing words in the transcript.`,
-          side: 'bottom',
-          align: 'start',
-        },
-      });
-    }
-
-    if (document.querySelector(`#tour-score-${partId}`)) {
-      steps.push({
-        element: `#tour-score-${partId}`,
-        popover: {
-          title: 'Score per Question',
-          description: 'Set the default score awarded for each correctly filled blank.',
-          side: 'right',
-          align: 'start',
-        },
-      });
-    }
-
-    if (document.querySelector(`#tour-audio-${partId}`)) {
-      steps.push({
-        element: `#tour-audio-${partId}`,
-        popover: {
-          title: 'Audio File',
-          description: 'Upload the listening audio file (MP3/M4A) for this part.',
-          side: 'bottom',
-          align: 'start',
-        },
-      });
-    }
-
-    if (document.querySelector(`#tour-instruction-${partId}`)) {
-      steps.push({
-        element: `#tour-instruction-${partId}`,
-        popover: {
-          title: 'Instruction',
-          description: 'Provide instructions for the students on how to complete this part.',
-          side: 'bottom',
-          align: 'start',
-        },
-      });
-    }
-
-    if (document.querySelector(`#tour-content-${partId}`)) {
-      steps.push({
-        element: `#tour-content-${partId}`,
-        popover: {
-          title: 'Content Editor',
-          description:
-            'Write the transcript here. Use the "(1)_" icon in the toolbar to insert blank placeholders where students need to fill in words.',
-          side: 'top',
-          align: 'start',
-        },
-      });
-    }
-
-    const insertBlankSel = `#tour-content-${partId} .ck-toolbar [data-cke-tooltip-text="Insert Blank"]`;
-    if (document.querySelector(insertBlankSel)) {
-      steps.push({
-        element: insertBlankSel,
-        popover: {
-          title: 'Insert Blank (1)_',
-          description:
-            'CRITICAL: Click this button to insert a numbered blank placeholder. Note: There must be text either before or after the blank for it to register properly and create an answer card below.',
-          side: 'bottom',
-          align: 'start',
-        },
-      });
-    }
-
-    if (document.querySelector(`#tour-answers-${partId}`)) {
-      steps.push({
-        element: `#tour-answers-${partId}`,
-        popover: {
-          title: 'Answers Section',
-          description:
-            'Provide the correct answers for each blank here. You can add multiple acceptable variations for a single blank.',
-          side: 'top',
-          align: 'start',
-        },
-      });
-
-      if (document.querySelector(`#tour-answers-${partId} .tour-option-input`)) {
-        steps.push({
-          element: `#tour-answers-${partId} .tour-option-input`,
-          popover: {
-            title: 'Correct Answer Options',
-            description:
-              'Enter an acceptable word or phrase for this blank. Students must match this text exactly (case-insensitive).',
-            side: 'top',
-            align: 'start',
-          },
-        });
-      }
-
-      if (document.querySelector(`#tour-answers-${partId} .tour-add-option-btn`)) {
-        steps.push({
-          element: `#tour-answers-${partId} .tour-add-option-btn`,
-          popover: {
-            title: 'Add Acceptable Variations',
-            description:
-              'If there are multiple correct spellings or phrasing for this blank, click here to add them.',
-            side: 'top',
-            align: 'start',
-          },
-        });
-      }
-
-      if (document.querySelector(`#tour-answers-${partId} .tour-explanation-input`)) {
-        steps.push({
-          element: `#tour-answers-${partId} .tour-explanation-input`,
-          popover: {
-            title: 'Answer Explanation',
-            description:
-              'Provide an explanation for the correct answer to help students understand their mistakes.',
-            side: 'top',
-            align: 'start',
-          },
-        });
-      }
-    }
-
-    const driverObj = driver({
-      showProgress: true,
-      animate: true,
-      doneBtnText: 'Finish',
-      closeBtnText: 'Close',
-      nextBtnText: 'Next',
-      prevBtnText: 'Back',
-      steps,
-    });
-    driverObj.drive();
-  };
-
   return (
     <>
       <Snackbar
@@ -319,7 +173,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
           {snackbar.message}
         </Alert>
       </Snackbar>
-      <Box id={`tour-part-header-${part.id}`} sx={partHeader}>
+      <Box sx={partHeader}>
         <Box sx={sectionHeader}>
           <Box sx={accentBar} />
           <Box>
@@ -332,30 +186,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
           </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={handlePartTour}
-            startIcon={<HelpOutlineIcon sx={{ fontSize: '0.9rem !important' }} />}
-            sx={{
-              color: '#FF9E45',
-              borderColor: '#FF9E45',
-              fontWeight: 600,
-              fontSize: '0.75rem',
-              textTransform: 'none',
-              borderRadius: '16px',
-              py: 0.25,
-              px: 1.5,
-              mr: 1,
-              '&:hover': {
-                borderColor: '#FF9E45',
-                backgroundColor: 'rgba(255, 158, 69, 0.08)',
-              },
-            }}
-          >
-            Guide
-          </Button>
+        <Box>
           <IconButton onClick={onDelete} sx={trashIconButton}>
             <DeleteRoundedIcon sx={{ fontSize: '1.4rem' }} />
           </IconButton>
@@ -386,7 +217,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
               minWidth: 0,
             }}
           >
-            <Box id={`tour-score-${part.id}`} sx={{ mb: 3 }}>
+            <Box sx={{ mb: 3 }}>
               <Box sx={rowContent}>
                 <Typography sx={labelText}>
                   The score for each question <span style={{ color: 'red' }}>*</span>
@@ -412,7 +243,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
               />
             </Box>
 
-            <Box id={`tour-audio-${part.id}`} sx={{ mb: 3 }}>
+            <Box sx={{ mb: 3 }}>
               <Typography sx={labelText}>
                 Audio File <span style={{ color: 'red' }}>*</span>
               </Typography>
@@ -423,7 +254,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
               />
             </Box>
 
-            <Box id={`tour-instruction-${part.id}`} sx={{ mb: 3 }}>
+            <Box sx={{ mb: 3 }}>
               <Box sx={rowContent}>
                 <Typography sx={labelText}>
                   Instruction <span style={{ color: 'red' }}>*</span>
@@ -440,7 +271,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
               />
             </Box>
 
-            <Box id={`tour-content-${part.id}`} sx={{ mb: -4 }}>
+            <Box sx={{ mb: -4 }}>
               <Box sx={rowContent}>
                 <Typography sx={labelText}>
                   Content <span style={{ color: 'red' }}>*</span>
@@ -459,142 +290,134 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
               </Box>
             </Box>
 
-            <Box
-              id={`tour-answers-${part.id}`}
-              sx={{ width: '100%', display: 'flex', flexDirection: 'column' }}
-            >
-              <Box sx={rowContent}>
-                <Typography sx={labelText}>
-                  Answers <span style={{ color: 'red' }}>*</span>
-                </Typography>
-              </Box>
+            <Box sx={rowContent}>
+              <Typography sx={labelText}>
+                Answers <span style={{ color: 'red' }}>*</span>
+              </Typography>
+            </Box>
 
-              {answers.length === 0 ? (
-                <Box sx={emptyStateBox}>
-                  No blanks inserted yet. Use the editor toolbar to insert blanks.
-                </Box>
-              ) : (
-                <Stack spacing={2}>
-                  {answers.map((answer, aIdx) => {
-                    const normalizedAnswer = normalizeAnswer(answer);
-                    const acceptedAnswers = normalizedAnswer.acceptedAnswers || [];
-                    return (
-                      <Paper key={normalizedAnswer.id} variant="outlined" sx={outlinedCard}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
-                          <Box sx={numberIndicator}>{aIdx + 1}</Box>
-                          {collapsedQuestions[normalizedAnswer.id] && (
+            {answers.length === 0 ? (
+              <Box sx={emptyStateBox}>
+                No blanks inserted yet. Use the editor toolbar to insert blanks.
+              </Box>
+            ) : (
+              <Stack spacing={2}>
+                {answers.map((answer, aIdx) => {
+                  const normalizedAnswer = normalizeAnswer(answer);
+                  const acceptedAnswers = normalizedAnswer.acceptedAnswers || [];
+                  return (
+                    <Paper key={normalizedAnswer.id} variant="outlined" sx={outlinedCard}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                        <Box sx={numberIndicator}>{aIdx + 1}</Box>
+                        {collapsedQuestions[normalizedAnswer.id] && (
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: 'text.secondary',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              ml: 0.5,
+                            }}
+                          >
+                            {acceptedAnswers[0]?.text || ''}
+                          </Typography>
+                        )}
+                        <Box sx={{ flexGrow: 1 }} />
+                        <IconButton onClick={() => toggleQuestionCollapse(normalizedAnswer.id)}>
+                          <ExpandLessRoundedIcon
+                            sx={{
+                              fontSize: '1.4rem',
+                              transition: 'transform 0.3s ease',
+                              transform: collapsedQuestions[normalizedAnswer.id]
+                                ? 'rotate(180deg)'
+                                : 'rotate(0deg)',
+                            }}
+                          />
+                        </IconButton>
+                      </Box>
+
+                      <Collapse
+                        in={!collapsedQuestions[normalizedAnswer.id]}
+                        sx={{ width: '100%' }}
+                      >
+                        <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          {/* Correct Answers Section */}
+                          <Box>
                             <Typography
-                              variant="body2"
                               sx={{
+                                fontSize: '0.875rem',
+                                fontWeight: 500,
+                                mb: 1.5,
                                 color: 'text.secondary',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                                ml: 0.5,
                               }}
                             >
-                              {acceptedAnswers[0]?.text || ''}
+                              Correct Answer(s)
                             </Typography>
-                          )}
-                          <Box sx={{ flexGrow: 1 }} />
-                          <IconButton onClick={() => toggleQuestionCollapse(normalizedAnswer.id)}>
-                            <ExpandLessRoundedIcon
-                              sx={{
-                                fontSize: '1.4rem',
-                                transition: 'transform 0.3s ease',
-                                transform: collapsedQuestions[normalizedAnswer.id]
-                                  ? 'rotate(180deg)'
-                                  : 'rotate(0deg)',
-                              }}
-                            />
-                          </IconButton>
-                        </Box>
-
-                        <Collapse
-                          in={!collapsedQuestions[normalizedAnswer.id]}
-                          sx={{ width: '100%' }}
-                        >
-                          <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            {/* Correct Answers Section */}
-                            <Box>
-                              <Typography
-                                sx={{
-                                  fontSize: '0.875rem',
-                                  fontWeight: 500,
-                                  mb: 1.5,
-                                  color: 'text.secondary',
-                                }}
-                              >
-                                Correct Answer(s)
-                              </Typography>
-                              <Stack spacing={1}>
-                                {acceptedAnswers.map((answer, vIdx) => (
-                                  <Box
-                                    key={answer.id}
-                                    sx={{
-                                      display: 'flex',
-                                      gap: 1,
-                                      alignItems: 'flex-start',
-                                    }}
-                                  >
-                                    <TextField
-                                      className="tour-option-input"
+                            <Stack spacing={1}>
+                              {acceptedAnswers.map((answer, vIdx) => (
+                                <Box
+                                  key={answer.id}
+                                  sx={{
+                                    display: 'flex',
+                                    gap: 1,
+                                    alignItems: 'flex-start',
+                                  }}
+                                >
+                                  <TextField
+                                    size="small"
+                                    fullWidth
+                                    placeholder={`Option ${vIdx + 1}`}
+                                    value={answer.text}
+                                    onChange={(e) => setVariantText(aIdx, vIdx, e.target.value)}
+                                    multiline
+                                    sx={textInput}
+                                  />
+                                  {acceptedAnswers.length > 1 && (
+                                    <IconButton
                                       size="small"
-                                      fullWidth
-                                      placeholder={`Option ${vIdx + 1}`}
-                                      value={answer.text}
-                                      onChange={(e) => setVariantText(aIdx, vIdx, e.target.value)}
-                                      multiline
-                                      sx={textInput}
-                                    />
-                                    {acceptedAnswers.length > 1 && (
-                                      <IconButton
-                                        size="small"
-                                        onClick={() => removeVariant(aIdx, vIdx)}
-                                        sx={{
-                                          mt: 0.5,
-                                        }}
-                                      >
-                                        <DeleteRoundedIcon sx={{ fontSize: '1.2rem' }} />
-                                      </IconButton>
-                                    )}
-                                  </Box>
-                                ))}
-                              </Stack>
-                              <Button
-                                className="tour-add-option-btn"
-                                size="small"
-                                startIcon={<AddRoundedIcon sx={{ fontSize: '1.4rem' }} />}
-                                onClick={() => addVariant(aIdx)}
-                                sx={{
-                                  mt: 1,
-                                  textTransform: 'none',
-                                  color: 'primary.main',
-                                }}
-                              >
-                                Add option
-                              </Button>
-                            </Box>
-
-                            {/* Explanation Section */}
-                            <TextField
-                              className="tour-explanation-input"
+                                      onClick={() => removeVariant(aIdx, vIdx)}
+                                      sx={{
+                                        mt: 0.5,
+                                      }}
+                                    >
+                                      <DeleteRoundedIcon sx={{ fontSize: '1.2rem' }} />
+                                    </IconButton>
+                                  )}
+                                </Box>
+                              ))}
+                            </Stack>
+                            <Button
                               size="small"
-                              fullWidth
-                              placeholder="Enter explanation"
-                              value={normalizedAnswer.explanation || ''}
-                              onChange={(e) => setAnswerExplanation(aIdx, e.target.value)}
-                              multiline
-                              sx={textInput}
-                            />
+                              startIcon={<AddRoundedIcon sx={{ fontSize: '1.4rem' }} />}
+                              onClick={() => addVariant(aIdx)}
+                              sx={{
+                                mt: 1,
+                                textTransform: 'none',
+                                color: 'primary.main',
+                              }}
+                            >
+                              Add option
+                            </Button>
                           </Box>
-                        </Collapse>
-                      </Paper>
-                    );
-                  })}
-                </Stack>
-              )}
-            </Box>
+
+                          {/* Explanation Section */}
+                          <TextField
+                            size="small"
+                            fullWidth
+                            placeholder="Enter explanation"
+                            value={normalizedAnswer.explanation || ''}
+                            onChange={(e) => setAnswerExplanation(aIdx, e.target.value)}
+                            multiline
+                            sx={textInput}
+                          />
+                        </Box>
+                      </Collapse>
+                    </Paper>
+                  );
+                })}
+              </Stack>
+            )}
           </Box>
         </Box>
       )}
