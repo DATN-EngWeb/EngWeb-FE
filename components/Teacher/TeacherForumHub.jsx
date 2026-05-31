@@ -7,7 +7,6 @@ import {
   Card,
   CardContent,
   CircularProgress,
-  Container,
   Divider,
   Grid,
   InputAdornment,
@@ -27,14 +26,12 @@ import { levelTheme } from '../TestCard';
 import { formatDate } from '../../utils/stringFormat';
 
 const SKILL_LABELS = {
-  R: 'Reading',
-  L: 'Listening',
   W: 'Writing',
   S: 'Speaking',
 };
 
-const LEVEL_OPTIONS = ['A1', 'A2', 'B1', 'B2'];
-const SKILL_OPTIONS = ['R', 'L', 'W', 'S'];
+const LEVEL_OPTIONS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+const SKILL_OPTIONS = ['W', 'S'];
 
 const FORMAT_LABELS = {
   A: 'Email',
@@ -174,7 +171,16 @@ export default function TeacherForumHub() {
         pb: 8,
       }}
     >
-      <Container maxWidth="xl" sx={{ px: { xs: 2, sm: 3, md: 4, lg: 6 }, mx: 'auto', pt: 4 }}>
+      <Box
+        component="main"
+        sx={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: '32px 24px 24px',
+          flex: 1,
+          width: '100%',
+        }}
+      >
         <Grid container spacing={2} sx={{ flexWrap: { xs: 'wrap', md: 'nowrap' } }}>
           <Grid
             item
@@ -351,7 +357,7 @@ export default function TeacherForumHub() {
                 variant="h4"
                 fontWeight={700}
                 color="primary.main"
-                sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.25rem' } }}
+                sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.75rem' } }}
               >
                 Forum by Test
               </Typography>
@@ -577,7 +583,7 @@ export default function TeacherForumHub() {
                               textTransform: 'none',
                               borderRadius: '8px',
                               fontWeight: 600,
-                              width: { xs: '100%', sm: 'auto' },
+                              width: '100%',
                               '&:hover': {
                                 borderColor: currentLevelTheme.badge,
                                 bgcolor: currentLevelTheme.badge,
@@ -611,7 +617,7 @@ export default function TeacherForumHub() {
             </Box>
           </Grid>
         </Grid>
-      </Container>
+      </Box>
     </Box>
   );
 }
