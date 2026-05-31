@@ -143,7 +143,7 @@ export default function ForumPostsPageContent({
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4, px: { xs: 5, md: 10, lg: 15 } }}>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4, px: { xs: 2, sm: 3, md: 4, lg: 6 } }}>
       <Paper
         sx={{
           p: 2,
@@ -161,8 +161,10 @@ export default function ForumPostsPageContent({
 
       <Box
         display="flex"
+        flexDirection={{ xs: 'column', md: 'row' }}
         justifyContent={showTabs ? 'space-between' : 'flex-end'}
-        alignItems="center"
+        alignItems={{ xs: 'stretch', md: 'center' }}
+        gap={{ xs: 2, md: 0 }}
         mb={3}
       >
         {showTabs ? (
@@ -170,6 +172,7 @@ export default function ForumPostsPageContent({
             value={tab}
             onChange={handleTabChange}
             sx={{
+              width: { xs: '100%', md: 'auto' },
               '& .MuiTabs-indicator': { display: 'none' },
               '& .MuiTab-root': {
                 borderRadius: '999px',
@@ -194,7 +197,13 @@ export default function ForumPostsPageContent({
           </Tabs>
         ) : null}
 
-        <Box display="flex" gap={1.5} alignItems="center">
+        <Box
+          display="flex"
+          flexDirection={{ xs: 'column', sm: 'row' }}
+          gap={1.5}
+          alignItems={{ xs: 'stretch', sm: 'center' }}
+          width={{ xs: '100%', md: 'auto' }}
+        >
           {previewData && (
             <Button
               variant="outlined"
@@ -204,7 +213,7 @@ export default function ForumPostsPageContent({
                 textTransform: 'none',
                 borderRadius: 2,
                 fontWeight: 700,
-                minWidth: 140,
+                minWidth: { xs: '100%', sm: 140 },
                 height: 40,
                 px: 2,
                 bgcolor: 'transparent',
@@ -230,7 +239,7 @@ export default function ForumPostsPageContent({
               setQueryInput(e.target.value);
             }}
             sx={{
-              width: 200,
+              width: { xs: '100%', sm: 220 },
               '& .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
             }}
             slotProps={{
@@ -252,7 +261,7 @@ export default function ForumPostsPageContent({
               setPage(1);
             }}
             sx={{
-              minWidth: 130,
+              minWidth: { xs: '100%', sm: 130 },
               height: 40,
               borderRadius: 2,
               fontSize: '14px',
@@ -279,6 +288,9 @@ export default function ForumPostsPageContent({
           >
             <MenuItem value="-created_at" sx={{ fontSize: '14px' }}>
               Newest
+            </MenuItem>
+            <MenuItem value="created_at" sx={{ fontSize: '14px' }}>
+              Oldest
             </MenuItem>
             <MenuItem value="-like_count" sx={{ fontSize: '14px' }}>
               Most liked

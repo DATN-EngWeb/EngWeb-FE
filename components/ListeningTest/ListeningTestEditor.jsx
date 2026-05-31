@@ -24,6 +24,7 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import ScrollToTopButton from '../CreateTest/ScrollToTopButton';
 import ListeningPreview from '../Teacher/ListeningPreview';
 import FeedbackPanel from '../Teacher/Feedback/FeedbackPanel';
+import DeleteConfirmSnackbar from '../Teacher/DeleteConfirmSnackbar';
 
 import {
   getValidationErrorMessage,
@@ -114,6 +115,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
   const [isPreviewActive, setIsPreviewActive] = useState(false);
   const [isFeedbackActive, setIsFeedbackActive] = useState(false);
   const [editingTestId, setEditingTestId] = useState(testId || null);
+  const [deleteTargetPartId, setDeleteTargetPartId] = useState(null);
 
   useEffect(() => {
     if (!isEditMode) {
@@ -217,6 +219,19 @@ export default function ListeningTestEditor({ testId: propTestId }) {
 
   const handleCancelPart = (partId) => {
     setParts((prev) => prev.filter((p) => p.id !== partId));
+  };
+
+  const handleRequestDeletePart = (partId) => {
+    setDeleteTargetPartId(partId);
+  };
+
+  const handleConfirmDeletePart = () => {
+    if (!deleteTargetPartId) {
+      return;
+    }
+
+    handleCancelPart(deleteTargetPartId);
+    setDeleteTargetPartId(null);
   };
 
   const handleSelectPartType = (partId, type) => {
@@ -432,6 +447,105 @@ export default function ListeningTestEditor({ testId: propTestId }) {
     }
   };
 
+  const handleStartTour = () => {
+    const driver = require('driver.js').driver;
+    const steps = [
+      {
+        element: '#tour-basic-info',
+        popover: {
+          title: 'Basic Information',
+          description:
+            'Fill in the test title, duration, level, and description of the listening test.',
+          side: 'bottom',
+          align: 'start',
+        },
+      },
+      {
+        element: '#tour-test-title',
+        popover: {
+          title: 'Test Title',
+          description: 'Enter a descriptive title for this listening test.',
+          side: 'bottom',
+          align: 'start',
+        },
+      },
+      {
+        element: '#tour-test-time',
+        popover: {
+          title: 'Test Duration',
+          description:
+            'Set the allowed time limit (in minutes) for students to complete this test.',
+          side: 'bottom',
+          align: 'start',
+        },
+      },
+      {
+        element: '#tour-test-description',
+        popover: {
+          title: 'Test Description',
+          description: 'Provide a brief overview or special instructions for the test.',
+          side: 'bottom',
+          align: 'start',
+        },
+      },
+      {
+        element: '#tour-test-level',
+        popover: {
+          title: 'Difficulty Level',
+          description: 'Select the English proficiency level targeted by this test.',
+          side: 'bottom',
+          align: 'start',
+        },
+      },
+    ];
+
+    if (document.querySelector('#tour-select-part-panel')) {
+      steps.push({
+        element: '#tour-select-part-panel',
+        popover: {
+          title: 'Select Part Type',
+          description: 'Choose the format for the listening part you want to create.',
+          side: 'top',
+          align: 'start',
+        },
+      });
+    }
+
+    steps.push({
+      element: '#tour-add-part-btn',
+      popover: {
+        title: 'Create Listening Parts',
+        description:
+          'Click here to add a new listening part. You can choose different formats like Multiple Choice, Fill in the Blanks, or Matching.',
+        side: 'top',
+        align: 'center',
+      },
+    });
+
+    steps.push({
+      element: '#tour-actions-bar',
+      popover: {
+        title: 'Action Panel',
+        description:
+          'Once finished, use this panel to Preview the test, Save it as a Draft, Send it for Review, or Publish it immediately.',
+        side: 'bottom',
+        align: 'center',
+      },
+    });
+
+    const driverObj = driver({
+      showProgress: true,
+      animate: true,
+      doneBtnText: 'Finish',
+      closeBtnText: 'Close',
+      nextBtnText: 'Next',
+      prevBtnText: 'Back',
+      steps: steps,
+    });
+
+    driverObj.drive();
+  };
+
   return (
     <Box sx={container}>
       <Container maxWidth="lg">
@@ -445,6 +559,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
           sx={{ mb: 2.5 }}
         />
         <Box
+          id="tour-actions-bar"
           sx={{
             position: 'sticky',
             top: 0,
@@ -462,6 +577,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
             onSendReview={() => handleSubmit('In review')}
             onSaveDraft={() => handleSubmit('Draft')}
             onPublish={() => handleSubmit('Published')}
+            onTour={handleStartTour}
           />
         </Box>
 
@@ -514,7 +630,11 @@ export default function ListeningTestEditor({ testId: propTestId }) {
                     {parts
                       .sort((a, b) => (a.order || 0) - (b.order || 0))
                       .map((part, index) => (
-                        <Box key={part.id} sx={uploadReadingStyles.basicInfoContainer}>
+                        <Box
+                          key={part.id}
+                          id={!part.type ? 'tour-select-part-panel' : undefined}
+                          sx={uploadReadingStyles.basicInfoContainer}
+                        >
                           {!part.type ? (
                             <SelectPartType
                               partTypes={PART_TYPES}
@@ -532,7 +652,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
                                       prev.map((p) => (p.id === part.id ? updatedPart : p)),
                                     )
                                   }
-                                  onDelete={() => handleCancelPart(part.id)}
+                                  onDelete={() => handleRequestDeletePart(part.id)}
                                 />
                               )}
 
@@ -545,7 +665,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
                                       prev.map((p) => (p.id === part.id ? updatedPart : p)),
                                     )
                                   }
-                                  onDelete={() => handleCancelPart(part.id)}
+                                  onDelete={() => handleRequestDeletePart(part.id)}
                                 />
                               )}
 
@@ -558,7 +678,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
                                       prev.map((p) => (p.id === part.id ? updatedPart : p)),
                                     )
                                   }
-                                  onDelete={() => handleCancelPart(part.id)}
+                                  onDelete={() => handleRequestDeletePart(part.id)}
                                 />
                               )}
 
@@ -571,7 +691,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
                                       prev.map((p) => (p.id === part.id ? updatedPart : p)),
                                     )
                                   }
-                                  onDelete={() => handleCancelPart(part.id)}
+                                  onDelete={() => handleRequestDeletePart(part.id)}
                                 />
                               )}
                             </>
@@ -579,7 +699,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
                         </Box>
                       ))}
 
-                    <Box sx={addPartBox} onClick={handleAddPart}>
+                    <Box id="tour-add-part-btn" sx={addPartBox} onClick={handleAddPart}>
                       <AddRoundedIcon sx={{ fontSize: '1.4rem' }} /> Add New Part
                     </Box>
                   </Box>
@@ -626,6 +746,17 @@ export default function ListeningTestEditor({ testId: propTestId }) {
       >
         <CircularProgress color="inherit" />
       </Backdrop>
+
+      <DeleteConfirmSnackbar
+        open={Boolean(deleteTargetPartId)}
+        onClose={() => setDeleteTargetPartId(null)}
+        onConfirm={handleConfirmDeletePart}
+        loading={false}
+        title="Confirm Delete Part"
+        description="Delete this part? This action will remove it from the test."
+        confirmLabel="Delete part"
+        loadingLabel="Deleting part..."
+      />
 
       <ScrollToTopButton />
     </Box>

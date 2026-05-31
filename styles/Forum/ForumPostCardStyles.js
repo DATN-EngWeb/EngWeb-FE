@@ -1,5 +1,5 @@
 const card = { mb: 3, borderRadius: 3 };
-const authorName = { fontWeight: 600, fontSize: 16 };
+const authorName = { fontWeight: 600, fontSize: { xs: 15, sm: 16 } };
 const moreButton = {
   ml: 'auto',
   border: '1px solid',
@@ -42,8 +42,14 @@ const deleteMenuItem = {
   '&:hover': { backgroundColor: 'error.lighter' },
 };
 
-const description = { fontSize: '15px' };
-const userAnswer = { whiteSpace: 'pre-line', fontSize: '14px' };
+const description = { fontSize: { xs: '14px', sm: '15px' } };
+const title = {
+  mt: 1.5,
+  fontWeight: 700,
+  fontSize: { xs: '15px', sm: '16px', md: '17px' },
+  lineHeight: 1.35,
+};
+const userAnswer = { whiteSpace: 'pre-line', fontSize: { xs: '13px', sm: '14px' } };
 
 const likeButton = {
   textTransform: 'none',
@@ -67,7 +73,7 @@ const commentButton = {
   '&:hover': { bgcolor: 'transparent' },
 };
 
-const countText = { fontSize: '14px' };
+const countText = { fontSize: { xs: '13px', sm: '14px' } };
 
 const editDialogTitle = { color: 'primary.main' };
 const editDialogContent = { pt: 1 };
@@ -134,6 +140,7 @@ export default {
   menuPaper,
   menuItem,
   deleteMenuItem,
+  title,
   description,
   userAnswer,
   likeButton,

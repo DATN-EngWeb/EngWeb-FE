@@ -9,8 +9,9 @@ export const getConversationItemPaperSx = (isActive) => ({
 
 export const conversationSidebarStyles = {
   root: {
-    p: 2.25,
+    p: { xs: 1.5, sm: 2.25 },
     borderRight: { md: '1px solid rgba(0, 0, 0, 0.08)' },
+    borderBottom: { xs: '1px solid rgba(0, 0, 0, 0.08)', md: 'none' },
     bgcolor: 'background.paper',
     height: '100%',
     display: 'flex',
@@ -18,8 +19,8 @@ export const conversationSidebarStyles = {
     minHeight: 0,
   },
   logoWrap: {
-    width: 44,
-    height: 44,
+    width: { xs: 38, sm: 44 },
+    height: { xs: 38, sm: 44 },
     borderRadius: 3,
     display: 'grid',
     placeItems: 'center',
@@ -36,12 +37,13 @@ export const conversationSidebarStyles = {
   },
   closeButton: {
     bgcolor: 'background.paper',
+    alignSelf: { xs: 'center', sm: 'auto' },
   },
   createButtonRow: {
     mt: 2,
   },
   createButton: {
-    py: 1.2,
+    py: 1.05,
     fontWeight: 800,
   },
   listWrap: {
@@ -127,6 +129,7 @@ export const conversationSidebarStyles = {
   },
   conversationTitle: {
     fontWeight: 900,
+    fontSize: { xs: '0.9rem', sm: '0.95rem' },
   },
   optionsButton: {
     ml: 'auto',

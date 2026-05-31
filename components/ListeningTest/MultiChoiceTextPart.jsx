@@ -19,6 +19,7 @@ import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import HeadsetMicRoundedIcon from '@mui/icons-material/HeadsetMicRounded';
 import MusicNoteRoundedIcon from '@mui/icons-material/MusicNoteRounded';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import AudioUploader from '../Upload/AudioUploader';
 import ClientSideCustomEditor from '../Editor/ClientSideCustomEditor';
 import { useState, useEffect, useRef } from 'react';
@@ -50,7 +51,7 @@ const options = [
   },
   {
     id: 'onetomany',
-    title: '1 audio - many question',
+    title: '1 audio - many questions',
     description: 'One audio for all questions',
     icon: <MusicNoteRoundedIcon sx={{ fontSize: 40, color: '#000' }} />,
   },
@@ -63,11 +64,189 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
   const [collapsedQuestions, setCollapsedQuestions] = useState({});
   const layoutRef = useRef(null);
 
+  const partId = part.id || `part-${index}`;
+
   const toggleQuestionCollapse = (questionId) => {
     setCollapsedQuestions((prev) => ({
       ...prev,
       [questionId]: !prev[questionId],
     }));
+  };
+
+  const handlePartTour = (e) => {
+    e.stopPropagation();
+    const { driver } = require('driver.js');
+    const steps = [];
+
+    // Part header
+    if (document.querySelector(`#tour-part-header-${partId}`)) {
+      steps.push({
+        element: `#tour-part-header-${partId}`,
+        popover: {
+          title: 'Multiple Choice Text Part',
+          description: `This is Part ${index + 1} (Multiple Choice Text). Students will listen to audio and select the correct text answer.`,
+          side: 'bottom',
+          align: 'start',
+        },
+      });
+    }
+
+    // Score
+    if (document.querySelector(`#tour-score-${partId}`)) {
+      steps.push({
+        element: `#tour-score-${partId}`,
+        popover: {
+          title: 'Score per Question',
+          description:
+            'Set the default point score awarded for each correctly answered question in this part.',
+          side: 'right',
+          align: 'start',
+        },
+      });
+    }
+
+    // Audio format
+    if (document.querySelector(`#tour-audio-format-${partId}`)) {
+      steps.push({
+        element: `#tour-audio-format-${partId}`,
+        popover: {
+          title: 'Audio Format',
+          description:
+            'Choose "1 audio – 1 question" (each question has its own audio clip) or "1 audio – many questions" (all questions share one shared audio).',
+          side: 'bottom',
+          align: 'start',
+        },
+      });
+    }
+
+    // Instruction
+    if (document.querySelector(`#tour-instruction-${partId}`)) {
+      steps.push({
+        element: `#tour-instruction-${partId}`,
+        popover: {
+          title: 'Instruction Text',
+          description:
+            'Write a task instruction for students. Example: "Listen to the conversation and choose the best answer for each question."',
+          side: 'top',
+          align: 'start',
+        },
+      });
+    }
+
+    // Shared audio (onetomany)
+    if (document.querySelector(`#tour-shared-audio-${partId}`)) {
+      steps.push({
+        element: `#tour-shared-audio-${partId}`,
+        popover: {
+          title: 'Shared Audio File',
+          description:
+            'Upload the main audio clip that all questions in this part will use. Supports MP3 and M4A formats.',
+          side: 'top',
+          align: 'start',
+        },
+      });
+    }
+
+    // Questions section
+    if (document.querySelector(`#tour-questions-${partId}`)) {
+      steps.push({
+        element: `#tour-questions-${partId}`,
+        popover: {
+          title: 'Questions Section',
+          description:
+            'Each card here is one question. You can add, delete, and configure each question including the question text, explanation, per-question audio, and answer choices.',
+          side: 'top',
+          align: 'start',
+        },
+      });
+
+      if (document.querySelector(`#tour-questions-${partId} .tour-question-input`)) {
+        steps.push({
+          element: `#tour-questions-${partId} .tour-question-input`,
+          popover: {
+            title: 'Question Text',
+            description:
+              'Enter the question that students must answer after listening to the audio.',
+            side: 'top',
+            align: 'start',
+          },
+        });
+      }
+
+      if (document.querySelector(`#tour-questions-${partId} .tour-explanation-input`)) {
+        steps.push({
+          element: `#tour-questions-${partId} .tour-explanation-input`,
+          popover: {
+            title: 'Explanation',
+            description:
+              'Optionally explain why the correct answer is right. This is shown to students during result review.',
+            side: 'top',
+            align: 'start',
+          },
+        });
+      }
+
+      if (document.querySelector(`#tour-questions-${partId} .tour-per-question-audio`)) {
+        steps.push({
+          element: `#tour-questions-${partId} .tour-per-question-audio`,
+          popover: {
+            title: 'Per-Question Audio File',
+            description:
+              'Upload a unique audio clip for this specific question (only shown in "1 audio – 1 question" format).',
+            side: 'top',
+            align: 'start',
+          },
+        });
+      }
+
+      if (document.querySelector(`#tour-questions-${partId} .tour-option-item`)) {
+        steps.push({
+          element: `#tour-questions-${partId} .tour-option-item`,
+          popover: {
+            title: 'Answer Options',
+            description:
+              'Enter each answer choice text. Click the radio button to the left of an option to mark it as the correct answer.',
+            side: 'top',
+            align: 'start',
+          },
+        });
+      }
+
+      if (document.querySelector(`#tour-questions-${partId} .tour-add-option-btn`)) {
+        steps.push({
+          element: `#tour-questions-${partId} .tour-add-option-btn`,
+          popover: {
+            title: 'Add Option',
+            description: 'Click "+ Add option" to add another answer choice for this question.',
+            side: 'top',
+            align: 'center',
+          },
+        });
+      }
+
+      if (document.querySelector(`#tour-questions-${partId} .tour-add-question-btn`)) {
+        steps.push({
+          element: `#tour-questions-${partId} .tour-add-question-btn`,
+          popover: {
+            title: 'Add New Question',
+            description: 'Click "+ Add question" to append another question card to this part.',
+            side: 'top',
+            align: 'center',
+          },
+        });
+      }
+    }
+
+    const driverObj = driver({
+      showProgress: true,
+      animate: true,
+      doneBtnText: 'Finish',
+      closeBtnText: 'Close',
+      nextBtnText: 'Next',
+      prevBtnText: 'Back',
+      steps,
+    });
+    driverObj.drive();
   };
   const [snackbar, setSnackbar] = useState({ open: false, message: '' });
   const [content, setContent] = useState(part.content || '');
@@ -210,7 +389,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
           {snackbar.message}
         </Alert>
       </Snackbar>
-      <Box sx={{ ...partHeader, alignSelf: 'stretch' }}>
+      <Box id={`tour-part-header-${partId}`} sx={{ ...partHeader, alignSelf: 'stretch' }}>
         <Box sx={sectionHeader}>
           <Box sx={accentBar} />
           <Box>
@@ -222,7 +401,27 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
             </Typography>
           </Box>
         </Box>
-        <Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={handlePartTour}
+            startIcon={<HelpOutlineIcon sx={{ fontSize: '0.9rem !important' }} />}
+            sx={{
+              color: '#FF9E45',
+              borderColor: '#FF9E45',
+              fontWeight: 600,
+              fontSize: '0.75rem',
+              textTransform: 'none',
+              borderRadius: '16px',
+              py: 0.25,
+              px: 1.5,
+              mr: 1,
+              '&:hover': { backgroundColor: '#FFEAD4', borderColor: '#FF9E45' },
+            }}
+          >
+            Guide
+          </Button>
           <IconButton onClick={onDelete} sx={trashIconButton}>
             <DeleteRoundedIcon sx={{ fontSize: '1.4rem' }} />
           </IconButton>
@@ -255,7 +454,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
               width: '100%',
             }}
           >
-            <Box sx={{ mb: 3 }}>
+            <Box id={`tour-score-${partId}`} sx={{ mb: 3 }}>
               <Box sx={rowContent}>
                 <Typography sx={labelText}>
                   The score for each question <span style={{ color: 'red' }}>*</span>
@@ -281,7 +480,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
             <Typography sx={labelText}>
               Audio Format <span style={{ color: 'red' }}>*</span>
             </Typography>
-            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+            <Box id={`tour-audio-format-${partId}`} sx={{ display: 'flex', gap: 2, mb: 2 }}>
               {options.map((option) => {
                 const isActive = audioFormat === option.id;
                 return (
@@ -326,7 +525,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
               })}
             </Box>
 
-            <Box sx={{ mb: 3 }}>
+            <Box id={`tour-instruction-${partId}`} sx={{ mb: 3 }}>
               <Box sx={rowContent}>
                 <Typography sx={labelText}>
                   Instruction <span style={{ color: 'red' }}>*</span>
@@ -348,11 +547,13 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
                 <Typography sx={labelText}>
                   Audio File <span style={{ color: 'red' }}>*</span>
                 </Typography>
-                <AudioUploader
-                  value={part.audio}
-                  onChange={(audio) => updatePart({ ...part, audio })}
-                  accept="audio/mp3,audio/m4a"
-                />
+                <Box id={`tour-shared-audio-${partId}`}>
+                  <AudioUploader
+                    value={part.audio}
+                    onChange={(audio) => updatePart({ ...part, audio })}
+                    accept="audio/mp3,audio/m4a"
+                  />
+                </Box>
 
                 <Box sx={{ mb: 3 }}>
                   <Box sx={rowContent}>
@@ -372,172 +573,185 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
                 </Box>
               </>
             )}
-            <Box sx={rowContent}>
-              <Typography sx={labelText}>
-                Questions <span style={{ color: 'red' }}>*</span>
-              </Typography>
-            </Box>
-
-            {questions.length === 0 ? (
-              <Box sx={emptyStateBox}>
-                No questions yet
-                <br />
-                <Button
-                  startIcon={<AddRoundedIcon />}
-                  sx={{ mt: 1, ...actionTextButton, textTransform: 'none' }}
-                  onClick={addQuestion}
-                >
-                  Add your first question
-                </Button>
+            <Box id={`tour-questions-${partId}`}>
+              <Box sx={rowContent}>
+                <Typography sx={labelText}>
+                  Questions <span style={{ color: 'red' }}>*</span>
+                </Typography>
               </Box>
-            ) : (
-              <Stack spacing={2}>
-                {questions.map((q, qIdx) => (
-                  <Paper key={q.id} variant="outlined" sx={outlinedCard}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
-                      <Box sx={numberIndicator}>{qIdx + 1}</Box>
-                      {collapsedQuestions[q.id] && (
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: 'text.secondary',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            ml: 0.5,
-                          }}
-                        >
-                          {q.text || ''}
-                        </Typography>
-                      )}
-                      <Box sx={{ flexGrow: 1 }} />
-                      <IconButton onClick={() => removeQuestion(qIdx)} sx={trashIconButton}>
-                        <DeleteRoundedIcon sx={{ fontSize: '1.2rem' }} />
-                      </IconButton>
-                      <IconButton onClick={() => toggleQuestionCollapse(q.id)}>
-                        <ExpandLessRoundedIcon
-                          sx={{
-                            fontSize: '1.4rem',
-                            transition: 'transform 0.3s ease',
-                            transform: collapsedQuestions[q.id] ? 'rotate(180deg)' : 'rotate(0deg)',
-                          }}
-                        />
-                      </IconButton>
-                    </Box>
 
-                    <Collapse in={!collapsedQuestions[q.id]} sx={{ width: '100%' }}>
-                      <Box sx={{ mt: 1 }}>
-                        <TextField
-                          size="small"
-                          fullWidth
-                          placeholder="Enter question text"
-                          value={q.text}
-                          onChange={(e) => setQuestionText(qIdx, e.target.value)}
-                          multiline
-                          sx={{ ...textInput, mb: 2 }}
-                        />
-
-                        <TextField
-                          size="small"
-                          fullWidth
-                          placeholder="Enter explanation"
-                          value={q.explanation || ''}
-                          onChange={(e) => {
-                            const newQs = questions.map((question, i) =>
-                              i === qIdx ? { ...question, explanation: e.target.value } : question,
-                            );
-                            updatePart({ ...part, questions: newQs });
-                          }}
-                          multiline
-                          sx={{ ...textInput, mb: 2 }}
-                        />
-
-                        {audioFormat === 'onetoone' && (
-                          <Box sx={{ mb: 2 }}>
-                            <Typography sx={labelText}>
-                              Audio File <span style={{ color: 'red' }}>*</span>
-                            </Typography>
-                            <AudioUploader
-                              value={q.audio}
-                              onChange={(audio) => handleAudioChange(qIdx, audio)}
-                              accept="audio/mp3,audio/m4a"
-                            />
-                          </Box>
-                        )}
-
-                        <Typography sx={{ ...labelText, color: 'text.gray', mb: 1 }}>
-                          Text answers (click to set correct):
-                        </Typography>
-
-                        <Stack spacing={1}>
-                          {q.answers.map((ans, aIdx) => {
-                            const isCorrect = q.correctIndex === aIdx;
-
-                            return (
-                              <Box key={ans.id || aIdx} sx={answerOptionRow}>
-                                <Radio
-                                  checked={isCorrect}
-                                  onChange={() => setCorrect(qIdx, aIdx)}
-                                  sx={{
-                                    color: 'text.gray',
-                                    '&.Mui-checked': { color: 'primary.main' },
-                                    p: 1,
-                                    mr: 1,
-                                  }}
-                                />
-
-                                <Typography
-                                  sx={{
-                                    fontWeight: 'bold',
-                                    mr: 2,
-                                    minWidth: '20px',
-                                    color: 'text.primary',
-                                  }}
-                                >
-                                  {String.fromCharCode(65 + aIdx)}
-                                </Typography>
-
-                                <TextField
-                                  size="small"
-                                  multiline
-                                  placeholder={`Answer ${String.fromCharCode(65 + aIdx)}...`}
-                                  value={ans.text || ''}
-                                  onChange={(e) => setAnswerText(qIdx, aIdx, e.target.value)}
-                                  sx={{ ...answerTextInput, flex: 1, minWidth: 0 }}
-                                />
-
-                                <IconButton
-                                  size="small"
-                                  onClick={() => removeAnswer(qIdx, aIdx)}
-                                  sx={{
-                                    ...trashIconButton,
-                                    ml: 1,
-                                  }}
-                                >
-                                  <DeleteRoundedIcon />
-                                </IconButton>
-                              </Box>
-                            );
-                          })}
-                        </Stack>
-
-                        <Button
-                          startIcon={<AddRoundedIcon sx={{ fontSize: '1.4rem' }} />}
-                          onClick={() => addAnswer(qIdx)}
-                          sx={addOptionButton}
-                        >
-                          Add option
-                        </Button>
-                      </Box>
-                    </Collapse>
-                  </Paper>
-                ))}
-                <Box onClick={addQuestion} sx={addQuestionBox}>
-                  <AddRoundedIcon sx={{ fontSize: '1.2rem' }} />
-                  Add question
+              {questions.length === 0 ? (
+                <Box sx={emptyStateBox}>
+                  No questions yet
+                  <br />
+                  <Button
+                    startIcon={<AddRoundedIcon />}
+                    sx={{ mt: 1, ...actionTextButton, textTransform: 'none' }}
+                    onClick={addQuestion}
+                  >
+                    Add your first question
+                  </Button>
                 </Box>
-              </Stack>
-            )}
+              ) : (
+                <Stack spacing={2}>
+                  {questions.map((q, qIdx) => (
+                    <Paper key={q.id} variant="outlined" sx={outlinedCard}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                        <Box sx={numberIndicator}>{qIdx + 1}</Box>
+                        {collapsedQuestions[q.id] && (
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: 'text.secondary',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              ml: 0.5,
+                            }}
+                          >
+                            {q.text || ''}
+                          </Typography>
+                        )}
+                        <Box sx={{ flexGrow: 1 }} />
+                        <IconButton onClick={() => removeQuestion(qIdx)} sx={trashIconButton}>
+                          <DeleteRoundedIcon sx={{ fontSize: '1.2rem' }} />
+                        </IconButton>
+                        <IconButton onClick={() => toggleQuestionCollapse(q.id)}>
+                          <ExpandLessRoundedIcon
+                            sx={{
+                              fontSize: '1.4rem',
+                              transition: 'transform 0.3s ease',
+                              transform: collapsedQuestions[q.id]
+                                ? 'rotate(180deg)'
+                                : 'rotate(0deg)',
+                            }}
+                          />
+                        </IconButton>
+                      </Box>
+
+                      <Collapse in={!collapsedQuestions[q.id]} sx={{ width: '100%' }}>
+                        <Box sx={{ mt: 1 }}>
+                          <TextField
+                            size="small"
+                            fullWidth
+                            className="tour-question-input"
+                            placeholder="Enter question text"
+                            value={q.text}
+                            onChange={(e) => setQuestionText(qIdx, e.target.value)}
+                            multiline
+                            sx={{ ...textInput, mb: 2 }}
+                          />
+
+                          <TextField
+                            size="small"
+                            fullWidth
+                            className="tour-explanation-input"
+                            placeholder="Enter explanation"
+                            value={q.explanation || ''}
+                            onChange={(e) => {
+                              const newQs = questions.map((question, i) =>
+                                i === qIdx
+                                  ? { ...question, explanation: e.target.value }
+                                  : question,
+                              );
+                              updatePart({ ...part, questions: newQs });
+                            }}
+                            multiline
+                            sx={{ ...textInput, mb: 2 }}
+                          />
+
+                          {audioFormat === 'onetoone' && (
+                            <Box className="tour-per-question-audio" sx={{ mb: 2 }}>
+                              <Typography sx={labelText}>
+                                Audio File <span style={{ color: 'red' }}>*</span>
+                              </Typography>
+                              <AudioUploader
+                                value={q.audio}
+                                onChange={(audio) => handleAudioChange(qIdx, audio)}
+                                accept="audio/mp3,audio/m4a"
+                              />
+                            </Box>
+                          )}
+
+                          <Typography sx={{ ...labelText, color: 'text.gray', mb: 1 }}>
+                            Text answers (click to set correct):
+                          </Typography>
+
+                          <Stack spacing={1}>
+                            {q.answers.map((ans, aIdx) => {
+                              const isCorrect = q.correctIndex === aIdx;
+
+                              return (
+                                <Box
+                                  key={ans.id || aIdx}
+                                  className="tour-option-item"
+                                  sx={answerOptionRow}
+                                >
+                                  <Radio
+                                    checked={isCorrect}
+                                    onChange={() => setCorrect(qIdx, aIdx)}
+                                    sx={{
+                                      color: 'text.gray',
+                                      '&.Mui-checked': { color: 'primary.main' },
+                                      p: 1,
+                                      mr: 1,
+                                    }}
+                                  />
+
+                                  <Typography
+                                    sx={{
+                                      fontWeight: 'bold',
+                                      mr: 2,
+                                      minWidth: '20px',
+                                      color: 'text.primary',
+                                    }}
+                                  >
+                                    {String.fromCharCode(65 + aIdx)}
+                                  </Typography>
+
+                                  <TextField
+                                    size="small"
+                                    multiline
+                                    placeholder={`Answer ${String.fromCharCode(65 + aIdx)}...`}
+                                    value={ans.text || ''}
+                                    onChange={(e) => setAnswerText(qIdx, aIdx, e.target.value)}
+                                    sx={{ ...answerTextInput, flex: 1, minWidth: 0 }}
+                                  />
+
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => removeAnswer(qIdx, aIdx)}
+                                    sx={{
+                                      ...trashIconButton,
+                                      ml: 1,
+                                    }}
+                                  >
+                                    <DeleteRoundedIcon />
+                                  </IconButton>
+                                </Box>
+                              );
+                            })}
+                          </Stack>
+
+                          <Button
+                            startIcon={<AddRoundedIcon sx={{ fontSize: '1.4rem' }} />}
+                            onClick={() => addAnswer(qIdx)}
+                            className="tour-add-option-btn"
+                            sx={addOptionButton}
+                          >
+                            Add option
+                          </Button>
+                        </Box>
+                      </Collapse>
+                    </Paper>
+                  ))}
+                  <Box onClick={addQuestion} className="tour-add-question-btn" sx={addQuestionBox}>
+                    <AddRoundedIcon sx={{ fontSize: '1.2rem' }} />
+                    Add question
+                  </Box>
+                </Stack>
+              )}
+            </Box>
           </Box>
         </Box>
       )}

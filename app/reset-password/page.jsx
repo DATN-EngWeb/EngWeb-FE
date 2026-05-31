@@ -138,7 +138,11 @@ function ResetPasswordContent() {
         >
           <Image src={Logo} alt="NENS" width={32} height={24} />
         </Button>
-        <Image src={registerImage} alt="Reset Password" style={loginStyles.storyImage} />
+        <Box sx={loginStyles.storyImageWrap}>
+          <Box sx={loginStyles.innerImageBox}>
+            <Image src={registerImage} alt="Reset Password" style={loginStyles.storyImage} />
+          </Box>
+        </Box>
       </Box>
 
       <Box component="section" sx={loginStyles.formPanel}>
