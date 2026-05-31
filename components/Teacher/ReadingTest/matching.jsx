@@ -107,20 +107,6 @@ export default function MatchingForm({
           align: 'start',
         },
       });
-
-      const insertBlankSel = `#tour-passage-${partId} .ck-toolbar [data-cke-tooltip-text="Insert Blank"]`;
-      if (document.querySelector(insertBlankSel)) {
-        steps.push({
-          element: insertBlankSel,
-          popover: {
-            title: 'Insert Blank (1)_',
-            description:
-              'Click this button to insert a numbered blank placeholder into the passage. Note: There must be text either before or after the blank for it to register properly. This can be used as a reference point for matching questions.',
-            side: 'bottom',
-            align: 'start',
-          },
-        });
-      }
     }
 
     if (document.querySelector(`#tour-questions-${partId}`)) {
