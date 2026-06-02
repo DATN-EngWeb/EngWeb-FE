@@ -20,6 +20,7 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import AudioUploader from '../Upload/AudioUploader';
 import ImageUploader from '../Upload/ImageUploader';
+import { createDriver } from '../../utils/createDriver';
 import { useRef, useState } from 'react';
 import {
   sectionHeader,
@@ -57,7 +58,6 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
 
   const handlePartTour = (e) => {
     e.stopPropagation();
-    const { driver } = require('driver.js');
     const steps = [];
 
     if (document.querySelector(`#tour-part-header-${partId}`)) {
@@ -178,15 +178,7 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
       }
     }
 
-    const driverObj = driver({
-      showProgress: true,
-      animate: true,
-      doneBtnText: 'Finish',
-      closeBtnText: 'Close',
-      nextBtnText: 'Next',
-      prevBtnText: 'Back',
-      steps,
-    });
+    const driverObj = createDriver({ steps });
     driverObj.drive();
   };
   const [snackbar, setSnackbar] = useState({ open: false, message: '' });

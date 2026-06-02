@@ -11,6 +11,7 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { multipleChoiceStyles } from '../../../styles/Teacher/Reading/QuesitonTypeStyles';
 import { uploadReadingStyles } from '../../../styles/Teacher/Reading/UploadReadingStyles';
 import ClientSideCustomEditor from '../../../components/Editor/ClientSideCustomEditor';
+import { createDriver } from '../../../utils/createDriver';
 
 export default function MultipleChoiceForm({
   flag,
@@ -32,7 +33,6 @@ export default function MultipleChoiceForm({
 
   const handlePartTour = (e) => {
     e.stopPropagation();
-    const { driver } = require('driver.js');
 
     const steps = [
       {
@@ -145,16 +145,7 @@ export default function MultipleChoiceForm({
       });
     }
 
-    const driverObj = driver({
-      showProgress: true,
-      animate: true,
-      doneBtnText: 'Finish',
-      closeBtnText: 'Close',
-      nextBtnText: 'Next',
-      prevBtnText: 'Back',
-      steps: steps,
-    });
-
+    const driverObj = createDriver({ steps });
     driverObj.drive();
   };
 

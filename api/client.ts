@@ -109,7 +109,16 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
       localStorage.removeItem('userStatus');
       localStorage.removeItem('userRole');
       document.cookie = 'userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
-      window.location.href = '/login';
+      try {
+        if (window.self !== window.top) {
+          window.top!.location.href = '/login';
+        } else {
+          window.location.href = '/login';
+        }
+      } catch {
+        // window.top is cross-origin (e.g. chrome-error:// frame) — fall back safely
+        window.location.href = '/login';
+      }
       throw err;
     }
   }
