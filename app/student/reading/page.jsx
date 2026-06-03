@@ -1,23 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Container,
-  Typography,
-  Grid,
-  TextField,
-  MenuItem,
-  Select,
-  Checkbox,
-  FormControlLabel,
-  Pagination,
-  InputAdornment,
-  Stack,
-  CircularProgress,
-} from '@mui/material';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Box, Container, Typography, Grid, Pagination, CircularProgress } from '@mui/material';
 import { getTestOverview } from '../../../api/tests';
 import TestCard from '../../../components/TestCard';
 import { useAuth } from '../../../hooks/useAuth';
@@ -27,13 +11,6 @@ const pageContainerStyles = {
   backgroundColor: 'background.default',
   minHeight: '100vh',
   pb: 8,
-};
-
-const headerSectionStyles = {
-  bgcolor: 'background.paper',
-  px: 4,
-  py: 3,
-  borderRadius: 4,
 };
 
 export default function ReadingHub() {
@@ -148,9 +125,8 @@ export default function ReadingHub() {
   return (
     <Box sx={pageContainerStyles}>
       <Container
-        maxWidth="xl"
+        maxWidth="lg"
         sx={{
-          px: { xs: 2, md: 8, lg: 15 },
           mx: 'auto',
           pt: 4,
           minHeight: { md: 'calc(100vh - 120px)' },

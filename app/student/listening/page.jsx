@@ -11,13 +11,7 @@ const pageContainerStyles = {
   backgroundColor: 'background.default',
   minHeight: '100vh',
   pb: 8,
-};
-
-const headerSectionStyles = {
-  bgcolor: 'background.paper',
-  px: 4,
-  py: 3,
-  borderRadius: 4,
+  mx: 'auto',
 };
 
 export default function ListeningHub() {
@@ -131,9 +125,8 @@ export default function ListeningHub() {
   return (
     <Box sx={pageContainerStyles}>
       <Container
-        maxWidth="xl"
+        maxWidth="lg"
         sx={{
-          px: { xs: 2, md: 8, lg: 15 },
           mx: 'auto',
           pt: 4,
           minHeight: { md: 'calc(100vh - 120px)' },

@@ -297,7 +297,7 @@ export default function TeacherHeader() {
         },
       }}
     >
-      <Container maxWidth="lg">
+      <Container disableGutters maxWidth="lg">
         <Toolbar sx={{ ...toolbarStyles, minHeight: 'auto', py: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0 }}>
             <Link href="/teacher" style={logoLinkStyles}>
