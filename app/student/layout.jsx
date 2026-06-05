@@ -3,6 +3,7 @@
 'use client';
 
 import React, { Suspense, useEffect, useState } from 'react';
+import Box from '@mui/material/Box';
 import Header from '../../components/Home/Header';
 import Footer from '../../components/Home/Footer';
 import AIAssistantWidget from '../../components/Student/AIAssistantWidget';
@@ -26,13 +27,15 @@ export default function StudentLayout({ children }) {
   }, [pathname]);
 
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
       <Suspense fallback={null}>
         <Header />
       </Suspense>
-      <main style={{ minHeight: isTestPage ? 'auto' : '60vh' }}>{children}</main>
+      <Box component="main" sx={{ flex: 1 }}>
+        {children}
+      </Box>
       {!isAuthLoading && isAuthenticated && <AIAssistantWidget />}
       <Suspense fallback={null}>{!isTestPage && <Footer />}</Suspense>
-    </>
+    </Box>
   );
 }

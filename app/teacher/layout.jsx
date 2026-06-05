@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
+import Box from '@mui/material/Box';
 import Header from '../../components/TeacherHome/Header';
 import Footer from '../../components/Home/Footer';
 
@@ -18,10 +19,12 @@ export default function TeacherLayout({ children }) {
   }, [pathname]);
 
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
       <Header />
-      <main style={{ minHeight: isPreviewPage ? '100vh' : '60vh' }}>{children}</main>
+      <Box component="main" sx={{ flex: 1, minHeight: isPreviewPage ? '100vh' : 'unset' }}>
+        {children}
+      </Box>
       {!isPreviewPage && !hideFooter && <Footer />}
-    </>
+    </Box>
   );
 }

@@ -25,6 +25,7 @@ import {
   fillBlankStyles,
 } from '../../../styles/Teacher/Reading/QuesitonTypeStyles';
 import ClientSideCustomEditor from '../../../components/Editor/ClientSideCustomEditor';
+import { createDriver } from '../../../utils/createDriver';
 
 export default function FillBlankForm({
   flag,
@@ -47,7 +48,6 @@ export default function FillBlankForm({
 
   const handlePartTour = (e) => {
     e.stopPropagation();
-    const { driver } = require('driver.js');
 
     const steps = [
       {
@@ -182,16 +182,7 @@ export default function FillBlankForm({
       }
     }
 
-    const driverObj = driver({
-      showProgress: true,
-      animate: true,
-      doneBtnText: 'Finish',
-      closeBtnText: 'Close',
-      nextBtnText: 'Next',
-      prevBtnText: 'Back',
-      steps: steps,
-    });
-
+    const driverObj = createDriver({ steps });
     driverObj.drive();
   };
 

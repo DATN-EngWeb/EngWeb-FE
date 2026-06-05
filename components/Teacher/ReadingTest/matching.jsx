@@ -15,6 +15,7 @@ import {
 import { uploadReadingStyles } from '../../../styles/Teacher/Reading/UploadReadingStyles';
 import { Box, Typography } from '@mui/material';
 import ClientSideCustomEditor from '../../../components/Editor/ClientSideCustomEditor';
+import { createDriver } from '../../../utils/createDriver';
 
 export default function MatchingForm({
   flag,
@@ -72,7 +73,6 @@ export default function MatchingForm({
 
   const handlePartTour = (e) => {
     e.stopPropagation();
-    const { driver } = require('driver.js');
 
     const steps = [
       {
@@ -171,16 +171,7 @@ export default function MatchingForm({
       }
     }
 
-    const driverObj = driver({
-      showProgress: true,
-      animate: true,
-      doneBtnText: 'Finish',
-      closeBtnText: 'Close',
-      nextBtnText: 'Next',
-      prevBtnText: 'Back',
-      steps: steps,
-    });
-
+    const driverObj = createDriver({ steps });
     driverObj.drive();
   };
 

@@ -20,6 +20,7 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import AudioUploader from '../Upload/AudioUploader';
 import ClientSideCustomEditor from '../Editor/ClientSideCustomEditor';
+import { createDriver } from '../../utils/createDriver';
 import { useRef, useState } from 'react';
 import {
   sectionHeader,
@@ -164,7 +165,6 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
 
   const handlePartTour = (e) => {
     e.stopPropagation();
-    const { driver } = require('driver.js');
     const steps = [];
     const partId = part.id;
 
@@ -295,15 +295,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
       }
     }
 
-    const driverObj = driver({
-      showProgress: true,
-      animate: true,
-      doneBtnText: 'Finish',
-      closeBtnText: 'Close',
-      nextBtnText: 'Next',
-      prevBtnText: 'Back',
-      steps,
-    });
+    const driverObj = createDriver({ steps });
     driverObj.drive();
   };
 
