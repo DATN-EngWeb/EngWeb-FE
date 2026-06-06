@@ -1056,50 +1056,6 @@ export default function WritingTest() {
                   alignSelf: 'stretch',
                 }}
               >
-                {question.suggestion ? (
-                  <Box sx={{ mb: 1.25 }}>
-                    <Button
-                      variant="text"
-                      size="small"
-                      onClick={() => setMobileSuggestionOpen((prev) => !prev)}
-                      startIcon={mobileSuggestionOpen ? <ExpandLess /> : <ExpandMore />}
-                      sx={{
-                        ...styles.outlineButton,
-                        alignSelf: 'flex-start',
-                        textTransform: 'none',
-                        fontWeight: 700,
-                        fontSize: '0.8rem',
-                        mb: 1,
-                      }}
-                    >
-                      Suggestion
-                    </Button>
-
-                    <Collapse in={mobileSuggestionOpen} timeout="auto" unmountOnExit>
-                      <Box
-                        sx={{
-                          p: 1.25,
-                          borderRadius: 2,
-                          border: `1px solid ${theme.palette.reading.instructionBorder}`,
-                          bgcolor: theme.palette.reading.instructionBg,
-                        }}
-                      >
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: 'text.secondary',
-                            fontSize: '0.8rem',
-                            lineHeight: 1.55,
-                            whiteSpace: 'pre-wrap',
-                          }}
-                        >
-                          {question.suggestion}
-                        </Typography>
-                      </Box>
-                    </Collapse>
-                  </Box>
-                ) : null}
-
                 {/* Outline toggle button */}
                 {!showOutline && (
                   <Button
