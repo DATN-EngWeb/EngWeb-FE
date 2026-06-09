@@ -1,0 +1,46 @@
+name: Continuous Deployment Frontend
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-to-vm:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Deploy via SSH to VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+            
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+            cd ~/EngWeb-FE
+
+            echo "Pulling latest code..."
+            git pull origin main
+
+            echo "Installing dependencies..."
+            npm ci
+
+            echo "Building application..."
+            npm run build
+
+            echo "Restarting application with PM2..."
+            if pm2 show english-fe > /dev/null 2>&1; then
+              echo "Restarting existing PM2 process..."
+              pm2 restart english-fe
+            else
+              echo "Starting new PM2 process..."
+              pm2 start npm --name "english-fe" -- start
+            fi
+
+            pm2 save
+            echo "Deployment successful!"
