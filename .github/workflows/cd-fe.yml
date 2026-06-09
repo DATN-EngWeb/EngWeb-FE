@@ -40,7 +40,7 @@ jobs:
               pm2 restart nens-frontend --update-env
             else
               echo "Starting new PM2 process natively..."
-              pm2 start node_modules/next/dist/bin/next --name "nens-frontend" -- start -p 3000
+              pm2 start node_modules/next/dist/bin/next --name "nens-frontend" --interpreter node -- start -p 3000
             fi
 
             pm2 save
