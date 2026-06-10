@@ -432,13 +432,13 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
               />
             </Box>
 
-            <Box id={`tour-content-${part.id}`} sx={{ mb: -4 }}>
+            <Box id={`tour-content-${part.id}`} sx={{ mb: 3 }}>
               <Box sx={rowContent}>
                 <Typography sx={labelText}>
                   Content <span style={{ color: 'red' }}>*</span>
                 </Typography>
               </Box>
-              <Box sx={scrollEditorBox}>
+              <Box sx={{ ...scrollEditorBox, minHeight: 'auto' }}>
                 <ClientSideCustomEditor
                   data={content}
                   onChange={(newContent) => {

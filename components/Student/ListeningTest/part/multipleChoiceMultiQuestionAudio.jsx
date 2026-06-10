@@ -166,21 +166,23 @@ export default function MultipleChoiceQuestionAudio({
           )}
         </Box>
         {/* -------- Passage (Optional) --------- */}
-        <Box
-          sx={{
-            ...listeningPartStyles.passageContainer,
-            overflowY: 'auto',
-            scrollbarWidth: 'thin',
-            '&::-webkit-scrollbar': { width: '8px' },
-            '&::-webkit-scrollbar-track': { background: 'transparent' },
-            '&::-webkit-scrollbar-thumb': {
-              background: '#ccc',
-              borderRadius: '4px',
-              '&:hover': { background: '#999' },
-            },
-          }}
-          dangerouslySetInnerHTML={{ __html: passageSrc }}
-        />
+        {passageSrc && (
+          <Box
+            sx={{
+              ...listeningPartStyles.passageContainer,
+              overflowY: 'auto',
+              scrollbarWidth: 'thin',
+              '&::-webkit-scrollbar': { width: '8px' },
+              '&::-webkit-scrollbar-track': { background: 'transparent' },
+              '&::-webkit-scrollbar-thumb': {
+                background: '#ccc',
+                borderRadius: '4px',
+                '&:hover': { background: '#999' },
+              },
+            }}
+            dangerouslySetInnerHTML={{ __html: passageSrc }}
+          />
+        )}
       </Box>
       {/* -------- Drag Section --------- */}
       <Box
