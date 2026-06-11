@@ -1,0 +1,47 @@
+name: Continuous Deployment Frontend
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-to-vm:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Deploy via SSH to VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+            
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+            cd ~/EngWeb-FE
+
+            echo "Pulling latest code..."
+            git pull origin main
+
+            echo "Installing dependencies..."
+            npm ci
+
+            echo "Building application..."
+            npm run build
+
+            echo "Deploying with PM2 (Tối ưu hóa Production)..."
+            # Sửa đổi quan trọng ở đây: Chạy trực tiếp qua binary của next, thêm --update-env
+            if pm2 show nens-frontend > /dev/null 2>&1; then
+              echo "Restarting existing PM2 process with new environment..."
+              pm2 restart nens-frontend --update-env
+            else
+              echo "Starting new PM2 process natively..."
+              pm2 start node_modules/next/dist/bin/next --name "nens-frontend" --interpreter node -- start -p 3000
+            fi
+
+            pm2 save
+            echo "Deployment successful!"
