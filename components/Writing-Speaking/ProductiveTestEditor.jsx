@@ -35,7 +35,7 @@ import TestEditorActions from '../UploadTest/TestEditorActions';
 import BasicInformation from './BasicInformation';
 import TestSettingComponent from './TestSetting';
 import * as styles from '../../styles/Teacher/productive/ProductiveStyles';
-import { driver } from 'driver.js';
+import { createDriver } from '../../utils/createDriver';
 import 'driver.js/dist/driver.css';
 
 const levelTheme = {
@@ -245,16 +245,7 @@ export default function ProductiveTestEditor({
       },
     });
 
-    const driverObj = driver({
-      showProgress: true,
-      animate: true,
-      doneBtnText: 'Finish',
-      closeBtnText: 'Close',
-      nextBtnText: 'Next',
-      prevBtnText: 'Back',
-      steps: steps,
-    });
-
+    const driverObj = createDriver({ steps });
     driverObj.drive();
   };
 

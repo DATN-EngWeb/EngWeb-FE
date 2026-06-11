@@ -25,6 +25,7 @@ import {
   fillBlankStyles,
 } from '../../../styles/Teacher/Reading/QuesitonTypeStyles';
 import ClientSideCustomEditor from '../../../components/Editor/ClientSideCustomEditor';
+import { createDriver } from '../../../utils/createDriver';
 
 export default function FillBlankForm({
   flag,
@@ -47,7 +48,6 @@ export default function FillBlankForm({
 
   const handlePartTour = (e) => {
     e.stopPropagation();
-    const { driver } = require('driver.js');
 
     const steps = [
       {
@@ -182,16 +182,7 @@ export default function FillBlankForm({
       }
     }
 
-    const driverObj = driver({
-      showProgress: true,
-      animate: true,
-      doneBtnText: 'Finish',
-      closeBtnText: 'Close',
-      nextBtnText: 'Next',
-      prevBtnText: 'Back',
-      steps: steps,
-    });
-
+    const driverObj = createDriver({ steps });
     driverObj.drive();
   };
 
@@ -667,7 +658,7 @@ export default function FillBlankForm({
                   handleUpdateContentPart(part.id, content);
                   syncQuestionsWithBlanks(content);
                 }}
-                onError={(msg) => handleEditorError(part.id, msg)}
+                onError={(msg) => handleEditorError(msg)}
                 startingBlankId={1}
               />
             </FormControl>
@@ -718,18 +709,17 @@ export default function FillBlankForm({
                         >
                           <Box sx={multipleChoiceStyles.labelQuestionsContainer}>
                             <Box sx={multipleChoiceStyles.questionLabel}>{qIndex + 1}</Box>
-                            <Box
-                              sx={{
-                                flexGrow: 1,
-                                alignSelf: 'stretch',
-                                ...(collapsedQuestions[question.id] && { cursor: 'pointer' }),
-                                backgroundColor: 'transparent',
-                              }}
-                              onClick={() =>
-                                collapsedQuestions[question.id] &&
-                                toggleQuestionCollapse(question.id)
-                              }
-                            />
+                            {collapsedQuestions[question.id] && (
+                              <Typography
+                                noWrap
+                                onClick={() => toggleQuestionCollapse(question.id)}
+                                sx={uploadReadingStyles.collapsedQuestions}
+                                display={{ xs: 'none', md: 'block' }}
+                              >
+                                {question.answers?.[0]?.answer_text || ''}
+                              </Typography>
+                            )}
+                            {!collapsedQuestions[question.id] && <Box sx={{ flexGrow: 1 }} />}
                             {/* ---------------- Question Controls ---------------- */}
                             <Box
                               sx={{
@@ -738,6 +728,7 @@ export default function FillBlankForm({
                                 gap: 1,
                                 alignItems: 'center',
                                 alignSelf: 'center',
+                                ml: 'auto',
                               }}
                             >
                               <ExpandLessRoundedIcon

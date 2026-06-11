@@ -21,6 +21,7 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import AudioUploader from '../Upload/AudioUploader';
 import { useEffect, useRef, useState } from 'react';
+import { createDriver } from '../../utils/createDriver';
 import {
   sectionHeader,
   accentBar,
@@ -84,7 +85,6 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
 
   const handlePartTour = (e) => {
     e.stopPropagation();
-    const { driver } = require('driver.js');
     const steps = [];
 
     if (document.querySelector(`#tour-part-header-${partId}`)) {
@@ -205,15 +205,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
       });
     }
 
-    const driverObj = driver({
-      showProgress: true,
-      animate: true,
-      doneBtnText: 'Finish',
-      closeBtnText: 'Close',
-      nextBtnText: 'Next',
-      prevBtnText: 'Back',
-      steps,
-    });
+    const driverObj = createDriver({ steps });
     driverObj.drive();
   };
 
@@ -466,6 +458,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                               textOverflow: 'ellipsis',
                               whiteSpace: 'nowrap',
                               ml: 0.5,
+                              display: { xs: 'none', md: 'block' },
                             }}
                           >
                             {question.text || ''}

@@ -241,7 +241,7 @@ export default function StreakBadge({ isHaveText = true }) {
         }
       >
         <Box
-          onClick={() => setOpenModal(true)}
+          onClick={() => streak_count > 0 && setOpenModal(true)}
           sx={{
             display: 'flex',
             alignItems: 'flex-end',

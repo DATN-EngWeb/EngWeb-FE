@@ -11,6 +11,7 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { multipleChoiceStyles } from '../../../styles/Teacher/Reading/QuesitonTypeStyles';
 import { uploadReadingStyles } from '../../../styles/Teacher/Reading/UploadReadingStyles';
 import ClientSideCustomEditor from '../../../components/Editor/ClientSideCustomEditor';
+import { createDriver } from '../../../utils/createDriver';
 
 export default function MultipleChoiceForm({
   flag,
@@ -32,7 +33,6 @@ export default function MultipleChoiceForm({
 
   const handlePartTour = (e) => {
     e.stopPropagation();
-    const { driver } = require('driver.js');
 
     const steps = [
       {
@@ -145,16 +145,7 @@ export default function MultipleChoiceForm({
       });
     }
 
-    const driverObj = driver({
-      showProgress: true,
-      animate: true,
-      doneBtnText: 'Finish',
-      closeBtnText: 'Close',
-      nextBtnText: 'Next',
-      prevBtnText: 'Back',
-      steps: steps,
-    });
-
+    const driverObj = createDriver({ steps });
     driverObj.drive();
   };
 
@@ -212,10 +203,6 @@ export default function MultipleChoiceForm({
         : q,
     );
     setQuestions(updatedQuestions);
-  };
-
-  const handleEditorErrorQuestion = (questionId, msg) => {
-    window.alert(`Question ${questionId}: ${msg}`);
   };
 
   const handleUpdateExplanation = (questionId, value) => {
@@ -449,7 +436,7 @@ export default function MultipleChoiceForm({
                 <ClientSideCustomEditor
                   data={part.content || ''}
                   onChange={(content) => handleUpdateContentPart(part.id, content)}
-                  onError={(msg) => handleEditorError(part.id, msg)}
+                  onError={(msg) => handleEditorError(msg)}
                   startingBlankId={1}
                 />
               </FormControl>
@@ -511,6 +498,7 @@ export default function MultipleChoiceForm({
                                 noWrap
                                 onClick={() => toggleQuestionCollapse(question.id)}
                                 sx={uploadReadingStyles.collapsedQuestions}
+                                display={{ xs: 'none', md: 'block' }}
                               >
                                 {question.content ? question.content.replace(/<[^>]+>/g, '') : ''}
                               </Typography>
@@ -523,6 +511,7 @@ export default function MultipleChoiceForm({
                                 gap: 1,
                                 alignItems: 'center',
                                 alignSelf: 'center',
+                                ml: 'auto',
                               }}
                             >
                               <DeleteRoundedIcon
@@ -568,7 +557,7 @@ export default function MultipleChoiceForm({
                                       onChange={(content) =>
                                         handleUpdateQuestion(question.id, content)
                                       }
-                                      onError={(msg) => handleEditorErrorQuestion(question.id, msg)}
+                                      onError={(msg) => handleEditorError(msg)}
                                       startingBlankId={1}
                                     />
                                   </FormControl>

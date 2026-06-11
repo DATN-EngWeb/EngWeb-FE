@@ -22,6 +22,7 @@ import MusicNoteRoundedIcon from '@mui/icons-material/MusicNoteRounded';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import AudioUploader from '../Upload/AudioUploader';
 import ClientSideCustomEditor from '../Editor/ClientSideCustomEditor';
+import { createDriver } from '../../utils/createDriver';
 import { useState, useEffect, useRef } from 'react';
 import {
   sectionHeader,
@@ -75,7 +76,6 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
 
   const handlePartTour = (e) => {
     e.stopPropagation();
-    const { driver } = require('driver.js');
     const steps = [];
 
     // Part header
@@ -237,15 +237,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
       }
     }
 
-    const driverObj = driver({
-      showProgress: true,
-      animate: true,
-      doneBtnText: 'Finish',
-      closeBtnText: 'Close',
-      nextBtnText: 'Next',
-      prevBtnText: 'Back',
-      steps,
-    });
+    const driverObj = createDriver({ steps });
     driverObj.drive();
   };
   const [snackbar, setSnackbar] = useState({ open: false, message: '' });
@@ -607,6 +599,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
                               textOverflow: 'ellipsis',
                               whiteSpace: 'nowrap',
                               ml: 0.5,
+                              display: { xs: 'none', md: 'block' },
                             }}
                           >
                             {q.text || ''}

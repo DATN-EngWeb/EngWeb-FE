@@ -474,7 +474,7 @@ export default function Header() {
   return (
     <>
       <AppBar position="static" sx={appBarStyles}>
-        <Container maxWidth="lg">
+        <Container disableGutters maxWidth="lg">
           <Toolbar sx={toolbarStyles}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0 }}>
               <Link href="/" style={logoLinkStyles}>

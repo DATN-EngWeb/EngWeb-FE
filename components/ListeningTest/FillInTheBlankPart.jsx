@@ -20,6 +20,7 @@ import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import AudioUploader from '../Upload/AudioUploader';
 import ClientSideCustomEditor from '../Editor/ClientSideCustomEditor';
+import { createDriver } from '../../utils/createDriver';
 import { useRef, useState } from 'react';
 import {
   sectionHeader,
@@ -164,7 +165,6 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
 
   const handlePartTour = (e) => {
     e.stopPropagation();
-    const { driver } = require('driver.js');
     const steps = [];
     const partId = part.id;
 
@@ -295,15 +295,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
       }
     }
 
-    const driverObj = driver({
-      showProgress: true,
-      animate: true,
-      doneBtnText: 'Finish',
-      closeBtnText: 'Close',
-      nextBtnText: 'Next',
-      prevBtnText: 'Back',
-      steps,
-    });
+    const driverObj = createDriver({ steps });
     driverObj.drive();
   };
 
@@ -440,13 +432,13 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
               />
             </Box>
 
-            <Box id={`tour-content-${part.id}`} sx={{ mb: -4 }}>
+            <Box id={`tour-content-${part.id}`} sx={{ mb: 3 }}>
               <Box sx={rowContent}>
                 <Typography sx={labelText}>
                   Content <span style={{ color: 'red' }}>*</span>
                 </Typography>
               </Box>
-              <Box sx={scrollEditorBox}>
+              <Box sx={{ ...scrollEditorBox, minHeight: 'auto' }}>
                 <ClientSideCustomEditor
                   data={content}
                   onChange={(newContent) => {
@@ -491,6 +483,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
                                 ml: 0.5,
+                                display: { xs: 'none', md: 'block' },
                               }}
                             >
                               {acceptedAnswers[0]?.text || ''}

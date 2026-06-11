@@ -1,5 +1,5 @@
 /* eslint-env browser */
-/* eslint-disable no-console */
+
 /* global fetch */
 /* global DOMParser */
 'use client';
@@ -49,6 +49,7 @@ import {
 } from '../../../../utils/testValidation';
 import { accentBar, addPartBox } from '@/styles/Teacher/Listening/ListeningStyles';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import { createDriver } from '../../../../utils/createDriver';
 
 export default function Page() {
   const router = useRouter();
@@ -108,8 +109,6 @@ export default function Page() {
   };
 
   const handleStartTour = () => {
-    const { driver } = require('driver.js');
-
     const steps = [
       {
         element: '#tour-basic-info',
@@ -245,16 +244,7 @@ export default function Page() {
       },
     });
 
-    const driverObj = driver({
-      showProgress: true,
-      animate: true,
-      doneBtnText: 'Finish',
-      closeBtnText: 'Close',
-      nextBtnText: 'Next',
-      prevBtnText: 'Back',
-      steps: steps,
-    });
-
+    const driverObj = createDriver({ steps });
     driverObj.drive();
   };
 
@@ -262,10 +252,11 @@ export default function Page() {
   useEffect(() => {
     if (parts.length > prevPartsLengthRef.current) {
       if (lastPartRef.current) {
-        lastPartRef.current.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        });
+        const header = document.querySelector('header') ?? document.querySelector('nav');
+        const headerHeight = header ? header.getBoundingClientRect().height : 0;
+        const EXTRA_GAP = 16;
+        const elementTop = lastPartRef.current.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top: elementTop - headerHeight - EXTRA_GAP, behavior: 'smooth' });
       }
     }
     prevPartsLengthRef.current = parts.length;
@@ -673,9 +664,8 @@ export default function Page() {
     );
   };
 
-  const handleEditorError = (partId, message) => {
-    // Cách 1: Log lỗi
-    console.error(`Lỗi tại Part ${partId}: ${message}`);
+  const handleEditorError = (message) => {
+    setSnackbar({ open: true, message: message, severity: 'error' });
   };
 
   const handleShowPreview = () => {

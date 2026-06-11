@@ -125,7 +125,11 @@ export default function ReadingTestContent({ testId }) {
           return;
         }
 
-        const preloadPromises = backendTest.receptive_test.receptive_parts.map(async (part) => {
+        const partsByOrder = [...backendTest.receptive_test.receptive_parts].sort(
+          (a, b) => (a.order ?? 0) - (b.order ?? 0),
+        );
+
+        const preloadPromises = partsByOrder.map(async (part) => {
           if (part.content && part.content.includes('http')) {
             part.content = await fetchHtmlContent(part.content);
           }
@@ -147,7 +151,7 @@ export default function ReadingTestContent({ testId }) {
 
         await Promise.all(preloadPromises);
 
-        const parts = backendTest.receptive_test.receptive_parts.map((part) => {
+        const parts = partsByOrder.map((part) => {
           const format = part.format;
           let componentType = 'unknown';
           let transformedData = null;
@@ -216,8 +220,8 @@ export default function ReadingTestContent({ testId }) {
               const restoredAnswers = {};
 
               const findLabelById = (answerId) => {
-                if (!answerId || !backendTest?.receptive_test?.receptive_parts) return null;
-                for (const part of backendTest.receptive_test.receptive_parts) {
+                if (!answerId || !partsByOrder.length) return null;
+                for (const part of partsByOrder) {
                   for (const q of part.receptive_questions) {
                     const found = q.receptive_answers?.find(
                       (a) => a.id === answerId || a.id === parseInt(answerId),

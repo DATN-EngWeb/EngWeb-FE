@@ -6,7 +6,15 @@ import { useEffect } from 'react';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
-import { FormControl, FormLabel, OutlinedInput, Select, MenuItem, Button } from '@mui/material';
+import {
+  FormControl,
+  FormLabel,
+  OutlinedInput,
+  Select,
+  MenuItem,
+  Button,
+  Collapse,
+} from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import {
   multipleChoiceStyles,
@@ -15,6 +23,7 @@ import {
 import { uploadReadingStyles } from '../../../styles/Teacher/Reading/UploadReadingStyles';
 import { Box, Typography } from '@mui/material';
 import ClientSideCustomEditor from '../../../components/Editor/ClientSideCustomEditor';
+import { createDriver } from '../../../utils/createDriver';
 
 export default function MatchingForm({
   flag,
@@ -45,6 +54,14 @@ export default function MatchingForm({
   });
 
   const [openSelectId, setOpenSelectId] = React.useState(null);
+  const [collapsedQuestions, setCollapsedQuestions] = React.useState({});
+
+  const toggleQuestionCollapse = (questionId) => {
+    setCollapsedQuestions((prev) => ({
+      ...prev,
+      [questionId]: !prev[questionId],
+    }));
+  };
 
   useEffect(() => {
     if (openSelectId === null) return;
@@ -72,7 +89,6 @@ export default function MatchingForm({
 
   const handlePartTour = (e) => {
     e.stopPropagation();
-    const { driver } = require('driver.js');
 
     const steps = [
       {
@@ -171,16 +187,7 @@ export default function MatchingForm({
       }
     }
 
-    const driverObj = driver({
-      showProgress: true,
-      animate: true,
-      doneBtnText: 'Finish',
-      closeBtnText: 'Close',
-      nextBtnText: 'Next',
-      prevBtnText: 'Back',
-      steps: steps,
-    });
-
+    const driverObj = createDriver({ steps });
     driverObj.drive();
   };
 
@@ -452,7 +459,7 @@ export default function MatchingForm({
               <ClientSideCustomEditor
                 data={part.content || ''}
                 onChange={(content) => handleUpdateContentPart(part.id, content)}
-                onError={(msg) => handleEditorError(part.id, msg)}
+                onError={(msg) => handleEditorError(msg)}
                 startingBlankId={1}
               />
             </FormControl>
@@ -509,21 +516,124 @@ export default function MatchingForm({
                       .filter((question) => question.action !== 'delete')
                       .sort((a, b) => (a.question_number || 0) - (b.question_number || 0))
                       .map((question, qIndex) => (
-                        <Box key={question.id} sx={multipleChoiceStyles.questionsContainer}>
+                        <Box
+                          key={question.id}
+                          sx={{
+                            ...multipleChoiceStyles.questionsContainer,
+                            ...(collapsedQuestions[question.id] && { gap: 0 }),
+                          }}
+                        >
                           <Box sx={multipleChoiceStyles.labelQuestionsContainer}>
                             <Box sx={multipleChoiceStyles.questionLabel}>{qIndex + 1}</Box>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 1 }}>
-                              <OutlinedInput
-                                size="small"
-                                multiline
-                                className="tour-question-input"
-                                placeholder="Enter question here"
-                                defaultValue={question.content || question.text || ''}
-                                onBlur={(e) =>
-                                  handleUpdateQuestionContent(question.id, e.target.value)
-                                }
-                                sx={uploadReadingStyles.inputMultiline}
+                            {collapsedQuestions[question.id] && (
+                              <Typography
+                                noWrap
+                                onClick={() => toggleQuestionCollapse(question.id)}
+                                sx={uploadReadingStyles.collapsedQuestions}
+                                display={{ xs: 'none', md: 'block' }}
+                              >
+                                {question.content ? question.content.replace(/<[^>]+>/g, '') : ''}
+                              </Typography>
+                            )}
+                            {!collapsedQuestions[question.id] && <Box sx={{ flexGrow: 1 }} />}
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                gap: 1,
+                                alignItems: 'center',
+                                alignSelf: 'center',
+                                ml: 'auto',
+                              }}
+                            >
+                              <DeleteRoundedIcon
+                                onClick={() => handleDeleteQuestion(partId, question.id)}
+                                sx={multipleChoiceStyles.trashIconQuestion}
                               />
+                              <ExpandLessRoundedIcon
+                                onClick={() => toggleQuestionCollapse(question.id)}
+                                sx={{
+                                  cursor: 'pointer',
+                                  fontSize: { xs: '1.1rem', md: '1.3rem' },
+                                  color: 'text.gray',
+                                  transition: 'transform 0.3s ease',
+                                  transform: collapsedQuestions[question.id]
+                                    ? 'rotate(180deg)'
+                                    : 'rotate(0deg)',
+                                }}
+                              />
+                            </Box>
+                          </Box>
+
+                          <Collapse in={!collapsedQuestions[question.id]} sx={{ width: '100%' }}>
+                            <Box sx={{ pl: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  flexDirection: { xs: 'column', md: 'row' },
+                                  gap: 1,
+                                  alignItems: { xs: 'stretch', md: 'flex-start' },
+                                  width: '100%',
+                                }}
+                              >
+                                <OutlinedInput
+                                  size="small"
+                                  multiline
+                                  className="tour-question-input"
+                                  placeholder="Enter question here"
+                                  defaultValue={question.content || question.text || ''}
+                                  onBlur={(e) =>
+                                    handleUpdateQuestionContent(question.id, e.target.value)
+                                  }
+                                  sx={{
+                                    ...uploadReadingStyles.inputMultiline,
+                                    width: { xs: '100%', md: '85%' },
+                                  }}
+                                />
+                                <FormControl
+                                  id={`select-${question.id}`}
+                                  size="small"
+                                  className="tour-answer-select"
+                                  sx={{
+                                    ...uploadReadingStyles.formControl,
+                                    width: { xs: '100%', md: '15%' },
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  <Select
+                                    size="small"
+                                    value={
+                                      question.answers &&
+                                      question.answers[0] &&
+                                      question.answers[0].option_label !== undefined &&
+                                      question.answers[0].option_label !== ''
+                                        ? question.answers[0].option_label
+                                        : ''
+                                    }
+                                    onChange={(e) =>
+                                      handleUpdateCorrectAnswer(question.id, e.target.value)
+                                    }
+                                    open={openSelectId === question.id}
+                                    onOpen={() => setOpenSelectId(question.id)}
+                                    onClose={() => setOpenSelectId(null)}
+                                    displayEmpty
+                                    sx={matchingStyles.selectAnswer}
+                                    MenuProps={{ disableScrollLock: true }}
+                                  >
+                                    <MenuItem value="" disabled>
+                                      <em>Select</em>
+                                    </MenuItem>
+                                    {answers.map((answer) => (
+                                      <MenuItem
+                                        key={answer.option_label}
+                                        value={answer.option_label}
+                                      >
+                                        {answer.option_label}
+                                      </MenuItem>
+                                    ))}
+                                  </Select>
+                                </FormControl>
+                              </Box>
                               <OutlinedInput
                                 size="small"
                                 multiline
@@ -531,54 +641,13 @@ export default function MatchingForm({
                                 placeholder="Enter explanation here"
                                 defaultValue={question.explanation}
                                 onBlur={(e) => handleUpdateExplanation(question.id, e.target.value)}
-                                sx={uploadReadingStyles.inputMultiline}
+                                sx={{
+                                  ...uploadReadingStyles.inputMultiline,
+                                  width: { xs: '100%', md: '84%' },
+                                }}
                               />
                             </Box>
-                            <FormControl
-                              id={`select-${question.id}`}
-                              size="small"
-                              className="tour-answer-select"
-                              sx={{
-                                ...uploadReadingStyles.formControl,
-                                width: { xs: '150px', md: '180px' },
-                              }}
-                            >
-                              <Select
-                                size="small"
-                                value={
-                                  question.answers &&
-                                  question.answers[0] &&
-                                  question.answers[0].option_label !== undefined &&
-                                  question.answers[0].option_label !== ''
-                                    ? question.answers[0].option_label
-                                    : ''
-                                }
-                                onChange={(e) =>
-                                  handleUpdateCorrectAnswer(question.id, e.target.value)
-                                }
-                                open={openSelectId === question.id}
-                                onOpen={() => setOpenSelectId(question.id)}
-                                onClose={() => setOpenSelectId(null)}
-                                displayEmpty
-                                sx={matchingStyles.selectAnswer}
-                                MenuProps={{ disableScrollLock: true }}
-                              >
-                                <MenuItem value="" disabled>
-                                  <em>Select</em>
-                                </MenuItem>
-                                {/* Hiện đầy đủ danh sách, không cần vô hiệu hóa */}
-                                {answers.map((answer) => (
-                                  <MenuItem key={answer.option_label} value={answer.option_label}>
-                                    {answer.option_label}
-                                  </MenuItem>
-                                ))}
-                              </Select>
-                            </FormControl>
-                            <DeleteRoundedIcon
-                              onClick={() => handleDeleteQuestion(partId, question.id)}
-                              sx={multipleChoiceStyles.trashIconQuestion}
-                            />
-                          </Box>
+                          </Collapse>
                         </Box>
                       ))}
                   </Box>

@@ -7,7 +7,7 @@ import {
   EditRounded as Edit,
   LinkRounded as Link,
 } from '@mui/icons-material';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { container, contentWrap, addPartBox } from '../../styles/Teacher/Listening/ListeningStyles';
 import { uploadReadingStyles } from '../../styles/Teacher/Reading/UploadReadingStyles';
@@ -25,6 +25,7 @@ import ScrollToTopButton from '../CreateTest/ScrollToTopButton';
 import ListeningPreview from '../Teacher/ListeningPreview';
 import FeedbackPanel from '../Teacher/Feedback/FeedbackPanel';
 import DeleteConfirmSnackbar from '../Teacher/DeleteConfirmSnackbar';
+import { createDriver } from '../../utils/createDriver';
 
 import {
   getValidationErrorMessage,
@@ -116,6 +117,8 @@ export default function ListeningTestEditor({ testId: propTestId }) {
   const [isFeedbackActive, setIsFeedbackActive] = useState(false);
   const [editingTestId, setEditingTestId] = useState(testId || null);
   const [deleteTargetPartId, setDeleteTargetPartId] = useState(null);
+  const lastPartRef = useRef(null);
+  const prevPartsLengthRef = useRef(parts.length);
 
   useEffect(() => {
     if (!isEditMode) {
@@ -217,6 +220,19 @@ export default function ListeningTestEditor({ testId: propTestId }) {
     });
   };
 
+  useEffect(() => {
+    if (parts.length > prevPartsLengthRef.current) {
+      if (lastPartRef.current) {
+        const header = document.querySelector('header') ?? document.querySelector('nav');
+        const headerHeight = header ? header.getBoundingClientRect().height : 0;
+        const EXTRA_GAP = 16;
+        const elementTop = lastPartRef.current.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top: elementTop - headerHeight - EXTRA_GAP, behavior: 'smooth' });
+      }
+    }
+    prevPartsLengthRef.current = parts.length;
+  }, [parts.length]);
+
   const handleCancelPart = (partId) => {
     setParts((prev) => prev.filter((p) => p.id !== partId));
   };
@@ -240,7 +256,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
       return prev.map((p, idx) => {
         if (p.id !== partId) return p;
 
-        const newPart = { ...p, type, order: partIndex + 1 };
+        const newPart = { ...p, type, order: partIndex + 1, score: 10 };
         if (type === 'multichoice_texts') {
           newPart.audioFormat = p.audioFormat || 'onetoone';
         }
@@ -448,7 +464,6 @@ export default function ListeningTestEditor({ testId: propTestId }) {
   };
 
   const handleStartTour = () => {
-    const driver = require('driver.js').driver;
     const steps = [
       {
         element: '#tour-basic-info',
@@ -533,16 +548,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
       },
     });
 
-    const driverObj = driver({
-      showProgress: true,
-      animate: true,
-      doneBtnText: 'Finish',
-      closeBtnText: 'Close',
-      nextBtnText: 'Next',
-      prevBtnText: 'Back',
-      steps: steps,
-    });
-
+    const driverObj = createDriver({ steps });
     driverObj.drive();
   };
 
@@ -629,9 +635,10 @@ export default function ListeningTestEditor({ testId: propTestId }) {
 
                     {parts
                       .sort((a, b) => (a.order || 0) - (b.order || 0))
-                      .map((part, index) => (
+                      .map((part, index, arr) => (
                         <Box
                           key={part.id}
+                          ref={index === arr.length - 1 ? lastPartRef : null}
                           id={!part.type ? 'tour-select-part-panel' : undefined}
                           sx={uploadReadingStyles.basicInfoContainer}
                         >
