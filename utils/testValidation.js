@@ -81,9 +81,9 @@ export const validateReadingPartPayload = (parts) => {
     return trimmed === '' || trimmed === '<p><br></p>' || trimmed === '<p></p>';
   };
 
-  const formatPartMessage = (partName, message) => `Part ${partName}: ${message}`;
+  const formatPartMessage = (partName, message) => `${partName}: ${message}`;
   const formatQuestionMessage = (partName, qNum, message) =>
-    `Part ${partName}, Question ${qNum}: ${message}`;
+    `${partName}, Question ${qNum}: ${message}`;
 
   if (!parts || parts.length === 0) {
     return 'The test has no parts.';
