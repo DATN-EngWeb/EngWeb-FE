@@ -108,7 +108,7 @@ export default function ProductiveHub({ Skill }) {
     }
 
     fetchTests();
-  }, [filters, page, user?.role, Skill, hasLoadedOnce]);
+  }, [filters, page, user?.role, Skill]);
 
   const handleFilterChange = (field, value) => {
     setFilters((prev) => ({
