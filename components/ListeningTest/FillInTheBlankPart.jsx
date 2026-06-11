@@ -483,6 +483,7 @@ export default function FillInTheBlankPart({ index, part = {}, onChange, onDelet
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
                                 ml: 0.5,
+                                display: { xs: 'none', md: 'block' },
                               }}
                             >
                               {acceptedAnswers[0]?.text || ''}

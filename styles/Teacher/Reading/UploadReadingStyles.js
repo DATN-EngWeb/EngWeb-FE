@@ -306,12 +306,8 @@ export const uploadReadingStyles = {
     flexGrow: 1,
     alignSelf: 'center',
     minWidth: 0,
-    cursor: 'pointer',
-    color: 'text.gray',
+    color: 'text.primary',
     fontSize: '0.95rem',
     mr: 2,
-    '&:hover': {
-      color: 'text.primary',
-    },
   },
 };

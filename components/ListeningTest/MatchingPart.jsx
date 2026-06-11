@@ -458,6 +458,7 @@ export default function MatchingPart({ index, part = {}, onChange, onDelete }) {
                               textOverflow: 'ellipsis',
                               whiteSpace: 'nowrap',
                               ml: 0.5,
+                              display: { xs: 'none', md: 'block' },
                             }}
                           >
                             {question.text || ''}

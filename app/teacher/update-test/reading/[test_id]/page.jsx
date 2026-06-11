@@ -880,9 +880,24 @@ export default function Page() {
 
   const handleUpdateScoreForEachQuestionPart = (partId, newScoreForEachQuestion) => {
     setParts((prevParts) =>
-      prevParts.map((p) =>
-        p.id === partId ? { ...p, scoreForEachQuestion: Number(newScoreForEachQuestion) } : p,
-      ),
+      prevParts.map((p) => {
+        if (p.id !== partId) return p;
+
+        const updatedScore = Number(newScoreForEachQuestion);
+        const updatedQuestions = (p.questions || []).map((q) => ({
+          ...q,
+          score: updatedScore,
+          ...(test.flag === 'update' && !q.action && { action: 'update' }),
+          ...(test.flag === 'update' && { _changedFields: ['score'] }),
+        }));
+
+        return {
+          ...p,
+          scoreForEachQuestion: updatedScore,
+          questions: updatedQuestions,
+          ...(test.flag === 'update' && !p.action && { action: 'update' }),
+        };
+      }),
     );
   };
 
@@ -901,9 +916,12 @@ export default function Page() {
     );
   };
 
-  const handleEditorError = (partId, message) => {
-    // Cách 1: Log lỗi
-    console.error(`Lỗi tại Part ${partId}: ${message}`);
+  const handleEditorError = (message) => {
+    setSnackbar({
+      open: true,
+      message: message,
+      severity: 'error',
+    });
   };
 
   const handleShowPreview = () => {

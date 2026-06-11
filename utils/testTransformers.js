@@ -36,7 +36,7 @@ export const transformApiResponseToParts = (apiData) => {
         type,
         order: part.order,
         description: part.description || '',
-        score: part.score,
+        score: part.score / part.receptive_questions?.length || 0,
         totalScore: part.score,
       };
 
@@ -1373,14 +1373,15 @@ export const transformFormatUpdateData = (data) => {
       const isFormatJ = restPart.format === 'J';
 
       const updatedQuestions = (questions || [])
-        .filter((q) => validActions.includes(q.action))
+        .filter((q) => q.action !== 'delete')
         .map((question) => {
-          const { id, answers, ...restQuestion } = question;
+          const { id, answers, action, ...restQuestion } = question;
+          const questionAction = action || 'update';
 
           const updatedAnswers = (answers || [])
-            .filter((ans) => validActions.includes(ans.action))
+            .filter((ans) => ans.action !== 'delete')
             .map((ans) => {
-              const { id, ...restAnswer } = ans;
+              const { id, action: answerAction, ...restAnswer } = ans;
 
               // Nếu là format J, xóa answer_text khỏi payload của answer
               if (isFormatJ) {
@@ -1388,16 +1389,18 @@ export const transformFormatUpdateData = (data) => {
               }
 
               return {
-                ...(restAnswer.action !== 'create' && { id }),
+                action: answerAction || 'update',
+                ...(answerAction !== 'create' && { id }),
                 ...restAnswer,
               };
             });
 
           return {
+            action: questionAction,
             ...restQuestion,
             answers: updatedAnswers,
             score: scoreForEachQuestion,
-            ...(restQuestion.action !== 'create' && { id }),
+            ...(questionAction !== 'create' && { id }),
           };
         });
 
@@ -1445,7 +1448,7 @@ export const buildReceptiveTestPayload = (test, preparedParts, status) => {
               // I, H không có content
               ...(!['I', 'H'].includes(format) && { content: q.content || '' }),
               explanation: q.explanation || '',
-              score: q.score || 0,
+              score: q.score ?? part.scoreForEachQuestion ?? 0,
 
               receptive_answers: (q.answers || []).map((ans) => {
                 if (ans.action === 'delete') {

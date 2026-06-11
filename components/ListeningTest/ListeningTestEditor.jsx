@@ -256,7 +256,7 @@ export default function ListeningTestEditor({ testId: propTestId }) {
       return prev.map((p, idx) => {
         if (p.id !== partId) return p;
 
-        const newPart = { ...p, type, order: partIndex + 1 };
+        const newPart = { ...p, type, order: partIndex + 1, score: 10 };
         if (type === 'multichoice_texts') {
           newPart.audioFormat = p.audioFormat || 'onetoone';
         }

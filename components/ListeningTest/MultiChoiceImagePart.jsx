@@ -439,6 +439,7 @@ export default function MultiChoiceImagePart({ index, part = {}, onChange, onDel
                               textOverflow: 'ellipsis',
                               whiteSpace: 'nowrap',
                               ml: 0.5,
+                              display: { xs: 'none', md: 'block' },
                             }}
                           >
                             {q.text || ''}
