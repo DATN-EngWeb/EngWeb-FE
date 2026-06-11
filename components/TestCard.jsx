@@ -323,6 +323,8 @@ const TestCard = ({
           overflow: 'hidden',
           WebkitBoxOrient: 'vertical',
           WebkitLineClamp: 1,
+          wordBreak: 'break-all',
+          overflowWrap: 'anywhere',
         }}
       >
         {title}
@@ -340,6 +342,8 @@ const TestCard = ({
           WebkitLineClamp: 2,
           WebkitBoxOrient: 'vertical',
           overflow: 'hidden',
+          wordBreak: 'break-all',
+          overflowWrap: 'anywhere',
         }}
       >
         {description}
