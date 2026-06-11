@@ -1,5 +1,5 @@
 /* eslint-env browser */
-/* eslint-disable no-console */
+
 /* global fetch */
 /* global DOMParser */
 'use client';
@@ -664,9 +664,8 @@ export default function Page() {
     );
   };
 
-  const handleEditorError = (partId, message) => {
-    // Cách 1: Log lỗi
-    console.error(`Lỗi tại Part ${partId}: ${message}`);
+  const handleEditorError = (message) => {
+    setSnackbar({ open: true, message: message, severity: 'error' });
   };
 
   const handleShowPreview = () => {

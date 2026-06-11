@@ -546,17 +546,21 @@ export default function ViewTestFeedbackPage({ params }) {
                     <Typography fontWeight={700} color="text.primary">
                       No AI feedback yet
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Generate AI review to see summarized insights for this test.
-                    </Typography>
-                    <Button
-                      variant="contained"
-                      onClick={() => setConfirmAISendOpen(true)}
-                      disabled={reviewLoading || !readingReviewData}
-                      sx={{ textTransform: 'none', fontWeight: 600 }}
-                    >
-                      {reviewLoading ? 'Sending...' : 'Send AI'}
-                    </Button>
+                    {testStatus === 'I' && (
+                      <>
+                        <Typography variant="body2" color="text.secondary">
+                          Generate AI review to see summarized insights for this test.
+                        </Typography>
+                        <Button
+                          variant="contained"
+                          onClick={() => setConfirmAISendOpen(true)}
+                          disabled={reviewLoading || !readingReviewData}
+                          sx={{ textTransform: 'none', fontWeight: 600 }}
+                        >
+                          {reviewLoading ? 'Sending...' : 'Send AI'}
+                        </Button>
+                      </>
+                    )}
                   </Box>
                 )}
               </Box>

@@ -481,7 +481,6 @@ export const listeningPartStyles = {
     width: '100%',
     height: '150px',
     display: 'flex',
-    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'background.gray',
@@ -489,8 +488,8 @@ export const listeningPartStyles = {
     overflow: 'hidden',
     '& img': {
       width: '100%',
-      height: 'auto',
-      objectFit: 'cover',
+      height: '100%',
+      objectFit: 'contain',
     },
   },
   labelButton: {

@@ -321,7 +321,9 @@ export default function ListeningTestContent({ test_id, initialData }) {
           });
         }
 
-        const parts = svData?.receptive_test?.receptive_parts || [];
+        const parts = [...(svData?.receptive_test?.receptive_parts || [])].sort(
+          (a, b) => (a.order ?? 0) - (b.order ?? 0),
+        );
 
         const resourcesMap = {};
         const preloadPromises = parts.map(async (part) => {

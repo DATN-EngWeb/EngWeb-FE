@@ -205,10 +205,6 @@ export default function MultipleChoiceForm({
     setQuestions(updatedQuestions);
   };
 
-  const handleEditorErrorQuestion = (questionId, msg) => {
-    window.alert(`Question ${questionId}: ${msg}`);
-  };
-
   const handleUpdateExplanation = (questionId, value) => {
     const updatedQuestions = questions.map((q) =>
       q.id === questionId
@@ -440,7 +436,7 @@ export default function MultipleChoiceForm({
                 <ClientSideCustomEditor
                   data={part.content || ''}
                   onChange={(content) => handleUpdateContentPart(part.id, content)}
-                  onError={(msg) => handleEditorError(part.id, msg)}
+                  onError={(msg) => handleEditorError(msg)}
                   startingBlankId={1}
                 />
               </FormControl>
@@ -502,6 +498,7 @@ export default function MultipleChoiceForm({
                                 noWrap
                                 onClick={() => toggleQuestionCollapse(question.id)}
                                 sx={uploadReadingStyles.collapsedQuestions}
+                                display={{ xs: 'none', md: 'block' }}
                               >
                                 {question.content ? question.content.replace(/<[^>]+>/g, '') : ''}
                               </Typography>
@@ -514,6 +511,7 @@ export default function MultipleChoiceForm({
                                 gap: 1,
                                 alignItems: 'center',
                                 alignSelf: 'center',
+                                ml: 'auto',
                               }}
                             >
                               <DeleteRoundedIcon
@@ -559,7 +557,7 @@ export default function MultipleChoiceForm({
                                       onChange={(content) =>
                                         handleUpdateQuestion(question.id, content)
                                       }
-                                      onError={(msg) => handleEditorErrorQuestion(question.id, msg)}
+                                      onError={(msg) => handleEditorError(msg)}
                                       startingBlankId={1}
                                     />
                                   </FormControl>

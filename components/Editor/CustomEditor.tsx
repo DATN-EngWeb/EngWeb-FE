@@ -33,9 +33,9 @@ import { BlankEditing, BlankUI } from './BlankPlugin';
 import 'ckeditor5/ckeditor5.css';
 import 'ckeditor5/ckeditor5-content.css';
 
-const MAX_FILE_SIZE = 0.5 * 1024 * 1024; // 0.5MB
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 const MAX_FILE_SIZE_MB = MAX_FILE_SIZE / (1024 * 1024);
-const MAX_IMAGES = 2; // Giới hạn số ảnh tối đa
+const MAX_IMAGES = 3; // Giới hạn số ảnh tối đa
 
 // Store current image count globally
 let currentImageCount = 0;

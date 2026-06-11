@@ -599,6 +599,7 @@ export default function MultiChoiceTextPart({ index, part = {}, onChange, onDele
                               textOverflow: 'ellipsis',
                               whiteSpace: 'nowrap',
                               ml: 0.5,
+                              display: { xs: 'none', md: 'block' },
                             }}
                           >
                             {q.text || ''}
