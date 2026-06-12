@@ -4,12 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { Box, Container, Typography, Radio, RadioGroup, Chip } from '@mui/material';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
+import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import CircleIcon from '@mui/icons-material/Circle';
 import {
   containerStyles,
   passageTitleStyles,
   passageTextStyles,
+  rightPaneStyles,
 } from '@/styles/Reading/MultiChoiceReadingStyles';
 import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
@@ -572,11 +574,11 @@ const MultiChoiceContent = ({
 
           <Box
             sx={{
-              ...listeningPartStyles.questionSection,
+              ...rightPaneStyles,
               flex:
                 hidePassage && !shortTextLayout?.hasMedia && !stimulusPageUrls?.length
                   ? 1
-                  : undefined,
+                  : '0 0 auto',
               width: {
                 xs: '100%',
                 md: usePassageColumn ? `calc(${100 - leftWidth}% - 32px)` : '100%',
@@ -584,213 +586,242 @@ const MultiChoiceContent = ({
               minWidth: usePassageColumn ? { md: '400px' } : 0,
               maxWidth: !usePassageColumn ? '100%' : undefined,
               height: '100%',
-              overflowY: 'auto',
-              minHeight: 0,
-              scrollbarWidth: 'thin',
-              '&::-webkit-scrollbar': { width: '8px' },
-              '&::-webkit-scrollbar-track': { background: 'transparent' },
-              '&::-webkit-scrollbar-thumb': {
-                background: '#ccc',
-                borderRadius: '4px',
-                '&:hover': { background: '#999' },
-              },
+              maxHeight: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              containerType: 'inline-size',
+              containerName: 'rightPanel',
+              p: 0,
             }}
           >
-            <Box sx={listeningPartStyles.innerInstruction}>
-              <LightbulbOutlinedIcon />
-              <Typography sx={{ color: 'inherit', fontSize: 'inherit', fontWeight: 'inherit' }}>
-                {hidePassage
-                  ? 'Look at the content on the left and choose the correct answer for each question.'
-                  : 'Read the passage on the left and choose the correct answer for each question.'}
-              </Typography>
-            </Box>
-
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, width: '100%' }}>
-              {sortedQuestions.map((question, index) => {
-                const qKey = question.id ?? `__idx_${index}`;
-                const rawQuestion = question.question;
-                const questionHtml =
-                  typeof rawQuestion === 'string' && rawQuestion.startsWith('http')
-                    ? (questionBodyByKey[qKey] ?? rawQuestion)
-                    : (rawQuestion ?? '');
-                const displayHtml = hidePassage ? '' : questionHtml;
-
-                const selectedValue = answers[question.id] || '';
-                const correctOption = question.options?.find((o) => o.isCorrect);
-                const correctAnswerText = correctOption ? correctOption.label : '';
-
-                return (
-                  <Box
-                    key={question.id || index}
-                    id={`question-${question.id}`}
-                    sx={listeningPartStyles.questionContainerCol}
+            <Box
+              sx={{
+                flex: 1,
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                scrollbarWidth: 'thin',
+                '&::-webkit-scrollbar': { width: '8px' },
+                '&::-webkit-scrollbar-track': { background: 'transparent' },
+                '&::-webkit-scrollbar-thumb': {
+                  background: '#ccc',
+                  borderRadius: '4px',
+                  '&:hover': { background: '#999' },
+                },
+              }}
+            >
+              <Box sx={listeningPartStyles.instructionContainer}>
+                <ErrorRoundedIcon sx={{ color: 'red.text', fontSize: '1.5rem', mt: 0.2 }} />
+                <Box sx={listeningPartStyles.instructionWrapper}>
+                  <Typography
+                    sx={{ color: 'red.text', fontSize: '1rem', fontWeight: 600, mb: 0.5 }}
                   >
-                    <Box sx={listeningPartStyles.questionTextContainer}>
-                      <Typography sx={listeningPartStyles.questionLabelRectangle}>
-                        {question.question_number ?? question.questionNumber ?? index + 1}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          ...listeningPartStyles.questionText,
-                          ...textWrapStyles,
-                          '& a': {
-                            color: '#0000EE',
-                            textDecoration: 'underline',
-                            ['&:hover']: {
-                              color: '#000099',
-                              cursor: 'pointer',
-                            },
-                          },
-                        }}
-                        dangerouslySetInnerHTML={{ __html: displayHtml }}
-                      />
-                    </Box>
-                    <Box
-                      sx={{
-                        ...listeningPartStyles.audioAndOptionsContainer,
-                        pl: { xs: 0, md: 4 },
-                      }}
-                    >
-                      <Box sx={listeningPartStyles.optionsGridRow}>
-                        <RadioGroup
-                          value={selectedValue}
-                          onChange={(e) => handleAnswerSelection(question.id, e.target.value)}
-                          sx={{ gap: 1 }}
-                        >
-                          {question.options?.map((option, optIndex) => {
-                            const isSelected = selectedValue === option.value;
-                            const isCorrect = option.isCorrect;
+                    Instruction
+                  </Typography>
+                  <Typography
+                    sx={{
+                      color: 'text.primary',
+                      fontSize: '0.9rem',
+                      lineHeight: 1.5,
+                      wordBreak: 'break-word',
+                    }}
+                  >
+                    {hidePassage
+                      ? 'Look at the content on the left and choose the correct answer for each question.'
+                      : 'Read the passage on the left and choose the correct answer for each question.'}
+                  </Typography>
+                </Box>
+              </Box>
 
-                            return (
-                              <Box
-                                key={optIndex}
-                                onClick={() => {
-                                  if (!showResults)
-                                    handleAnswerSelection(question.id, option.value);
-                                }}
-                                sx={{
-                                  ...multipleChoiceStyles.optionContainer,
-                                  cursor: showResults ? 'default' : 'pointer',
-                                  ...(showSummary &&
-                                    isSelected && {
-                                      border: `1px solid ${isCorrect ? '#4caf50' : '#f44336'}`,
-                                      backgroundColor: isCorrect
-                                        ? 'rgba(76, 175, 80, 0.05)'
-                                        : 'rgba(244, 67, 54, 0.05)',
-                                    }),
-                                }}
-                              >
-                                <Radio
-                                  disabled={showResults}
-                                  checked={isSelected}
-                                  value={option.value}
-                                  icon={
-                                    <RadioButtonUncheckedIcon
-                                      sx={multipleChoiceStyles.uncheckIcon}
-                                    />
-                                  }
-                                  checkedIcon={
-                                    <Box sx={multipleChoiceStyles.checkedIconWrapper}>
-                                      <RadioButtonUncheckedIcon
-                                        sx={{
-                                          ...multipleChoiceStyles.outerCircle,
-                                          ...(showSummary &&
-                                            isSelected && {
-                                              color: isCorrect ? 'success.main' : 'error.main',
-                                            }),
-                                        }}
-                                      />
-                                      <CircleIcon
-                                        sx={{
-                                          ...multipleChoiceStyles.innerCircle,
-                                          ...(showSummary &&
-                                            isSelected && {
-                                              color: isCorrect ? 'success.main' : 'error.main',
-                                            }),
-                                        }}
-                                      />
-                                    </Box>
-                                  }
-                                  sx={{
-                                    ...multipleChoiceStyles.checkboxRoot,
-                                    ...(showSummary &&
-                                      isSelected && {
-                                        color: isCorrect ? 'success.main' : 'error.main',
-                                        '&.Mui-checked': {
-                                          color: isCorrect ? 'success.main' : 'error.main',
-                                        },
-                                      }),
-                                  }}
-                                />
-                                <Typography
-                                  sx={{
-                                    ...multipleChoiceStyles.optionLabel,
-                                    flexShrink: 0,
-                                    ...(showSummary &&
-                                      isSelected && {
-                                        color: isCorrect ? '#4caf50' : '#f44336',
-                                        fontWeight: 600,
-                                      }),
-                                  }}
-                                >
-                                  {option.option_label || option.value}.
-                                </Typography>
-                                <Typography
-                                  sx={{
-                                    ...multipleChoiceStyles.optionLabel,
-                                    fontWeight: 400,
-                                    flex: 1,
-                                    ...textWrapStyles, // Cập nhật ngắt dòng
-                                    ...(showSummary &&
-                                      isSelected && {
-                                        color: isCorrect ? '#4caf50' : '#f44336',
-                                        fontWeight: 500,
-                                      }),
-                                  }}
-                                >
-                                  {option.answer_text || option.text || option.label}
-                                </Typography>
-                                {showSummary && isCorrect && (
-                                  <Chip
-                                    label="Correct"
-                                    size="small"
-                                    color="success"
-                                    sx={{
-                                      height: 20,
-                                      fontSize: '0.65rem',
-                                      ml: 1,
-                                      display: { xs: 'none', md: 'inline-flex' },
-                                    }}
-                                  />
-                                )}
-                              </Box>
-                            );
-                          })}
-                        </RadioGroup>
-                      </Box>
-                    </Box>
+              <Box sx={{ ...listeningPartStyles.questionSection, mt: 2 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, width: '100%' }}>
+                  {sortedQuestions.map((question, index) => {
+                    const qKey = question.id ?? `__idx_${index}`;
+                    const rawQuestion = question.question;
+                    const questionHtml =
+                      typeof rawQuestion === 'string' && rawQuestion.startsWith('http')
+                        ? (questionBodyByKey[qKey] ?? rawQuestion)
+                        : (rawQuestion ?? '');
+                    const displayHtml = hidePassage ? '' : questionHtml;
 
-                    {showSummary && correctOption && (
-                      <Box sx={{ pr: { xs: 0, md: 4 }, pl: { xs: 0, md: 4 }, width: '100%' }}>
-                        <Box sx={{ ...listeningPartStyles.explanationContainer }}>
-                          <Typography
-                            sx={{ ...listeningPartStyles.correctText, ...textWrapStyles }}
-                          >
-                            Correct Answer: {correctOption.option_label}. {correctAnswerText}
+                    const selectedValue = answers[question.id] || '';
+                    const correctOption = question.options?.find((o) => o.isCorrect);
+                    const correctAnswerText = correctOption ? correctOption.label : '';
+
+                    return (
+                      <Box
+                        key={question.id || index}
+                        id={`question-${question.id}`}
+                        sx={listeningPartStyles.questionContainerCol}
+                      >
+                        <Box sx={listeningPartStyles.questionTextContainer}>
+                          <Typography sx={listeningPartStyles.questionLabelRectangle}>
+                            {question.question_number ?? question.questionNumber ?? index + 1}
                           </Typography>
-                          {question.explanation && (
-                            <Typography
-                              sx={{ ...listeningPartStyles.explanationText, ...textWrapStyles }}
-                            >
-                              <strong>Explanation:</strong> {question.explanation}
-                            </Typography>
-                          )}
+                          <Typography
+                            sx={{
+                              ...listeningPartStyles.questionText,
+                              ...textWrapStyles,
+                              '& a': {
+                                color: '#0000EE',
+                                textDecoration: 'underline',
+                                ['&:hover']: {
+                                  color: '#000099',
+                                  cursor: 'pointer',
+                                },
+                              },
+                            }}
+                            dangerouslySetInnerHTML={{ __html: displayHtml }}
+                          />
                         </Box>
+                        <Box
+                          sx={{
+                            ...listeningPartStyles.audioAndOptionsContainer,
+                            pl: { xs: 0, md: 4 },
+                          }}
+                        >
+                          <Box sx={listeningPartStyles.optionsGridRow}>
+                            <RadioGroup
+                              value={selectedValue}
+                              onChange={(e) => handleAnswerSelection(question.id, e.target.value)}
+                              sx={{ gap: 1 }}
+                            >
+                              {question.options?.map((option, optIndex) => {
+                                const isSelected = selectedValue === option.value;
+                                const isCorrect = option.isCorrect;
+
+                                return (
+                                  <Box
+                                    key={optIndex}
+                                    onClick={() => {
+                                      if (!showResults)
+                                        handleAnswerSelection(question.id, option.value);
+                                    }}
+                                    sx={{
+                                      ...multipleChoiceStyles.optionContainer,
+                                      cursor: showResults ? 'default' : 'pointer',
+                                      ...(showSummary &&
+                                        isSelected && {
+                                          border: `1px solid ${isCorrect ? '#4caf50' : '#f44336'}`,
+                                          backgroundColor: isCorrect
+                                            ? 'rgba(76, 175, 80, 0.05)'
+                                            : 'rgba(244, 67, 54, 0.05)',
+                                        }),
+                                    }}
+                                  >
+                                    <Radio
+                                      disabled={showResults}
+                                      checked={isSelected}
+                                      value={option.value}
+                                      icon={
+                                        <RadioButtonUncheckedIcon
+                                          sx={multipleChoiceStyles.uncheckIcon}
+                                        />
+                                      }
+                                      checkedIcon={
+                                        <Box sx={multipleChoiceStyles.checkedIconWrapper}>
+                                          <RadioButtonUncheckedIcon
+                                            sx={{
+                                              ...multipleChoiceStyles.outerCircle,
+                                              ...(showSummary &&
+                                                isSelected && {
+                                                  color: isCorrect ? 'success.main' : 'error.main',
+                                                }),
+                                            }}
+                                          />
+                                          <CircleIcon
+                                            sx={{
+                                              ...multipleChoiceStyles.innerCircle,
+                                              ...(showSummary &&
+                                                isSelected && {
+                                                  color: isCorrect ? 'success.main' : 'error.main',
+                                                }),
+                                            }}
+                                          />
+                                        </Box>
+                                      }
+                                      sx={{
+                                        ...multipleChoiceStyles.checkboxRoot,
+                                        ...(showSummary &&
+                                          isSelected && {
+                                            color: isCorrect ? 'success.main' : 'error.main',
+                                            '&.Mui-checked': {
+                                              color: isCorrect ? 'success.main' : 'error.main',
+                                            },
+                                          }),
+                                      }}
+                                    />
+                                    <Typography
+                                      sx={{
+                                        ...multipleChoiceStyles.optionLabel,
+                                        flexShrink: 0,
+                                        ...(showSummary &&
+                                          isSelected && {
+                                            color: isCorrect ? '#4caf50' : '#f44336',
+                                            fontWeight: 600,
+                                          }),
+                                      }}
+                                    >
+                                      {option.option_label || option.value}.
+                                    </Typography>
+                                    <Typography
+                                      sx={{
+                                        ...multipleChoiceStyles.optionLabel,
+                                        fontWeight: 400,
+                                        flex: 1,
+                                        ...textWrapStyles, // Cập nhật ngắt dòng
+                                        ...(showSummary &&
+                                          isSelected && {
+                                            color: isCorrect ? '#4caf50' : '#f44336',
+                                            fontWeight: 500,
+                                          }),
+                                      }}
+                                    >
+                                      {option.answer_text || option.text || option.label}
+                                    </Typography>
+                                    {showSummary && isCorrect && (
+                                      <Chip
+                                        label="Correct"
+                                        size="small"
+                                        color="success"
+                                        sx={{
+                                          height: 20,
+                                          fontSize: '0.65rem',
+                                          ml: 1,
+                                          display: { xs: 'none', md: 'inline-flex' },
+                                        }}
+                                      />
+                                    )}
+                                  </Box>
+                                );
+                              })}
+                            </RadioGroup>
+                          </Box>
+                        </Box>
+
+                        {showSummary && correctOption && (
+                          <Box sx={{ pr: { xs: 0, md: 4 }, pl: { xs: 0, md: 4 }, width: '100%' }}>
+                            <Box sx={{ ...listeningPartStyles.explanationContainer }}>
+                              <Typography
+                                sx={{ ...listeningPartStyles.correctText, ...textWrapStyles }}
+                              >
+                                Correct Answer: {correctOption.option_label}. {correctAnswerText}
+                              </Typography>
+                              {question.explanation && (
+                                <Typography
+                                  sx={{ ...listeningPartStyles.explanationText, ...textWrapStyles }}
+                                >
+                                  <strong>Explanation:</strong> {question.explanation}
+                                </Typography>
+                              )}
+                            </Box>
+                          </Box>
+                        )}
                       </Box>
-                    )}
-                  </Box>
-                );
-              })}
+                    );
+                  })}
+                </Box>
+              </Box>
             </Box>
           </Box>
         </Box>
