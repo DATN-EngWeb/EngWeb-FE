@@ -165,6 +165,7 @@ export default function FilterSidebar({ filters, handleFilterChange, user }) {
           <Box>
             <FieldLabel>Test name</FieldLabel>
             <TextField
+              id="filter-test-name"
               fullWidth
               placeholder="Find test name"
               size="small"
@@ -185,6 +186,7 @@ export default function FilterSidebar({ filters, handleFilterChange, user }) {
           <Box>
             <FieldLabel>Teacher</FieldLabel>
             <TextField
+              id="filter-teacher-name"
               fullWidth
               placeholder="Find teacher"
               size="small"

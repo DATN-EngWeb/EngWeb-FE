@@ -293,7 +293,6 @@ export default function BasicInformation({
                   <MenuItem value="" disabled>
                     Choose level
                   </MenuItem>
-                  <MenuItem value="A1">A1</MenuItem>
                   <MenuItem value="A2">A2</MenuItem>
                   <MenuItem value="B1">B1</MenuItem>
                   <MenuItem value="B2">B2</MenuItem>

@@ -363,11 +363,6 @@ const FillBlanksContent = ({
                       color: 'text.primary',
                       fontSize: '0.9rem',
                       lineHeight: 1.5,
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
                       wordBreak: 'break-word',
                     }}
                   >

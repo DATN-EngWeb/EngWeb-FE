@@ -239,11 +239,6 @@ export default function FillBlankPart({
                 color: 'text.primary',
                 fontSize: '0.9rem',
                 lineHeight: 1.5,
-                display: '-webkit-box',
-                WebkitLineClamp: 3,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
                 wordBreak: 'break-word',
               }}
             >

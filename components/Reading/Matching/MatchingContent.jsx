@@ -459,11 +459,6 @@ const MatchingContent = ({
                       color: 'text.primary',
                       fontSize: '0.9rem',
                       lineHeight: 1.5,
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
                       wordBreak: 'break-word',
                     }}
                   >
@@ -473,12 +468,6 @@ const MatchingContent = ({
                 </Box>
               </Box>
               <Box sx={listeningPartStyles.questionSection}>
-                <Box sx={listeningPartStyles.innerInstruction}>
-                  <Typography sx={{ color: 'inherit', fontSize: 'inherit', fontWeight: 'inherit' }}>
-                    Match the questions with the correct options.
-                  </Typography>
-                </Box>
-
                 <Box
                   sx={{
                     ...listeningPartStyles.matchingQuestionAnswerContainerGrid,

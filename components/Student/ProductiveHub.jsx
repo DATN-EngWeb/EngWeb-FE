@@ -69,6 +69,7 @@ export default function ProductiveHub({ Skill }) {
           page: page,
           ordering: filters.ordering,
           submitted: 'true',
+          page_size: 6,
         };
 
         if (filters.title) params.title = filters.title;
@@ -92,7 +93,7 @@ export default function ProductiveHub({ Skill }) {
         if (response && response.results) {
           setTests(response.results);
           const count = response.count || 0;
-          setTotalPages(Math.ceil(count / 10) || 1);
+          setTotalPages(Math.ceil(count / 6) || 1);
         } else {
           setTests([]);
           setTotalPages(1);
@@ -108,7 +109,7 @@ export default function ProductiveHub({ Skill }) {
     }
 
     fetchTests();
-  }, [filters, page, user?.role, Skill, hasLoadedOnce]);
+  }, [filters, page, user?.role, Skill]);
 
   const handleFilterChange = (field, value) => {
     setFilters((prev) => ({

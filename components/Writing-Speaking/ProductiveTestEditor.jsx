@@ -39,7 +39,6 @@ import { createDriver } from '../../utils/createDriver';
 import 'driver.js/dist/driver.css';
 
 const levelTheme = {
-  A1: { border: '#2ecc71', text: '#2ecc71', bg: '#f0fff4' },
   A2: { border: '#3498db', text: '#3498db', bg: '#ebf5fb' },
   B1: { border: '#f39c12', text: '#f39c12', bg: '#fef5e7' },
   B2: { border: '#e74c3c', text: '#e74c3c', bg: '#fdedec' },
