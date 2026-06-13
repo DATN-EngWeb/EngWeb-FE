@@ -67,6 +67,7 @@ export default function ReadingHub() {
           type: 'R',
           page: page,
           ordering: filters.ordering,
+          page_size: 6,
         };
 
         if (filters.title) params.title = filters.title;
@@ -90,7 +91,7 @@ export default function ReadingHub() {
         if (response && response.results) {
           setTests(response.results);
           const count = response.count || 0;
-          setTotalPages(Math.ceil(count / 10) || 1);
+          setTotalPages(Math.ceil(count / 6) || 1);
         } else {
           setTests([]);
           setTotalPages(1);

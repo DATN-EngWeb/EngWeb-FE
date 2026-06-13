@@ -322,7 +322,7 @@ export default function Page() {
           type: svData.type || 'R',
           level: svData.level || '',
           skill: svData.skill || 'R',
-          time: svData.time > 10000 ? 60 : svData.time,
+          time: svData.time || 60,
           description: svData.description || '',
           status: svData.status || 'D',
           flag: 'update',
