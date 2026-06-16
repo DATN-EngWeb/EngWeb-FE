@@ -29,12 +29,9 @@ import FillBlanksReading from '@/components/Reading/FillBlanks/FillBlanksReading
 import MatchingReading from '@/components/Reading/Matching/MatchingReading';
 import { getFullReceptiveTest } from '@/api/tests';
 import { createReceptiveTest } from '@/api/test';
-import {
-  transformMultiChoiceTest,
-  transformFillBlanksTest,
-  transformMatchingTest,
-} from '@/utils/testDataTransform';
+import { transformMultiChoiceTest } from '@/utils/testDataTransform';
 import { fetchHtmlContent } from '@/api/teacher/upload-reading';
+import { cleanBase64Images } from '@/utils/stringFormat';
 import ReceptiveTestResult from '@/components/Student/ReceptiveTestResult/ReceptiveTestResult';
 import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import Skeleton from '../ListeningTest/skeleton';
@@ -132,6 +129,8 @@ export default function ReadingTestContent({ testId }) {
         const preloadPromises = partsByOrder.map(async (part) => {
           if (part.content && part.content.includes('http')) {
             part.content = await fetchHtmlContent(part.content);
+          } else if (part.content && typeof part.content === 'string') {
+            part.content = cleanBase64Images(part.content);
           }
           const qHtmlPromises = [];
           part.receptive_questions?.forEach((q) => {
@@ -144,6 +143,8 @@ export default function ReadingTestContent({ testId }) {
               qHtmlPromises.push(async () => {
                 q.content = await fetchHtmlContent(q.content);
               });
+            } else if (q.content && typeof q.content === 'string') {
+              q.content = cleanBase64Images(q.content);
             }
           });
           await Promise.all(qHtmlPromises.map((p) => p()));
@@ -172,20 +173,55 @@ export default function ReadingTestContent({ testId }) {
             transformedData = transformed.parts[0];
           } else if (format === 'H' || format === 'I' || format === 'D') {
             componentType = 'fill-blanks';
-            const transformed = transformFillBlanksTest({
-              receptive_test: {
-                receptive_parts: [part],
-              },
-            });
-            transformedData = transformed.parts[0];
+            const questions = (part.receptive_questions || []).map((q) => ({
+              id: q.id,
+              question_number: q.question_number,
+              question: q.content || '',
+              explanation: q.explanation,
+              correctLabel: q.receptive_answers?.find((a) => a.is_correct)?.option_label || '',
+              correctText: q.receptive_answers?.find((a) => a.is_correct)?.answer_text || '',
+              options:
+                q.receptive_answers?.map((a) => ({
+                  id: a.id,
+                  value: a.option_label,
+                  label: a.answer_text || '',
+                  option_label: a.option_label || '',
+                  answer_text: a.answer_text || '',
+                  isCorrect: a.is_correct,
+                })) || [],
+            }));
+            transformedData = {
+              passage: part.content || '',
+              passageTitle: part.description || '',
+              blanks: (part.receptive_questions || [])
+                .map((q) => q.question_number)
+                .sort((a, b) => a - b),
+              questions,
+            };
           } else if (format === 'J' || format === 'E') {
             componentType = 'matching';
-            const transformed = transformMatchingTest({
-              receptive_test: {
-                receptive_parts: [part],
-              },
-            });
-            transformedData = transformed.parts[0];
+            const sentences = (part.receptive_questions || []).map((q) => ({
+              id: q.id,
+              text: q.content || q.explanation || '',
+              question_number: q.question_number,
+            }));
+            const gaps = (part.receptive_questions || [])
+              .map((q) => q.question_number)
+              .sort((a, b) => a - b);
+            const questions = (part.receptive_questions || []).map((q) => ({
+              id: q.id,
+              question_number: q.question_number,
+              explanation: q.explanation,
+              correctLabel: q.receptive_answers?.find((a) => a.is_correct)?.option_label || '',
+              correctText: q.receptive_answers?.find((a) => a.is_correct)?.answer_text || '',
+            }));
+            transformedData = {
+              passage: part.content || '',
+              passageTitle: part.description || '',
+              sentences,
+              gaps,
+              questions,
+            };
           }
 
           return {

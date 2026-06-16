@@ -15,8 +15,6 @@ import {
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import HeadsetMicIcon from '@mui/icons-material/HeadsetMic';
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -106,8 +104,6 @@ export default function OverallProgress({
   const tabs = [
     { id: 'READING', label: 'READING', icon: <MenuBookOutlinedIcon fontSize="small" /> },
     { id: 'LISTENING', label: 'LISTENING', icon: <HeadsetMicIcon fontSize="small" /> },
-    { id: 'WRITING', label: 'WRITING', icon: <EditOutlinedIcon fontSize="small" /> },
-    { id: 'SPEAKING', label: 'SPEAKING', icon: <CampaignOutlinedIcon fontSize="small" /> },
   ];
 
   return (
@@ -275,11 +271,7 @@ export default function OverallProgress({
           </Stack>
         ) : (
           <>
-            <ProgressTracking
-              historyData={historyData}
-              type={activeTab === 'READING' || activeTab === 'LISTENING' ? 'R' : 'P'}
-              activeTab={activeTab}
-            />
+            <ProgressTracking historyData={historyData} type="R" activeTab={activeTab} />
             {/* ------------------ 4grid Thông tin ------------------ */}
             <Box
               sx={{

@@ -143,6 +143,15 @@ export const validateReadingPartPayload = (parts) => {
         }
       }
 
+      if (format !== 'I') {
+        for (let k = 0; k < q.answers.length; k++) {
+          const ans = q.answers[k];
+          if (!ans.option_label || String(ans.option_label).trim() === '') {
+            return formatQuestionMessage(partName, qNum, 'choose an option label (A, B, C...).');
+          }
+        }
+      }
+
       const hasCorrectAnswer = q.answers.some((ans) => ans.is_correct === true);
       if (!hasCorrectAnswer) {
         return formatQuestionMessage(partName, qNum, 'choose the correct answer.');
