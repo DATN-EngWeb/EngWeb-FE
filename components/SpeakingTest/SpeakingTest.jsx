@@ -507,7 +507,7 @@ export default function SpeakingTest() {
       );
 
       setIsFetchingFeedback(false);
-      router.push(`/student/speaking/${testId}/${attempt}/AI-feedback`);
+      router.replace(`/student/speaking/${testId}/${attempt}/AI-feedback`);
     } catch (error) {
       setIsFetchingFeedback(false);
       if (
@@ -532,7 +532,7 @@ export default function SpeakingTest() {
       const nextTurns = normalizeAITurns(category.remaining_turns);
       setRemainingAITurns(nextTurns);
       localStorage.setItem('remainAIturns', JSON.stringify(nextTurns));
-      router.push(`/student/speaking/${testId}/${attempt}/AI-feedback`);
+      router.replace(`/student/speaking/${testId}/${attempt}/AI-feedback`);
     } catch (error) {
       if (
         error?.status >= 500 ||
