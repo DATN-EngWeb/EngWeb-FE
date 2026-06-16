@@ -35,6 +35,7 @@ import {
   transformMatchingTest,
 } from '@/utils/testDataTransform';
 import { fetchHtmlContent } from '@/api/teacher/upload-reading';
+import { cleanBase64Images } from '@/utils/stringFormat';
 import ReceptiveTestResult from '@/components/Student/ReceptiveTestResult/ReceptiveTestResult';
 import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import Skeleton from '../ListeningTest/skeleton';
@@ -132,6 +133,8 @@ export default function ReadingTestContent({ testId }) {
         const preloadPromises = partsByOrder.map(async (part) => {
           if (part.content && part.content.includes('http')) {
             part.content = await fetchHtmlContent(part.content);
+          } else if (part.content && typeof part.content === 'string') {
+            part.content = cleanBase64Images(part.content);
           }
           const qHtmlPromises = [];
           part.receptive_questions?.forEach((q) => {
@@ -144,6 +147,8 @@ export default function ReadingTestContent({ testId }) {
               qHtmlPromises.push(async () => {
                 q.content = await fetchHtmlContent(q.content);
               });
+            } else if (q.content && typeof q.content === 'string') {
+              q.content = cleanBase64Images(q.content);
             }
           });
           await Promise.all(qHtmlPromises.map((p) => p()));
