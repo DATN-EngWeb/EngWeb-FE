@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation';
 import { CircularProgress, Box, Alert, Button } from '@mui/material';
 import FillBlanksReading from '@/components/Reading/FillBlanks/FillBlanksReading';
 import { getFullReceptiveTest } from '@/api/tests';
-import { transformFillBlanksTest } from '@/utils/testDataTransform';
 
 function FillBlanksPageContent() {
   const searchParams = useSearchParams();
@@ -32,7 +31,46 @@ function FillBlanksPageContent() {
 
         const backendTest = await getFullReceptiveTest(testId);
 
-        const transformed = transformFillBlanksTest(backendTest);
+        const receptiveParts =
+          backendTest?.receptive_test?.receptive_parts || backendTest?.receptive_parts;
+
+        const parts = (receptiveParts || [])
+          .filter((part) => part.format === 'I' || part.format === 'H' || part.format === 'D')
+          .map((part, index) => {
+            const questions = (part.receptive_questions || []).map((q) => ({
+              id: q.id,
+              question_number: q.question_number,
+              question: q.content || '',
+              explanation: q.explanation,
+              correctLabel: q.receptive_answers?.find((a) => a.is_correct)?.option_label || '',
+              correctText: q.receptive_answers?.find((a) => a.is_correct)?.answer_text || '',
+              options:
+                q.receptive_answers?.map((a) => ({
+                  id: a.id,
+                  value: a.option_label,
+                  label: a.answer_text || '',
+                  option_label: a.option_label || '',
+                  answer_text: a.answer_text || '',
+                  isCorrect: a.is_correct,
+                })) || [],
+            }));
+
+            return {
+              id: part.order || index + 1,
+              databaseId: part.id,
+              title: `Part ${part.order || index + 1}`,
+              passage: part.content || '',
+              passageTitle: part.description || '',
+              blanks: (part.receptive_questions || [])
+                .map((q) => q.question_number)
+                .sort((a, b) => a - b),
+              questions,
+              componentType: 'fill-blanks',
+              rawPart: part,
+            };
+          });
+
+        const transformed = { parts };
 
         if (!transformed.parts || transformed.parts.length === 0) {
           setError('This test does not contain fill-in-the-blanks questions.');

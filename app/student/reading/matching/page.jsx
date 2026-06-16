@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation';
 import { CircularProgress, Box, Alert, Button } from '@mui/material';
 import MatchingReading from '@/components/Reading/Matching/MatchingReading';
 import { getFullReceptiveTest } from '@/api/tests';
-import { transformMatchingTest } from '@/utils/testDataTransform';
 
 function MatchingPageContent() {
   const searchParams = useSearchParams();
@@ -32,7 +31,46 @@ function MatchingPageContent() {
 
         const backendTest = await getFullReceptiveTest(testId);
 
-        const transformed = transformMatchingTest(backendTest);
+        const receptiveParts =
+          backendTest?.receptive_test?.receptive_parts || backendTest?.receptive_parts;
+
+        const parts = (receptiveParts || [])
+          .filter((part) => part.format === 'J' || part.format === 'E')
+          .map((part, index) => {
+            const sentences = (part.receptive_questions || []).map((question) => {
+              return {
+                id: question.id,
+                text: question.content || question.explanation || '',
+                question_number: question.question_number,
+              };
+            });
+
+            const gaps = (part.receptive_questions || [])
+              .map((q) => q.question_number)
+              .sort((a, b) => a - b);
+
+            const questions = (part.receptive_questions || []).map((q) => ({
+              id: q.id,
+              question_number: q.question_number,
+              explanation: q.explanation,
+              correctLabel: q.receptive_answers?.find((a) => a.is_correct)?.option_label || '',
+              correctText: q.receptive_answers?.find((a) => a.is_correct)?.answer_text || '',
+            }));
+
+            return {
+              id: part.order || index + 1,
+              title: `Part ${part.order || index + 1}`,
+              passage: part.content || '',
+              passageTitle: part.description || '',
+              sentences,
+              gaps,
+              questions,
+              componentType: 'matching',
+              rawPart: part,
+            };
+          });
+
+        const transformed = { parts };
 
         if (!transformed.parts || transformed.parts.length === 0) {
           setError('This test does not contain matching questions.');
