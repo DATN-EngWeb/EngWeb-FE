@@ -424,7 +424,7 @@ export default function WritingTest() {
       localStorage.setItem('remainAIturns', JSON.stringify(nextTurns));
       // eslint-disable-next-line no-console
       console.log('Fetched AI feedback:', category);
-      router.push(`/student/writing/${testId}/${attempt}/AI-feedback`);
+      router.replace(`/student/writing/${testId}/${attempt}/AI-feedback`);
     } catch (error) {
       if (
         error?.status >= 500 ||
@@ -500,7 +500,7 @@ export default function WritingTest() {
     try {
       localStorage.removeItem('category');
       setSubmitStatus('idle');
-      router.push(`/student/writing/${testId}/${attempt}/AI-feedback`);
+      router.replace(`/student/writing/${testId}/${attempt}/AI-feedback`);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Failed to open submitted result:', error);

@@ -17,6 +17,7 @@ import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestSty
 import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
 import SumaryPartTab from '../../Student/ListeningTest/part/sumaryPartTab';
 import { fetchHtmlContent } from '@/api/test';
+import { cleanBase64Images } from '@/utils/stringFormat';
 import 'ckeditor5/ckeditor5.css';
 
 const textWrapStyles = {
@@ -183,7 +184,7 @@ const MultiChoiceContent = ({
 
   useEffect(() => {
     if (hidePassage) return;
-    setPassageContent(passage);
+    setPassageContent(cleanBase64Images(passage));
     const fetchContent = async () => {
       if (
         passage &&
@@ -194,7 +195,7 @@ const MultiChoiceContent = ({
         try {
           const response = await fetch(passage);
           const text = await response.text();
-          setPassageContent(text);
+          setPassageContent(cleanBase64Images(text));
         } catch {
           // Catch error
         }

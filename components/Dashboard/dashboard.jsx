@@ -203,6 +203,7 @@ export default function StudentDashboard() {
             setFilterSkill={setFilterSkill}
             filterLevelForHistory={filterLevelForHistory}
             setFilterLevelForHistory={setFilterLevelForHistory}
+            isLoading={isLoading}
           />
         </Stack>
       </Box>

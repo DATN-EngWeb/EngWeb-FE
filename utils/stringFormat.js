@@ -96,3 +96,10 @@ export const secondsToMinutesValue = (seconds) => {
   if (!seconds || isNaN(seconds)) return '0';
   return (seconds / 60).toFixed(1);
 };
+
+export const cleanBase64Images = (htmlString) => {
+  if (!htmlString || typeof htmlString !== 'string') return htmlString;
+  return htmlString.replace(/src="data:image\/[^"]+"/gi, (match) =>
+    match.replace(/[\r\n\s]+/g, ''),
+  );
+};

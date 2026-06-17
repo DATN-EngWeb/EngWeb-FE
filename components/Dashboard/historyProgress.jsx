@@ -10,6 +10,7 @@ import {
   Select,
   MenuItem,
   Pagination,
+  CircularProgress,
 } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import HistoryItem from '@/components/Dashboard/historyItem';
@@ -24,6 +25,7 @@ export default function ProgressHistory({
   setFilterSkill,
   filterLevelForHistory,
   setFilterLevelForHistory,
+  isLoading,
 }) {
   const historyRef = useRef(null);
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -126,12 +128,24 @@ export default function ProgressHistory({
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+          gridTemplateColumns: isLoading ? '1fr' : { xs: '1fr', md: '1fr 1fr' },
           gap: 2,
           width: '100%',
         }}
       >
-        {progressHistory.length > 0 ? (
+        {isLoading ? (
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              width: '100%',
+              minHeight: '200px',
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        ) : progressHistory.length > 0 ? (
           progressHistory.map((test, _index) => (
             <HistoryItem key={test.id} data={test} filterSkill={filterSkill} />
           ))

@@ -12,6 +12,8 @@ import {
   passageTitleStyles,
   rightPaneStyles,
 } from '@/styles/Reading/FillBlanksStyles';
+import { cleanBase64Images } from '@/utils/stringFormat';
+
 import { listeningPartStyles } from '@/styles/Student/Listening/listeningTestStyles';
 import { multipleChoiceStyles } from '@/styles/Teacher/Reading/QuesitonTypeStyles';
 import SumaryPartTab from '../../Student/ListeningTest/part/sumaryPartTab';
@@ -48,7 +50,7 @@ const FillBlanksContent = ({
 
   // Lấy nội dung bài đọc từ URL nếu passage là một link lưu trữ (Google Cloud Storage)
   useEffect(() => {
-    setPassageContent(passage);
+    setPassageContent(cleanBase64Images(passage));
     const fetchContent = async () => {
       if (
         passage &&
@@ -59,7 +61,7 @@ const FillBlanksContent = ({
         try {
           const response = await fetch(passage);
           const text = await response.text();
-          setPassageContent(text);
+          setPassageContent(cleanBase64Images(text));
         } catch (error) {
           // eslint-disable-next-line no-console
           console.error('Failed to fetch passage content:', error);

@@ -13,6 +13,7 @@ import {
   passageTitleStyles,
   rightPaneStyles,
 } from '@/styles/Reading/MatchingStyles';
+import { cleanBase64Images } from '@/utils/stringFormat';
 import 'ckeditor5/ckeditor5.css';
 
 const textWrapStyles = {
@@ -76,7 +77,7 @@ const MatchingContent = ({
 
   // Lấy nội dung bài đọc từ URL nếu passage là một link lưu trữ (Google Cloud Storage)
   useEffect(() => {
-    setPassageContent(passage);
+    setPassageContent(cleanBase64Images(passage));
     const fetchContent = async () => {
       if (
         passage &&
@@ -87,7 +88,7 @@ const MatchingContent = ({
         try {
           const response = await fetch(passage);
           const text = await response.text();
-          setPassageContent(text);
+          setPassageContent(cleanBase64Images(text));
         } catch (error) {
           // eslint-disable-next-line no-console
           console.error('Failed to fetch passage content:', error);
@@ -99,7 +100,7 @@ const MatchingContent = ({
 
   // Tải nội dung cho từng câu/đoạn văn cần nối nếu dữ liệu trả về là dạng link (URL)
   useEffect(() => {
-    setProcessedSentences(sentences);
+    setProcessedSentences(sentences.map((s) => ({ ...s, text: cleanBase64Images(s.text) })));
     const fetchSentences = async () => {
       const newSentences = await Promise.all(
         sentences.map(async (s) => {
@@ -112,14 +113,14 @@ const MatchingContent = ({
             try {
               const response = await fetch(s.text);
               const text = await response.text();
-              return { ...s, text };
+              return { ...s, text: cleanBase64Images(text) };
             } catch (error) {
               // eslint-disable-next-line no-console
               console.error('Failed to fetch sentence content:', error);
-              return s;
+              return { ...s, text: cleanBase64Images(s.text) };
             }
           }
-          return s;
+          return { ...s, text: cleanBase64Images(s.text) };
         }),
       );
       setProcessedSentences(newSentences);

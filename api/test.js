@@ -2,6 +2,7 @@
 /* global fetch */
 /* global URLSearchParams */
 import { apiFetch } from './client';
+import { cleanBase64Images } from '../utils/stringFormat';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 if (!API_BASE_URL) {
@@ -168,12 +169,13 @@ export async function getReceptiveTestDetails(testId) {
 
 export const fetchHtmlContent = async (url) => {
   if (!url || typeof url !== 'string' || !url.startsWith('http')) {
-    return url;
+    return cleanBase64Images(url);
   }
   try {
     const response = await fetch(url);
     if (!response.ok) throw new Error('Fetch failed');
-    return await response.text();
+    const text = await response.text();
+    return cleanBase64Images(text);
   } catch (_error) {
     return '';
   }
