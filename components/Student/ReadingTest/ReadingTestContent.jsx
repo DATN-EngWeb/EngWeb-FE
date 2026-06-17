@@ -122,9 +122,19 @@ export default function ReadingTestContent({ testId }) {
           return;
         }
 
-        const partsByOrder = [...backendTest.receptive_test.receptive_parts].sort(
-          (a, b) => (a.order ?? 0) - (b.order ?? 0),
-        );
+        const partsByOrder = [...backendTest.receptive_test.receptive_parts]
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+          .map((part) => {
+            const sortedQuestions = [...(part.receptive_questions || [])]
+              .sort((a, b) => (a.question_number ?? 0) - (b.question_number ?? 0))
+              .map((q) => {
+                const sortedAnswers = [...(q.receptive_answers || [])].sort((a, b) =>
+                  (a.option_label || '').localeCompare(b.option_label || ''),
+                );
+                return { ...q, receptive_answers: sortedAnswers };
+              });
+            return { ...part, receptive_questions: sortedQuestions };
+          });
 
         const preloadPromises = partsByOrder.map(async (part) => {
           if (part.content && part.content.includes('http')) {

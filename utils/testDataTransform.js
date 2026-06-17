@@ -56,7 +56,9 @@ export function transformMultiChoiceTest(backendTest) {
         part.format === 'C',
     )
     .map((part, index) => {
-      const rawQuestions = part.receptive_questions || [];
+      const rawQuestions = [...(part.receptive_questions || [])].sort(
+        (a, b) => (a.question_number ?? 0) - (b.question_number ?? 0),
+      );
       let passage = part.content || '';
       let stimulusPageUrls = null;
       const stripQuestionIds = new Set();
@@ -72,15 +74,17 @@ export function transformMultiChoiceTest(backendTest) {
       }
 
       const questions = rawQuestions.map((question) => {
-        const options =
-          question.receptive_answers?.map((answer) => ({
-            id: answer.id,
-            value: answer.option_label,
-            label: answer.answer_text || '',
-            option_label: answer.option_label || '',
-            answer_text: answer.answer_text || '',
-            isCorrect: answer.is_correct,
-          })) || [];
+        const sortedAnswers = [...(question.receptive_answers || [])].sort((a, b) =>
+          (a.option_label || '').localeCompare(b.option_label || ''),
+        );
+        const options = sortedAnswers.map((answer) => ({
+          id: answer.id,
+          value: answer.option_label,
+          label: answer.answer_text || '',
+          option_label: answer.option_label || '',
+          answer_text: answer.answer_text || '',
+          isCorrect: answer.is_correct,
+        }));
 
         const stem = stripQuestionIds.has(question.id) ? '' : question.content;
 
