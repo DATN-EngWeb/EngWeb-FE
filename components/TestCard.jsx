@@ -346,7 +346,7 @@ const TestCard = ({
           overflowWrap: 'anywhere',
         }}
       >
-        {description}
+        {skill === 'S' || skill === 'W' ? test_details?.topic : description}
       </Typography>
 
       <Divider
