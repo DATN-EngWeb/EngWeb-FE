@@ -61,6 +61,7 @@ export default function ProductiveMetaPanel({ metadata }) {
 
       <Stack spacing={1.5}>
         <InfoRow label="Topic" value={metadata?.topic || 'No topic'} />
+        <InfoRow label="Description" value={metadata?.descriptionInfo} />
         <InfoRow label="Format" value={formatLabel} />
         {metadata?.showMinWord && metadata?.minWord !== undefined && metadata?.minWord !== null && (
           <InfoRow

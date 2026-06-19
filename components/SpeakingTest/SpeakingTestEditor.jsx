@@ -17,6 +17,7 @@ export default function SpeakingTestEditor() {
     level: '',
     topics: '',
     format: '',
+    descriptionInfo: '',
   });
   const [settings, setSettings] = useState({
     skill: 'S',
@@ -64,7 +65,7 @@ export default function SpeakingTestEditor() {
         status: status === 'Draft' ? 'D' : status === 'In review' ? 'I' : 'P',
         time: parseInt(settings.timeLimit),
         completed_bonus: settings.score,
-        description: 'Speaking test',
+        description: testData.descriptionInfo,
       };
 
       const res = await createTest(basicInfo);
@@ -95,7 +96,14 @@ export default function SpeakingTestEditor() {
       await submitProductiveTest({ testId: res.id, data: detailedData });
       setSnackbar({ open: true, message: 'Test submitted successfully', severity: 'success' });
       setIsSaving(false);
-      setTestData({ skill: 'S', testName: '', level: '', topics: '', format: '' });
+      setTestData({
+        skill: 'S',
+        testName: '',
+        level: '',
+        topics: '',
+        format: '',
+        descriptionInfo: '',
+      });
       setSettings({ timeLimit: 30, score: 10 });
       setQuestion({ description: '', suggestion: '', audio: null });
       setErrors(null);
