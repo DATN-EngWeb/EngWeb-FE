@@ -89,7 +89,7 @@ export default function InformationSection({ profile, setProfile, onSave, isSavi
               <MenuItem value="C">Center Teacher</MenuItem>
             </Select>
           ) : (
-            <Typography>{getEmploymentTypeLabel(profile.employmentType)}</Typography>
+            <Typography>{getEmploymentTypeLabel(profile.employmentType) || '-'}</Typography>
           )}
         </Grid>
 
@@ -109,7 +109,7 @@ export default function InformationSection({ profile, setProfile, onSave, isSavi
               }}
             />
           ) : (
-            <Typography>{profile.experienceYear}</Typography>
+            <Typography>{profile.experienceYear || '-'}</Typography>
           )}
         </Grid>
 
@@ -129,7 +129,7 @@ export default function InformationSection({ profile, setProfile, onSave, isSavi
               }}
             />
           ) : (
-            <Typography>{profile.workplace}</Typography>
+            <Typography>{profile.workplace || '-'}</Typography>
           )}
         </Grid>
 
@@ -149,7 +149,7 @@ export default function InformationSection({ profile, setProfile, onSave, isSavi
               }}
             />
           ) : (
-            <Typography>{profile.introduction}</Typography>
+            <Typography>{profile.introduction || '-'}</Typography>
           )}
         </Grid>
       </Grid>

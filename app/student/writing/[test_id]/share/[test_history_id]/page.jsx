@@ -67,7 +67,7 @@ export default function WritingSharePage() {
       return;
     }
     try {
-      await createPost({
+      const post = await createPost({
         productive_test_history_id: test_history_id,
         title: title,
         description: description,
@@ -78,7 +78,7 @@ export default function WritingSharePage() {
         severity: 'success',
       });
       setTimeout(() => {
-        router.replace(`/student/writing/${test_id}`);
+        router.replace(`/student/writing/${test_id}/forum?open_post=${post.id}`);
       }, 2000);
     } catch (error) {
       setSnackbar({

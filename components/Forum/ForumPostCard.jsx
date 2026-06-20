@@ -57,6 +57,12 @@ export default function ForumPostCard({ post, initialOpen = false }) {
   const pendingLikedRef = useRef(post.is_liked ?? false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
+  useEffect(() => {
+    if (String(post.id) === searchParams.get('open_post')) {
+      setModalOpen(true);
+    }
+  }, [searchParams, post.id]);
+
   const handleMoreClick = (e) => setAnchorEl(e.currentTarget);
   const handleMoreClose = () => setAnchorEl(null);
   const handleEditClick = () => {
@@ -170,7 +176,9 @@ export default function ForumPostCard({ post, initialOpen = false }) {
               flexWrap="wrap"
             >
               <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography sx={styles.authorName}>{post.author_name}</Typography>
+                <Typography sx={styles.authorName}>
+                  {post.author_name || post.author_username}
+                </Typography>
                 <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
                   <Typography variant="caption" color="text.secondary">
                     {formatDateTime(post.created_at)}

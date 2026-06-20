@@ -164,6 +164,8 @@ export default function ProgressHistory({
             color="primary"
             variant="outlined"
             shape="rounded"
+            siblingCount={0}
+            boundaryCount={2}
           />
         </Box>
       )}
