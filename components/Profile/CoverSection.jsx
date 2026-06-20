@@ -3,7 +3,7 @@ import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import { useEffect, useState } from 'react';
 import { coverSectionStyles } from '../../styles/Profile/ProfileStyles';
 
-export default function CoverSection({ avatarUrl, coverUrl, fullName, onSave, isSaving, onError }) {
+export default function CoverSection({ avatarUrl, coverUrl, userName, onSave, isSaving, onError }) {
   const [editing, setEditing] = useState(false);
   const [cover, setCover] = useState(coverUrl || null);
   const [avatar, setAvatar] = useState(avatarUrl || null);
@@ -96,7 +96,7 @@ export default function CoverSection({ avatarUrl, coverUrl, fullName, onSave, is
       <Box sx={coverSectionStyles.avatarSection}>
         <Box sx={coverSectionStyles.avatarWrapper}>
           <Avatar src={avatar || ''} sx={coverSectionStyles.avatar}>
-            {fullName?.charAt(0)?.toUpperCase()}
+            {userName?.charAt(0)?.toUpperCase()}
           </Avatar>
           {editing && (
             <IconButton component="label" sx={coverSectionStyles.avatarCameraButton} size="small">
@@ -106,7 +106,7 @@ export default function CoverSection({ avatarUrl, coverUrl, fullName, onSave, is
           )}
         </Box>
         <Box>
-          <Typography variant="h6">{fullName}</Typography>
+          <Typography variant="h6">{userName}</Typography>
         </Box>
       </Box>
     </Paper>
