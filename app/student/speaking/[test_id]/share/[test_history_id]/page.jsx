@@ -79,7 +79,7 @@ export default function ShareSpeakingPage() {
       return;
     }
     try {
-      await createPost({
+      const post = await createPost({
         productive_test_history_id: test_history_id,
         title: title,
         description: description,
@@ -90,7 +90,7 @@ export default function ShareSpeakingPage() {
         severity: 'success',
       });
       setTimeout(() => {
-        router.replace(`/student/speaking/${test_id}`);
+        router.replace(`/student/speaking/${test_id}/forum?open_post=${post.id}`);
       }, 2000);
     } catch (error) {
       setSnackbar({
