@@ -67,6 +67,7 @@ export default function ViewWritingTestPage({ params }) {
           level: response.level || '',
           time: response.time,
           topic: response.productive_test?.topic || '',
+          descriptionInfo: response.description || '',
           format: response.productive_test?.format || '',
           minWord: response.productive_test?.min_word,
           showMinWord: true,

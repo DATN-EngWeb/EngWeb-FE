@@ -35,6 +35,7 @@ export default function UpdateSpeakingTestEditor() {
     level: '',
     topics: '',
     format: '',
+    descriptionInfo: '',
   });
   const [settings, setSettings] = useState({
     skill: 'S',
@@ -93,6 +94,7 @@ export default function UpdateSpeakingTestEditor() {
         level: response.level,
         topics: response.productive_test.topic,
         format: reverseFormatMapper[response.productive_test.format] || '',
+        descriptionInfo: response.description || '',
       });
       setSettings({
         skill: 'S',
@@ -121,6 +123,7 @@ export default function UpdateSpeakingTestEditor() {
         format: response.productive_test.format,
         suggestion: response.productive_test.glue_text,
         description: htmlText,
+        descriptionInfo: response.description,
         audioUrl: audioUrlFromServer,
       };
     } catch (error) {
@@ -174,6 +177,9 @@ export default function UpdateSpeakingTestEditor() {
         updatePayload.time = parseInt(settings.timeLimit);
       if (settings.score !== origin.score) updatePayload.completed_bonus = settings.score;
 
+      if (testData.descriptionInfo !== origin.descriptionInfo) {
+        updatePayload.description = testData.descriptionInfo;
+      }
       const newStatus = status === 'Draft' ? 'D' : status === 'In review' ? 'I' : 'P';
 
       if (newStatus !== origin.status) {

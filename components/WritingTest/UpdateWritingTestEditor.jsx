@@ -40,6 +40,7 @@ export default function UpdateWritingTestEditor() {
     level: '',
     topics: '',
     format: '',
+    descriptionInfo: '',
   });
   const [settings, setSettings] = useState({
     skill: 'W',
@@ -99,6 +100,7 @@ export default function UpdateWritingTestEditor() {
         level: response.level,
         topics: response.productive_test.topic,
         format: reverseFormatMapper[response.productive_test.format] || '',
+        descriptionInfo: response.description,
       });
       setSettings({
         skill: 'W',
@@ -126,6 +128,7 @@ export default function UpdateWritingTestEditor() {
         format: response.productive_test.format,
         suggestion: response.productive_test.glue_text,
         description: htmlText,
+        descriptionInfo: response.description,
         min_word: response.productive_test.min_word,
       };
     } catch (error) {
@@ -179,6 +182,9 @@ export default function UpdateWritingTestEditor() {
         updatePayload.time = parseInt(settings.timeLimit);
       if (settings.score !== origin.score) updatePayload.completed_bonus = settings.score;
 
+      if (testData.descriptionInfo !== origin.descriptionInfo) {
+        updatePayload.description = testData.descriptionInfo;
+      }
       const newStatus = status === 'Draft' ? 'D' : status === 'In review' ? 'I' : 'P';
 
       if (newStatus !== origin.status) {

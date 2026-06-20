@@ -17,6 +17,7 @@ export default function WritingTestEditor() {
     level: '',
     topics: '',
     format: '',
+    descriptionInfo: '',
   });
   const [settings, setSettings] = useState({
     skill: 'W',
@@ -67,7 +68,7 @@ export default function WritingTestEditor() {
         status: status === 'Draft' ? 'D' : status === 'In review' ? 'I' : 'P',
         time: parseInt(settings.timeLimit),
         completed_bonus: settings.score,
-        description: 'Writing test',
+        description: testData.descriptionInfo,
       };
 
       const res = await createTest(basicInfo);
@@ -97,7 +98,14 @@ export default function WritingTestEditor() {
       await submitProductiveTest({ testId: res.id, data: detailedData });
       setSnackbar({ open: true, message: 'Test submitted successfully', severity: 'success' });
       setIsSaving(false);
-      setTestData({ skill: 'W', testName: '', level: '', topics: '', format: '' });
+      setTestData({
+        skill: 'W',
+        testName: '',
+        level: '',
+        topics: '',
+        format: '',
+        descriptionInfo: '',
+      });
       setSettings({ skill: 'W', timeLimit: 30, minWords: 100, score: 10 });
       setQuestion({ description: '', suggestion: '', audio: null });
       setErrors(null);
