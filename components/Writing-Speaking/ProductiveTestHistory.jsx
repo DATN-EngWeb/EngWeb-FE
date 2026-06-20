@@ -348,6 +348,8 @@ export default function ProductiveTestHistory() {
                   shape="rounded"
                   size={isSmall ? 'small' : 'large'}
                   disabled={pageLoading}
+                  siblingCount={0}
+                  boundaryCount={2}
                 />
               </Box>
             )}

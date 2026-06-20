@@ -91,13 +91,13 @@ export default function ReviewTestPage() {
   }, []);
 
   const getPaginationRange = (current, total) => {
-    const delta = 1;
+    const delta = 0;
     const range = [];
     const rangeWithDots = [];
     let l;
 
     for (let i = 1; i <= total; i++) {
-      if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) {
+      if (i <= 2 || i >= total - 1 || (i >= current - delta && i <= current + delta)) {
         range.push(i);
       }
     }
