@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Container, Box, Paper, Stack } from '@mui/material';
+import { Container, Box, Paper, Stack, Typography } from '@mui/material';
 import { keyframes } from '@mui/system';
 
 const shimmer = keyframes`
@@ -289,8 +289,28 @@ export default function SkeletonStudentDashboard() {
             </Box>
 
             {/* Pagination Skeleton */}
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3, width: '100%' }}>
-              <SkeletonBox width="300px" height="40px" borderRadius="8px" />
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: 1,
+                mt: 3,
+                width: '100%',
+              }}
+            >
+              {/* Prev button */}
+              <SkeletonBox width="40px" height="40px" borderRadius="8px" />
+              <SkeletonBox width="40px" height="40px" borderRadius="8px" />
+              <SkeletonBox width="40px" height="40px" borderRadius="8px" />
+              {/* Dots */}
+              <Typography sx={{ mx: 0.5, color: 'text.secondary', fontWeight: 'bold' }}>
+                ...
+              </Typography>
+              <SkeletonBox width="40px" height="40px" borderRadius="8px" />
+              <SkeletonBox width="40px" height="40px" borderRadius="8px" />
+              {/* Next button */}
+              <SkeletonBox width="40px" height="40px" borderRadius="8px" />
             </Box>
           </Paper>
         </Stack>

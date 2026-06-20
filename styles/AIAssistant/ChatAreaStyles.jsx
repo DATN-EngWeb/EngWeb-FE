@@ -1,7 +1,15 @@
 export const selectMenuProps = {
+  anchorOrigin: {
+    vertical: 'top',
+    horizontal: 'left',
+  },
+  transformOrigin: {
+    vertical: 'bottom',
+    horizontal: 'left',
+  },
   PaperProps: {
     sx: {
-      mt: 1,
+      mb: 1,
       borderRadius: 3,
       border: '1px solid rgba(0, 0, 0, 0.08)',
       boxShadow: '0 18px 48px rgba(15, 23, 42, 0.12)',

@@ -74,13 +74,13 @@ export default function ProfileSettingSection({ profile, setProfile, onSave, isS
               }}
             />
           ) : (
-            <Typography>{profile.fullName}</Typography>
+            <Typography>{profile.fullName || '-'}</Typography>
           )}
         </Grid>
 
         <Grid item>
           <Typography variant="caption">EMAIL</Typography>
-          <Typography>{profile.email}</Typography>
+          <Typography>{profile.email || '-'}</Typography>
         </Grid>
 
         <Grid item>
@@ -100,7 +100,7 @@ export default function ProfileSettingSection({ profile, setProfile, onSave, isS
               }}
             />
           ) : (
-            <Typography>{formatDate(profile.dateOfBirth)}</Typography>
+            <Typography>{formatDate(profile.dateOfBirth) || '-'}</Typography>
           )}
         </Grid>
 

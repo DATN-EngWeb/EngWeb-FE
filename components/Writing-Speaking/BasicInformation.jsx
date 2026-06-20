@@ -44,6 +44,7 @@ export default function BasicInformation({
   timeLimit,
   format,
   topics,
+  descriptionInfo,
   onChange,
   errors,
 }) {
@@ -319,6 +320,34 @@ export default function BasicInformation({
               value={topics || ''}
               onChange={(e) => onChange('topics', e.target.value)}
               error={errors?.topics}
+              sx={{
+                ...textInput,
+                '& .MuiInputBase-input': {
+                  fontSize: { xs: '0.7rem', md: '0.9rem' },
+                },
+              }}
+            />
+          </Box>
+
+          <Box id="tour-test-description">
+            <Typography
+              variant="body2"
+              color="text.primary"
+              fontSize={{ xs: '0.75rem', md: '0.9rem' }}
+              lineHeight={1.4}
+              fontWeight={500}
+              mb={0.5}
+              mt={1.5}
+            >
+              Description <span style={{ color: 'red' }}>*</span>
+            </Typography>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="e.g. Describe a family picnic in a park."
+              value={descriptionInfo || ''}
+              onChange={(e) => onChange('descriptionInfo', e.target.value)}
+              error={errors?.descriptionInfo}
               sx={{
                 ...textInput,
                 '& .MuiInputBase-input': {

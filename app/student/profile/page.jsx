@@ -142,7 +142,7 @@ export default function StudentProfile() {
         <CoverSection
           avatarUrl={profile.avatarUrl}
           coverUrl={profile.coverUrl}
-          fullName={profile.fullName}
+          userName={profile.username}
           onSave={handleSaveSection}
           isSaving={isSaving}
           onError={showSnackbar}

@@ -321,9 +321,19 @@ export default function ListeningTestContent({ test_id, initialData }) {
           });
         }
 
-        const parts = [...(svData?.receptive_test?.receptive_parts || [])].sort(
-          (a, b) => (a.order ?? 0) - (b.order ?? 0),
-        );
+        const parts = [...(svData?.receptive_test?.receptive_parts || [])]
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+          .map((part) => {
+            const sortedQuestions = [...(part.receptive_questions || [])]
+              .sort((a, b) => (a.question_number ?? 0) - (b.question_number ?? 0))
+              .map((q) => {
+                const sortedAnswers = [...(q.receptive_answers || [])].sort((a, b) =>
+                  (a.option_label || '').localeCompare(b.option_label || ''),
+                );
+                return { ...q, receptive_answers: sortedAnswers };
+              });
+            return { ...part, receptive_questions: sortedQuestions };
+          });
 
         const resourcesMap = {};
         const preloadPromises = parts.map(async (part) => {

@@ -321,7 +321,7 @@ export default function ForumPostModal({
                 noWrap
                 sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}
               >
-                {post.author_name}
+                {post.author_name || post.author_username}
               </Typography>
               <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
                 <Typography variant="caption" color="text.secondary">
@@ -474,7 +474,7 @@ export default function ForumPostModal({
                     <Box flex={1} sx={modalStyles.commentBubble}>
                       <Box display="flex" alignItems="center" flexWrap="wrap" gap={0.5}>
                         <Typography fontWeight={700} variant="body2" flex={1}>
-                          {c.author_name}
+                          {c.author_name || c.author_username}
                         </Typography>
                         {c.created_at && (
                           <Typography

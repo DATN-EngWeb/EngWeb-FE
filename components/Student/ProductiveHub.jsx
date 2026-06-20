@@ -231,6 +231,8 @@ export default function ProductiveHub({ Skill }) {
               color="primary"
               shape="rounded"
               size="large"
+              siblingCount={0}
+              boundaryCount={2}
             />
           </Box>
         </Box>

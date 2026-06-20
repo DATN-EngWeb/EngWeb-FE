@@ -220,8 +220,7 @@ export default function TeacherProfile() {
         <CoverSection
           avatarUrl={profile.avatarUrl}
           coverUrl={profile.coverUrl}
-          fullName={profile.fullName}
-          roleLabel="Teacher"
+          userName={profile.username}
           onSave={handleSaveCover}
           isSaving={isSaving}
           onError={showSnackbar}
