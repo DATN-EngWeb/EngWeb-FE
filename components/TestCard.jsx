@@ -37,16 +37,16 @@ export const levelTheme = {
 };
 
 const FormatTheme = {
-  A: { bg: 'success.greenLight', text: 'success.green_dark' },
-  B: { bg: 'info.light', text: 'info.dark' },
-  C: { bg: 'success.highlight', text: 'success.main_dark' },
-  D: { bg: 'background.paper', text: 'error.main' },
-  E: { bg: 'text.gray', text: 'background.paper' },
-  F: { bg: 'success.greenLight', text: 'success.main_dark' },
-  G: { bg: 'success.highlight', text: 'success.main_dark' },
-  H: { bg: 'error.main', text: 'background.paper' },
-  I: { bg: 'purple.pastel', text: 'purple.main' },
-  J: { bg: 'text.gray', text: 'warning.main' },
+  A: { color: '#2e7d32' },
+  B: { color: '#0288d1' },
+  C: { color: '#9c27b0' },
+  D: { color: '#d32f2f' },
+  E: { color: '#ed6c02' },
+  F: { color: '#009688' },
+  G: { color: '#c2185b' },
+  H: { color: '#455a64' },
+  I: { color: '#512da8' },
+  J: { color: '#1976d2' },
 };
 
 const Formatlabels = {
@@ -117,8 +117,7 @@ const TestCard = ({
   const formatText = Formatlabels[formatCode];
 
   const currentFormatStyle = FormatTheme[formatCode] || {
-    bg: currentLevelTheme.badge,
-    text: 'background.paper',
+    color: currentLevelTheme.badge,
   };
 
   useEffect(() => {
@@ -278,10 +277,12 @@ const TestCard = ({
         {formatText && (
           <Typography
             sx={{
-              bgcolor: currentFormatStyle.bg,
-              color: currentFormatStyle.text,
-              px: 1.5,
-              py: 0.5,
+              bgcolor: 'background.paper',
+              color: currentFormatStyle.color,
+              border: '1px solid',
+              borderColor: currentFormatStyle.color,
+              px: 1.2,
+              py: 0.4,
               borderRadius: '6px',
               fontSize: '0.8rem',
               fontWeight: 700,
