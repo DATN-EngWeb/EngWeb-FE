@@ -17,7 +17,7 @@ const features = [
   'Teacher & AI Feedback on Speaking and Writing',
   'Review Past Work and Track Progress',
   'Earn Points and Access Learning Dashboard',
-  'Contribute and Download Study Materials',
+  'Contribute Study Materials',
 ];
 
 export default function WhatMakesUsDifferent() {
