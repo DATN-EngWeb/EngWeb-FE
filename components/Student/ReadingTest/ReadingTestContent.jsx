@@ -795,7 +795,7 @@ export default function ReadingTestContent({ testId }) {
       {/* Separator Line */}
       <Box sx={{ ...listeningtestStyles.separatorLine, backgroundColor: 'gray.main' }} />{' '}
       {/* KHỐI 2: CONTENT CỦA PART */}
-      <Box sx={{ width: '100%', flex: 1, display: 'flex', bgcolor: 'background.default' }}>
+      <Box sx={{ width: '100%', display: 'flex', bgcolor: 'background.gray' }}>
         {renderPartComponent()}
       </Box>
       {/* KHỐI 3: STEPPER NAVIGATION Ở DƯỚI CÙNG */}
@@ -842,7 +842,9 @@ export default function ReadingTestContent({ testId }) {
             )}
           </Box>
         </Container>
-      </Box>{' '}
+      </Box>
+      {/* Khối màu xám lấp đầy khoảng trống còn lại bên dưới màn hình */}
+      <Box sx={{ width: '100%', flex: 1, backgroundColor: 'background.gray' }} />
       {/* --- CÁC DIALOG XÁC NHẬN --- */}
       <Dialog
         open={openSubmitDialog}

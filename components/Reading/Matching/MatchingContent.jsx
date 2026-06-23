@@ -310,7 +310,6 @@ const MatchingContent = ({
           ref={containerRef}
           sx={{
             ...listeningPartStyles.containerColRow,
-            height: { xs: 'auto', md: '100vh' },
             maxHeight: { xs: 'none', md: '100vh' },
             overflow: { xs: 'visible', md: 'hidden' },
             width: '100%',
@@ -322,7 +321,7 @@ const MatchingContent = ({
               ...listeningPartStyles.basicFlexColCenStart,
               width: { xs: '100%', md: `${leftWidth}%` },
               mb: { xs: 2, md: 0 },
-              height: '100%',
+              maxHeight: { xs: 'none', md: 'calc(100vh - 32px)' },
               overflowY: 'auto',
               minHeight: 0,
               scrollbarWidth: 'thin',
@@ -419,8 +418,7 @@ const MatchingContent = ({
               ...rightPaneStyles,
               flex: '0 0 auto',
               width: { xs: '100%', md: `calc(${100 - leftWidth}% - 32px)` },
-              height: '100%',
-              maxHeight: '100%',
+              maxHeight: { xs: 'none', md: 'calc(100vh - 32px)' },
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden',

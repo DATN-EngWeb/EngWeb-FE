@@ -565,7 +565,15 @@ export default function ListeningTestContent({ test_id, initialData }) {
   }
 
   return (
-    <Box sx={{ ...listeningtestStyles.mainContainer, position: 'relative' }}>
+    <Box
+      sx={{
+        ...listeningtestStyles.mainContainer,
+        position: 'relative',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       <SubmitLoadingDialog
         status={submitStatus}
         testType="listening"
@@ -916,6 +924,8 @@ export default function ListeningTestContent({ test_id, initialData }) {
           </Box>
         </Container>
       </Box>
+      {/* Khối màu xám lấp đầy khoảng trống còn lại bên dưới màn hình */}
+      <Box sx={{ width: '100%', flex: 1, backgroundColor: 'background.gray' }} />
     </Box>
   );
 }
