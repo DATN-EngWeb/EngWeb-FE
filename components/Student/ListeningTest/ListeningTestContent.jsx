@@ -47,6 +47,8 @@ import { useStreakContext } from '@/context/streakContext';
 import SubmitLoadingDialog from '../../Writing-Speaking/SubmitLoadingDialog';
 import SaveDraftToast from '../../Writing-Speaking/SaveDraftToast';
 import useUnsavedChangesWarning from '@/hooks/useUnsavedChangesWarning';
+import ListPartTab from '@/components/Student/Common/ListPartTab';
+import { getListeningPartProgress, getVisibleTabs } from '@/utils/partProgress';
 
 export default function ListeningTestContent({ test_id, initialData }) {
   const router = useRouter();
@@ -57,6 +59,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
   const [receptiveParts, setReceptiveParts] = useState([]);
   const [mediaResources, setMediaResources] = useState({});
   const [indexPart, setIndexPart] = useState(0);
+  const [visitedParts, setVisitedParts] = useState(new Set([0]));
   const [startTime, setStartTime] = useState(testData?.total_time || 0);
   const [allAnswers, setAllAnswers] = useState({});
 
@@ -434,20 +437,27 @@ export default function ListeningTestContent({ test_id, initialData }) {
     return () => clearInterval(timer);
   }, [isReadOnly]);
 
+  const handleGoToPart = (index) => {
+    setIndexPart(index);
+    if (index >= 0) {
+      setVisitedParts((prev) => new Set([...prev, index]));
+    }
+  };
+
   const goNextPart = () => {
     if (indexPart < receptiveParts.length - 1) {
       window.scrollTo({ top: 64, behavior: 'smooth' });
-      setIndexPart(indexPart + 1);
+      handleGoToPart(indexPart + 1);
     }
   };
 
   const goPrevPart = () => {
     if (indexPart === 0 && isReadOnly) {
       window.scrollTo({ top: 64, behavior: 'smooth' });
-      setIndexPart(-1);
+      handleGoToPart(-1);
     } else if (indexPart > 0) {
       window.scrollTo({ top: 64, behavior: 'smooth' });
-      setIndexPart(indexPart - 1);
+      handleGoToPart(indexPart - 1);
     }
   };
 
@@ -832,35 +842,53 @@ export default function ListeningTestContent({ test_id, initialData }) {
                 color: 'orange.dark',
               }),
             }}
-            onClick={() => setIndexPart(-1)}
+            onClick={() => handleGoToPart(-1)}
           >
             Summary
           </Box>
         )}
         {/* -------- Receptive Test Parts -------- */}
-        {receptiveParts.map((part, index) => (
-          <Box
-            sx={{
-              ...listeningtestStyles.boxPart,
-              ...(index === indexPart && {
-                backgroundColor: 'background.default',
-                borderColor: 'orange.light',
-                color: 'orange.dark',
-              }),
-              ...((index < indexPart - 1 || index > indexPart + 1) && {
-                display: { xs: 'none', sm: 'flex' },
-              }),
-              ...(((index === indexPart - 2 && indexPart === receptiveParts.length - 1) ||
-                (index === indexPart + 2 && indexPart === 0)) && {
-                display: 'flex',
-              }),
-            }}
-            key={part.id}
-            onClick={() => setIndexPart(index)}
-          >
-            Part {index + 1}
-          </Box>
-        ))}
+        {getVisibleTabs(indexPart, receptiveParts.length).map((item, idx) => {
+          if (item === '...') {
+            return (
+              <Box
+                key={`ellipsis-${idx}`}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  justifyContent: 'center',
+                  px: 1,
+                  color: 'text.gray',
+                  fontWeight: 'bold',
+                  fontSize: '1.2rem',
+                  pb: 0.5,
+                }}
+              >
+                ...
+              </Box>
+            );
+          }
+
+          const index = item;
+          const part = receptiveParts[index];
+          const { status, unanswered } = getListeningPartProgress(
+            part,
+            allAnswers,
+            visitedParts,
+            index,
+          );
+
+          return (
+            <ListPartTab
+              key={part.id}
+              index={index}
+              isActive={index === indexPart}
+              status={status}
+              unanswered={unanswered}
+              onClick={() => handleGoToPart(index)}
+            />
+          );
+        })}
       </Box>
       <Box sx={{ ...listeningtestStyles.separatorLine, backgroundColor: 'gray.main' }}></Box>
       {/* -------- Part Content Section --------- */}
