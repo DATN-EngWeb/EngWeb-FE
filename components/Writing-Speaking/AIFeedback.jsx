@@ -276,7 +276,7 @@ export default function AIFeedback() {
   const overallScore = categories.reduce((acc, cat) => acc + cat.score, 0) / categories.length || 0;
 
   return (
-    <Box sx={styles.mainWrapper}>
+    <Box sx={{ ...styles.mainWrapper, fontSize: { lg: 'calc(1rem + 1px)' } }}>
       <Box sx={styles.layoutContainer}>
         <Box sx={{ ...styles.gridLayout, gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' } }}>
           {/* LEFT COLUMN: Prompt Context */}

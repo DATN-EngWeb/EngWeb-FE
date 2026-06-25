@@ -248,7 +248,6 @@ const ReadingPreview = ({ open, onClose, testData, inline = false, showBackButto
           flex: 1,
           display: 'flex',
           bgcolor: 'background.default',
-          minHeight: '60vh',
         }}
       >
         {transformedData?.component ? (

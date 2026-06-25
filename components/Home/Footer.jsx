@@ -9,9 +9,6 @@ import TwitterImage from '../../assets/img/twitter.png';
 import LogoImage from '../../assets/img/logo.png';
 import { footerStyles } from '../../styles/Home/FooterStyles';
 
-const homeLinks = ['Benefits', 'Our Courses', 'Our Testimonials', 'Our FAQ'];
-const aboutLinks = ['Company', 'Achievements', 'Our Clients'];
-
 export default function Footer() {
   return (
     <Box sx={footerStyles.mainContainer}>
@@ -44,34 +41,18 @@ export default function Footer() {
             </Box>
           </Box>
 
-          <Box sx={footerStyles.columnNarrow}>
-            <Typography variant="h6" sx={footerStyles.sectionTitle}>
-              Home
-            </Typography>
-            <Box sx={footerStyles.linksContainer}>
-              {homeLinks.map((link) => (
-                <Typography key={link} variant="body2" sx={footerStyles.footerLink}>
-                  {link}
-                </Typography>
-              ))}
-            </Box>
-          </Box>
-
-          <Box sx={footerStyles.columnNarrow}>
-            <Typography variant="h6" sx={footerStyles.sectionTitle}>
-              About Us
-            </Typography>
-            <Box sx={footerStyles.linksContainer}>
-              {aboutLinks.map((link) => (
-                <Typography key={link} variant="body2" sx={footerStyles.footerLink}>
-                  {link}
-                </Typography>
-              ))}
-            </Box>
-          </Box>
-
-          <Box sx={footerStyles.columnNarrow}>
-            <Typography variant="h6" sx={footerStyles.sectionTitle}>
+          <Box
+            sx={{
+              ...footerStyles.columnNarrow,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: { xs: 'flex-start', sm: 'flex-end' },
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{ ...footerStyles.sectionTitle, textAlign: { xs: 'left', sm: 'right' } }}
+            >
               Social Profiles
             </Typography>
             <Box sx={footerStyles.socialLinksContainer}>

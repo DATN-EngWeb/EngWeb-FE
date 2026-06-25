@@ -117,7 +117,6 @@ export default function FillBlankPart({
       ref={containerRef}
       sx={{
         ...listeningPartStyles.containerColRow,
-        height: { xs: 'auto', md: '100vh' },
         maxHeight: { xs: 'none', md: '100vh' },
         overflow: { xs: 'visible', md: 'hidden' },
         width: '100%',
@@ -129,7 +128,7 @@ export default function FillBlankPart({
           ...listeningPartStyles.basicFlexColCenStart,
           width: { xs: '100%', md: `${leftWidth}%` },
           mb: 2,
-          height: '100%',
+          maxHeight: { xs: 'none', md: 'calc(100vh - 32px)' },
           overflowY: 'auto',
           minHeight: 0,
         }}
@@ -212,7 +211,7 @@ export default function FillBlankPart({
           ...listeningPartStyles.basicFlexColCenStart,
           width: { xs: '100%', md: `calc(${100 - leftWidth}% - 32px)` },
           minWidth: { md: '400px' },
-          height: '100%',
+          maxHeight: { xs: 'none', md: 'calc(100vh - 32px)' },
           overflowY: 'auto',
           minHeight: 0,
           containerType: 'inline-size',
