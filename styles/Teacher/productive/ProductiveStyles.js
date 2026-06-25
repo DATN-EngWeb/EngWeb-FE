@@ -134,3 +134,9 @@ export const rowContent = {
   justifyContent: 'space-between',
   alignItems: 'center',
 };
+
+export const suggestionContent = {
+  fontSize: '0.9rem',
+  ml: 3,
+  fontFamily: 'Arial !important',
+};

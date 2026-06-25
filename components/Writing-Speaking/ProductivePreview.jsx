@@ -46,7 +46,7 @@ export default function ProductivePreview({
                 ? description
                 : `<p style="color: #a0a0a0; font-style: italic;">Typing your test...</p>`,
           }}
-          sx={{ minHeight: '100px', '& p': { margin: 0 } }}
+          sx={{ minHeight: '100px', '& p': { margin: 0 }, fontFamily: 'Arial !important' }}
         />
 
         {suggestion && (
@@ -82,8 +82,11 @@ export default function ProductivePreview({
                 </Box>
                 <Box
                   className="ck-content"
+                  sx={{
+                    ...styles.suggestionContent,
+                    '&, & *': { fontFamily: 'Arial !important' },
+                  }}
                   dangerouslySetInnerHTML={{ __html: suggestion }}
-                  sx={{ fontSize: '0.9rem', ml: 3 }}
                 />
               </Box>
             </Collapse>
