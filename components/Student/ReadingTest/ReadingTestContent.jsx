@@ -39,6 +39,8 @@ import { useStreakContext } from '@/context/streakContext';
 import SubmitLoadingDialog from '../../Writing-Speaking/SubmitLoadingDialog';
 import SaveDraftToast from '../../Writing-Speaking/SaveDraftToast';
 import useUnsavedChangesWarning from '@/hooks/useUnsavedChangesWarning';
+import ListPartTab from '@/components/Student/Common/ListPartTab';
+import { getReadingPartProgress, getVisibleTabs } from '@/utils/partProgress';
 
 // Hàm helper format thời gian hiển thị
 const formatTimeFromSeconds = (totalSeconds) => {
@@ -73,6 +75,7 @@ export default function ReadingTestContent({ testId }) {
   const [error, setError] = useState(null);
   const [answers, setAnswers] = useState({});
   const [currentPartIndex, setCurrentPartIndex] = useState(0);
+  const [visitedParts, setVisitedParts] = useState(new Set([0]));
   const [startTime, setStartTime] = useState(new Date().toISOString());
   const [openSubmitDialog, setOpenSubmitDialog] = useState(false);
   const [openWarningDialog, setOpenWarningDialog] = useState(false);
@@ -543,16 +546,23 @@ export default function ReadingTestContent({ testId }) {
     }
   };
 
+  const handleGoToPart = (index) => {
+    setCurrentPartIndex(index);
+    if (index >= 0) {
+      setVisitedParts((prev) => new Set([...prev, index]));
+    }
+  };
+
   const handleBack = () => {
     if (currentPartIndex > 0) {
-      setCurrentPartIndex(currentPartIndex - 1);
+      handleGoToPart(currentPartIndex - 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handleNext = () => {
     if (testData && currentPartIndex < testData.parts.length - 1) {
-      setCurrentPartIndex(currentPartIndex + 1);
+      handleGoToPart(currentPartIndex + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
@@ -766,36 +776,47 @@ export default function ReadingTestContent({ testId }) {
       </Box>
       {/* -------- List Part Selection --------- */}
       <Box maxWidth="lg" sx={{ ...listeningtestStyles.listPartContainer, mx: 'auto' }}>
-        {testData.parts.map((part, index) => (
-          <Box
-            key={index}
-            onClick={() => setCurrentPartIndex(index)}
-            sx={{
-              ...listeningtestStyles.boxPart,
-              ...(index === currentPartIndex && {
-                backgroundColor: 'background.default',
-                borderColor: 'orange.light',
-                color: 'orange.dark',
-              }),
-              // Responsive Logic: Ẩn bớt tab trên mobile giống Listening
-              ...((index < currentPartIndex - 1 || index > currentPartIndex + 1) && {
-                display: { xs: 'none', sm: 'flex' },
-              }),
-              ...(((index === currentPartIndex - 2 &&
-                currentPartIndex === testData.parts.length - 1) ||
-                (index === currentPartIndex + 2 && currentPartIndex === 0)) && {
-                display: 'flex',
-              }),
-            }}
-          >
-            Part {index + 1}
-          </Box>
-        ))}
+        {getVisibleTabs(currentPartIndex, testData.parts.length).map((item, idx) => {
+          if (item === '...') {
+            return (
+              <Box
+                key={`ellipsis-${idx}`}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  justifyContent: 'center',
+                  px: 1,
+                  color: 'text.gray',
+                  fontWeight: 'bold',
+                  fontSize: '1.2rem',
+                  pb: 0.5,
+                }}
+              >
+                ...
+              </Box>
+            );
+          }
+
+          const index = item;
+          const part = testData.parts[index];
+          const { status, unanswered } = getReadingPartProgress(part, answers, visitedParts, index);
+
+          return (
+            <ListPartTab
+              key={index}
+              index={index}
+              isActive={index === currentPartIndex}
+              status={status}
+              unanswered={unanswered}
+              onClick={() => handleGoToPart(index)}
+            />
+          );
+        })}
       </Box>
       {/* Separator Line */}
       <Box sx={{ ...listeningtestStyles.separatorLine, backgroundColor: 'gray.main' }} />{' '}
       {/* KHỐI 2: CONTENT CỦA PART */}
-      <Box sx={{ width: '100%', flex: 1, display: 'flex', bgcolor: 'background.default' }}>
+      <Box sx={{ width: '100%', display: 'flex', bgcolor: 'background.gray' }}>
         {renderPartComponent()}
       </Box>
       {/* KHỐI 3: STEPPER NAVIGATION Ở DƯỚI CÙNG */}
@@ -842,7 +863,9 @@ export default function ReadingTestContent({ testId }) {
             )}
           </Box>
         </Container>
-      </Box>{' '}
+      </Box>
+      {/* Khối màu xám lấp đầy khoảng trống còn lại bên dưới màn hình */}
+      <Box sx={{ width: '100%', flex: 1, backgroundColor: 'background.gray' }} />
       {/* --- CÁC DIALOG XÁC NHẬN --- */}
       <Dialog
         open={openSubmitDialog}
