@@ -51,6 +51,7 @@ export default function ReviewTestPage() {
   const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmall = useMediaQuery(theme.breakpoints.down('sm'));
   const [mounted, setMounted] = useState(false);
   const [tests, setTests] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -90,14 +91,18 @@ export default function ReviewTestPage() {
     return 'listening';
   }, []);
 
-  const getPaginationRange = (current, total) => {
+  const getPaginationRange = (current, total, boundary = 2) => {
     const delta = 0;
     const range = [];
     const rangeWithDots = [];
     let l;
 
     for (let i = 1; i <= total; i++) {
-      if (i <= 2 || i >= total - 1 || (i >= current - delta && i <= current + delta)) {
+      if (
+        i <= boundary ||
+        i >= total - boundary + 1 ||
+        (i >= current - delta && i <= current + delta)
+      ) {
         range.push(i);
       }
     }
@@ -461,10 +466,13 @@ export default function ReviewTestPage() {
           </IconButton>
 
           {/* Pagination */}
-          {getPaginationRange(currentPage, totalPages).map((page, i) => {
+          {getPaginationRange(currentPage, totalPages, isSmall ? 1 : 2).map((page, i) => {
             if (page === '...') {
               return (
-                <Typography key={`dots-${i}`} sx={{ mx: 1, color: 'text.secondary' }}>
+                <Typography
+                  key={`dots-${i}`}
+                  sx={{ mx: { xs: 0.25, sm: 1 }, color: 'text.secondary' }}
+                >
                   ...
                 </Typography>
               );
@@ -476,11 +484,12 @@ export default function ReviewTestPage() {
                 variant={currentPage === page ? 'contained' : 'text'}
                 onClick={() => setCurrentPage(page)}
                 sx={{
-                  minWidth: 40,
-                  height: 40,
-                  mx: 0.5,
+                  minWidth: { xs: 32, sm: 40 },
+                  height: { xs: 32, sm: 40 },
+                  mx: { xs: 0.25, sm: 0.5 },
                   borderRadius: '8px',
                   fontWeight: currentPage === page ? 700 : 400,
+                  fontSize: { xs: '0.8rem', sm: '0.875rem' },
                 }}
               >
                 {page}

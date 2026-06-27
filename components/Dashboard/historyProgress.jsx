@@ -1,6 +1,8 @@
 'use client';
 
 import { useRef } from 'react';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import {
   Box,
   Paper,
@@ -27,6 +29,8 @@ export default function ProgressHistory({
   setFilterLevelForHistory,
   isLoading,
 }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const historyRef = useRef(null);
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
@@ -164,8 +168,9 @@ export default function ProgressHistory({
             color="primary"
             variant="outlined"
             shape="rounded"
+            size={isMobile ? 'small' : 'medium'}
             siblingCount={0}
-            boundaryCount={2}
+            boundaryCount={isMobile ? 1 : 2}
           />
         </Box>
       )}
