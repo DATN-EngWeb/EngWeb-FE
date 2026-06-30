@@ -153,10 +153,12 @@ export default function ForumPostsPageContent({
         }}
       >
         <Typography variant="h4" fontWeight={700} mb={0.5} sx={{ color: 'primary.main' }}>
-          Our Forum
+          {previewData?.title || `Our Forum`}
         </Typography>
 
-        <Typography color="text.secondary">{subtitle}</Typography>
+        <Typography color="text.secondary">
+          {metadata?.descriptionInfo || 'Discuss and share insights about the test.'}
+        </Typography>
       </Paper>
 
       <Box
