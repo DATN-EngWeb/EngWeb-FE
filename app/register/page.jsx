@@ -159,6 +159,18 @@ function RegisterContent() {
         <Box component="section" sx={loginStyles.formPanel}>
           <Box sx={loginStyles.formCard}>
             <Typography sx={loginStyles.cardEyebrow}>Welcome to NENS</Typography>
+            <Typography
+              sx={{
+                textAlign: 'center',
+                fontSize: { xs: 15, sm: 18, md: 20 },
+                fontWeight: 700,
+                color: 'primary.dark',
+                mb: 2,
+                mt: -1,
+              }}
+            >
+              Register
+            </Typography>
 
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
               <Stack direction="row" spacing={{ xs: 2, sm: 5, md: 15 }} justifyContent="center">
