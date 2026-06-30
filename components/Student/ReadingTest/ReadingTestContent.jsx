@@ -334,11 +334,12 @@ export default function ReadingTestContent({ testId }) {
       });
     });
 
-    return totalQuestions === totalAnswered ? 'S' : 'D';
+    const unanswered = totalQuestions - totalAnswered;
+    return { status: unanswered === 0 ? 'S' : 'D', unanswered };
   };
 
   const handleSubmit = (type = 'S') => {
-    if (type === 'S' && checkCompletionStatus(testData, answers) !== 'S') {
+    if (type === 'S' && checkCompletionStatus(testData, answers).status !== 'S') {
       setSubmitType('S');
       setOpenSubmitDialog(true);
       return;
@@ -909,7 +910,7 @@ export default function ReadingTestContent({ testId }) {
 
         <DialogContent sx={{ textAlign: 'center', pt: 2, pb: 1 }}>
           <Stack spacing={3} alignItems="center">
-            {submitType === 'S' && checkCompletionStatus(testData, answers) !== 'S' && (
+            {submitType === 'S' && checkCompletionStatus(testData, answers).status !== 'S' && (
               <Box
                 sx={{
                   display: 'flex',
@@ -921,7 +922,7 @@ export default function ReadingTestContent({ testId }) {
                 <WarningAmberIcon sx={{ fontSize: 48, color: '#ef6c00' }} />
               </Box>
             )}
-            {submitType === 'S' && checkCompletionStatus(testData, answers) === 'S' && (
+            {submitType === 'S' && checkCompletionStatus(testData, answers).status === 'S' && (
               <Box
                 sx={{
                   display: 'flex',
@@ -945,9 +946,9 @@ export default function ReadingTestContent({ testId }) {
               }}
             >
               {submitType === 'S'
-                ? checkCompletionStatus(testData, answers) === 'S'
+                ? checkCompletionStatus(testData, answers).status === 'S'
                   ? 'Great job! Are you sure to submit your test?'
-                  : 'You have unanswered questions. Do you still want to submit?'
+                  : `You have ${checkCompletionStatus(testData, answers).unanswered} unanswered question(s). Do you still want to submit?`
                 : 'Do you want to save your progress as a draft?'}
             </Typography>
           </Stack>

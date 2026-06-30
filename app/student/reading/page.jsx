@@ -152,7 +152,12 @@ export default function ReadingHub() {
               display: 'block',
             }}
           >
-            <FilterSidebar filters={filters} handleFilterChange={handleFilterChange} user={user} />
+            <FilterSidebar
+              filters={filters}
+              handleFilterChange={handleFilterChange}
+              user={user}
+              tests={tests}
+            />
           </Grid>
 
           <Grid

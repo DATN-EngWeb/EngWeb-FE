@@ -57,8 +57,6 @@ const dropdownMenuProps = {
   },
 };
 
-const YEARS = ['All years', '2024', '2025', '2026'];
-
 const LEVELS = [
   { value: 'A1', label: 'Beginner (A1)' },
   { value: 'A2', label: 'Elementary (A2)' },
@@ -111,7 +109,14 @@ function FieldLabel({ children }) {
   );
 }
 
-export default function FilterSidebar({ filters, handleFilterChange, user }) {
+export default function FilterSidebar({ filters, handleFilterChange, user, tests = [] }) {
+  const years = [
+    'All years',
+    ...[...new Set(tests.map((t) => new Date(t.created_at).getFullYear().toString()))].sort(
+      (a, b) => b - a,
+    ),
+  ];
+
   // filters.level is array: [] = all, ['A1'], ['A1','B1'], ...
   const selectedLevels = (filters.level || []).filter((value) =>
     LEVELS.some((level) => level.value === value),
@@ -214,7 +219,7 @@ export default function FilterSidebar({ filters, handleFilterChange, user }) {
               sx={inputSx}
               MenuProps={dropdownMenuProps}
             >
-              {YEARS.map((year) => (
+              {years.map((year) => (
                 <MenuItem key={year} value={year}>
                   {year}
                 </MenuItem>

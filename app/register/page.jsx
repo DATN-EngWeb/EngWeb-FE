@@ -16,7 +16,7 @@ import {
   Typography,
   Alert,
 } from '@mui/material';
-import { Visibility, VisibilityOff, ArrowBack } from '@mui/icons-material';
+import { Visibility, VisibilityOff, ArrowBack, CheckCircle, Cancel } from '@mui/icons-material';
 import Logo from '../../assets/img/logo.png';
 import registerImage from '../../assets/img/register.png';
 import googleImage from '../../assets/img/google.png';
@@ -26,11 +26,20 @@ import { registerUser } from '../../api/accounts.jsx';
 
 import Header from '../../components/Home/Header';
 
+const PASSWORD_CRITERIA = [
+  { label: 'At least 8 characters', test: (p) => p.length >= 8 },
+  { label: 'One uppercase letter (A–Z)', test: (p) => /[A-Z]/.test(p) },
+  { label: 'One lowercase letter (a–z)', test: (p) => /[a-z]/.test(p) },
+  { label: 'One number (0–9)', test: (p) => /[0-9]/.test(p) },
+  { label: 'One special character (!@#$%...)', test: (p) => /[^A-Za-z0-9\s]/.test(p) },
+];
+
 function RegisterContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const role = searchParams.get('role') || '';
   const [showPassword, setShowPassword] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -92,6 +101,8 @@ function RegisterContent() {
 
     if (!password.trim()) {
       newErrors.password = 'Please enter your password';
+    } else if (!PASSWORD_CRITERIA.every((c) => c.test(password))) {
+      newErrors.password = 'Password does not meet all the requirements below';
     }
 
     const selectedRole = (currentRole || role || '').toLowerCase();
@@ -148,6 +159,18 @@ function RegisterContent() {
         <Box component="section" sx={loginStyles.formPanel}>
           <Box sx={loginStyles.formCard}>
             <Typography sx={loginStyles.cardEyebrow}>Welcome to NENS</Typography>
+            <Typography
+              sx={{
+                textAlign: 'center',
+                fontSize: { xs: 15, sm: 18, md: 20 },
+                fontWeight: 700,
+                color: 'primary.dark',
+                mb: 2,
+                mt: -1,
+              }}
+            >
+              Register
+            </Typography>
 
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
               <Stack direction="row" spacing={{ xs: 2, sm: 5, md: 15 }} justifyContent="center">
@@ -350,6 +373,8 @@ function RegisterContent() {
                       setErrors({ ...errors, password: '' });
                     }
                   }}
+                  onFocus={() => setPasswordFocused(true)}
+                  onBlur={() => setPasswordFocused(false)}
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Enter your Password"
                   fullWidth
@@ -386,6 +411,84 @@ function RegisterContent() {
                     },
                   }}
                 />
+
+                {(passwordFocused || password.length > 0) && (
+                  <Box
+                    sx={{
+                      mt: 1.5,
+                      p: { xs: 1.5, sm: 2 },
+                      borderRadius: 3,
+                      border: '1.5px solid',
+                      borderColor: 'warning.light',
+                      backgroundColor: 'background.paper',
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                        mb: 1,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                      }}
+                    >
+                      Password requirements
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                        gap: { xs: 0.75, sm: 1 },
+                      }}
+                    >
+                      {PASSWORD_CRITERIA.map((criterion) => {
+                        const met = criterion.test(password);
+                        return (
+                          <Box
+                            key={criterion.label}
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.75,
+                            }}
+                          >
+                            {met ? (
+                              <CheckCircle
+                                sx={{
+                                  fontSize: { xs: 14, sm: 16 },
+                                  color: 'success.main',
+                                  flexShrink: 0,
+                                }}
+                              />
+                            ) : (
+                              <Cancel
+                                sx={{
+                                  fontSize: { xs: 14, sm: 16 },
+                                  color: password.length > 0 ? 'error.main' : 'text.disabled',
+                                  flexShrink: 0,
+                                }}
+                              />
+                            )}
+                            <Typography
+                              sx={{
+                                fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                                color: met
+                                  ? 'success.main'
+                                  : password.length > 0
+                                    ? 'error.main'
+                                    : 'text.secondary',
+                                lineHeight: 1.4,
+                              }}
+                            >
+                              {criterion.label}
+                            </Typography>
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  </Box>
+                )}
               </Box>
 
               {errors.role && (
