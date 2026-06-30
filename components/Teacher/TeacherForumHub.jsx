@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import {
   Box,
   Button,
@@ -74,6 +76,8 @@ function extractYear(value) {
 }
 
 export default function TeacherForumHub() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const router = useRouter();
   const [tests, setTests] = useState([]);
   const [page, setPage] = useState(1);
@@ -612,9 +616,9 @@ export default function TeacherForumHub() {
                 onChange={(_, value) => setPage(value)}
                 color="primary"
                 shape="rounded"
-                size="large"
+                size={isMobile ? 'small' : 'large'}
                 siblingCount={0}
-                boundaryCount={2}
+                boundaryCount={isMobile ? 1 : 2}
               />
             </Box>
           </Grid>

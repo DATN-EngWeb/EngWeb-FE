@@ -59,7 +59,12 @@ const likeButton = {
   minHeight: 34,
   px: 1.25,
   '& .MuiButton-startIcon svg': { fontSize: '1.1rem' },
-  '&:hover': { bgcolor: 'transparent', color: 'error.light' },
+  '@media (hover: hover) and (pointer: fine)': {
+    '&:hover': {
+      bgcolor: 'transparent',
+      color: 'error.light',
+    },
+  },
 };
 
 const commentButton = {

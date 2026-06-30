@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Box, Container, Typography, Grid, Pagination, CircularProgress } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getTestOverview } from '../../api/tests';
@@ -16,6 +18,8 @@ const pageContainerStyles = {
 };
 
 export default function ProductiveHub({ Skill }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { user } = useAuth();
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -230,9 +234,9 @@ export default function ProductiveHub({ Skill }) {
               onChange={handlePageChange}
               color="primary"
               shape="rounded"
-              size="large"
+              size={isMobile ? 'small' : 'large'}
               siblingCount={0}
-              boundaryCount={2}
+              boundaryCount={isMobile ? 1 : 2}
             />
           </Box>
         </Box>

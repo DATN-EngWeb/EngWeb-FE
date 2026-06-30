@@ -2,6 +2,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import {
   Paper,
   Box,
@@ -41,6 +43,8 @@ export default function ForumPostsPageContent({
   metadata = null,
   testContextLoading = false,
 }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(1);
   const [count, setCount] = useState(0);
@@ -320,9 +324,9 @@ export default function ForumPostsPageContent({
           onChange={(_, value) => setPage(value)}
           color="primary"
           shape="rounded"
-          size="large"
+          size={isMobile ? 'small' : 'large'}
           siblingCount={0}
-          boundaryCount={2}
+          boundaryCount={isMobile ? 1 : 2}
         />
       </Box>
 
