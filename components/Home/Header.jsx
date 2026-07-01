@@ -455,14 +455,19 @@ export default function Header() {
     router.push(path);
   };
 
-  const navItemStyle = (segment) => ({
+  const isNavActive = (seg) => {
+    if (seg === '/forum') return !!pathname?.includes('/forum');
+    return !!(pathname?.includes(seg) && !pathname?.includes('/forum'));
+  };
+
+  const navItemStyle = (seg) => ({
     ...navButtonStyles,
     borderRadius: 0,
     backgroundColor: 'transparent',
-    color: pathname?.includes(segment) ? 'secondary.main' : 'primary.main',
-    fontWeight: pathname?.includes(segment) ? 700 : 500,
+    color: isNavActive(seg) ? 'secondary.main' : 'primary.main',
+    fontWeight: isNavActive(seg) ? 700 : 500,
     borderBottom: '3px solid',
-    borderColor: pathname?.includes(segment) ? 'secondary.main' : 'transparent',
+    borderColor: isNavActive(seg) ? 'secondary.main' : 'transparent',
     px: 1,
     pt: 1.5,
     pb: 0.5,
@@ -497,6 +502,7 @@ export default function Header() {
                   { href: '/student/listening', label: 'Listening', seg: '/listening' },
                   { href: '/student/writing', label: 'Writing', seg: '/writing' },
                   { href: '/student/speaking', label: 'Speaking', seg: '/speaking' },
+                  { href: '/student/forum', label: 'Forum', seg: '/forum' },
                 ].map(({ href, label, seg }) => (
                   <Link key={seg} href={href} style={navLinkStyles}>
                     <Button color="inherit" sx={navItemStyle(seg)}>
@@ -659,8 +665,9 @@ export default function Header() {
             { href: '/student/listening', label: 'Listening', seg: '/listening' },
             { href: '/student/writing', label: 'Writing', seg: '/writing' },
             { href: '/student/speaking', label: 'Speaking', seg: '/speaking' },
+            { href: '/student/forum', label: 'Forum', seg: '/forum' },
           ].map(({ href, label, seg }) => {
-            const isActive = pathname?.includes(seg);
+            const isActive = isNavActive(seg);
             return (
               <Link key={seg} href={href} style={{ textDecoration: 'none' }}>
                 <Button

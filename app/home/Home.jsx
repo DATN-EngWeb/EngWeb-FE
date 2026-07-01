@@ -8,6 +8,7 @@ import WhatMakesUsDifferent from '../../components/Home/WhatMakesUsDifferent';
 import Testimonials from '../../components/Home/Testimonials';
 import ContactForm from '../../components/Home/ContactForm';
 import Footer from '../../components/Home/Footer';
+import AIAssistantGate from '../../components/Home/AIAssistantGate';
 
 export default function Home() {
   return (
@@ -28,6 +29,8 @@ export default function Home() {
       <Suspense fallback={null}>
         <Footer />
       </Suspense>
+
+      <AIAssistantGate />
     </Box>
   );
 }
