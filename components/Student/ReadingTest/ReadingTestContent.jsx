@@ -593,8 +593,8 @@ export default function ReadingTestContent({ testId }) {
           severity="error"
           sx={{ maxWidth: 600 }}
           action={
-            <Button color="inherit" size="small" onClick={() => window.location.reload()}>
-              Retry
+            <Button color="inherit" size="small" onClick={() => router.back()}>
+              Back
             </Button>
           }
         >

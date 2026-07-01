@@ -65,7 +65,7 @@ export default function ProgressHistory({
           variant="h1"
           sx={{ fontWeight: 800, color: 'primary.main', fontSize: { xs: 20, md: 24 } }}
         >
-          Progress history
+          Practice results
         </Typography>
         <Stack direction="row" gap={1} alignItems="center">
           <FormControl size="small" sx={{ minWidth: { xs: 80, sm: 120 } }}>
