@@ -465,7 +465,6 @@ export default function ReceptiveTestResult({
       <Box
         sx={{
           width: '100%',
-          flex: 1,
           display: 'flex',
           flexDirection: 'column',
           bgcolor: 'background.default',
@@ -534,6 +533,8 @@ export default function ReceptiveTestResult({
           </Box>
         </Container>
       </Box>
+      {/* Khối màu xám lấp đầy khoảng trống còn lại bên dưới màn hình */}
+      <Box sx={{ width: '100%', flex: 1, backgroundColor: 'background.gray' }} />
     </Box>
   );
 }

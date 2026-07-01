@@ -872,12 +872,9 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
           const index = item;
           const part = receptiveParts[index];
-          const { status, unanswered } = getListeningPartProgress(
-            part,
-            allAnswers,
-            visitedParts,
-            index,
-          );
+          const { status, unanswered } = isReadOnly
+            ? { status: 'default', unanswered: 0 }
+            : getListeningPartProgress(part, allAnswers, visitedParts, index);
 
           return (
             <ListPartTab
