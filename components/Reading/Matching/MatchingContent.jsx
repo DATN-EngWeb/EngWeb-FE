@@ -625,7 +625,11 @@ const MatchingContent = ({
                               </Typography>
                               {q?.explanation && (
                                 <Typography
-                                  sx={{ ...listeningPartStyles.explanationText, ...textWrapStyles }}
+                                  sx={{
+                                    ...listeningPartStyles.explanationText,
+                                    ...textWrapStyles,
+                                    whiteSpace: 'pre-line',
+                                  }}
                                 >
                                   <strong>Explanation:</strong> {q.explanation}
                                 </Typography>
