@@ -12,12 +12,26 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from 'recharts';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import * as styles from '@/styles/Student/HistoryTestStyles';
 import { getProductiveTestHistory, getReceptiveTestHistory } from '@/api/test';
+import theme from '@/theme/theme';
 
-export default function ProgressTracking({ historyData, type, activeTab }) {
+const LEVEL_COLORS = {
+  A1: theme.palette.success.main,
+  A2: theme.palette.info.main,
+  B1: theme.palette.secondary.main,
+  B2: theme.palette.pink.main,
+};
+
+export default function ProgressTracking({
+  allLevelsData = {},
+  filterLevelForTab,
+  type,
+  activeTab,
+}) {
   const router = useRouter();
 
   const handleViewDetail = async (historyId) => {
@@ -71,7 +85,32 @@ export default function ProgressTracking({ historyData, type, activeTab }) {
     router.push(`/student/${path}/${testId}/${attempt}`);
   };
 
-  if (historyData.length === 0) {
+  const selectedLevels =
+    filterLevelForTab === 'ALL' ? ['A1', 'A2', 'B1', 'B2'] : [filterLevelForTab];
+
+  const buildMultiLineChartData = (allLevelsData, selectedLevels) => {
+    const dateMap = {};
+    selectedLevels.forEach((level) => {
+      const attempts = allLevelsData[level]?.last_30_attempts || [];
+      [...attempts].reverse().forEach((h) => {
+        const dateObj = new Date(h.date);
+        const dateKey = dateObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+
+        if (!dateMap[dateKey]) {
+          dateMap[dateKey] = { date: dateKey, dateObj };
+        }
+        dateMap[dateKey][level] = (type === 'R' ? h.normalized_score : h.earned_bonus_point) || 0;
+        dateMap[dateKey][`${level}_history_id`] = h.history_id;
+      });
+    });
+    return Object.values(dateMap)
+      .sort((a, b) => a.dateObj - b.dateObj)
+      .map((item, index) => ({ ...item, id: index }));
+  };
+
+  const chartData = buildMultiLineChartData(allLevelsData, selectedLevels);
+
+  if (chartData.length === 0) {
     return (
       <Paper elevation={0} sx={styles.sidebarPaper}>
         <Typography variant="subtitle2" fontWeight={800} textAlign="left" mb={2}>
@@ -100,12 +139,14 @@ export default function ProgressTracking({ historyData, type, activeTab }) {
   }
 
   const CustomActiveDot = (props) => {
-    const { cx, cy, payload } = props;
+    const { cx, cy, payload, dataKey } = props;
     if (!cx || !cy) return null;
+
+    const historyId = payload[`${dataKey}_history_id`];
 
     return (
       <g
-        onClick={() => handleViewDetail(payload.history_id)}
+        onClick={() => handleViewDetail(historyId)}
         style={{
           cursor: 'pointer',
           outline: 'none',
@@ -125,12 +166,12 @@ export default function ProgressTracking({ historyData, type, activeTab }) {
           stroke="none"
           style={{ outline: 'none' }}
         />
-        {/* Chấm vàng */}
+        {/* Chấm theo level */}
         <circle
           cx={cx}
           cy={cy}
           r={6}
-          fill="#ffb300"
+          fill={LEVEL_COLORS[dataKey] || '#ffb300'}
           stroke="#fff"
           strokeWidth={2}
           style={{ pointerEvents: 'none' }}
@@ -139,32 +180,25 @@ export default function ProgressTracking({ historyData, type, activeTab }) {
     );
   };
 
-  const chartData = [...historyData]
-    .reverse()
-    .slice(-historyData.length)
-    .map((h, index) => ({
-      date: new Date(h.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit' }),
-      score: (type === 'R' ? h.normalized_score : h.earned_bonus_point) || 0,
-      id: index,
-      history_id: h.history_id,
-    }));
-
   // 2. find best score today
   const today = new Date().toLocaleDateString('en-US');
-  const todaySubmissions =
-    historyData?.filter((h) => {
-      const isToday = new Date(h.date).toLocaleDateString('en-US') === today;
-      return isToday;
-    }) || [];
-
-  const bestScoreToday =
-    todaySubmissions.length > 0
-      ? Math.max(
-          ...todaySubmissions.map(
-            (h) => (type === 'R' ? h.normalized_score : h.earned_bonus_point) || 0,
-          ),
-        )
-      : null;
+  let bestScoreToday = null;
+  selectedLevels.forEach((level) => {
+    const attempts = allLevelsData[level]?.last_30_attempts || [];
+    const todaySubmissions = attempts.filter(
+      (h) => new Date(h.date).toLocaleDateString('en-US') === today,
+    );
+    if (todaySubmissions.length > 0) {
+      const maxScore = Math.max(
+        ...todaySubmissions.map(
+          (h) => (type === 'R' ? h.normalized_score : h.earned_bonus_point) || 0,
+        ),
+      );
+      if (bestScoreToday === null || maxScore > bestScoreToday) {
+        bestScoreToday = maxScore;
+      }
+    }
+  });
 
   return (
     <Paper elevation={0} sx={styles.sidebarPaper}>
@@ -178,7 +212,7 @@ export default function ProgressTracking({ historyData, type, activeTab }) {
           Progress Tracking
         </Typography>
         <Typography variant="caption" fontWeight={700} color="text.secondary">
-          LAST {historyData.length} ATTEMPTS
+          LAST 30 ATTEMPTS
         </Typography>
       </Stack>
 
@@ -206,7 +240,7 @@ export default function ProgressTracking({ historyData, type, activeTab }) {
             />
             <YAxis hide domain={[0, 100]} />
             <Tooltip
-              wrapperStyle={{ pointerEvents: 'none' }}
+              wrapperStyle={{ pointerEvents: 'none', zIndex: 9999 }}
               labelFormatter={(id) => chartData[id]?.date}
               contentStyle={{
                 borderRadius: '10px',
@@ -214,14 +248,26 @@ export default function ProgressTracking({ historyData, type, activeTab }) {
                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
               }}
             />
-            <Line
-              type="monotone"
-              dataKey="score"
-              stroke="#ffb300"
-              strokeWidth={4}
-              dot={{ r: 4, fill: '#ffb300', strokeWidth: 2, stroke: '#fff', cursor: 'pointer' }}
-              activeDot={<CustomActiveDot />}
-            />
+            {selectedLevels.length > 1 && <Legend iconType="circle" />}
+            {selectedLevels.map((level) => (
+              <Line
+                key={level}
+                type="monotone"
+                dataKey={level}
+                name={level}
+                stroke={LEVEL_COLORS[level]}
+                strokeWidth={3}
+                dot={{
+                  r: 4,
+                  fill: LEVEL_COLORS[level],
+                  strokeWidth: 2,
+                  stroke: '#fff',
+                  cursor: 'pointer',
+                }}
+                activeDot={<CustomActiveDot />}
+                connectNulls={false}
+              />
+            ))}
           </LineChart>
         </ResponsiveContainer>
       </Box>

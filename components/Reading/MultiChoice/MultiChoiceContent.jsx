@@ -701,10 +701,17 @@ const MultiChoiceContent = ({
                                       cursor: showResults ? 'default' : 'pointer',
                                       ...(showSummary &&
                                         isSelected && {
-                                          border: `1px solid ${isCorrect ? '#4caf50' : '#f44336'}`,
+                                          border: `1px solid`,
+                                          borderColor: isCorrect ? 'success.main' : 'error.main',
                                           backgroundColor: isCorrect
-                                            ? 'rgba(76, 175, 80, 0.05)'
-                                            : 'rgba(244, 67, 54, 0.05)',
+                                            ? 'success.pastel'
+                                            : 'error.pastel',
+                                        }),
+                                      ...(showSummary &&
+                                        isCorrect && {
+                                          border: `1px solid`,
+                                          borderColor: 'success.main',
+                                          backgroundColor: 'success.pastel',
                                         }),
                                     }}
                                   >
@@ -778,19 +785,6 @@ const MultiChoiceContent = ({
                                     >
                                       {option.answer_text || option.text || option.label}
                                     </Typography>
-                                    {showSummary && isCorrect && (
-                                      <Chip
-                                        label="Correct"
-                                        size="small"
-                                        color="success"
-                                        sx={{
-                                          height: 20,
-                                          fontSize: '0.65rem',
-                                          ml: 1,
-                                          display: { xs: 'none', md: 'inline-flex' },
-                                        }}
-                                      />
-                                    )}
                                   </Box>
                                 );
                               })}
