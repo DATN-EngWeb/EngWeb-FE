@@ -194,7 +194,14 @@ const MatchingContent = ({
     const newAnswers = { ...answers };
 
     if (value !== '') {
+      // Chỉ kiểm tra duplicate trong phạm vi các câu hỏi của Matching part này,
+      // tránh vô tình xóa đáp án của các format khác (MultiChoice, FillBlanks)
+      // đang dùng chung cùng một flat answers object.
+      const matchingQuestionIds = new Set(questions.map((q) => String(q.id)));
+
       Object.keys(newAnswers).forEach((key) => {
+        if (!matchingQuestionIds.has(key)) return; // Bỏ qua key của format khác
+
         let existingValue = String(newAnswers[key]).trim();
         if (/^\d+$/.test(existingValue)) {
           const sentenceIndex = processedSentences.findIndex(
@@ -618,7 +625,11 @@ const MatchingContent = ({
                               </Typography>
                               {q?.explanation && (
                                 <Typography
-                                  sx={{ ...listeningPartStyles.explanationText, ...textWrapStyles }}
+                                  sx={{
+                                    ...listeningPartStyles.explanationText,
+                                    ...textWrapStyles,
+                                    whiteSpace: 'pre-line',
+                                  }}
                                 >
                                   <strong>Explanation:</strong> {q.explanation}
                                 </Typography>

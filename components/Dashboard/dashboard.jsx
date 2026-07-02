@@ -24,12 +24,11 @@ export default function StudentDashboard() {
   const [isLoading, setIsLoading] = useState(true);
 
   const [activeTab, setActiveTab] = useState('READING');
-  const [historyData, setHistoryData] = useState([]);
-  const [statisticsData, setStatisticsData] = useState({});
+  const [allLevelsData, setAllLevelsData] = useState({});
   const [studentProfile, setStudentProfile] = useState(null);
   const [userLevels, setUserLevels] = useState([]);
   const [isLevelLoading, setIsLevelLoading] = useState(true);
-  const [filterLevelForTab, setFilterLevelForTab] = useState('A1');
+  const [filterLevelForTab, setFilterLevelForTab] = useState('ALL');
 
   const [progressHistory, setProgressHistory] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
@@ -69,14 +68,15 @@ export default function StudentDashboard() {
         };
         const skill = skillMap[activeTab];
 
-        const statsPromise = getStatisticsForSkill(skill, filterLevelForTab);
+        const levels = ['A1', 'A2', 'B1', 'B2'];
+        const results = await Promise.all(levels.map((lvl) => getStatisticsForSkill(skill, lvl)));
 
-        const statsResponse = await statsPromise;
+        const newAllLevelsData = {};
+        levels.forEach((lvl, i) => {
+          newAllLevelsData[lvl] = results[i] || {};
+        });
 
-        if (statsResponse) {
-          setStatisticsData(statsResponse);
-          setHistoryData(statsResponse?.last_30_attempts || []);
-        }
+        setAllLevelsData(newAllLevelsData);
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error('Error fetching dashboard data:', error);
@@ -87,7 +87,7 @@ export default function StudentDashboard() {
     };
 
     fetchData();
-  }, [activeTab, filterLevelForTab]);
+  }, [activeTab]);
 
   useEffect(() => {
     const fetchStudentLevelData = async () => {
@@ -188,8 +188,7 @@ export default function StudentDashboard() {
           <OverallProgress
             activeTab={activeTab}
             setActiveTab={setActiveTab}
-            historyData={historyData}
-            statisticsData={statisticsData}
+            allLevelsData={allLevelsData}
             filterLevelForTab={filterLevelForTab}
             setFilterLevelForTab={setFilterLevelForTab}
           />

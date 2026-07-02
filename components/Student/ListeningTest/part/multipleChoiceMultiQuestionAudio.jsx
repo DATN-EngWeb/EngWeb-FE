@@ -284,10 +284,15 @@ export default function MultipleChoiceQuestionAudio({
                           cursor: disabled ? 'default' : 'pointer',
                           ...(questionResult &&
                             isSelectedInReview && {
-                              border: `1px solid ${isCorrect ? '#4caf50' : '#f44336'}`,
-                              backgroundColor: isCorrect
-                                ? 'rgba(76, 175, 80, 0.05)'
-                                : 'rgba(244, 67, 54, 0.05)',
+                              border: `1px solid`,
+                              borderColor: isCorrect ? 'success.main' : 'error.main',
+                              backgroundColor: isCorrect ? 'success.pastel' : 'error.pastel',
+                            }),
+                          ...(showSummary &&
+                            correctAnswer?.option_label === option.option_label && {
+                              border: `1px solid`,
+                              borderColor: 'success.main',
+                              backgroundColor: 'success.pastel',
                             }),
                         }}
                       >
@@ -355,19 +360,6 @@ export default function MultipleChoiceQuestionAudio({
                         >
                           {option.answer_text || option.text}
                         </Typography>
-                        {correctAnswer?.option_label === option.option_label && showSummary && (
-                          <Chip
-                            label="Correct"
-                            size="small"
-                            color="success"
-                            sx={{
-                              height: 20,
-                              fontSize: '0.65rem',
-                              ml: 1,
-                              display: { xs: 'none', md: 'inline-flex' },
-                            }}
-                          />
-                        )}
                       </Box>
                     );
                   })}
@@ -381,7 +373,9 @@ export default function MultipleChoiceQuestionAudio({
                       Correct Answer: {correctAnswerText}
                     </Typography>
                     {question.explanation && (
-                      <Typography sx={listeningPartStyles.explanationText}>
+                      <Typography
+                        sx={{ ...listeningPartStyles.explanationText, whiteSpace: 'pre-line' }}
+                      >
                         <strong>Explanation:</strong> {question.explanation}
                       </Typography>
                     )}

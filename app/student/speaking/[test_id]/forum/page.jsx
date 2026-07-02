@@ -37,6 +37,7 @@ export default function ForumPage() {
           showMinWord: false,
           audio: response.productive_test?.glue_resources?.audio || null,
           image: response.productive_test?.glue_resources?.image || null,
+          descriptionInfo: response.description || null,
         });
       } catch (err) {
         console.error(err);

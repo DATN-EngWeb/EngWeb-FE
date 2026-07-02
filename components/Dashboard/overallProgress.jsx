@@ -95,12 +95,19 @@ const StatItem = ({ icon: Icon, label, value, helpText, unit }) => (
 export default function OverallProgress({
   activeTab,
   setActiveTab,
-  historyData,
-  statisticsData,
+  allLevelsData,
   filterLevelForTab,
   setFilterLevelForTab,
 }) {
   const router = useRouter();
+
+  const statisticsData = filterLevelForTab === 'ALL' ? {} : allLevelsData[filterLevelForTab] || {};
+
+  const hasAnyData =
+    filterLevelForTab === 'ALL'
+      ? Object.values(allLevelsData || {}).some((d) => (d?.last_30_attempts?.length || 0) > 0)
+      : (allLevelsData?.[filterLevelForTab]?.last_30_attempts?.length || 0) > 0;
+
   const tabs = [
     { id: 'READING', label: 'READING', icon: <MenuBookOutlinedIcon fontSize="small" /> },
     { id: 'LISTENING', label: 'LISTENING', icon: <HeadsetMicIcon fontSize="small" /> },
@@ -227,6 +234,7 @@ export default function OverallProgress({
               },
             }}
           >
+            <MenuItem value="ALL">All Levels</MenuItem>
             <MenuItem value="A1">A1</MenuItem>
             <MenuItem value="A2">A2</MenuItem>
             <MenuItem value="B1">B1</MenuItem>
@@ -249,7 +257,7 @@ export default function OverallProgress({
           p: 2,
         }}
       >
-        {historyData.length === 0 ? (
+        {!hasAnyData ? (
           <Stack spacing={1} alignItems="center">
             <Typography
               variant="h6"
@@ -271,46 +279,71 @@ export default function OverallProgress({
           </Stack>
         ) : (
           <>
-            <ProgressTracking historyData={historyData} type="R" activeTab={activeTab} />
+            <ProgressTracking
+              allLevelsData={allLevelsData}
+              filterLevelForTab={filterLevelForTab}
+              type="R"
+              activeTab={activeTab}
+            />
             {/* ------------------ 4grid Thông tin ------------------ */}
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
-                gap: { xs: 1, md: 2 },
-                width: '100%',
-              }}
-            >
-              <StatItem
-                icon={TrendingUpIcon}
-                label="Average score"
-                value={`${statisticsData?.average_score || 0}`}
-                helpText="Average score based on all tests"
-              />
-              <StatItem
-                icon={AssignmentOutlinedIcon}
-                label="Completed tests"
-                value={`${statisticsData?.completed_tests_count}`}
-                helpText="Number of completed tests"
-              />
-              <StatItem
-                icon={AccessTimeOutlinedIcon}
-                label="Average time"
-                value={
-                  statisticsData?.average_completion_time >= 3600
-                    ? secondsToHours(statisticsData.average_completion_time)
-                    : secondsToMinutesValue(statisticsData?.average_completion_time || 0)
-                }
-                unit={statisticsData?.average_completion_time >= 3600 ? 'hours' : 'minutes'}
-                helpText="Average time per test"
-              />
-              <StatItem
-                icon={TrackChangesIcon}
-                label="Accuracy"
-                value={`${statisticsData?.accuracy || 0}%`}
-                helpText="Average accuracy based on all tests"
-              />
-            </Box>
+            {filterLevelForTab !== 'ALL' && (
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
+                  gap: { xs: 1, md: 2 },
+                  width: '100%',
+                }}
+              >
+                <StatItem
+                  icon={TrendingUpIcon}
+                  label="Average score"
+                  value={`${statisticsData?.average_score || 0}`}
+                  helpText="Average score based on all tests"
+                />
+                <StatItem
+                  icon={AssignmentOutlinedIcon}
+                  label="Completed tests"
+                  value={`${statisticsData?.completed_tests_count || 0}`}
+                  helpText="Number of completed tests"
+                />
+                <StatItem
+                  icon={AccessTimeOutlinedIcon}
+                  label="Average time"
+                  value={
+                    statisticsData?.average_completion_time >= 3600
+                      ? secondsToHours(statisticsData.average_completion_time)
+                      : secondsToMinutesValue(statisticsData?.average_completion_time || 0)
+                  }
+                  unit={statisticsData?.average_completion_time >= 3600 ? 'hours' : 'minutes'}
+                  helpText="Average time per test"
+                />
+                <StatItem
+                  icon={TrackChangesIcon}
+                  label="Accuracy"
+                  value={`${statisticsData?.accuracy || 0}%`}
+                  helpText="Average accuracy based on all tests"
+                />
+              </Box>
+            )}
+
+            {/* Placeholder khi filter = ALL */}
+            {filterLevelForTab === 'ALL' && (
+              <Box
+                sx={{
+                  width: '100%',
+                  p: 1.5,
+                  borderRadius: 3,
+                  border: '1px dashed',
+                  borderColor: 'divider',
+                  textAlign: 'center',
+                }}
+              >
+                <Typography variant="caption" color="text.secondary">
+                  Select a specific level to view detailed statistics.
+                </Typography>
+              </Box>
+            )}
           </>
         )}
       </Box>
