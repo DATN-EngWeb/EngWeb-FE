@@ -2,7 +2,7 @@
 'use client';
 
 import { Box, Typography } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CheckIcon from '@mui/icons-material/Check';
 import { listeningtestStyles } from '@/styles/Student/Listening/listeningTestStyles';
 
 const STATUS_STYLES = {
@@ -20,7 +20,7 @@ const STATUS_STYLES = {
 };
 
 /**
- * Tab hiển thị Part với badge progress (1 dòng duy nhất).
+ * Tab hiển thị Part với badge progress góc dưới-phải dạng tam giác.
  *
  * @param {number}   props.index      - Index của tab (0-based), dùng để hiển thị "Part N+1"
  * @param {boolean}  props.isActive   - Tab này đang được xem không
@@ -48,15 +48,16 @@ export default function ListPartTab({ index, isActive, status, unanswered, onCli
     <Box
       onClick={onClick}
       sx={{
-        // Base style (giữ các thuộc tính của boxPart, override width/height)
         ...listeningtestStyles.boxPart,
-        width: 'auto', // Tự co giãn theo nội dung
-        minWidth: '80px', // Không nhỏ hơn 80px
-        height: '36px', // Giữ nguyên chiều cao cố định — 1 dòng
-        px: '10px', // Tăng padding ngang để có khoảng thở cho badge
-        flexDirection: 'row', // Đảm bảo 1 dòng ngang
-        gap: '6px', // Khoảng cách giữa label và badge
+        width: 'auto',
+        minWidth: '80px',
+        height: '36px',
+        px: '10px',
+        flexDirection: 'row',
         flexShrink: 0,
+        // Cần cho badge absolute + cắt tam giác
+        position: 'relative',
+        overflow: 'hidden',
         transition: 'border-color 0.18s ease, background-color 0.18s ease',
         ...statusSx,
         ...activeSx,
@@ -77,39 +78,71 @@ export default function ListPartTab({ index, isActive, status, unanswered, onCli
         Part {index + 1}
       </Typography>
 
-      {/* Badge In-Progress: pill đỏ với số câu chưa làm */}
+      {/* ── Tam giác góc dưới-phải: In-Progress (chấm than đỏ/cam) ── */}
       {showBadge && status === 'in-progress' && (
         <Box
           component="span"
+          aria-label={`${unanswered} câu chưa làm`}
           sx={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minWidth: '18px',
-            height: '18px',
-            borderRadius: '999px',
-            backgroundColor: 'error.main',
-            color: '#fff',
-            fontSize: '0.65rem',
-            fontWeight: 700,
-            lineHeight: 1,
-            px: '4px',
-            flexShrink: 0,
+            position: 'absolute',
+            bottom: '-2px',
+            right: '-2px',
+            width: '24px',
+            height: '24px',
+            // Tạo hình tam giác vuông góc dưới-phải
+            clipPath: 'polygon(100% 0, 100% 100%, 0 100%)',
+            backgroundColor: 'warning.main',
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'flex-end',
+            pb: '3px',
+            pr: '4px',
           }}
         >
-          {unanswered}
+          <Box
+            component="span"
+            sx={{
+              fontSize: '11px',
+              lineHeight: 1,
+              color: '#fff',
+              fontWeight: 800,
+              userSelect: 'none',
+            }}
+          >
+            !
+          </Box>
         </Box>
       )}
 
-      {/* Badge Completed: icon checkmark xanh lá */}
+      {/* ── Tam giác góc dưới-phải: Completed (check xanh) ── */}
       {showBadge && status === 'completed' && (
-        <CheckCircleIcon
+        <Box
+          component="span"
+          aria-label="Đã hoàn thành"
           sx={{
-            fontSize: '14px',
-            color: 'success.main',
-            flexShrink: 0,
+            position: 'absolute',
+            bottom: '-2px',
+            right: '-2px',
+            width: '24px',
+            height: '24px',
+            clipPath: 'polygon(100% 0, 100% 100%, 0 100%)',
+            backgroundColor: 'success.main',
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'flex-end',
+            pb: '3px',
+            pr: '3px',
           }}
-        />
+        >
+          <CheckIcon
+            sx={{
+              fontSize: '11px',
+              color: '#fff',
+              stroke: '#fff',
+              strokeWidth: 1,
+            }}
+          />
+        </Box>
       )}
     </Box>
   );

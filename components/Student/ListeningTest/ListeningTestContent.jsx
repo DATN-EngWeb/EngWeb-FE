@@ -54,6 +54,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
   const router = useRouter();
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
   const [isInitial, setIsInitial] = useState(true);
+  const [error, setError] = useState(null);
 
   const [testData, setTestData] = useState(initialData || null);
   const [receptiveParts, setReceptiveParts] = useState([]);
@@ -142,7 +143,8 @@ export default function ListeningTestContent({ test_id, initialData }) {
       });
     });
 
-    return totalQuestions === totalAnswered ? 'S' : 'D';
+    const unanswered = totalQuestions - totalAnswered;
+    return { status: unanswered === 0 ? 'S' : 'D', unanswered };
   };
 
   const handlePreSubmit = () => {
@@ -255,8 +257,13 @@ export default function ListeningTestContent({ test_id, initialData }) {
     window.scrollTo({ top: 0, behavior: 'instant' });
     let loadedResources = {};
     const fetchTestData = async () => {
-      if (!test_id) return;
+      if (!test_id) {
+        setError('Test ID is required.');
+        setIsInitial(false);
+        return;
+      }
       try {
+        setError(null);
         let isReviewMode = false;
         let savedData = null;
 
@@ -403,6 +410,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
         setReceptiveParts(parts);
       } catch (error) {
         console.error('Lỗi tải dữ liệu bài thi:', error);
+        setError(error.message || 'Lỗi tải dữ liệu bài thi');
       } finally {
         setIsInitial(false);
       }
@@ -574,6 +582,50 @@ export default function ListeningTestContent({ test_id, initialData }) {
     return <Skeleton />;
   }
 
+  if (error) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '60vh',
+          padding: 3,
+        }}
+      >
+        <Alert
+          severity="error"
+          sx={{ maxWidth: 600 }}
+          action={
+            <Button color="inherit" size="small" onClick={() => router.back()}>
+              Back
+            </Button>
+          }
+        >
+          {error}
+        </Alert>
+      </Box>
+    );
+  }
+
+  if (!testData || !receptiveParts || receptiveParts.length === 0) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '60vh',
+          padding: 3,
+        }}
+      >
+        <Alert severity="info" sx={{ maxWidth: 600 }}>
+          No test data available.
+        </Alert>
+      </Box>
+    );
+  }
+
   return (
     <Box
       sx={{
@@ -667,7 +719,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
         <DialogContent sx={{ textAlign: 'center', pt: 2, pb: 1 }}>
           <Stack spacing={3} alignItems="center">
-            {submitType === 'S' && checkCompletionStatus(testData, allAnswers) !== 'S' && (
+            {submitType === 'S' && checkCompletionStatus(testData, allAnswers).status !== 'S' && (
               <Box
                 sx={{
                   display: 'flex',
@@ -679,7 +731,7 @@ export default function ListeningTestContent({ test_id, initialData }) {
                 <WarningAmberIcon sx={{ fontSize: 48, color: '#ef6c00' }} />
               </Box>
             )}
-            {submitType === 'S' && checkCompletionStatus(testData, allAnswers) === 'S' && (
+            {submitType === 'S' && checkCompletionStatus(testData, allAnswers).status === 'S' && (
               <Box
                 sx={{
                   display: 'flex',
@@ -703,9 +755,9 @@ export default function ListeningTestContent({ test_id, initialData }) {
               }}
             >
               {submitType === 'S'
-                ? checkCompletionStatus(testData, allAnswers) === 'S'
+                ? checkCompletionStatus(testData, allAnswers).status === 'S'
                   ? 'Great job! Are you sure to submit your test?'
-                  : 'You have unanswered questions. Do you still want to submit?'
+                  : `You have ${checkCompletionStatus(testData, allAnswers).unanswered} unanswered question(s). Do you still want to submit?`
                 : 'Do you want to save your progress as a draft?'}
             </Typography>
           </Stack>
@@ -871,12 +923,9 @@ export default function ListeningTestContent({ test_id, initialData }) {
 
           const index = item;
           const part = receptiveParts[index];
-          const { status, unanswered } = getListeningPartProgress(
-            part,
-            allAnswers,
-            visitedParts,
-            index,
-          );
+          const { status, unanswered } = isReadOnly
+            ? { status: 'default', unanswered: 0 }
+            : getListeningPartProgress(part, allAnswers, visitedParts, index);
 
           return (
             <ListPartTab

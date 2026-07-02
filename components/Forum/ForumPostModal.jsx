@@ -472,18 +472,16 @@ export default function ForumPostModal({
                   <Box key={c.id ?? i} display="flex" gap={1.5} mb={1.5} alignItems="flex-start">
                     <Avatar src={c.author_avatar} sx={modalStyles.commentAvatar} />
                     <Box flex={1} sx={modalStyles.commentBubble}>
-                      <Box display="flex" alignItems="center" flexWrap="wrap" gap={0.5}>
-                        <Typography fontWeight={700} variant="body2" flex={1}>
+                      <Box display="flex" alignItems="flex-start" flexWrap="wrap" gap={0.5}>
+                        <Typography
+                          fontWeight={700}
+                          variant="body2"
+                          sx={{ flex: 1, minWidth: 0, wordBreak: 'break-word' }}
+                        >
                           {c.author_name || c.author_username}
                         </Typography>
                         {c.created_at && (
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              ...modalStyles.commentTimestamp,
-                              right: isAuthor && !isEditing ? 36 : 12,
-                            }}
-                          >
+                          <Typography variant="caption" sx={modalStyles.commentTimestamp}>
                             {formatDateTime(c.created_at)}
                           </Typography>
                         )}

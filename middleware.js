@@ -18,6 +18,7 @@ const GUEST_ALLOWED_STUDENT_LIST_PAGES = new Set([
   '/student/listening',
   '/student/speaking',
   '/student/writing',
+  '/student/forum',
 ]);
 
 function isLoggedIn(role) {

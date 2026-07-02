@@ -92,7 +92,7 @@ export const TeacherHomepageStyles = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 1,
+    gap: { xs: 0.25, sm: 1 },
     paddingBottom: '40px',
   },
 };

@@ -77,7 +77,12 @@ const likeButton = {
   fontWeight: 700,
   p: 0,
   minWidth: 'auto',
-  '&:hover': { bgcolor: 'transparent', color: 'error.light' },
+  '@media (hover: hover) and (pointer: fine)': {
+    '&:hover': {
+      bgcolor: 'transparent',
+      color: 'error.light',
+    },
+  },
 };
 
 const selectSort = {
@@ -122,13 +127,12 @@ const commentBubble = {
   borderRadius: 2,
   px: { xs: 1.5, sm: 2 },
   py: 1.5,
-  position: 'relative',
 };
 
 const commentMoreButton = {
-  position: 'absolute',
-  top: 2,
-  right: 4,
+  flexShrink: 0,
+  ml: 0.5,
+  p: 0,
 };
 
 const editCommentField = {
@@ -147,9 +151,10 @@ const commentContent = {
 };
 
 const commentTimestamp = {
-  position: 'absolute',
-  top: 10,
   color: '#6B2C1F',
+  flexShrink: 0,
+  whiteSpace: 'nowrap',
+  lineHeight: '1.43',
 };
 
 // Edit post dialog

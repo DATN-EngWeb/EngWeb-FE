@@ -267,10 +267,10 @@ export default function SkeletonStudentDashboard() {
               alignItems="center"
               sx={{ width: '100%' }}
             >
-              <SkeletonBox width="160px" height="28px" />
-              <Stack direction="row" gap={1} alignItems="center">
-                <SkeletonBox width="100px" height="40px" borderRadius="8px" />
-                <SkeletonBox width="120px" height="40px" borderRadius="8px" />
+              <SkeletonBox width="160px" height="28px" sx={{ flexShrink: 0 }} />
+              <Stack direction="row" gap={1} alignItems="center" sx={{ flexShrink: 0 }}>
+                <SkeletonBox width={{ xs: '80px', sm: '100px' }} height="40px" borderRadius="8px" />
+                <SkeletonBox width={{ xs: '90px', sm: '120px' }} height="40px" borderRadius="8px" />
               </Stack>
             </Stack>
 
@@ -294,23 +294,47 @@ export default function SkeletonStudentDashboard() {
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                gap: 1,
+                gap: { xs: 0.5, sm: 1 },
                 mt: 3,
                 width: '100%',
               }}
             >
-              {/* Prev button */}
-              <SkeletonBox width="40px" height="40px" borderRadius="8px" />
-              <SkeletonBox width="40px" height="40px" borderRadius="8px" />
-              <SkeletonBox width="40px" height="40px" borderRadius="8px" />
+              {/* Prev */}
+              <SkeletonBox
+                width={{ xs: '32px', sm: '40px' }}
+                height={{ xs: '32px', sm: '40px' }}
+                borderRadius="8px"
+              />
+              {/* Boundary 1 */}
+              <SkeletonBox
+                width={{ xs: '32px', sm: '40px' }}
+                height={{ xs: '32px', sm: '40px' }}
+                borderRadius="8px"
+              />
+              {/* Boundary 2 — desktop only */}
+              <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                <SkeletonBox width="40px" height="40px" borderRadius="8px" />
+              </Box>
               {/* Dots */}
               <Typography sx={{ mx: 0.5, color: 'text.secondary', fontWeight: 'bold' }}>
                 ...
               </Typography>
-              <SkeletonBox width="40px" height="40px" borderRadius="8px" />
-              <SkeletonBox width="40px" height="40px" borderRadius="8px" />
-              {/* Next button */}
-              <SkeletonBox width="40px" height="40px" borderRadius="8px" />
+              {/* Boundary last-1 — desktop only */}
+              <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                <SkeletonBox width="40px" height="40px" borderRadius="8px" />
+              </Box>
+              {/* Boundary last */}
+              <SkeletonBox
+                width={{ xs: '32px', sm: '40px' }}
+                height={{ xs: '32px', sm: '40px' }}
+                borderRadius="8px"
+              />
+              {/* Next */}
+              <SkeletonBox
+                width={{ xs: '32px', sm: '40px' }}
+                height={{ xs: '32px', sm: '40px' }}
+                borderRadius="8px"
+              />
             </Box>
           </Paper>
         </Stack>

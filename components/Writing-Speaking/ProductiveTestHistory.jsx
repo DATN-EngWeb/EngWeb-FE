@@ -349,7 +349,7 @@ export default function ProductiveTestHistory() {
                   size={isSmall ? 'small' : 'large'}
                   disabled={pageLoading}
                   siblingCount={0}
-                  boundaryCount={2}
+                  boundaryCount={isSmall ? 1 : 2}
                 />
               </Box>
             )}

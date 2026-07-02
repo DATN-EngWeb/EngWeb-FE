@@ -18,8 +18,9 @@ export default function TeacherTestForumPage() {
       try {
         const response = await getProductiveTestDetails(params.test_id);
         let description = response.productive_test?.description || '';
-        if (description?.startsWith('http')) {
-          description = await fetchHtmlContent(description);
+        if (description) {
+          const htmlContent = await fetchHtmlContent(description);
+          description = htmlContent;
         }
         setPreviewData({
           title: response.title || '',
@@ -31,6 +32,7 @@ export default function TeacherTestForumPage() {
           level: response.level || '',
           time: response.time,
           topic: response.productive_test?.topic || '',
+          descriptionInfo: response.description || '',
           format: response.productive_test?.format || '',
           minWord: response.productive_test?.min_word,
           showMinWord: false,

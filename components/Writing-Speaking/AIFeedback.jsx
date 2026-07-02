@@ -8,6 +8,8 @@ import {
   Button,
   Tooltip as MuiTooltip,
   Stack,
+  ToggleButton,
+  ToggleButtonGroup,
   CircularProgress,
   Dialog,
   IconButton,
@@ -133,6 +135,7 @@ export default function AIFeedback() {
   const [context, setContext] = useState({ text: '', wordCount: 0, title: '', type: '' });
   const [testData, setTestData] = useState(null);
   const [revised_text, setRevisedText] = useState('');
+  const [showAIReview, setShowAIReview] = useState(false);
   const [isFetchingFeedback, setIsFetchingFeedback] = useState(false);
   const [turns, setTurns] = useState({ weekly_ai_turn: 0, bonus_ai_turn: 0 });
   const { user } = useAuth(null);
@@ -171,6 +174,13 @@ export default function AIFeedback() {
     return { weekly_ai_turn: 0, bonus_ai_turn: 0 };
   };
   const totalTurns = turns.weekly_ai_turn + turns.bonus_ai_turn;
+  const hasAIReview = !isSpeaking && Boolean(revised_text?.trim());
+
+  useEffect(() => {
+    if (!hasAIReview) {
+      setShowAIReview(false);
+    }
+  }, [hasAIReview]);
 
   useEffect(() => {
     setOpenFeedback(true);
@@ -312,25 +322,87 @@ export default function AIFeedback() {
               direction="row"
               justifyContent="space-between"
               alignItems="baseline"
-              mb={4}
+              mb={2}
               borderBottom="1px solid #eee"
               pb={2}
             >
               <Box>
-                <Typography variant="h4" fontWeight="800" color="#3e2723" mb={0.5}>
-                  {categories.length > 0 && !isSpeaking ? 'AI Corrected' : 'Your Submission'}
-                </Typography>
+                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                  <Typography
+                    variant="h4"
+                    fontWeight="800"
+                    color="#3e2723"
+                    mb={0.5}
+                    sx={{ fontSize: { xs: '1.2rem', sm: '2.125rem' }, lineHeight: 1.15 }}
+                  >
+                    {hasAIReview && showAIReview ? 'AI Corrected' : 'Your Submission'}
+                  </Typography>
+
+                  {hasAIReview && (
+                    <ToggleButtonGroup
+                      value={showAIReview ? 'review' : 'submission'}
+                      exclusive
+                      onChange={(_, value) => {
+                        if (value) {
+                          setShowAIReview(value === 'review');
+                        }
+                      }}
+                      size="small"
+                      sx={{
+                        bgcolor: '#fff8e1',
+                        borderRadius: 999,
+                        p: 0.15,
+                        boxShadow: '0 1px 6px rgba(139, 90, 43, 0.14)',
+                        border: '1px solid rgba(139, 90, 43, 0.18)',
+                        '& .MuiToggleButton-root': {
+                          minHeight: { xs: 24, sm: 28 },
+                          px: { xs: 0.9, sm: 1.1 },
+                          py: 0.1,
+                          border: 'none',
+                          borderRadius: 999,
+                          fontWeight: 800,
+                          textTransform: 'none',
+                          fontSize: { xs: '0.62rem', sm: '0.72rem' },
+                          lineHeight: 1,
+                          color: '#8B5A2B',
+                          bgcolor: 'transparent',
+                          '&:hover': {
+                            bgcolor: 'rgba(251, 192, 45, 0.14)',
+                          },
+                        },
+                        '& .Mui-selected': {
+                          bgcolor: '#fbc02d !important',
+                          color: '#5d4037 !important',
+                          boxShadow: '0 1px 3px rgba(93, 64, 55, 0.2)',
+                          '&:hover': {
+                            bgcolor: '#f9a825 !important',
+                          },
+                        },
+                      }}
+                    >
+                      <ToggleButton value="submission">My</ToggleButton>
+                      <ToggleButton value="review">AI</ToggleButton>
+                    </ToggleButtonGroup>
+                  )}
+                </Stack>
               </Box>
               <Box sx={styles.metricsDisplay}>
                 <Typography
                   variant="caption"
                   fontWeight="800"
                   color="#8B5A2B"
-                  sx={{ letterSpacing: 1 }}
+                  sx={{ letterSpacing: 1, fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
                 >
                   METRICS
                 </Typography>
-                <Typography variant="body1" color="text.primary">
+                <Typography
+                  variant="body1"
+                  color="text.primary"
+                  sx={{
+                    fontSize: { xs: '0.78rem', sm: '1rem' },
+                    lineHeight: { xs: 1.45, sm: 1.6 },
+                  }}
+                >
                   {!isSpeaking && `${context.wordCount} words`}
                   {!isSpeaking && context.duration ? ' - ' : ''}
                   {context.duration ? formatTime(context.duration) + ' mins' : ''}
@@ -350,22 +422,30 @@ export default function AIFeedback() {
                     </Box>
                   )}
                 </>
-              ) : categories.length > 0 ? (
+              ) : hasAIReview && showAIReview ? (
                 <DiffViewer originalText={context.text} revisedText={revised_text} />
               ) : (
                 <Paper
                   elevation={0}
                   sx={{
-                    p: 4,
+                    pt: 2,
+                    px: 4,
+                    pb: 4,
                     minHeight: '200px',
                     bgcolor: 'transparent',
-                    border: '1px solid #ffd54f',
                     borderRadius: 3,
                     fontFamily: 'Inter, sans-serif',
-                    fontSize: '1rem',
+                    fontSize: { xs: '0.9rem', sm: '1rem' },
                   }}
                 >
-                  <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 2 }}>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      whiteSpace: 'pre-wrap',
+                      lineHeight: { xs: 1.8, sm: 2 },
+                      fontSize: { xs: '0.9rem', sm: '1rem' },
+                    }}
+                  >
                     {context.text || 'No text submitted.'}
                   </Typography>
                 </Paper>
@@ -476,19 +556,23 @@ export default function AIFeedback() {
               onClose={handleServerErrorClose}
               PaperProps={{ sx: { borderRadius: 3, p: 2, minWidth: 320 } }}
             >
-              <DialogTitle sx={{ fontWeight: 'bold', color: 'error.main' }}>
-                Server Error
+              <DialogTitle sx={{ fontWeight: 'bold', color: 'warning.main' }}>
+                AI Feedback is temporarily unavailable
               </DialogTitle>
               <DialogContent>
-                <Typography>The system is experiencing issues. Please try again later.</Typography>
+                <Typography gutterBottom>Our AI is helping other learners right now.</Typography>
+
+                <Typography variant="body2" color="text.secondary">
+                  Don't worry—your work has been saved. Please try again in a few minutes.
+                </Typography>
               </DialogContent>
               <DialogActions>
                 <Button
                   onClick={handleServerErrorClose}
                   variant="contained"
-                  sx={{ bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' } }}
+                  sx={{ bgcolor: 'warning.main', '&:hover': { bgcolor: 'primary.dark' } }}
                 >
-                  OK
+                  Got it
                 </Button>
               </DialogActions>
             </Dialog>
@@ -510,6 +594,9 @@ export default function AIFeedback() {
                 p: 2,
                 borderBottom: '1px solid #eee',
                 bgcolor: '#F9F6F0',
+                position: 'sticky',
+                top: 0,
+                zIndex: 2,
               }}
             >
               <Typography variant="h6" fontWeight="bold" color="primary.main">
@@ -603,9 +690,9 @@ export default function AIFeedback() {
                   </AccordionSummary>
                   <AccordionDetails sx={styles.accordionDetails}>
                     <Typography
-                      variant="caption"
+                      variant="body2"
                       color="text.secondary"
-                      sx={{ lineHeight: 1.6, fontStyle: 'italic' }}
+                      sx={{ lineHeight: 1.7, fontStyle: 'italic', fontSize: '0.8rem' }}
                     >
                       {overall.summary || 'Summary not available.'}
                     </Typography>
@@ -630,7 +717,12 @@ export default function AIFeedback() {
                           .map((text, i) => (
                             <Stack key={i} direction="row" spacing={1} alignItems="flex-start">
                               <CheckCircleIcon sx={{ color: '#ed6c02', fontSize: 16, mt: 0.2 }} />
-                              <Typography variant="caption" color="text.secondary" fontWeight="500">
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                fontWeight="500"
+                                sx={{ fontSize: '0.8rem', lineHeight: 1.7 }}
+                              >
                                 {text.replace(/^\d+\.\s*/, '').trim()}
                               </Typography>
                             </Stack>
@@ -656,9 +748,9 @@ export default function AIFeedback() {
                       <Box key={index} sx={styles.feedbackCard}>
                         <Stack direction="row" justifyContent="space-between" alignItems="center">
                           <Typography
-                            variant="caption"
+                            variant="body2"
                             fontWeight="800"
-                            sx={{ letterSpacing: 1, color: '#333' }}
+                            sx={{ letterSpacing: 1, color: '#333', fontSize: '0.78rem' }}
                           >
                             {cat.title}
                           </Typography>
@@ -680,32 +772,42 @@ export default function AIFeedback() {
                           <Stack spacing={2}>
                             <Box>
                               <Typography
-                                variant="caption"
+                                variant="body2"
                                 color="success.main"
                                 fontWeight="800"
                                 display="flex"
                                 alignItems="center"
                                 gap={0.5}
+                                sx={{ fontSize: '0.78rem' }}
                               >
                                 <CheckCircleOutline sx={{ fontSize: 14 }} /> STRENGTHS
                               </Typography>
-                              <Typography variant="caption" color="text.secondary">
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{ fontSize: '0.82rem', lineHeight: 1.75 }}
+                              >
                                 {' '}
                                 {cat.strengths}
                               </Typography>
                             </Box>
                             <Box>
                               <Typography
-                                variant="caption"
+                                variant="body2"
                                 color="warning.dark"
                                 fontWeight="800"
                                 display="flex"
                                 alignItems="center"
                                 gap={0.5}
+                                sx={{ fontSize: '0.78rem' }}
                               >
                                 <LightbulbOutlined sx={{ fontSize: 14 }} /> IMPROVEMENTS
                               </Typography>
-                              <Typography variant="caption" color="text.secondary">
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{ fontSize: '0.82rem', lineHeight: 1.75 }}
+                              >
                                 {' '}
                                 {cat.improvements}
                               </Typography>
