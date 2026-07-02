@@ -20,7 +20,7 @@ import {
   FlashOn,
   Close as CloseIcon,
 } from '@mui/icons-material';
-import * as styles from '@/styles/Student/Writing/AIFeedbackStyles';
+import * as styles from '@/styles/student/Writing/AIFeedbackStyles';
 
 export default function HistoryAIFeedbackModal({ open, onClose, data }) {
   const theme = useTheme();
@@ -84,37 +84,41 @@ export default function HistoryAIFeedbackModal({ open, onClose, data }) {
           flexDirection: { xs: 'column', sm: 'row' },
           justifyContent: 'space-between',
           alignItems: { xs: 'flex-start', sm: 'center' },
-          gap: { xs: 1.25, sm: 2 },
+          gap: { xs: 1.25, sm: 1.5 },
           bgcolor: '#F9F6F0',
           borderBottom: '1px solid #eee',
         }}
       >
-        <Box sx={{ width: '100%' }}>
-          <Typography
-            variant="h5"
-            fontWeight="800"
-            color="primary.main"
-            sx={{ fontSize: { xs: '1.5rem', sm: '1.5rem' } }}
-          >
-            AI Feedback Result
-          </Typography>
-        </Box>
         <Box
           sx={{
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: { xs: 'space-between', sm: 'flex-end' },
-            gap: { xs: 1, sm: 3 },
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            justifyContent: 'space-between',
+            gap: { xs: 1, sm: 2 },
             width: '100%',
           }}
         >
-          <Stack direction="row" alignItems="center" sx={{ flex: 1 }}>
-            <Box textAlign={{ xs: 'left', sm: 'right' }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography
+              variant="h5"
+              fontWeight="800"
+              color="primary.main"
+              sx={{ fontSize: { xs: '1.15rem', sm: '1.5rem' }, lineHeight: 1.2 }}
+            >
+              AI Feedback Result
+            </Typography>
+          </Box>
+          <Stack direction="row" alignItems="center" spacing={1.5} sx={{ flexShrink: 0 }}>
+            <Box textAlign="right">
               <Typography
                 variant="body2"
                 color="text.secondary"
                 fontWeight="700"
-                sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}
+                sx={{
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                  fontSize: { xs: '0.68rem', sm: '0.75rem' },
+                }}
               >
                 Overall Score
               </Typography>
@@ -122,31 +126,35 @@ export default function HistoryAIFeedbackModal({ open, onClose, data }) {
                 variant="h4"
                 fontWeight="900"
                 color="warning.main"
-                sx={{ lineHeight: 1, mt: 0.5, fontSize: { xs: '1.6rem', sm: '2.125rem' } }}
+                sx={{ lineHeight: 1, mt: 0.25, fontSize: { xs: '1.15rem', sm: '2.125rem' } }}
               >
                 Band {overallScore.toFixed(1)}
-                <Typography component="span" variant="h6" color="text.disabled" fontWeight="700">
+                <Typography
+                  component="span"
+                  variant="h6"
+                  color="text.disabled"
+                  fontWeight="700"
+                  sx={{ fontSize: { xs: '0.82rem', sm: '1.25rem' } }}
+                >
                   {' '}
                   / 5.0
                 </Typography>
               </Typography>
             </Box>
+
+            <IconButton
+              aria-label="close"
+              onClick={onClose}
+              sx={{
+                color: 'text.secondary',
+                bgcolor: '#fff',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                '&:hover': { bgcolor: '#eceff1' },
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
           </Stack>
-          <IconButton
-            aria-label="close"
-            onClick={onClose}
-            sx={{
-              color: 'text.secondary',
-              bgcolor: '#fff',
-              position: 'absolute',
-              top: 12,
-              right: 12,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-              '&:hover': { bgcolor: '#eceff1' },
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
         </Box>
       </DialogTitle>
 
@@ -158,7 +166,7 @@ export default function HistoryAIFeedbackModal({ open, onClose, data }) {
             display: 'flex',
             flexDirection: { xs: 'column', sm: 'row' },
             width: '100%',
-            mb: { xs: 2.5, sm: 5 },
+            mb: { xs: 5, sm: 5 },
             gap: { xs: 2, sm: 0 },
           }}
         >
@@ -192,7 +200,7 @@ export default function HistoryAIFeedbackModal({ open, onClose, data }) {
               width: { xs: '100%', sm: '50%' },
             }}
           >
-            <Box sx={{ p: { xs: 0, sm: 2 }, width: '100%' }}>
+            <Box sx={{ p: { xs: 0, sm: 2 }, width: '100%', mb: { xs: 1, sm: 0 } }}>
               <Card sx={styles.NextActionCard}>
                 <CardContent>
                   <Stack direction="row" spacing={1} alignItems="center" mb={2}>
@@ -230,7 +238,9 @@ export default function HistoryAIFeedbackModal({ open, onClose, data }) {
         </Box>
 
         {/* CATEGORIES GRID */}
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: { xs: 2, sm: 3 } }}>
+        <Box
+          sx={{ display: 'flex', flexWrap: 'wrap', gap: { xs: 2, sm: 3 }, mt: { xs: 4, sm: 0 } }}
+        >
           {categories.map((cat, index) => (
             <Box
               key={index}
