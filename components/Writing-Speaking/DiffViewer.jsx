@@ -42,6 +42,35 @@ const DiffViewer = ({ originalText, revisedText }) => {
     return result;
   }, [originalText, revisedText]);
 
+  const stackReplaceLayout = useMemo(() => {
+    const countWords = (value) => (value || '').trim().split(/\s+/).filter(Boolean).length;
+
+    let equalWords = 0;
+    let totalWords = 0;
+
+    diffChunks.forEach((chunk) => {
+      if (chunk.type === 'equal') {
+        const words = countWords(chunk.value);
+        equalWords += words;
+        totalWords += words;
+        return;
+      }
+
+      if (chunk.type === 'replace') {
+        totalWords += countWords(chunk.old) + countWords(chunk.new);
+        return;
+      }
+
+      totalWords += countWords(chunk.value);
+    });
+
+    if (!totalWords) {
+      return false;
+    }
+
+    return equalWords / totalWords <= 0.15;
+  }, [diffChunks]);
+
   return (
     <Box sx={{ maxWidth: 900, mx: 'auto' }}>
       <Box
@@ -50,13 +79,22 @@ const DiffViewer = ({ originalText, revisedText }) => {
           fontSize: '1.1rem',
           fontFamily: 'Inter, "Roboto", "Helvetica", Arial, sans-serif',
           color: colors.text.primary,
-          textAlign: 'justify',
-          p: { xs: 1, md: 2 },
+          textAlign: 'left',
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+          overflowWrap: 'anywhere',
+          pt: { xs: 0.5, md: 1 },
+          px: { xs: 1, md: 2 },
+          pb: { xs: 1, md: 2 },
         }}
       >
         {diffChunks.map((chunk, index) => {
           if (chunk.type === 'equal') {
-            return <span key={index}>{chunk.value}</span>;
+            return (
+              <Box component="span" key={index} sx={{ whiteSpace: 'inherit' }}>
+                {chunk.value}
+              </Box>
+            );
           }
 
           if (chunk.type === 'delete') {
@@ -95,7 +133,6 @@ const DiffViewer = ({ originalText, revisedText }) => {
                     py: 0.25,
                     mx: 0.2,
                     borderRadius: 1.5,
-                    //borderBottom: `2px solid ${alpha(colors.success.main, 0.3)}`,
                   }}
                 >
                   {chunk.value}
@@ -111,14 +148,12 @@ const DiffViewer = ({ originalText, revisedText }) => {
                 component="span"
                 sx={{
                   display: 'inline-flex',
-                  alignItems: 'center',
+                  flexDirection: stackReplaceLayout ? 'column' : 'row',
+                  alignItems: stackReplaceLayout ? 'stretch' : 'center',
                   mx: 0.5,
                   verticalAlign: 'middle',
-                  //border: '1px solid',
-                  // borderColor: 'divider',
                   borderRadius: 2,
                   overflow: 'hidden',
-                  //boxShadow: `0 1px 2px ${alpha('#000', 0.05)}`,
                 }}
               >
                 <Tooltip title="Old word" arrow placement="top">
@@ -126,11 +161,13 @@ const DiffViewer = ({ originalText, revisedText }) => {
                     component="span"
                     sx={{
                       fontSize: '0.95em',
+                      display: 'block',
                       color: alpha(colors.error.main, 0.7),
                       bgcolor: alpha(colors.error.bg, 0.7),
-                      textDecoration: 'line-through',
+                      //textDecoration: 'line-through',
                       px: 1,
                       py: 0.25,
+                      whiteSpace: 'pre-wrap',
                     }}
                   >
                     {chunk.old}
@@ -139,13 +176,17 @@ const DiffViewer = ({ originalText, revisedText }) => {
 
                 <Box
                   sx={{
-                    color: 'text.disabled',
-                    fontSize: '0.8rem',
-                    px: 0.2,
-                    bgcolor: 'action.hover',
+                    color: 'text.secondary',
+                    fontSize: stackReplaceLayout ? '1.5rem' : '1.1rem',
+                    fontWeight: 800,
+                    px: stackReplaceLayout ? 1 : 0.2,
+                    py: stackReplaceLayout ? 0.25 : 0,
+                    bgcolor: 'background.paper',
+                    textAlign: 'center',
+                    minWidth: stackReplaceLayout ? 44 : 'auto',
                   }}
                 >
-                  →
+                  {stackReplaceLayout ? '↓' : '→'}
                 </Box>
 
                 <Tooltip title="Revised suggestion" arrow placement="top">
@@ -153,13 +194,14 @@ const DiffViewer = ({ originalText, revisedText }) => {
                     component="span"
                     sx={{
                       fontSize: 'inherit',
+                      display: 'block',
                       color: colors.success.main,
                       bgcolor: colors.success.bg,
-                      fontWeight: '600',
+                      fontWeight: stackReplaceLayout ? '400' : '600',
                       px: 1,
                       py: 0.25,
-                      borderLeft: '1px solid',
                       borderColor: 'divider',
+                      whiteSpace: 'pre-wrap',
                     }}
                   >
                     {chunk.new}
