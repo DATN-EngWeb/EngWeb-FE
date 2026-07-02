@@ -129,7 +129,6 @@ export default function ForumHub({
           page,
           ordering: filters.ordering,
           status: 'P',
-          type: 'P',
           post_count: true,
         };
 
@@ -137,7 +136,11 @@ export default function ForumHub({
         if (filters.level !== 'all') params.level = filters.level;
         if (filters.skill !== 'all') params.skill = filters.skill;
         if (filters.year !== 'all') params.year = filters.year;
-        if (showMyPostsFilter && filters.myPosts === 'mine') params.posted = true;
+        if (showMyPostsFilter && isAuthenticated) {
+          params.my_posts = filters.myPosts === 'mine';
+        } else {
+          params.type = 'P';
+        }
 
         const response = await getTestOverview(params);
         const results = response?.results || [];
@@ -164,7 +167,7 @@ export default function ForumHub({
     return () => {
       active = false;
     };
-  }, [filters, page, showMyPostsFilter]);
+  }, [filters, page, showMyPostsFilter, isAuthenticated]);
 
   const handleViewForum = (test) => {
     const url = getForumUrl(test);
