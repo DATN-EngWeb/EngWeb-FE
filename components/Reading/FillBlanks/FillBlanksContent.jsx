@@ -544,6 +544,7 @@ const FillBlanksContent = ({
                                       sx={{
                                         ...listeningPartStyles.explanationText,
                                         ...textWrapStyles,
+                                        whiteSpace: 'pre-line',
                                       }}
                                     >
                                       <strong>Explanation:</strong> {qInfo.explanation}
@@ -648,6 +649,7 @@ const FillBlanksContent = ({
                                     sx={{
                                       ...listeningPartStyles.explanationText,
                                       ...textWrapStyles,
+                                      whiteSpace: 'pre-line',
                                     }}
                                   >
                                     <strong>Explanation:</strong> {qInfo.explanation}

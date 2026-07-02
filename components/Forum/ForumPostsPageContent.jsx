@@ -199,7 +199,7 @@ export default function ForumPostsPageContent({
             }}
           >
             <Tab label="All" />
-            <Tab label="Your posts" />
+            <Tab label="My posts" />
           </Tabs>
         ) : null}
 

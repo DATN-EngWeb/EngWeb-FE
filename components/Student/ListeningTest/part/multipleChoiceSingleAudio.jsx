@@ -226,7 +226,9 @@ export default function MultipleChoiceSingleAudio({
                       Correct Answer: {correctAnswerText}
                     </Typography>
                     {question.explanation && (
-                      <Typography sx={listeningPartStyles.explanationText}>
+                      <Typography
+                        sx={{ ...listeningPartStyles.explanationText, whiteSpace: 'pre-line' }}
+                      >
                         <strong>Explanation:</strong> {question.explanation}
                       </Typography>
                     )}

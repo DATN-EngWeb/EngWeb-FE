@@ -110,12 +110,7 @@ function FieldLabel({ children }) {
 }
 
 export default function FilterSidebar({ filters, handleFilterChange, user, tests = [] }) {
-  const years = [
-    'All years',
-    ...[...new Set(tests.map((t) => new Date(t.created_at).getFullYear().toString()))].sort(
-      (a, b) => b - a,
-    ),
-  ];
+  const years = ['All years', 2025, 2026];
 
   // filters.level is array: [] = all, ['A1'], ['A1','B1'], ...
   const selectedLevels = (filters.level || []).filter((value) =>
