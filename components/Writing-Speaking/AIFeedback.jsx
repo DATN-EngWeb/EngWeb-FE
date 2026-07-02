@@ -45,7 +45,7 @@ import {
 import DiffViewer from './DiffViewer';
 import CustomAudioPlayer from '../Test/customAudioPlayer';
 import AIGradingLoading from './AIGradingLoading';
-import * as styles from '@/styles/student/Writing/AIFeedbackStyles';
+import * as styles from '@/styles/Student/Writing/AIFeedbackStyles';
 import { useAuth } from '../../hooks/useAuth';
 
 function CustomTooltip({ active, payload }) {
@@ -327,8 +327,14 @@ export default function AIFeedback() {
               pb={2}
             >
               <Box>
-                <Stack direction="row" spacing={1.25} alignItems="center" flexWrap="wrap">
-                  <Typography variant="h4" fontWeight="800" color="#3e2723" mb={0.5}>
+                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                  <Typography
+                    variant="h4"
+                    fontWeight="800"
+                    color="#3e2723"
+                    mb={0.5}
+                    sx={{ fontSize: { xs: '1.2rem', sm: '2.125rem' }, lineHeight: 1.15 }}
+                  >
                     {hasAIReview && showAIReview ? 'AI Corrected' : 'Your Submission'}
                   </Typography>
 
@@ -345,18 +351,18 @@ export default function AIFeedback() {
                       sx={{
                         bgcolor: '#fff8e1',
                         borderRadius: 999,
-                        p: 0.2,
+                        p: 0.15,
                         boxShadow: '0 1px 6px rgba(139, 90, 43, 0.14)',
                         border: '1px solid rgba(139, 90, 43, 0.18)',
                         '& .MuiToggleButton-root': {
-                          minHeight: 28,
-                          px: 1.1,
-                          py: 0.15,
+                          minHeight: { xs: 24, sm: 28 },
+                          px: { xs: 0.9, sm: 1.1 },
+                          py: 0.1,
                           border: 'none',
                           borderRadius: 999,
                           fontWeight: 800,
                           textTransform: 'none',
-                          fontSize: '0.72rem',
+                          fontSize: { xs: '0.62rem', sm: '0.72rem' },
                           lineHeight: 1,
                           color: '#8B5A2B',
                           bgcolor: 'transparent',
@@ -385,11 +391,18 @@ export default function AIFeedback() {
                   variant="caption"
                   fontWeight="800"
                   color="#8B5A2B"
-                  sx={{ letterSpacing: 1 }}
+                  sx={{ letterSpacing: 1, fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
                 >
                   METRICS
                 </Typography>
-                <Typography variant="body1" color="text.primary">
+                <Typography
+                  variant="body1"
+                  color="text.primary"
+                  sx={{
+                    fontSize: { xs: '0.78rem', sm: '1rem' },
+                    lineHeight: { xs: 1.45, sm: 1.6 },
+                  }}
+                >
                   {!isSpeaking && `${context.wordCount} words`}
                   {!isSpeaking && context.duration ? ' - ' : ''}
                   {context.duration ? formatTime(context.duration) + ' mins' : ''}
@@ -422,10 +435,17 @@ export default function AIFeedback() {
                     bgcolor: 'transparent',
                     borderRadius: 3,
                     fontFamily: 'Inter, sans-serif',
-                    fontSize: '1rem',
+                    fontSize: { xs: '0.9rem', sm: '1rem' },
                   }}
                 >
-                  <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 2 }}>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      whiteSpace: 'pre-wrap',
+                      lineHeight: { xs: 1.8, sm: 2 },
+                      fontSize: { xs: '0.9rem', sm: '1rem' },
+                    }}
+                  >
                     {context.text || 'No text submitted.'}
                   </Typography>
                 </Paper>

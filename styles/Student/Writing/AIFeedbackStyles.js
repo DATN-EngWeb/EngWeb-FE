@@ -141,7 +141,7 @@ export const dotsContainer = {
 export const summaryCard = {
   borderRadius: 6,
   boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
-  height: '100%',
+  height: 'auto',
   p: 2,
   bgcolor: '#fff',
 };
@@ -150,7 +150,7 @@ export const NextActionCard = {
   borderRadius: 6,
   bgcolor: '#FFFDF0',
   border: '1px solid #fff9c4',
-  height: '100%',
+  height: 'auto',
   p: 2,
 };
 
