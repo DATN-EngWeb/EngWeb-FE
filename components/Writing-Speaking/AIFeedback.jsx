@@ -536,19 +536,23 @@ export default function AIFeedback() {
               onClose={handleServerErrorClose}
               PaperProps={{ sx: { borderRadius: 3, p: 2, minWidth: 320 } }}
             >
-              <DialogTitle sx={{ fontWeight: 'bold', color: 'error.main' }}>
-                Server Error
+              <DialogTitle sx={{ fontWeight: 'bold', color: 'warning.main' }}>
+                AI Feedback is temporarily unavailable
               </DialogTitle>
               <DialogContent>
-                <Typography>The system is experiencing issues. Please try again later.</Typography>
+                <Typography gutterBottom>Our AI is helping other learners right now.</Typography>
+
+                <Typography variant="body2" color="text.secondary">
+                  Don't worry—your work has been saved. Please try again in a few minutes.
+                </Typography>
               </DialogContent>
               <DialogActions>
                 <Button
                   onClick={handleServerErrorClose}
                   variant="contained"
-                  sx={{ bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' } }}
+                  sx={{ bgcolor: 'warning.main', '&:hover': { bgcolor: 'primary.dark' } }}
                 >
-                  OK
+                  Got it
                 </Button>
               </DialogActions>
             </Dialog>
