@@ -2,7 +2,7 @@ export const footerStyles = {
   mainContainer: {
     backgroundColor: 'background.paper',
     color: 'text.primary',
-    py: 6,
+    py: 3,
     borderTop: 1,
     borderTopColor: 'background.default',
   },
