@@ -321,17 +321,15 @@ export default function ReadingTestContent({ testId }) {
     });
 
     let totalAnswered = 0;
-    Object.values(currentAnswers).forEach((partAnswers) => {
-      Object.values(partAnswers || {}).forEach((answer) => {
-        if (
-          answer !== null &&
-          answer !== undefined &&
-          (typeof answer === 'string' ? answer.trim() !== '' : true) &&
-          (Array.isArray(answer) ? answer.length > 0 : true)
-        ) {
-          totalAnswered += 1;
-        }
-      });
+    Object.values(currentAnswers).forEach((answer) => {
+      if (
+        answer !== null &&
+        answer !== undefined &&
+        (typeof answer === 'string' ? answer.trim() !== '' : true) &&
+        (Array.isArray(answer) ? answer.length > 0 : true)
+      ) {
+        totalAnswered += 1;
+      }
     });
 
     const unanswered = totalQuestions - totalAnswered;
