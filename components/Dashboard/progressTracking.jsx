@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Paper, Typography, Box, Stack } from '@mui/material';
+import { Paper, Typography, Box, Stack, Button, ClickAwayListener } from '@mui/material';
 import {
   LineChart,
   Line,
@@ -23,7 +23,7 @@ const LEVEL_COLORS = {
   A1: theme.palette.success.main,
   A2: theme.palette.info.main,
   B1: theme.palette.secondary.main,
-  B2: theme.palette.pink.main,
+  B2: '#9c27b0',
 };
 
 export default function ProgressTracking({
@@ -33,6 +33,7 @@ export default function ProgressTracking({
   activeTab,
 }) {
   const router = useRouter();
+  const [showTooltip, setShowTooltip] = React.useState(true);
 
   const handleViewDetail = async (historyId) => {
     if (!historyId) return;
@@ -88,27 +89,38 @@ export default function ProgressTracking({
   const selectedLevels =
     filterLevelForTab === 'ALL' ? ['A1', 'A2', 'B1', 'B2'] : [filterLevelForTab];
 
-  const buildMultiLineChartData = (allLevelsData, selectedLevels) => {
-    const dateMap = {};
-    selectedLevels.forEach((level) => {
-      const attempts = allLevelsData[level]?.last_30_attempts || [];
-      [...attempts].reverse().forEach((h) => {
-        const dateObj = new Date(h.date);
-        const dateKey = dateObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
-
-        if (!dateMap[dateKey]) {
-          dateMap[dateKey] = { date: dateKey, dateObj };
+  // Mỗi attempt là 1 điểm riêng biệt trên trục X (tối đa 30)
+  const buildChartData = (allLevelsData, selectedLevels) => {
+    const maxLen = Math.max(
+      ...selectedLevels.map((l) => allLevelsData[l]?.last_30_attempts?.length || 0),
+    );
+    const data = [];
+    for (let i = 0; i < maxLen; i++) {
+      const point = { id: i };
+      selectedLevels.forEach((level) => {
+        const attempts = [...(allLevelsData[level]?.last_30_attempts || [])].reverse();
+        if (i < attempts.length) {
+          const h = attempts[i];
+          const score = (type === 'R' ? h.normalized_score : h.earned_bonus_point) || 0;
+          const d = new Date(h.date);
+          point[level] = score;
+          point[`${level}_history_id`] = h.history_id;
+          point[`${level}_date`] = d.toLocaleDateString('en-US', {
+            month: 'short',
+            day: '2-digit',
+          });
+          point[`${level}_time`] = d.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+          });
         }
-        dateMap[dateKey][level] = (type === 'R' ? h.normalized_score : h.earned_bonus_point) || 0;
-        dateMap[dateKey][`${level}_history_id`] = h.history_id;
       });
-    });
-    return Object.values(dateMap)
-      .sort((a, b) => a.dateObj - b.dateObj)
-      .map((item, index) => ({ ...item, id: index }));
+      data.push(point);
+    }
+    return data;
   };
 
-  const chartData = buildMultiLineChartData(allLevelsData, selectedLevels);
+  const chartData = buildChartData(allLevelsData, selectedLevels);
 
   if (chartData.length === 0) {
     return (
@@ -138,6 +150,86 @@ export default function ProgressTracking({
     );
   }
 
+  // ── Custom Tooltip: mỗi điểm là 1 attempt ──
+  const CustomTooltipContent = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    const point = chartData[label];
+    if (!point) return null;
+
+    // Sắp xếp theo điểm từ cao xuống thấp
+    const sortedPayload = [...payload].sort((a, b) => b.value - a.value);
+
+    return (
+      <Paper
+        elevation={6}
+        sx={{
+          p: 1.5,
+          borderRadius: 2,
+          minWidth: 200,
+          maxWidth: 300,
+          border: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        <Typography
+          variant="caption"
+          fontWeight={800}
+          color="text.secondary"
+          display="block"
+          mb={1}
+          sx={{ letterSpacing: 0.5, textTransform: 'uppercase' }}
+        >
+          Attempt #{label + 1}
+        </Typography>
+        <Stack spacing={0.75}>
+          {sortedPayload.map(({ dataKey: level, value, color }) => (
+            <Stack key={level} direction="row" alignItems="center" gap={0.75}>
+              <Box
+                sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: color, flexShrink: 0 }}
+              />
+              <Typography variant="caption" fontWeight={800} sx={{ color }}>
+                {level}
+              </Typography>
+              <Typography
+                variant="caption"
+                fontWeight={700}
+                sx={{ color: 'text.primary', whiteSpace: 'nowrap' }}
+              >
+                {value}/100
+              </Typography>
+              <Typography
+                variant="caption"
+                color="text.disabled"
+                sx={{ fontSize: '0.67rem', ml: 'auto', whiteSpace: 'nowrap' }}
+              >
+                {point[`${level}_date`]}&nbsp;&middot;&nbsp;{point[`${level}_time`]}
+              </Typography>
+              <Button
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewDetail(point[`${level}_history_id`]);
+                }}
+                sx={{
+                  minWidth: 'auto',
+                  p: '2px 6px',
+                  ml: 1,
+                  fontSize: '0.65rem',
+                  textTransform: 'none',
+                  borderRadius: 1,
+                  pointerEvents: 'auto',
+                  bgcolor: 'action.hover',
+                }}
+              >
+                Result
+              </Button>
+            </Stack>
+          ))}
+        </Stack>
+      </Paper>
+    );
+  };
+
   const CustomActiveDot = (props) => {
     const { cx, cy, payload, dataKey } = props;
     if (!cx || !cy) return null;
@@ -146,14 +238,11 @@ export default function ProgressTracking({
 
     return (
       <g
-        onClick={() => handleViewDetail(historyId)}
         style={{
-          cursor: 'pointer',
           outline: 'none',
           border: 'none',
           WebkitTapHighlightColor: 'transparent',
           userSelect: 'none',
-          pointerEvents: 'all',
         }}
         tabIndex="-1"
       >
@@ -216,61 +305,76 @@ export default function ProgressTracking({
         </Typography>
       </Stack>
 
-      {/* chart area */}
-      <Box sx={{ width: '100%', height: 180, mt: 2, mb: 2 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart
-            data={chartData}
-            style={{ cursor: 'pointer' }}
-            onClick={(e) => {
-              if (e && e.activePayload && e.activePayload.length > 0) {
-                handleViewDetail(e.activePayload[0].payload.history_id);
+      <ClickAwayListener onClickAway={() => setShowTooltip(false)}>
+        {/* chart area */}
+        <Box
+          onClick={() => setShowTooltip(true)}
+          sx={{
+            width: '100%',
+            height: 240,
+            mt: 2,
+            mb: 2,
+            '& .recharts-wrapper': { outline: 'none' },
+            '& svg': { outline: 'none' },
+          }}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={chartData}
+              style={{ cursor: 'pointer', outline: 'none' }}
+              margin={
+                selectedLevels.length > 1
+                  ? { top: 6, right: 6, bottom: 0, left: 6 }
+                  : { top: 6, right: 16, bottom: 0, left: 16 }
               }
-            }}
-          >
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-            <XAxis
-              dataKey="id"
-              tickFormatter={(id) => chartData[id]?.date}
-              interval={Math.ceil(chartData.length / 8)}
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 10, fontWeight: 600, fill: '#9e9e9e' }}
-              dy={10}
-            />
-            <YAxis hide domain={[0, 100]} />
-            <Tooltip
-              wrapperStyle={{ pointerEvents: 'none', zIndex: 9999 }}
-              labelFormatter={(id) => chartData[id]?.date}
-              contentStyle={{
-                borderRadius: '10px',
-                border: 'none',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              }}
-            />
-            {selectedLevels.length > 1 && <Legend iconType="circle" />}
-            {selectedLevels.map((level) => (
-              <Line
-                key={level}
-                type="monotone"
-                dataKey={level}
-                name={level}
-                stroke={LEVEL_COLORS[level]}
-                strokeWidth={3}
-                dot={{
-                  r: 4,
-                  fill: LEVEL_COLORS[level],
-                  strokeWidth: 2,
-                  stroke: '#fff',
-                  cursor: 'pointer',
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+              <XAxis
+                dataKey="id"
+                hide={selectedLevels.length > 1}
+                tickFormatter={(id) => {
+                  if (selectedLevels.length > 1) return '';
+                  const point = chartData[id];
+                  return point?.[`${selectedLevels[0]}_date`] || '';
                 }}
-                activeDot={<CustomActiveDot />}
-                connectNulls={false}
+                interval={Math.max(0, Math.ceil(chartData.length / 8) - 1)}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 10, fontWeight: 600, fill: '#9e9e9e' }}
+                dy={10}
               />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
-      </Box>
+              <YAxis hide domain={[0, 100]} />
+              {showTooltip && (
+                <Tooltip
+                  trigger="click"
+                  content={<CustomTooltipContent />}
+                  wrapperStyle={{ zIndex: 9999, pointerEvents: 'auto' }}
+                />
+              )}
+              {selectedLevels.length > 1 && <Legend iconType="circle" />}
+              {selectedLevels.map((level) => (
+                <Line
+                  key={level}
+                  type="monotone"
+                  dataKey={level}
+                  name={level}
+                  stroke={LEVEL_COLORS[level]}
+                  strokeWidth={3}
+                  dot={{
+                    r: 4,
+                    fill: LEVEL_COLORS[level],
+                    strokeWidth: 2,
+                    stroke: '#fff',
+                    cursor: 'pointer',
+                  }}
+                  activeDot={<CustomActiveDot />}
+                  connectNulls={false}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </Box>
+      </ClickAwayListener>
 
       {/* Personal Best Information */}
       <Box
