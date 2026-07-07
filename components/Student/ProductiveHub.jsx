@@ -41,24 +41,7 @@ export default function ProductiveHub({ Skill }) {
     mine: false,
   });
 
-  const [localTitle, setLocalTitle] = useState(filters.title);
-  const [localTeacher, setLocalTeacher] = useState(filters.teacher);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setFilters((prev) => {
-        if (prev.title !== localTitle || prev.teacher !== localTeacher) {
-          setPage(1);
-          return { ...prev, title: localTitle, teacher: localTeacher };
-        }
-        return prev;
-      });
-    }, 200);
-
-    return () => clearTimeout(timer);
-  }, [localTitle, localTeacher]);
-
-  // Fetch tests (Đã bỏ setTimeout ở đây vì filters đã được debounce ở trên)
+  // Fetch tests (search fields debounced inside FilterSidebar)
   useEffect(() => {
     async function fetchTests() {
       if (hasLoadedOnce) {
