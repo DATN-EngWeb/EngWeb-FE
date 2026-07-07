@@ -36,23 +36,7 @@ export default function ListeningHub() {
     mine: false,
   });
 
-  const [localTitle, setLocalTitle] = useState(filters.title);
-  const [localTeacher, setLocalTeacher] = useState(filters.teacher);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setFilters((prev) => {
-        if (prev.title !== localTitle || prev.teacher !== localTeacher) {
-          setPage(1);
-          return { ...prev, title: localTitle, teacher: localTeacher };
-        }
-        return prev;
-      });
-    }, 200);
-
-    return () => clearTimeout(timer);
-  }, [localTitle, localTeacher]);
-
+  // Fetch tests (search fields debounced inside FilterSidebar)
   useEffect(() => {
     async function fetchTests() {
       if (hasLoadedOnce) {
