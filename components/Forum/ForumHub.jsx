@@ -127,6 +127,7 @@ export default function ForumHub({
       try {
         const params = {
           page,
+          page_size: 6,
           ordering: filters.ordering,
           status: 'P',
           post_count: true,
@@ -149,7 +150,7 @@ export default function ForumHub({
         if (!active) return;
 
         setTests(results);
-        setTotalPages(Math.ceil(count / 10) || 1);
+        setTotalPages(Math.ceil(count / 6) || 1);
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error('Failed to load forum tests:', error);

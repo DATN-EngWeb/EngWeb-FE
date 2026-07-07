@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
 import {
   Box,
   Button,
@@ -65,6 +67,7 @@ const LEVELS = [
 ];
 
 const ALL_LEVELS_VALUE = '__ALL_LEVELS__';
+export const FILTER_SEARCH_DEBOUNCE_MS = 500;
 
 const renderLevelValue = (selected) => {
   if (!selected || selected.length === 0) return 'All levels';
@@ -111,6 +114,36 @@ function FieldLabel({ children }) {
 
 export default function FilterSidebar({ filters, handleFilterChange, user, tests = [] }) {
   const years = ['All years', 2025, 2026];
+  const [titleInput, setTitleInput] = useState(filters.title || '');
+  const [teacherInput, setTeacherInput] = useState(filters.teacher || '');
+
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      if (filters.title !== titleInput) {
+        handleFilterChange('title', titleInput);
+      }
+    }, FILTER_SEARCH_DEBOUNCE_MS);
+
+    return () => clearTimeout(handle);
+  }, [titleInput, filters.title, handleFilterChange]);
+
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      if (filters.teacher !== teacherInput) {
+        handleFilterChange('teacher', teacherInput);
+      }
+    }, FILTER_SEARCH_DEBOUNCE_MS);
+
+    return () => clearTimeout(handle);
+  }, [teacherInput, filters.teacher, handleFilterChange]);
+
+  useEffect(() => {
+    setTitleInput(filters.title || '');
+  }, [filters.title]);
+
+  useEffect(() => {
+    setTeacherInput(filters.teacher || '');
+  }, [filters.teacher]);
 
   // filters.level is array: [] = all, ['A1'], ['A1','B1'], ...
   const selectedLevels = (filters.level || []).filter((value) =>
@@ -131,8 +164,8 @@ export default function FilterSidebar({ filters, handleFilterChange, user, tests
   // Check if any filters are active
   const hasActiveFilters = () => {
     return (
-      filters.title !== '' ||
-      filters.teacher !== '' ||
+      titleInput !== '' ||
+      teacherInput !== '' ||
       filters.year !== 'All years' ||
       (filters.level && filters.level.length > 0) ||
       filters.ordering !== '-created_at' ||
@@ -169,8 +202,8 @@ export default function FilterSidebar({ filters, handleFilterChange, user, tests
               fullWidth
               placeholder="Find test name"
               size="small"
-              value={filters.title}
-              onChange={(e) => handleFilterChange('title', e.target.value)}
+              value={titleInput}
+              onChange={(e) => setTitleInput(e.target.value)}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -190,8 +223,8 @@ export default function FilterSidebar({ filters, handleFilterChange, user, tests
               fullWidth
               placeholder="Find teacher"
               size="small"
-              value={filters.teacher}
-              onChange={(e) => handleFilterChange('teacher', e.target.value)}
+              value={teacherInput}
+              onChange={(e) => setTeacherInput(e.target.value)}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -379,6 +412,8 @@ export default function FilterSidebar({ filters, handleFilterChange, user, tests
                 variant="outlined"
                 startIcon={<CloseIcon />}
                 onClick={() => {
+                  setTitleInput('');
+                  setTeacherInput('');
                   handleFilterChange('title', '');
                   handleFilterChange('teacher', '');
                   handleFilterChange('year', 'All years');

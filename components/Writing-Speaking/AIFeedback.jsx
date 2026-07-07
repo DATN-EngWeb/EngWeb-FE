@@ -321,24 +321,42 @@ export default function AIFeedback() {
             <Stack
               direction="row"
               justifyContent="space-between"
-              alignItems="baseline"
+              alignItems="center"
               mb={2}
               borderBottom="1px solid #eee"
               pb={2}
+              width="100%"
             >
-              <Box>
-                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flex: 1,
+                  minWidth: 0,
+                }}
+              >
+                <Box sx={{ flex: { xs: '7', sm: 5, md: 7 }, minWidth: 0 }}>
                   <Typography
                     variant="h4"
                     fontWeight="800"
                     color="#3e2723"
                     mb={0.5}
-                    sx={{ fontSize: { xs: '1.2rem', sm: '2.125rem' }, lineHeight: 1.15 }}
+                    sx={{
+                      fontSize: { xs: '1.2rem', sm: '2.125rem' },
+                      lineHeight: 1.15,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      textAlign: 'left',
+                    }}
                   >
                     {hasAIReview && showAIReview ? 'AI Corrected' : 'Your Submission'}
                   </Typography>
+                </Box>
 
-                  {hasAIReview && (
+                {hasAIReview && (
+                  <Box sx={{ flex: { xs: '3', sm: 5, md: 3 }, minWidth: 0 }}>
                     <ToggleButtonGroup
                       value={showAIReview ? 'review' : 'submission'}
                       exclusive
@@ -354,6 +372,8 @@ export default function AIFeedback() {
                         p: 0.15,
                         boxShadow: '0 1px 6px rgba(139, 90, 43, 0.14)',
                         border: '1px solid rgba(139, 90, 43, 0.18)',
+                        flexShrink: 0,
+                        whiteSpace: 'nowrap',
                         '& .MuiToggleButton-root': {
                           minHeight: { xs: 24, sm: 28 },
                           px: { xs: 0.9, sm: 1.1 },
@@ -383,8 +403,8 @@ export default function AIFeedback() {
                       <ToggleButton value="submission">My</ToggleButton>
                       <ToggleButton value="review">AI</ToggleButton>
                     </ToggleButtonGroup>
-                  )}
-                </Stack>
+                  </Box>
+                )}
               </Box>
               <Box sx={styles.metricsDisplay}>
                 <Typography

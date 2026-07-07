@@ -9,7 +9,6 @@ import FilterSidebar from '../../../components/Student/FilterSidebar';
 
 const pageContainerStyles = {
   backgroundColor: 'background.default',
-  minHeight: '100vh',
   pb: 8,
   mx: 'auto',
 };
@@ -36,23 +35,7 @@ export default function ListeningHub() {
     mine: false,
   });
 
-  const [localTitle, setLocalTitle] = useState(filters.title);
-  const [localTeacher, setLocalTeacher] = useState(filters.teacher);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setFilters((prev) => {
-        if (prev.title !== localTitle || prev.teacher !== localTeacher) {
-          setPage(1);
-          return { ...prev, title: localTitle, teacher: localTeacher };
-        }
-        return prev;
-      });
-    }, 200);
-
-    return () => clearTimeout(timer);
-  }, [localTitle, localTeacher]);
-
+  // Fetch tests (search fields debounced inside FilterSidebar)
   useEffect(() => {
     async function fetchTests() {
       if (hasLoadedOnce) {
@@ -130,7 +113,6 @@ export default function ListeningHub() {
         sx={{
           mx: 'auto',
           pt: 4,
-          minHeight: { md: 'calc(100vh - 120px)' },
           display: 'flex',
           flexDirection: 'column',
         }}
@@ -183,7 +165,6 @@ export default function ListeningHub() {
                 mb: 3,
                 minHeight: { xs: '400px', md: '560px' },
                 alignContent: 'start',
-                flexGrow: 1,
               }}
             >
               {loading && !hasLoadedOnce ? (
@@ -215,31 +196,21 @@ export default function ListeningHub() {
                 </Box>
               )}
             </Box>
+
+            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={handlePageChange}
+                color="primary"
+                shape="rounded"
+                size="large"
+                siblingCount={0}
+                boundaryCount={2}
+              />
+            </Box>
           </Grid>
         </Grid>
-
-        <Box sx={{ mt: 'auto', pt: 2, display: 'flex' }}>
-          <Box
-            sx={{
-              display: { xs: 'none', md: 'block' },
-              width: { md: 'calc(280px + 16px)' },
-              flexShrink: 0,
-            }}
-          />
-
-          <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
-            <Pagination
-              count={totalPages}
-              page={page}
-              onChange={handlePageChange}
-              color="primary"
-              shape="rounded"
-              size="large"
-              siblingCount={0}
-              boundaryCount={2}
-            />
-          </Box>
-        </Box>
       </Container>
     </Box>
   );
