@@ -393,48 +393,35 @@ export default function ForumPostModal({
           <Box
             display="flex"
             flexDirection="row"
-            justifyContent="space-between"
             alignItems="center"
-            gap={2}
+            justifyContent="flex-end"
+            gap={1}
             sx={modalStyles.likeCommentBox}
           >
-            <Box display="flex" gap={1} alignItems="center" minWidth={0}>
-              <Button
-                size="small"
-                startIcon={liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-                onClick={onLikeToggle}
-                sx={{
-                  ...modalStyles.likeButton,
-                  color: liked ? 'error.main' : 'text.secondary',
-                }}
-              >
-                {liked ? 'Liked' : 'Like'}
-              </Button>
+            <Button
+              size="small"
+              startIcon={liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+              onClick={onLikeToggle}
+              sx={{
+                ...modalStyles.likeButton,
+                color: liked ? 'error.main' : 'text.secondary',
+              }}
+            >
+              <Typography variant="body2" fontWeight={600}>
+                {likeCount}
+              </Typography>
+            </Button>
 
-              <Button
-                size="small"
-                startIcon={<ChatBubbleOutlineIcon />}
-                onClick={() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' })}
-                sx={modalStyles.likeButton}
-              >
-                Comment
-              </Button>
-            </Box>
-
-            <Box display="flex" gap={2} color="text.secondary" flexShrink={0}>
-              <Box display="flex" alignItems="center" gap={0.5}>
-                <FavoriteBorderIcon fontSize="small" />
-                <Typography fontSize="small" variant="body2" fontWeight={600}>
-                  {likeCount}
-                </Typography>
-              </Box>
-              <Box display="flex" alignItems="center" gap={0.5}>
-                <ChatBubbleOutlineIcon fontSize="small" />
-                <Typography fontSize="small" variant="body2" fontWeight={600}>
-                  {commentCount}
-                </Typography>
-              </Box>
-            </Box>
+            <Button
+              size="small"
+              startIcon={<ChatBubbleOutlineIcon />}
+              onClick={() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' })}
+              sx={modalStyles.likeButton}
+            >
+              <Typography variant="body2" fontWeight={600}>
+                {commentCount}
+              </Typography>
+            </Button>
           </Box>
 
           <Divider sx={{ mb: 1 }} />

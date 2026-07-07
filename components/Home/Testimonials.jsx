@@ -15,7 +15,7 @@ const feedbacks = [
     img: Avatar1.src,
     name: 'Emma Brown',
     role: 'A2 Learner',
-    text: 'This website is very easy to use. I can practice English every day, and the lessons help me learn new words and grammar.',
+    text: 'This website is very easy to use. I can practice English every day, and the lessons help me learn new words, grammar rules, and simple sentences.',
   },
   {
     img: Avatar2.src,
@@ -67,10 +67,25 @@ export default function Testimonials() {
             </Box>
 
             <Box sx={testimonialsStyles.contentOverlay}>
-              <Box sx={testimonialsStyles.userInfoContainer}>
-                <Avatar src={currentFeedback.img} alt="avatar" sx={testimonialsStyles.avatar} />
-                <Typography sx={testimonialsStyles.userName}>{currentFeedback.name}</Typography>
-                <Typography sx={testimonialsStyles.userRole}>{currentFeedback.role}</Typography>
+              <Box
+                sx={[
+                  testimonialsStyles.userInfoContainer,
+                  { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+                ]}
+              >
+                <Avatar
+                  src={currentFeedback.img}
+                  alt="avatar"
+                  sx={[testimonialsStyles.avatar, { mb: 0 }]}
+                />
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                  <Typography sx={[testimonialsStyles.userName, { textAlign: 'left' }]}>
+                    {currentFeedback.name}
+                  </Typography>
+                  <Typography sx={[testimonialsStyles.userRole, { textAlign: 'left' }]}>
+                    {currentFeedback.role}
+                  </Typography>
+                </Box>
               </Box>
 
               <Typography sx={testimonialsStyles.text}>{currentFeedback.text}</Typography>

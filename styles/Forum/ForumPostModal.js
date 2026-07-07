@@ -28,7 +28,7 @@ const closeButton = {
 const stickyHeader = {
   position: 'sticky',
   top: 0,
-  bgcolor: '#f5f5f5',
+  bgcolor: '#fff',
   display: 'flex',
   justifyContent: 'flex-end',
   alignItems: 'center',
@@ -68,7 +68,8 @@ const likeCommentBox = {
   display: 'flex',
   flexDirection: 'row',
   alignItems: 'center',
-  justifyContent: 'space-between',
+  justifyContent: 'flex-end',
+  gap: 1,
 };
 
 const likeButton = {
