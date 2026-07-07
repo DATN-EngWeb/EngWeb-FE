@@ -288,46 +288,32 @@ export default function ForumPostCard({ post, initialOpen = false }) {
           mt={3}
           display="flex"
           flexDirection="row"
-          justifyContent="space-between"
           alignItems="center"
-          gap={1.5}
+          justifyContent="flex-end"
+          gap={1}
           sx={{ borderTop: '1px solid #f0f0f0', pt: 2 }}
         >
-          <Box display="flex" gap={1} flexWrap="wrap" minWidth={0}>
-            <Button
-              size="medium"
-              startIcon={liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-              onClick={handleLike}
-              sx={{ ...styles.likeButton, color: liked ? 'error.main' : styles.likeButton.color }}
-            >
-              {liked ? 'Liked' : 'Like'}
-            </Button>
+          <Button
+            size="medium"
+            startIcon={liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+            onClick={handleLike}
+            sx={{ ...styles.likeButton, color: liked ? 'error.main' : styles.likeButton.color }}
+          >
+            <Typography variant="body2" fontWeight={600} sx={styles.countText}>
+              {likeCount}
+            </Typography>
+          </Button>
 
-            <Button
-              size="medium"
-              startIcon={<ChatBubbleOutlineIcon />}
-              onClick={() => setModalOpen(true)}
-              sx={styles.commentButton}
-            >
-              Comment
-            </Button>
-          </Box>
-
-          <Box display="flex" gap={2} color="text.secondary" flexWrap="wrap" flexShrink={0}>
-            <Box display="flex" alignItems="center" gap={0.5}>
-              <FavoriteBorderIcon fontSize="small" />
-              <Typography variant="body2" fontWeight={600} sx={styles.countText}>
-                {likeCount}
-              </Typography>
-            </Box>
-
-            <Box display="flex" alignItems="center" gap={0.5}>
-              <ChatBubbleOutlineIcon fontSize="small" />
-              <Typography variant="body2" fontWeight={600} sx={styles.countText}>
-                {commentCount}
-              </Typography>
-            </Box>
-          </Box>
+          <Button
+            size="medium"
+            startIcon={<ChatBubbleOutlineIcon />}
+            onClick={() => setModalOpen(true)}
+            sx={styles.commentButton}
+          >
+            <Typography variant="body2" fontWeight={600} sx={styles.countText}>
+              {commentCount}
+            </Typography>
+          </Button>
         </Box>
       </CardContent>
 
